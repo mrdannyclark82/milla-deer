@@ -10,8 +10,7 @@ import struct
 import difflib
 import re
 from datetime import datetime
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import server
 
 # --- RETRO THEME PLAYER ---
 class RetroPlayer:
@@ -65,15 +64,17 @@ def play_fanfare(sound_name):
 # ==========================================
 
 def speak_local(text):
-    """Uses espeakng for local text-to-speech with a relaxed pace (Fallback)."""
+    """Uses termux-tts-speak for local high-quality voice output (Fallback)."""
     try:
-        print(f"SARIi (Fallback): {text}")
-        subprocess.run(['espeak', '-v', 'en-us', '-s', '140', '-p', '40', '-w', 'temp.wav', text])
-        subprocess.run(['play', '-q', 'temp.wav'])
-        if os.path.exists('temp.wav'):
-            os.remove('temp.wav')
+        print(f"SARIi (Local): {text}")
+        subprocess.run(['termux-tts-speak', text], check=True)
     except Exception as e:
         print(f"Local TTS Error: {e}")
+        # Final fallback to espeak if termux-api is missing
+        try:
+            subprocess.run(['espeak', '-v', 'en-us', '-s', '140', '-p', '40', text])
+        except:
+            pass
 
 from gtts import gTTS
 
@@ -924,5 +925,17 @@ def speak_gtts(text):
 # -----------------------------------------------------
 
 # -----------------------------------------------------
+def start_uplink_server():
+    """Starts the Flask uplink server in a daemon thread."""
+    print("DEBUG: Starting Uplink Server...")
+    # Link the processor
+    server.set_command_processor(process_command)
+    
+    # Start thread
+    server_thread = threading.Thread(target=server.run_server, daemon=True)
+    server_thread.start()
+    print("DEBUG: Uplink Server started on port 5000.")
+
 if __name__ == "__main__":
+    start_uplink_server()
     main()
