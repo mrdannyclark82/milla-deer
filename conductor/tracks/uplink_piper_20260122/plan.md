@@ -1,7 +1,7 @@
 # Implementation Plan - Implement Flask Uplink Server and Piper TTS
 
 ## Phase 1: Piper TTS Integration
-- [ ] Task: Verify Piper binary and model assets
+- [x] Task: Verify Piper binary and model assets 50d41ae
     - [ ] Check for `piper` executable and `en_US-amy-low.onnx` model in the `piper/` directory.
     - [ ] Ensure execution permissions are set for the binary.
 - [ ] Task: Implement `speak_piper` function
