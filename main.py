@@ -1,3 +1,4 @@
+import threading
 import subprocess
 import sys
 import time
@@ -7,15 +8,47 @@ import struct
 import difflib
 import re
 from datetime import datetime
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 # ==========================================
 # MODULE 1: I/O INTERFACE
 # ==========================================
 
+def speak_local(text):
+    """Uses espeakng for local text-to-speech with a relaxed pace (Fallback)."""
+    try:
+        print(f"SARIi (Fallback): {text}")
+        subprocess.run(['espeak', '-v', 'en-us', '-s', '140', '-p', '40', '-w', 'temp.wav', text])
+        subprocess.run(['termux-media-player', 'play', 'temp.wav'])
+        if os.path.exists('temp.wav'):
+            os.remove('temp.wav')
+    except Exception as e:
+        print(f"Local TTS Error: {e}")
+
+from gtts import gTTS
+
+def speak_gtts(text):
+    """Uses Google TTS for high-quality neural voice output."""
+    try:
+        print(f"SARIi (Neural): {text}")
+        tts = gTTS(text=text, lang='en', tld='com') # Using US English
+        tts.save("temp.mp3")
+        
+        # Play using termux-media-player
+        subprocess.run(['termux-media-player', 'play', 'temp.mp3'], capture_output=True)
+        
+        # Give it a moment to play before deleting
+        time.sleep(0.5) 
+        if os.path.exists('temp.mp3'):
+            os.remove('temp.mp3')
+    except Exception as e:
+        print(f"gTTS Error: {e}")
+        speak_local(text)
+
 def speak(text):
-    """Uses Termux:API to speak text aloud."""
-    print(f"SARIi: {text}")
-    subprocess.run(['termux-tts-speak', text])
+    """Primary speak function using gTTS neural voice."""
+    speak_gtts(text)
 
 def listen():
     """Uses Termux:API to capture voice input."""
@@ -486,8 +519,56 @@ def process_command(raw_command):
     else:
         speak("I didn't understand that.")
 
+import threading
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# ... (rest of imports)
+
+# ==========================================
+# MODULE 1: I/O INTERFACE
+# ==========================================
+
+# ... (rest of module 1)
+
+# ==========================================
+# MODULE 6: UPLINK SERVER
+# ==========================================
+
+app = Flask(__name__)
+CORS(app) # Allow cross-origin requests from the mobile app
+
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({"status": "online", "system": "SARIi", "version": "6.1"})
+
+@app.route('/command', methods=['POST'])
+def handle_uplink_command():
+    data = request.json
+    user_cmd = data.get("command")
+    if user_cmd:
+        print(f"[Uplink]: {user_cmd}")
+        # Run process_command in a thread to avoid blocking the server
+        threading.Thread(target=process_command, args=(user_cmd,)).start()
+        return jsonify({"status": "received", "command": user_cmd})
+    return jsonify({"status": "error", "message": "No command provided"}), 400
+
+def run_server():
+    # Runs the server on all interfaces (0.0.0.0) at port 5000
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+
+# ==========================================
+# MODULE 5: CORE LOGIC
+# ==========================================
+
+# ... (keep existing variables)
+
 def main():
-    speak("SARIi v6 (Adaptive) online.")
+    # Start Uplink Server in a background thread
+    print("[*] Starting Uplink Server on port 5000...")
+    threading.Thread(target=run_server, daemon=True).start()
+    
+    speak("SARIi v6.1 (Uplink) online.")
     while True:
         print("\n[Listening...]")
         user_input = listen()
@@ -499,33 +580,57 @@ def main():
 if __name__ == "__main__":
     main()
 
-# --- AUTO-GENERATED FEATURE: Local TTS ---# Reasoning: To improve privacy and reduce reliance on external services (Termux:API), integrating a local TTS engine would be beneficial. This also improves speed and reduces network dependency.
-python
-# Requires installing a local TTS library like 'espeakng'
-# For example: apt install espeak
-import subprocess
-import os
+# -----------------------------------------------------
 
-def speak_local(text):
-    ""Uses espeakng for local text-to-speech."""
+# --- AUTO-GENERATED FEATURE: Edge TTS ---# Reasoning: To enhance privacy and reduce reliance on external services like gTTS, integrating a local, high-quality TTS engine is beneficial. This aligns with the trend of Edge AI and Local LLMs, where processing happens directly on the device.  This allows for better voice quality than the current fallback (espeakng) while maintaining privacy. We replace gTTS with edge-tts.
+```python
+import edge_tts
+import asyncio
+
+async def speak_edge_tts(text):
+    """Uses Edge TTS for high-quality local neural voice output."""
     try:
-        subprocess.run(['espeak', '-v', 'en', '-w', 'temp.wav', text])
-        subprocess.run(['termux-media-player', 'play', 'temp.wav'])
-        os.remove('temp.wav')
+        print(f"SARIi (Edge Neural): {text}")
+        voice = "en-US-JennyNeural"  # Choose a suitable voice
+        output_file = "temp.wav"
+
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(output_file)
+
+        subprocess.run(['termux-media-player', 'play', output_file], capture_output=True)
+
+        # Give it a moment to play before deleting
+        time.sleep(0.5)
+        if os.path.exists(output_file):
+            os.remove(output_file)
     except Exception as e:
-        print(f"Local TTS Error: {e}")
-
-# Replace speak() function calls with speak_local()
-# For example, in main():
-# speak("SARIi v6 (Adaptive) online.") becomes:
-# speak_local("SARIi v6 (Adaptive) online.")
-
-def speak(text):
-    ""Chooses between Termux API and local TTS."""
-    if os.path.exists('/data/data/com.termux/files/usr/bin/termux-tts-speak'): # Check if termux API exists.
-        print(f"SARIi: {text}")
-        subprocess.run(['termux-tts-speak', text])
-    else:
+        print(f"Edge TTS Error: {e}")
         speak_local(text)
 
+def speak(text):
+    """Primary speak function using Edge TTS neural voice, with fallback to gTTS."""
+    try:
+        asyncio.run(speak_edge_tts(text))
+    except:
+        speak_gtts(text)
+
+# Modify gTTS fallback function to include asyncio
+def speak_gtts(text):
+    """Uses Google TTS for high-quality neural voice output as a fallback."""
+    try:
+        print(f"SARIi (Neural): {text}")
+        tts = gTTS(text=text, lang='en', tld='com') # Using US English
+        tts.save("temp.mp3")
+        
+        # Play using termux-media-player
+        subprocess.run(['termux-media-player', 'play', 'temp.mp3'], capture_output=True)
+        
+        # Give it a moment to play before deleting
+        time.sleep(0.5) 
+        if os.path.exists('temp.mp3'):
+            os.remove('temp.mp3')
+    except Exception as e:
+        print(f"gTTS Error: {e}")
+        speak_local(text)
+```
 # -----------------------------------------------------

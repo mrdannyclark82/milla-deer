@@ -1,9 +1,10 @@
 import os
 import json
 import subprocess
-import requests
+import google.generativeai as genai
 from datetime import datetime
 from googlesearch import search
+from pydantic import BaseModel, Field
 
 # --- CONFIGURATION ---
 # Export this in your shell: export GOOGLE_API_KEY="AIzaSy..."
@@ -24,6 +25,18 @@ except:
 REPO_PATH = config.get("repo_path", ".")
 SEARCH_QUERY = config.get("scan_query", "python AI assistant trends 2026")
 
+# Setup Gemini with Pydantic Structure
+genai.configure(api_key=GOOGLE_KEY)
+
+class FeatureUpdate(BaseModel):
+    feature_name: str = Field(description="Short, descriptive name of the feature")
+    reasoning: str = Field(description="Why this feature is valuable for the project")
+    code_snippet: str = Field(description="Executable Python code to append to main.py")
+    pr_title: str = Field(description="Conventional Commit title (e.g., feat: add X)")
+
+model = genai.GenerativeModel('gemini-2.0-flash', 
+                              generation_config={"response_mime_type": "application/json"})
+
 def log(text):
     print(f"[Milla-Gemini]: {text}")
 
@@ -39,7 +52,7 @@ def scan_web():
     ]
     return "\n".join(results)
 
-# 2. ARCHITECT (The Gemini Brain via Raw HTTP)
+# 2. ARCHITECT (The Gemini Brain via Pydantic)
 def analyze_and_plan(web_results):
     log("Reading current source code...")
     
@@ -50,9 +63,9 @@ def analyze_and_plan(web_results):
         with open(target_file, "r") as f:
             code_context = f.read()[:20000] 
             
-    log("Consulting Gemini 1.5 Flash (via REST)...")
+    log("Consulting Gemini 2.0 Flash (Structured)...")
     
-    prompt_text = f"""
+    prompt = f"""
     ROLE: Senior Python DevOps Engineer.
     
     CONTEXT:
@@ -67,7 +80,8 @@ def analyze_and_plan(web_results):
     
     TASK:
     1. Identify ONE feasible feature or improvement from the trends that fits this codebase.
-    2. Output a JSON object with the following structure (do not output markdown):
+    2. Respond with a JSON object strictly adhering to this schema:
+    
     {{
        "feature_name": "Short Name",
        "reasoning": "Why we need this",
@@ -76,36 +90,14 @@ def analyze_and_plan(web_results):
     }}
     """
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_KEY}"
-    
-    headers = {'Content-Type': 'application/json'}
-    data = {
-        "contents": [{
-            "parts": [{'text': prompt_text}]
-        }]
-    }
-
     try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status() # Check for HTTP errors
+        response = model.generate_content(prompt)
+        # Parse directly into Pydantic model for validation
+        plan = FeatureUpdate.model_validate_json(response.text)
+        return plan.model_dump() # Return as dict for compatibility
         
-        result_json = response.json()
-        
-        # Extract text from the deeply nested response
-        try:
-            generated_text = result_json['candidates'][0]['content']['parts'][0]['text']
-        except (KeyError, IndexError) as e:
-            log(f"Error parsing API response structure: {e}")
-            log(f"Full Response: {result_json}")
-            raise
-
-        clean_text = generated_text.replace("```json", "").replace("```", "").strip()
-        return json.loads(clean_text)
-        
-    except requests.exceptions.RequestException as e:
-        log(f"API Request Failed: {e}")
-        if response is not None:
-             log(f"Response content: {response.text}")
+    except Exception as e:
+        log(f"Gemini Planning Failed: {e}")
         raise
 
 # 3. ENGINEER (Git)
