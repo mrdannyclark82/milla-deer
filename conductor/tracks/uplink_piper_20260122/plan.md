@@ -10,7 +10,7 @@
     - [ ] Update `main.py` to make `speak_piper` the primary TTS engine.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Piper TTS Integration' (Protocol in workflow.md)
 
-## Phase 2: Flask Uplink Server
+## Phase 2: Flask Uplink Server [checkpoint: 99bb2a0]
 - [x] Task: Install and Configure Flask 5f95f3e
     - [ ] Create a `requirements.txt` file including `flask` and `flask-cors`.
     - [ ] Install dependencies.
