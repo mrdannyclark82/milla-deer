@@ -23,6 +23,6 @@ SARIi (System Assistant for Research & Intelligence) is an autonomous, local-fir
 - **Retro Audio:** Themed audio feedback using local sound assets.
 
 ## 4. Immediate Goals (Next Phase)
-- **Local Voice Upgrade:** Fully integrate Piper TTS and Whisper STT to replace robotic fallbacks.
-- **Uplink Implementation:** Deploy the Flask/FastAPI server to enable secure communication with external apps.
+- **Local Voice Upgrade:** Fully integrate Whisper STT to complement Piper TTS.
+- **Uplink Expansion:** Enhance the Flask server with WebSocket support for real-time status updates.
 - **UI Integration:** Connect the existing Android Capacitor frontend to the Python backend via the new Uplink Server.
