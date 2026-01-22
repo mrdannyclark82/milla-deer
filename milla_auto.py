@@ -80,14 +80,16 @@ def analyze_and_plan(web_results):
     
     TASK:
     1. Identify ONE feasible feature or improvement from the trends that fits this codebase.
-    2. Respond with a JSON object strictly adhering to this schema:
+    2. Respond with EXACTLY ONE JSON object (NOT A LIST) strictly adhering to this schema:
     
     {{
        "feature_name": "Short Name",
        "reasoning": "Why we need this",
-       "code_snippet": "The actual python code to implement it",
+       "code_snippet": "The actual python code (or TSX if frontend) to implement it",
        "pr_title": "Conventional Commit Title"
     }}
+    
+    Do not include any other text or formatting. Just the raw JSON object.
     """
     
     try:
