@@ -1,7 +1,9 @@
 import threading
+print("DEBUG: SARIi script started.")
 import subprocess
 import sys
 import time
+import requests
 import json
 import os
 import struct
@@ -10,6 +12,53 @@ import re
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+# --- RETRO THEME PLAYER ---
+class RetroPlayer:
+    def __init__(self, tunes_dir="SARIi_Tunes"):
+        self.tunes_dir = tunes_dir
+        self.current_proc = None
+        self.song_map = {
+            "glass joe": "03 Glass Joe's Theme.mp3",
+            "dungeon": "03. Dungeon Theme.mp3",
+            "triforce": "09. Triforce Shard Collected.mp3",
+            "match": "10 Match BGM.mp3",
+            "rescue": "14. Zelda Is Rescued.mp3",
+            "punchout": "03 Glass Joe's Theme.mp3",
+            "zelda": "03. Dungeon Theme.mp3",
+            "victory": "09. Triforce Shard Collected.mp3"
+        }
+
+    def play(self, theme_name, loop=True):
+        self.stop()
+        filename = self.song_map.get(theme_name.lower())
+        if not filename:
+            for k, v in self.song_map.items():
+                if k in theme_name.lower():
+                    filename = v
+                    break
+        if not filename: filename = theme_name
+
+        path = os.path.join(self.tunes_dir, filename)
+        if os.path.exists(path):
+            print(f"[*] Playing theme: {filename}")
+            cmd = ['play', '-q', path]
+            if loop: cmd += ['repeat', '99']
+            self.current_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            print(f"[!] Theme not found: {path}")
+
+    def stop(self):
+        if self.current_proc:
+            self.current_proc.terminate()
+            self.current_proc = None
+        subprocess.run(['pkill', 'play'], capture_output=True)
+
+retro_player = RetroPlayer()
+
+def play_fanfare(sound_name):
+    """Plays retro game sounds from the SARIi_Tunes folder."""
+    retro_player.play(sound_name, loop=False)
 
 # ==========================================
 # MODULE 1: I/O INTERFACE
@@ -20,7 +69,7 @@ def speak_local(text):
     try:
         print(f"SARIi (Fallback): {text}")
         subprocess.run(['espeak', '-v', 'en-us', '-s', '140', '-p', '40', '-w', 'temp.wav', text])
-        subprocess.run(['termux-media-player', 'play', 'temp.wav'])
+        subprocess.run(['play', '-q', 'temp.wav'])
         if os.path.exists('temp.wav'):
             os.remove('temp.wav')
     except Exception as e:
@@ -35,8 +84,8 @@ def speak_gtts(text):
         tts = gTTS(text=text, lang='en', tld='com') # Using US English
         tts.save("temp.mp3")
         
-        # Play using termux-media-player
-        subprocess.run(['termux-media-player', 'play', 'temp.mp3'], capture_output=True)
+        # Play using sox play
+        subprocess.run(['play', '-q', 'temp.mp3'], capture_output=True)
         
         # Give it a moment to play before deleting
         time.sleep(0.5) 
@@ -118,7 +167,12 @@ class NLU:
             'macro_run': ['run simulation', 'play macro', 'execute macro'],
             'screen_check': ['check screen', 'pixel color', 'screen analysis'],
             'computer': ['computer run', 'system execute', 'shell command'],
-            'exit': ['exit', 'quit', 'shutdown', 'terminate', 'bye']
+            'exit': ['exit', 'quit', 'shutdown', 'terminate', 'bye'],
+            # NEW SKILLS
+            'analyze_code': ['analyze folder', 'review code', 'scan project', 'check code'],
+            'joke': ['tell me a joke', 'make me laugh', 'funny', 'joke'],
+            'play_music': ['play victory music', 'play zelda', 'play punch out', 'play retro sound'],
+            'ollama': ['ask ollama', 'hey ollama', 'consult ollama', 'local ai']
         }
 
     def match_intent(self, text):
@@ -172,6 +226,29 @@ class NLU:
 # ==========================================
 # MODULE 4: SKILLS IMPLEMENTATION
 # ==========================================
+
+# --- OLLAMA INTEGRATION ---
+def ask_ollama(text):
+    """Queries the local Ollama instance."""
+    prompt = text.replace("ask ollama", "").replace("hey ollama", "").replace("consult ollama", "").strip()
+    if not prompt: return "What should I ask?"
+    
+    speak(f"Asking local brain: {prompt}")
+    try:
+        url = "http://localhost:11434/api/generate"
+        payload = {
+            "model": "termux-assistant", # Using the model from your ollama_chat.py
+            "prompt": f"You are SARIi, a helpful AI assistant. Keep response concise (under 2 sentences). User asks: {prompt}",
+            "stream": False
+        }
+        response = requests.post(url, json=payload, timeout=30)
+        if response.status_code == 200:
+            res_text = response.json().get('response', '')
+            return res_text
+        else:
+            return f"Ollama returned status {response.status_code}"
+    except Exception as e:
+        return f"Could not reach Ollama. Is it running? Error: {e}"
 
 # --- HARDWARE ---
 def get_battery():
@@ -334,16 +411,33 @@ def find_contact(query):
 
 def make_call(text):
     name = text.replace("call", "").strip()
+    if not name: return "Who should I call?"
+    
     num = find_contact(name)
+    
+    # Check if 'num' is actually a number (or close to it)
+    if num == name: 
+        # Means find_contact failed to find a number
+        # Check if user actually spoke a number (digits)
+        if not any(char.isdigit() for char in name):
+             return f"I don't have a number for {name}. Please add them to contacts."
+    
     subprocess.run(['termux-telephony-call', num])
     return f"Calling {name}..."
 
 def send_sms(text):
     if "saying" in text:
         parts = text.split("saying")
-        name = parts[0].replace("text", "").replace("send message to", "").strip()
+        name = parts[0].replace("text", "").replace("send message to", "").replace("send sms to", "").strip()
         msg = parts[1].strip()
+        
+        if not name or not msg: return "Say: text [name] saying [message]"
+
         num = find_contact(name)
+        
+        if num == name and not any(char.isdigit() for char in name):
+             return f"I don't have a number for {name}."
+             
         subprocess.run(['termux-sms-send', '-n', num, msg])
         return "SMS sent."
     return "Say: text [name] saying [message]"
@@ -512,12 +606,32 @@ def process_command(raw_command):
         
     elif intent == 'dialect_learn':
         speak(learn_dialect(cmd))
+        
+    elif intent == 'analyze_code':
+        speak(analyze_folder(cmd))
+
+    elif intent == 'ollama':
+        speak(ask_ollama(cmd))
+        
+    elif intent == 'joke':
+        speak(tell_joke())
+        
+    elif intent == 'play_music':
+        # Handles: "play zelda", "play punch out", "stop music"
+        if "stop" in cmd or "quiet" in cmd:
+            retro_player.stop()
+            speak("Music stopped.")
+        else:
+            theme = cmd.replace("play", "").replace("music", "").strip()
+            if not theme: theme = "zelda" # default
+            retro_player.play(theme)
 
     elif intent == 'exit':
         speak("Goodbye.")
         sys.exit()
     else:
-        speak("I didn't understand that.")
+        # Fallback to Ollama for general conversation
+        speak(ask_ollama(cmd))
 
 import threading
 from flask import Flask, request, jsonify
@@ -540,7 +654,7 @@ CORS(app) # Allow cross-origin requests from the mobile app
 
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify({"status": "online", "system": "SARIi", "version": "6.1"})
+    return jsonify({"status": "online", "system": "SARIi", "version": "6.2"})
 
 @app.route('/command', methods=['POST'])
 def handle_uplink_command():
@@ -563,12 +677,39 @@ def run_server():
 
 # ... (keep existing variables)
 
+def ensure_ollama_running():
+    print("[*] Checking Ollama status...")
+    try:
+        requests.get("http://localhost:11434", timeout=1)
+        print("[*] Ollama is already running.")
+    except:
+        print("[*] Ollama not found. Starting server...")
+        try:
+            subprocess.Popen(['ollama', 'serve'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("[*] Waiting for Ollama to initialize...")
+            for _ in range(15):
+                try:
+                    requests.get("http://localhost:11434", timeout=1)
+                    print("[*] Ollama is now online.")
+                    return
+                except:
+                    time.sleep(1)
+            print("[!] Warning: Ollama server started but is not yet responsive.")
+        except Exception as e:
+            print(f"[!] Failed to start Ollama: {e}")
+
 def main():
+    # Ensure Ollama is running
+    ensure_ollama_running()
+
     # Start Uplink Server in a background thread
     print("[*] Starting Uplink Server on port 5000...")
     threading.Thread(target=run_server, daemon=True).start()
     
-    speak("SARIi v6.1 (Uplink) online.")
+    # Start Personality Engine
+    threading.Thread(target=idle_behavior_loop, daemon=True).start()
+    
+    speak("SARIi v6.2 (Analyst Edition) online.")
     while True:
         print("\n[Listening...]")
         user_input = listen()
@@ -577,15 +718,159 @@ def main():
             process_command(user_input)
         time.sleep(1)
 
-if __name__ == "__main__":
-    main()
 
 # -----------------------------------------------------
 
-# --- AUTO-GENERATED FEATURE: Edge TTS ---# Reasoning: To enhance privacy and reduce reliance on external services like gTTS, integrating a local, high-quality TTS engine is beneficial. This aligns with the trend of Edge AI and Local LLMs, where processing happens directly on the device.  This allows for better voice quality than the current fallback (espeakng) while maintaining privacy. We replace gTTS with edge-tts.
-```python
+# --- AUTO-GENERATED FEATURE: Edge TTS ---
+# Reasoning: To enhance privacy and reduce reliance on external services like gTTS, 
+# integrating a local, high-quality TTS engine is beneficial. 
+
 import edge_tts
 import asyncio
+import glob
+import random
+
+# --- MODULE 7: CODE ANALYST & PERSONALITY ---
+
+def analyze_folder(path_arg):
+    """Reads code files in a folder and asks Gemini for a review."""
+    target_path = path_arg.replace("analyze", "").replace("review", "").replace("folder", "").strip()
+    if not target_path: target_path = "."
+    
+    # Resolve relative paths
+    if target_path == ".": abs_path = os.getcwd()
+    else:
+        # Check if user meant a folder relative to home
+        if not target_path.startswith("/") and not target_path.startswith("."):
+            abs_path = os.path.join(os.path.expanduser("~"), target_path)
+        else:
+            abs_path = os.path.abspath(target_path)
+    
+    if not os.path.exists(abs_path):
+        return f"I can't find the folder: {target_path}"
+
+    speak(f"Scanning project {os.path.basename(abs_path)}...")
+    
+    # Gather code content
+    code_summary = ""
+    file_count = 0
+    extensions = ['*.py', '*.tsx', '*.ts', '*.js', '*.html', '*.json', '*.md']
+    
+    for ext in extensions:
+        for filepath in glob.glob(os.path.join(abs_path, '**', ext), recursive=True):
+            if "node_modules" in filepath or ".git" in filepath or "build" in filepath: continue
+            
+            try:
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                    if len(content) > 5000: content = content[:5000] + "...(truncated)"
+                    code_summary += f"\n--- FILE: {os.path.basename(filepath)} ---\n{content}\n"
+                    file_count += 1
+            except: pass
+            
+            if file_count >= 10: break # Increased context limit
+        if file_count >= 10: break
+
+    if not code_summary: return "No code files found to analyze."
+
+    # Ask Gemini
+    try:
+        import google.generativeai as genai
+        GOOGLE_KEY = os.getenv("GOOGLE_API_KEY")
+        if not GOOGLE_KEY: return "I need a GOOGLE_API_KEY to think."
+        
+        genai.configure(api_key=GOOGLE_KEY)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        prompt = f"""
+        ROLE: Senior Software Architect.
+        TASK: Analyze this code snippet from folder '{os.path.basename(abs_path)}'.
+        1. Summarize what this project does.
+        2. Identify 1 potential bug or issue.
+        3. Suggest 1 improvement.
+        
+        CODE:
+        {code_summary}
+        """
+        
+        response = model.generate_content(prompt)
+        
+        # PLAY ZELDA VICTORY AFTER ANALYSIS
+        play_fanfare("zelda")
+        
+        return f"Analysis complete. {response.text}"
+        
+    except Exception as e:
+        return f"My brain hurts. Error: {e}"
+
+# --- PERSONALITY ENGINE ---
+IDLE_TIMER = 0
+
+def idle_behavior_loop():
+    """Runs in background to make SARIi feel alive."""
+    global IDLE_TIMER
+    behaviors = [
+        lambda: speak("Hmph. Just looking at some data."),
+        lambda: speak("I wonder if I can optimize my own code..."),
+        lambda: speak("Do you ever feel like you're just living in a terminal?"),
+        lambda: speak("*humming* Hmm hmm hmmm..."),
+        lambda: speak("*fart noise* ... Excuse me. My buffer overflowed."),
+        lambda: speak("I am ready when you are."),
+        lambda: speak("Did you know that in Python, 'import this' reveals the Zen of Python?"),
+    ]
+    
+    while True:
+        time.sleep(60) # Check every minute
+        IDLE_TIMER += 1
+        
+        # Trigger random event every 5-10 minutes of silence
+        if IDLE_TIMER > random.randint(5, 10):
+            action = random.choice(behaviors)
+            action()
+            IDLE_TIMER = 0
+
+def tell_joke():
+    jokes = [
+        "Why do Python programmers have low vision? Because they don't C sharp.",
+        "I tried to catch some fog earlier. I mist.",
+        "A SQL query walks into a bar, walks up to two tables and asks... can I join you?",
+        "Why was the JavaScript developer sad? Because he didn't know how to null his feelings.",
+        "I'd tell you a UDP joke, but you might not get it."
+    ]
+    return random.choice(jokes)
+
+def speak_piper(text):
+    """Uses Piper for high-quality local neural voice output."""
+    try:
+        print(f"SARIi (Piper): {text}")
+        # Absolute path based on current working directory
+        piper_dir = os.path.join(os.getcwd(), 'piper')
+        piper_binary = os.path.join(piper_dir, 'piper', 'piper')
+        model_path = os.path.join(piper_dir, 'en_US-amy-low.onnx')
+        output_file = "temp_piper.wav"
+
+        # Check if assets exist
+        if not os.path.exists(piper_binary):
+            raise FileNotFoundError(f"Piper binary not found at {piper_binary}")
+        if not os.path.exists(model_path):
+             raise FileNotFoundError(f"Piper model not found at {model_path}")
+
+        # Execute Piper
+        subprocess.run([piper_binary, '--model', model_path, '--output_file', output_file], 
+                       input=text.encode('utf-8'), 
+                       capture_output=True, 
+                       check=True)
+        
+        # Play audio
+        subprocess.run(['play', '-q', output_file], capture_output=True)
+        
+        # Cleanup
+        if os.path.exists(output_file):
+            os.remove(output_file)
+            
+    except Exception as e:
+        print(f"Piper TTS Error: {e}")
+        speak_local(text)
 
 async def speak_edge_tts(text):
     """Uses Edge TTS for high-quality local neural voice output."""
@@ -597,7 +882,7 @@ async def speak_edge_tts(text):
         communicate = edge_tts.Communicate(text, voice)
         await communicate.save(output_file)
 
-        subprocess.run(['termux-media-player', 'play', output_file], capture_output=True)
+        subprocess.run(['play', '-q', output_file], capture_output=True)
 
         # Give it a moment to play before deleting
         time.sleep(0.5)
@@ -608,11 +893,10 @@ async def speak_edge_tts(text):
         speak_local(text)
 
 def speak(text):
-    """Primary speak function using Edge TTS neural voice, with fallback to gTTS."""
-    try:
-        asyncio.run(speak_edge_tts(text))
-    except:
-        speak_gtts(text)
+    """Primary speak function using Piper neural voice."""
+    global IDLE_TIMER
+    IDLE_TIMER = 0
+    speak_piper(text)
 
 # Modify gTTS fallback function to include asyncio
 def speak_gtts(text):
@@ -622,8 +906,8 @@ def speak_gtts(text):
         tts = gTTS(text=text, lang='en', tld='com') # Using US English
         tts.save("temp.mp3")
         
-        # Play using termux-media-player
-        subprocess.run(['termux-media-player', 'play', 'temp.mp3'], capture_output=True)
+        # Play using sox play
+        subprocess.run(['play', '-q', 'temp.mp3'], capture_output=True)
         
         # Give it a moment to play before deleting
         time.sleep(0.5) 
@@ -632,5 +916,13 @@ def speak_gtts(text):
     except Exception as e:
         print(f"gTTS Error: {e}")
         speak_local(text)
-```
+
+# --- NLU UPDATE ---
+# We inject the new intents into the existing NLU class at runtime or redefine match_intent
+# For simplicity in this append-style edit, we handle it in process_command.
+
 # -----------------------------------------------------
+
+# -----------------------------------------------------
+if __name__ == "__main__":
+    main()
