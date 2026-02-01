@@ -111,19 +111,11 @@ class SandboxEnvironmentService {
     const execAsync = promisify(exec);
 
     try {
-      // Get current branch
-      const { stdout: currentBranch } = await execAsync(
-        'git rev-parse --abbrev-ref HEAD'
-      );
-
-      // Create and checkout new branch
-      await execAsync(`git checkout -b ${branchName}`);
+      // Create branch (from current HEAD) without checking it out
+      await execAsync(`git branch ${branchName}`);
 
       // Push to remote
       await execAsync(`git push -u origin ${branchName}`);
-
-      // Switch back to original branch
-      await execAsync(`git checkout ${currentBranch.trim()}`);
     } catch (error) {
       throw new Error(
         `Failed to create git branch: ${error instanceof Error ? error.message : 'Unknown error'}`

@@ -165,11 +165,18 @@ class ProactiveRepositoryManagerService {
       `📊 Found ${suggestions.length} improvement opportunities from user interactions`
     );
 
-    for (const suggestion of suggestions.slice(
+    const suggestionsToProcess = suggestions.slice(
       0,
       config.proactiveRepoManager.suggestionsSlice
-    )) {
-      const action = await this.createActionFromSuggestion(suggestion);
+    );
+
+    const actions = await Promise.all(
+      suggestionsToProcess.map((suggestion) =>
+        this.createActionFromSuggestion(suggestion)
+      )
+    );
+
+    for (const action of actions) {
       if (action) {
         newActions.push(action);
       }
