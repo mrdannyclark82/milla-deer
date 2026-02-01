@@ -116,16 +116,13 @@ class BrowserAgentTool:
             await self.page.goto('https://calendar.google.com')
             await self.page.wait_for_load_state('networkidle')
             
-            # Wait for calendar to load
-            await self.page.wait_for_timeout(2000)
-            
-            # Click create button
-            create_button = await self.page.query_selector('[aria-label="Create"]')
-            if create_button:
-                await create_button.click()
-            else:
-                # Try alternative selectors
-                await self.page.click('button:has-text("Create")')
+            # Wait for calendar to load and click create button
+            # Use wait_for_selector to avoid arbitrary sleep and handle dynamic loading
+            create_button = await self.page.wait_for_selector(
+                '[aria-label="Create"], button:has-text("Create")',
+                state='visible'
+            )
+            await create_button.click()
             
             await self.page.wait_for_timeout(1000)
             
