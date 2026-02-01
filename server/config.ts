@@ -88,6 +88,7 @@ export const config = {
     // Accept either GOOGLE_REDIRECT_URI (preferred) or the older GOOGLE_OAUTH_REDIRECT_URI
     redirectUri:
       process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI,
+    ttsApiKey: process.env.GOOGLE_CLOUD_TTS_API_KEY,
   },
   smartHome: {
     enableIntegration: process.env.ENABLE_SMART_HOME === 'true',

@@ -8,6 +8,7 @@ import { registerMemoryRoutes } from './memory.routes';
 import { registerMonitoringRoutes } from './monitoring.routes';
 import { registerSandboxRoutes } from './sandbox.routes';
 import { registerGoogleRoutes } from './google.routes';
+import { registerGoogleTtsRoutes } from './google-tts.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
 
 /**
@@ -36,6 +37,7 @@ export function registerModularRoutes(app: Express) {
   // Sandbox and Google routes
   registerSandboxRoutes(app);
   registerGoogleRoutes(app);
+  registerGoogleTtsRoutes(app);
   registerPersonalTaskRoutes(app);
   
   return app;

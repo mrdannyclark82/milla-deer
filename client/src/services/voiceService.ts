@@ -238,23 +238,80 @@ class BrowserNativeTTS implements ITTSProvider {
 }
 
 /**
- * Google Cloud TTS implementation (placeholder)
+ * Google Cloud TTS implementation
  */
 class GoogleCloudTTS implements ITTSProvider {
+  private audio: HTMLAudioElement | null = null;
+
   async speak(request: VoiceSynthesisRequest): Promise<VoiceSynthesisResponse> {
-    // TODO: Implement Google Cloud TTS API integration
-    console.warn(
-      'Google Cloud TTS not yet implemented, falling back to browser-native'
-    );
-    return {
-      success: false,
-      error:
-        'Google Cloud TTS not configured - requires GOOGLE_CLOUD_TTS_API_KEY',
-    };
+    const { text, config } = request;
+    const voiceName = config.voiceName || 'en-US-Neural2-C';
+
+    try {
+      const response = await fetch('/api/google/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          voiceName,
+          config: {
+            rate: config.rate ?? 1.0,
+            pitch: config.pitch ?? 0.0,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || response.statusText;
+        console.error('Google Cloud TTS API Error:', errorMessage);
+        return {
+          success: false,
+          error: `Google Cloud TTS API Error: ${errorMessage}`,
+        };
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      this.cancel(); // Cancel any previous audio
+      this.audio = new Audio(audioUrl);
+
+      request.onStart?.();
+
+      this.audio.play();
+
+      return new Promise((resolve) => {
+        this.audio!.onended = () => {
+          request.onEnd?.();
+          resolve({ success: true, audioUrl });
+        };
+        this.audio!.onerror = (err) => {
+          const error = new Error('Error playing Google Cloud TTS audio.');
+          request.onError?.(error);
+          console.error('Error playing Google Cloud TTS audio:', err);
+          resolve({ success: false, error: error.message });
+        };
+      });
+    } catch (error) {
+      const err =
+        error instanceof Error
+          ? error
+          : new Error('Unknown error during Google Cloud TTS request.');
+      request.onError?.(err);
+      console.error('Google Cloud TTS request failed:', err);
+      return { success: false, error: err.message };
+    }
   }
 
   cancel(): void {
-    // TODO: Implement cancellation
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+      this.audio = null;
+    }
   }
 }
 
