@@ -107,6 +107,10 @@ export interface IStorage {
     videoId: string,
     userId: string
   ): Promise<YoutubeKnowledge | null>;
+  getYoutubeKnowledgeByVideoIds(
+    videoIds: string[],
+    userId: string
+  ): Promise<YoutubeKnowledge[]>;
   searchYoutubeKnowledge(filters: any): Promise<YoutubeKnowledge[]>;
   incrementYoutubeWatchCount(videoId: string, userId: string): Promise<void>;
 }
@@ -150,14 +154,16 @@ export interface VoiceConsent {
 export class SqliteStorage implements IStorage {
   private db: Database.Database;
 
-  constructor() {
+  constructor(dbPath: string = DB_PATH) {
     // Ensure memory directory exists
-    const memoryDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(memoryDir)) {
-      fs.mkdirSync(memoryDir, { recursive: true });
+    if (dbPath !== ':memory:') {
+      const memoryDir = path.dirname(dbPath);
+      if (!fs.existsSync(memoryDir)) {
+        fs.mkdirSync(memoryDir, { recursive: true });
+      }
     }
 
-    this.db = new Database(DB_PATH);
+    this.db = new Database(dbPath);
     this.initializeDatabase();
   }
 
@@ -516,7 +522,7 @@ export class SqliteStorage implements IStorage {
 
     const encryptionStatus = isEncryptionEnabled() ? 'enabled' : 'disabled';
     console.log(
-      `SQLite database initialized at: ${DB_PATH} (encryption: ${encryptionStatus})`
+      `SQLite database initialized at: ${this.db.name} (encryption: ${encryptionStatus})`
     );
 
     // Ensure default user exists for consent storage
@@ -1383,6 +1389,22 @@ export class SqliteStorage implements IStorage {
     if (!video) return null;
 
     return this.parseYoutubeKnowledge(video);
+  }
+
+  async getYoutubeKnowledgeByVideoIds(
+    videoIds: string[],
+    userId: string
+  ): Promise<YoutubeKnowledge[]> {
+    if (videoIds.length === 0) return [];
+
+    const placeholders = videoIds.map(() => '?').join(',');
+    const stmt = this.db.prepare(
+      `SELECT * FROM youtube_knowledge_base WHERE video_id IN (${placeholders}) AND user_id = ?`
+    );
+
+    const videos = stmt.all(...videoIds, userId) as any[];
+
+    return videos.map((v) => this.parseYoutubeKnowledge(v));
   }
 
   async searchYoutubeKnowledge(filters: any): Promise<YoutubeKnowledge[]> {
