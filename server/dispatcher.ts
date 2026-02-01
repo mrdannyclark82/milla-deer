@@ -4,6 +4,10 @@
  * Supports multiple AI providers with automatic failover
  */
 
+import { offlineService } from './offlineModelService';
+import { agenticDispatch } from './agentic-dispatch';
+// import { OpenRouter } from 'openrouter'; // Commented out as it was in the original file but might not exist or be needed here directly
+
 interface DispatcherConfig {
   fallbackChain: string[];
   enableCache: boolean;
@@ -14,13 +18,6 @@ interface ModelHealth {
   available: boolean;
   lastCheck: number;
   failureCount: number;
-import { OpenRouter } from 'openrouter'; // Assume existing import
-import { agenticDispatch } from './agentic-dispatch';
-
-// Placeholder for local Gemma inference - implement based on actual local model setup
-async function localGemmaInference(query: string): Promise<string> {
-  // TODO: Implement local Gemma inference using Ollama or similar
-  throw new Error('Local Gemma inference not yet implemented');
 }
 
 class Dispatcher {
@@ -61,7 +58,21 @@ class Dispatcher {
   /**
    * Dispatch query to available models with intelligent fallback
    */
-  async dispatch(query: string): Promise<string> {
+  async dispatch(query: string, useAgenticMode: boolean = false): Promise<string> {
+    // Use agentic dispatch for complex multi-step queries
+    if (useAgenticMode) {
+      try {
+        const result = await agenticDispatch(query, true, {
+          maxIterations: 5,
+          requiresVerification: true,
+        });
+        return result.answer;
+      } catch (e) {
+        console.error('Agentic dispatch failed, falling back to standard:', e);
+        // Fall through to standard dispatch
+      }
+    }
+
     // Check cache first
     if (this.config.enableCache) {
       const cached = this.cache.get(query);
@@ -79,6 +90,8 @@ class Dispatcher {
       
       // Skip unhealthy models
       if (health && !health.available && health.failureCount > 3) {
+        // Special case: if it's the only model left, or strict fallback chain logic is needed, we might want to try anyway.
+        // But for now, we respect the health check.
         console.log(`[Dispatcher] Skipping unhealthy model: ${model}`);
         continue;
       }
@@ -101,31 +114,10 @@ class Dispatcher {
               this.cache.delete(firstKey);
             }
           }
-  async dispatch(query: string, useAgenticMode: boolean = false): Promise<string> {
-    // Use agentic dispatch for complex multi-step queries
-    if (useAgenticMode) {
-      try {
-        const result = await agenticDispatch(query, true, {
-          maxIterations: 5,
-          requiresVerification: true,
-        });
-        return result.answer;
-      } catch (e) {
-        console.error('Agentic dispatch failed, falling back to standard:', e);
-        // Fall through to standard dispatch
-      }
-    }
-
-    // Standard model fallback chain
-    for (const model of this.models) {
-      try {
-        if (model === 'gemma-local') {
-          // Attempt local inference for offline scenarios
-          // Note: This is a server-side operation, not browser-based
-          return await localGemmaInference(query);
         }
 
         return result;
+
       } catch (e: any) {
         console.error(`[Dispatcher] Fallback from ${model}: ${e.message}`);
         this.updateHealth(model, false);
@@ -152,6 +144,7 @@ class Dispatcher {
     // Simulate network delay and potential failure
     await new Promise(resolve => setTimeout(resolve, 100));
     
+    // Simulate random failure for other models
     if (Math.random() > 0.85) {
       throw new Error(`${model} temporarily unavailable`);
     }
@@ -160,12 +153,25 @@ class Dispatcher {
   }
 
   /**
-   * Local Gemma inference for offline use
+   * Local Gemma inference for offline use via Ollama
    */
   private async localGemmaInference(query: string): Promise<string> {
     console.log('[Dispatcher] Using local Gemma3 (offline mode)');
-    // This would integrate with locallm/gemma3-ai-edge.ts
-    return `Local Gemma response: ${query}`;
+
+    // Check if offline service is available
+    if (!offlineService.isAvailable()) {
+       // If the service isn't initialized/available, we can't use it.
+       // The service itself handles checking for Ollama.
+       throw new Error('Local Gemma service is not available (Ollama not running or no model found)');
+    }
+
+    const result = await offlineService.generateResponse(query);
+
+    if (!result.success) {
+      throw new Error('Local Gemma inference failed');
+    }
+
+    return result.content;
   }
 
   /**
