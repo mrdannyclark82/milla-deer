@@ -40,7 +40,7 @@ export const config = {
   },
   memory: {
     key: process.env.MEMORY_KEY,
-    enableSummarization: process.env.MEMORY_ENABLE_SUMMARIZATION === 'true',
+    enableSummarization: process.env.ENABLE_MEMORY_SUMMARIZATION === 'true',
     summarizationCron: process.env.MEMORY_SUMMARIZATION_CRON || '0 0 * * *',
   },
   admin: {
