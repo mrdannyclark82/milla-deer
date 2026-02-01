@@ -30,3 +30,8 @@ __pycache__/
 .Python
 venv/
 .venv/
+
+# Database
+memory/*.db*
+*.db-shm
+*.db-wal

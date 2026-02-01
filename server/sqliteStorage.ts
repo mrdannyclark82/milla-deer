@@ -90,6 +90,7 @@ export interface IStorage {
   // Memory Summaries methods
   createMemorySummary(summary: InsertMemorySummary): Promise<MemorySummary>;
   getMemorySummaries(userId: string, limit?: number): Promise<MemorySummary[]>;
+  getLatestSensitiveMemory(userId: string): Promise<{ financialSummary: string | null; medicalNotes: string | null }>;
   searchMemorySummaries(
     userId: string,
     query: string,
@@ -421,11 +422,34 @@ export class SqliteStorage implements IStorage {
         summary_text TEXT NOT NULL,
         topics TEXT, -- Stored as JSON string
         emotional_tone TEXT CHECK(emotional_tone IN ('positive', 'negative', 'neutral')),
+        financial_summary TEXT, -- Encrypted financial data
+        medical_notes TEXT, -- Encrypted medical data
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Migration: Add financial_summary and medical_notes columns if they don't exist
+    try {
+      const summaryCols = this.db
+        .prepare("PRAGMA table_info('memory_summaries')")
+        .all() as { name: string }[];
+
+      const hasFinancialSummary = summaryCols.some((c) => c.name === 'financial_summary');
+      if (!hasFinancialSummary) {
+        console.log('sqlite: migrating memory_summaries table to add financial_summary column');
+        this.db.exec(`ALTER TABLE memory_summaries ADD COLUMN financial_summary TEXT`);
+      }
+
+      const hasMedicalNotes = summaryCols.some((c) => c.name === 'medical_notes');
+      if (!hasMedicalNotes) {
+        console.log('sqlite: migrating memory_summaries table to add medical_notes column');
+        this.db.exec(`ALTER TABLE memory_summaries ADD COLUMN medical_notes TEXT`);
+      }
+    } catch (err) {
+      console.warn('sqlite: warning while ensuring memory_summaries sensitive columns', err);
+    }
 
     // Create youtube_knowledge_base table
     console.debug('sqlite: creating youtube_knowledge_base table');
@@ -1131,8 +1155,8 @@ export class SqliteStorage implements IStorage {
   ): Promise<MemorySummary> {
     const id = randomUUID();
     const stmt = this.db.prepare(`
-      INSERT INTO memory_summaries (id, user_id, title, summary_text, topics, emotional_tone)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO memory_summaries (id, user_id, title, summary_text, topics, emotional_tone, financial_summary, medical_notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       id,
@@ -1140,7 +1164,9 @@ export class SqliteStorage implements IStorage {
       summary.title,
       summary.summaryText,
       summary.topics ? JSON.stringify(summary.topics) : null,
-      summary.emotionalTone || null
+      summary.emotionalTone || null,
+      summary.financialSummary || null,
+      summary.medicalNotes || null
     );
 
     const created = await this.getMemorySummaryById(id);
@@ -1166,9 +1192,37 @@ export class SqliteStorage implements IStorage {
       summaryText: s.summary_text,
       topics: s.topics ? JSON.parse(s.topics) : [],
       emotionalTone: s.emotional_tone,
+      financialSummary: s.financial_summary,
+      medicalNotes: s.medical_notes,
       createdAt: new Date(s.created_at),
       updatedAt: new Date(s.updated_at),
     }));
+  }
+
+  async getLatestSensitiveMemory(
+    userId: string
+  ): Promise<{ financialSummary: string | null; medicalNotes: string | null }> {
+    const financialStmt = this.db.prepare(`
+      SELECT financial_summary FROM memory_summaries
+      WHERE user_id = ? AND financial_summary IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+
+    const medicalStmt = this.db.prepare(`
+      SELECT medical_notes FROM memory_summaries
+      WHERE user_id = ? AND medical_notes IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+
+    const financial = financialStmt.get(userId) as { financial_summary: string } | undefined;
+    const medical = medicalStmt.get(userId) as { medical_notes: string } | undefined;
+
+    return {
+      financialSummary: financial?.financial_summary || null,
+      medicalNotes: medical?.medical_notes || null,
+    };
   }
 
   async searchMemorySummaries(
@@ -1200,8 +1254,8 @@ export class SqliteStorage implements IStorage {
       summaryText: s.summary_text,
       topics: s.topics ? JSON.parse(s.topics) : [],
       emotionalTone: s.emotional_tone,
-      financialSummary: null,
-      medicalNotes: null,
+      financialSummary: s.financial_summary,
+      medicalNotes: s.medical_notes,
       createdAt: new Date(s.created_at),
       updatedAt: new Date(s.updated_at),
     }));
@@ -1220,8 +1274,8 @@ export class SqliteStorage implements IStorage {
       summaryText: summary.summary_text,
       topics: summary.topics ? JSON.parse(summary.topics) : [],
       emotionalTone: summary.emotional_tone,
-      financialSummary: null,
-      medicalNotes: null,
+      financialSummary: summary.financial_summary,
+      medicalNotes: summary.medical_notes,
       createdAt: new Date(summary.created_at),
       updatedAt: new Date(summary.updated_at),
     };
