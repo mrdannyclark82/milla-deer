@@ -211,6 +211,9 @@ Please adjust your approach to better align with the user's goals.
 // P2.4: SCPA (Self-Correcting Perpetual Agent) Error Hook
 // ============================================================================
 
+export type FailureSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type FailureImpact = 'low' | 'medium' | 'high';
+
 /**
  * Agent failure context for SCPA processing
  */
@@ -226,12 +229,103 @@ export interface AgentFailureContext {
     timestamp: number;
     error: string;
   }>;
+  severity?: FailureSeverity;
+  impact?: FailureImpact;
+  priorityScore?: number;
 }
 
 /**
  * SCPA task queue for self-correction
  */
 const scpaQueue: AgentFailureContext[] = [];
+
+/**
+ * Determine if a failure is critical
+ */
+export function isCriticalFailure(context: AgentFailureContext): boolean {
+  return (
+    context.severity === 'critical' ||
+    (context.priorityScore || 0) >= 70 ||
+    context.attemptCount > 2 ||
+    (typeof context.error === 'string' &&
+      (context.error.includes('critical') || context.error.includes('fatal')))
+  );
+}
+
+/**
+ * Calculate priority score for a failure
+ * Higher score = higher priority
+ */
+export function calculatePriorityScore(context: AgentFailureContext): number {
+  let score = 0;
+
+  // Severity Weight (0-40)
+  switch (context.severity) {
+    case 'critical':
+      score += 40;
+      break;
+    case 'high':
+      score += 30;
+      break;
+    case 'medium':
+      score += 20;
+      break;
+    case 'low':
+      score += 10;
+      break;
+    default:
+      score += 20; // Default to medium
+  }
+
+  // Impact Weight (0-30)
+  switch (context.impact) {
+    case 'high':
+      score += 30;
+      break;
+    case 'medium':
+      score += 20;
+      break;
+    case 'low':
+      score += 10;
+      break;
+    default:
+      score += 20; // Default to medium
+  }
+
+  // Attempts Weight (10 points per attempt, max 30)
+  score += Math.min((context.attemptCount || 1) * 10, 30);
+
+  return score;
+}
+
+/**
+ * Add a failure to the SCPA queue
+ */
+export function enqueueFailure(failure: AgentFailureContext): void {
+  // Calculate priority score if not present
+  if (failure.priorityScore === undefined) {
+    failure.priorityScore = calculatePriorityScore(failure);
+  }
+
+  scpaQueue.push(failure);
+
+  // Sort queue by priority score (descending)
+  scpaQueue.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0));
+}
+
+/**
+ * Get the next highest priority failure from the queue
+ */
+export function getNextSCPAFailure(): AgentFailureContext | undefined {
+  return scpaQueue.shift(); // Since it's sorted descending, the first element is highest priority
+}
+
+/**
+ * Peek at the next highest priority failure without removing it
+ */
+export function peekNextSCPAFailure(): AgentFailureContext | undefined {
+  return scpaQueue[0];
+}
 
 /**
  * P2.4: Report agent failure to metacognitive service for SCPA processing
@@ -248,6 +342,22 @@ export async function reportAgentFailure(
   const errorMessage = error instanceof Error ? error.message : error;
   const stackTrace = error instanceof Error ? error.stack : undefined;
 
+  // Infer severity if not provided
+  let severity = context.severity;
+  if (!severity) {
+    const errLower = errorMessage.toLowerCase();
+    if (errLower.includes('critical') || errLower.includes('fatal')) {
+      severity = 'critical';
+    } else if (errLower.includes('timeout') || errLower.includes('connection')) {
+      severity = 'high';
+    } else {
+      severity = 'medium';
+    }
+  }
+
+  // Infer impact if not provided (default to medium)
+  const impact = context.impact || 'medium';
+
   const failureContext: AgentFailureContext = {
     agentName: context.agentName || 'unknown',
     taskId: context.taskId || `task_${Date.now()}`,
@@ -257,45 +367,33 @@ export async function reportAgentFailure(
     taskContext: context.taskContext,
     stackTrace,
     previousAttempts: context.previousAttempts || [],
+    severity,
+    impact,
   };
 
+  failureContext.priorityScore = calculatePriorityScore(failureContext);
+
   console.error(
-    `🚨 [SCPA] Agent failure reported: ${failureContext.agentName}`
+    `🚨 [SCPA] Agent failure reported: ${failureContext.agentName} (Severity: ${severity}, Impact: ${impact}, Priority: ${failureContext.priorityScore})`
   );
   console.error(`🚨 [SCPA] Error: ${errorMessage}`);
   console.error(`🚨 [SCPA] Task ID: ${failureContext.taskId}`);
 
   // Add to SCPA queue for processing
-  scpaQueue.push(failureContext);
-
-  // TODO: In production, implement priority queue based on:
-  // - Severity of error
-  // - Number of attempts
-  // - Impact on user experience
-  // - Time since last failure
+  enqueueFailure(failureContext);
 
   // Log for monitoring
   console.log(
     `🔧 [SCPA] Failure queued for self-correction (queue size: ${scpaQueue.length})`
   );
 
-  // Check if this is a critical/recurring failure
-  const isCritical =
-    failureContext.attemptCount > 2 ||
-    errorMessage.includes('critical') ||
-    errorMessage.includes('fatal');
+  // Determine if critical based on priority score or flags
+  const isCritical = isCriticalFailure(failureContext);
 
   if (isCritical) {
     console.error(
       `🚨 [SCPA] CRITICAL failure detected - immediate attention required`
     );
-
-    // TODO: In production:
-    // 1. Trigger immediate notification to admin
-    // 2. Create high-priority task for coding agent
-    // 3. Optionally pause affected agent until fix is deployed
-    // await notifyAdminCriticalFailure(failureContext);
-    // await createUrgentFixTask(failureContext);
   }
 
   // Enqueue task for coding agent to generate fix
@@ -315,6 +413,7 @@ export async function reportAgentFailure(
         scpaFailure: true,
         originalError: failureContext,
         attemptCount: failureContext.attemptCount,
+        priorityScore: failureContext.priorityScore,
       },
     });
 
@@ -333,12 +432,7 @@ export function getSCPAQueueStatus(): {
   criticalFailures: number;
 } {
   const now = Date.now();
-  const criticalFailures = scpaQueue.filter(
-    (f) =>
-      f.attemptCount > 2 ||
-      (typeof f.error === 'string' &&
-        (f.error.includes('critical') || f.error.includes('fatal')))
-  ).length;
+  const criticalFailures = scpaQueue.filter((f) => isCriticalFailure(f)).length;
 
   const oldestTimestamp =
     scpaQueue.length > 0
