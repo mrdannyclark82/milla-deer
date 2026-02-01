@@ -24,6 +24,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { encrypt, decrypt, isEncryptionEnabled, getMemoryKey } from './crypto';
+import { VectorClock, LWWRegister, ORSet, PNCounter, RGA } from './lib/crdt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -220,9 +221,28 @@ export class SqliteStorage implements IStorage {
         );
         this.db.exec(`ALTER TABLE messages ADD COLUMN display_role TEXT`);
       }
+
+      // Check for CRDT columns
+      const hasVectorClock = msgCols.some(c => c.name === 'vector_clock');
+      const hasSiteId = msgCols.some(c => c.name === 'site_id');
+      const hasTombstone = msgCols.some(c => c.name === 'tombstone');
+
+      if (!hasVectorClock) {
+        console.log('sqlite: adding vector_clock to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN vector_clock TEXT`);
+      }
+      if (!hasSiteId) {
+        console.log('sqlite: adding site_id to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN site_id TEXT`);
+      }
+      if (!hasTombstone) {
+        console.log('sqlite: adding tombstone to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN tombstone INTEGER DEFAULT 0`);
+      }
+
     } catch (err) {
       console.warn(
-        'sqlite: warning while ensuring messages.display_role column',
+        'sqlite: warning while ensuring messages columns',
         err
       );
     }
@@ -1428,35 +1448,27 @@ export class SqliteStorage implements IStorage {
    * @returns Merged data with conflicts resolved
    */
   mergeCRDT(localData: any, remoteData: any): any {
-    console.log('📡 [CRDT] Merge operation called (STUB)');
+    console.log('📡 [CRDT] Merge operation called');
     console.log('📡 [CRDT] Local entries:', Object.keys(localData).length);
     console.log('📡 [CRDT] Remote entries:', Object.keys(remoteData).length);
-
-    // STUB: In production, implement actual CRDT merge logic
-    // For now, return a simple last-write-wins merge
 
     const merged = { ...localData };
 
     for (const [key, remoteValue] of Object.entries(remoteData)) {
       const localValue = localData[key];
 
-      // TODO: Replace with proper CRDT merge based on type
-      // - For LWW: Compare timestamps, keep newer
-      // - For OR-Set: Union of additions, apply removals
-      // - For Counters: Sum increments, handle decrements
-      // - For RGA: Merge ordered lists preserving causality
-
       if (!localValue) {
         // New entry from remote
         merged[key] = remoteValue;
         console.log(`📡 [CRDT] Added new entry: ${key}`);
-      } else if (this.shouldKeepRemoteValue(localValue, remoteValue)) {
-        // Remote is newer/preferred
-        merged[key] = remoteValue;
-        console.log(`📡 [CRDT] Updated entry: ${key}`);
       } else {
-        // Keep local value
-        console.log(`📡 [CRDT] Kept local entry: ${key}`);
+        // Conflict resolution
+        if (this.shouldKeepRemoteValue(localValue, remoteValue)) {
+          merged[key] = remoteValue;
+          console.log(`📡 [CRDT] Updated entry: ${key}`);
+        } else {
+          console.log(`📡 [CRDT] Kept local entry: ${key}`);
+        }
       }
     }
 
@@ -1469,31 +1481,43 @@ export class SqliteStorage implements IStorage {
   }
 
   /**
-   * P3.4: Helper to determine if remote value should be kept (STUB)
-   * In production, would use vector clocks or Lamport timestamps
+   * P3.4: Helper to determine if remote value should be kept
+   * Uses Vector Clocks if available, otherwise falls back to LWW with site ID tie-breaking
    */
   private shouldKeepRemoteValue(localValue: any, remoteValue: any): boolean {
-    // STUB: Simple timestamp comparison
-    // TODO: Implement proper causality checking with vector clocks
+    // 1. Try Vector Clock comparison
+    if (localValue.vector_clock && remoteValue.vector_clock) {
+      try {
+        const localVC = VectorClock.fromJSON(JSON.parse(localValue.vector_clock));
+        const remoteVC = VectorClock.fromJSON(JSON.parse(remoteValue.vector_clock));
+        const comparison = localVC.compare(remoteVC);
 
-    const localTimestamp = localValue.timestamp || localValue.updated_at || 0;
-    const remoteTimestamp =
-      remoteValue.timestamp || remoteValue.updated_at || 0;
+        if (comparison === 'less') return true; // Remote is strictly newer
+        if (comparison === 'greater') return false; // Local is strictly newer
+        if (comparison === 'equal') return false; // Same
 
-    // LWW (Last-Write-Wins) strategy
-    if (remoteTimestamp > localTimestamp) {
-      return true;
+        // Concurrent: fall through to LWW tie-breaker
+      } catch (e) {
+        console.warn('Failed to parse vector clocks', e);
+      }
     }
 
-    // If timestamps equal, use deterministic tie-breaking
-    // (e.g., higher site_id wins)
-    if (remoteTimestamp === localTimestamp) {
-      const localSiteId = localValue.site_id || '';
-      const remoteSiteId = remoteValue.site_id || '';
-      return remoteSiteId > localSiteId;
-    }
+    // 2. LWW (Last-Write-Wins) strategy
+    const localTimestamp = new Date(
+      localValue.timestamp || localValue.updated_at || localValue.created_at || 0
+    ).getTime();
+    const remoteTimestamp = new Date(
+      remoteValue.timestamp || remoteValue.updated_at || remoteValue.created_at || 0
+    ).getTime();
 
-    return false;
+    if (remoteTimestamp > localTimestamp) return true;
+    if (remoteTimestamp < localTimestamp) return false;
+
+    // Timestamps equal: Compare Site IDs for deterministic tie-breaking
+    const localSiteId = localValue.site_id || '';
+    const remoteSiteId = remoteValue.site_id || '';
+
+    return remoteSiteId > localSiteId;
   }
 
   /**

@@ -49,6 +49,10 @@ export const messages = pgTable('messages', {
   displayRole: text('display_role'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   userId: varchar('user_id'),
+  // CRDT Fields
+  vectorClock: text('vector_clock'), // JSON string of vector clock
+  siteId: text('site_id'),
+  tombstone: boolean('tombstone').default(false),
 });
 
 export const aiUpdates = pgTable('ai_updates', {
@@ -141,6 +145,9 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   personalityMode: true,
   displayRole: true,
   userId: true,
+  vectorClock: true,
+  siteId: true,
+  tombstone: true,
 });
 
 export const insertAiUpdateSchema = createInsertSchema(aiUpdates).pick({
