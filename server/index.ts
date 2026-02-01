@@ -231,6 +231,10 @@ export async function initApp() {
   );
   await initializePerformanceProfiling();
 
+  // Initialize Token Rotation Scheduler
+  const { scheduleTokenRotation } = await import('./authService');
+  scheduleTokenRotation();
+
   console.log(
     '✅ Proactive Repository Ownership System initialized (with enhancements)'
   );
