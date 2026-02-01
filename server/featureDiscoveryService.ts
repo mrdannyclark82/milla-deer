@@ -61,6 +61,10 @@ class FeatureDiscoveryService {
     'express server',
     'sqlite database',
   ];
+  private isSaving: boolean = false;
+  private pendingSavePromise: Promise<void> | null = null;
+  private resolvePending?: () => void;
+  private rejectPending?: (err: any) => void;
 
   async initialize(): Promise<void> {
     await this.loadDiscoveryData();
@@ -725,15 +729,38 @@ class FeatureDiscoveryService {
    * Save discovery data to file
    */
   private async saveDiscoveryData(): Promise<void> {
-    try {
-      const data = {
-        features: this.discoveredFeatures,
-        repositories: this.scannedRepositories,
-        lastUpdated: Date.now(),
-      };
-      await fs.writeFile(this.DISCOVERY_FILE, JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error('Error saving discovery data:', error);
+    if (!this.isSaving) {
+      this.isSaving = true;
+      try {
+        const data = {
+          features: this.discoveredFeatures,
+          repositories: this.scannedRepositories,
+          lastUpdated: Date.now(),
+        };
+        await fs.writeFile(this.DISCOVERY_FILE, JSON.stringify(data, null, 2));
+      } catch (error) {
+        console.error('Error saving discovery data:', error);
+      } finally {
+        this.isSaving = false;
+        if (this.pendingSavePromise) {
+          const resolve = this.resolvePending!;
+          const reject = this.rejectPending!;
+          this.pendingSavePromise = null;
+          this.resolvePending = undefined;
+          this.rejectPending = undefined;
+
+          this.saveDiscoveryData().then(resolve, reject);
+        }
+      }
+    } else {
+      if (this.pendingSavePromise) {
+        return this.pendingSavePromise;
+      }
+      this.pendingSavePromise = new Promise((resolve, reject) => {
+        this.resolvePending = resolve;
+        this.rejectPending = reject;
+      });
+      return this.pendingSavePromise;
     }
   }
 }

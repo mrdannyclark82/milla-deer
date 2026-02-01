@@ -54,6 +54,10 @@ class SandboxEnvironmentService {
     'sandbox_environments.json'
   );
   private readonly SANDBOX_PREFIX = 'sandbox/';
+  private isSaving: boolean = false;
+  private pendingSavePromise: Promise<void> | null = null;
+  private resolvePending?: () => void;
+  private rejectPending?: (err: any) => void;
 
   async initialize(): Promise<void> {
     await this.loadSandboxes();
@@ -396,14 +400,37 @@ class SandboxEnvironmentService {
    * Save sandboxes to file
    */
   private async saveSandboxes(): Promise<void> {
-    try {
-      const data = {
-        sandboxes: Object.fromEntries(this.sandboxes),
-        lastUpdated: Date.now(),
-      };
-      await fs.writeFile(this.SANDBOX_FILE, JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error('Error saving sandboxes:', error);
+    if (!this.isSaving) {
+      this.isSaving = true;
+      try {
+        const data = {
+          sandboxes: Object.fromEntries(this.sandboxes),
+          lastUpdated: Date.now(),
+        };
+        await fs.writeFile(this.SANDBOX_FILE, JSON.stringify(data, null, 2));
+      } catch (error) {
+        console.error('Error saving sandboxes:', error);
+      } finally {
+        this.isSaving = false;
+        if (this.pendingSavePromise) {
+          const resolve = this.resolvePending!;
+          const reject = this.rejectPending!;
+          this.pendingSavePromise = null;
+          this.resolvePending = undefined;
+          this.rejectPending = undefined;
+
+          this.saveSandboxes().then(resolve, reject);
+        }
+      }
+    } else {
+      if (this.pendingSavePromise) {
+        return this.pendingSavePromise;
+      }
+      this.pendingSavePromise = new Promise((resolve, reject) => {
+        this.resolvePending = resolve;
+        this.rejectPending = reject;
+      });
+      return this.pendingSavePromise;
     }
   }
 }
