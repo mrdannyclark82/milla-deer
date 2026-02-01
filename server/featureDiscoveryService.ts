@@ -453,46 +453,71 @@ class FeatureDiscoveryService {
     const newFeatures: DiscoveredFeature[] = [];
 
     try {
-      const { searchYouTubeVideos } = await import('./youtubeService');
+      const { searchVideos } = await import('./googleYoutubeService');
+      const pLimit = (await import('p-limit')).default;
+      const limit = pLimit(3); // Limit concurrency to avoid rate limits
 
-      for (const term of searchTerms) {
-        const videos = await searchYouTubeVideos(term, 5);
-
-        for (const video of videos) {
-          // Extract features from YouTube video titles and descriptions
-          const feature: DiscoveredFeature = {
-            id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: this.extractFeatureNameFromText(video.title),
-            description: `Feature inspired by YouTube video: ${video.title}`,
-            source: 'youtube',
-            sourceUrl: `https://youtube.com/watch?v=${video.videoId}`,
-            popularity: Math.min(
-              10,
-              Math.floor(Math.log10((video.views || 1000) / 100))
-            ),
-            relevance: this.calculateYouTubeRelevance(
-              video.title,
-              video.description
-            ),
-            implementationComplexity: 'medium',
-            estimatedValue: 7,
-            discoveredAt: Date.now(),
-            status: 'discovered',
-            tags: this.extractTagsFromText(
-              video.title + ' ' + (video.description || '')
-            ),
-          };
-
-          const existing = this.discoveredFeatures.find(
-            (f) =>
-              f.name.toLowerCase() === feature.name.toLowerCase() &&
-              f.source === feature.source
-          );
-
-          if (!existing) {
-            this.discoveredFeatures.push(feature);
-            newFeatures.push(feature);
+      // Search concurrently with limit
+      const searchPromises = searchTerms.map((term) =>
+        limit(async () => {
+          try {
+            const result = await searchVideos('default-user', term, 5);
+            if (result.success && result.data) {
+              return result.data.map((item: any) => ({
+                videoId: item.id.videoId,
+                title: item.snippet.title,
+                description: item.snippet.description || '',
+                views: 0, // Search API doesn't return view counts
+              }));
+            }
+            return [];
+          } catch (err) {
+            console.error(
+              `Error searching YouTube for term "${term}":`,
+              err
+            );
+            return [];
           }
+        })
+      );
+
+      const searchResults = await Promise.all(searchPromises);
+      const allVideos = searchResults.flat();
+
+      for (const video of allVideos) {
+        // Extract features from YouTube video titles and descriptions
+        const feature: DiscoveredFeature = {
+          id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: this.extractFeatureNameFromText(video.title),
+          description: `Feature inspired by YouTube video: ${video.title}`,
+          source: 'youtube',
+          sourceUrl: `https://youtube.com/watch?v=${video.videoId}`,
+          popularity: Math.min(
+            10,
+            Math.floor(Math.log10((video.views || 1000) / 100))
+          ),
+          relevance: this.calculateYouTubeRelevance(
+            video.title,
+            video.description
+          ),
+          implementationComplexity: 'medium',
+          estimatedValue: 7,
+          discoveredAt: Date.now(),
+          status: 'discovered',
+          tags: this.extractTagsFromText(
+            video.title + ' ' + (video.description || '')
+          ),
+        };
+
+        const existing = this.discoveredFeatures.find(
+          (f) =>
+            f.name.toLowerCase() === feature.name.toLowerCase() &&
+            f.source === feature.source
+        );
+
+        if (!existing) {
+          this.discoveredFeatures.push(feature);
+          newFeatures.push(feature);
         }
       }
 
