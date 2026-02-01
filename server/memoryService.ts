@@ -9,6 +9,7 @@ import {
   queryHomomorphic,
   isHomomorphicallyEncrypted,
 } from './crypto/homomorphicProduction';
+import { storage } from './storage';
 
 export interface MemoryData {
   content: string;
@@ -1162,11 +1163,18 @@ export async function storeSensitiveMemory(
       console.log('🔒 Encrypted medical notes with HE');
     }
 
-    // TODO: Store encrypted data (requires DB migration for new fields)
-    // For now, this is a placeholder showing the architecture
-    console.log(
-      '[MemoryService] Sensitive data encrypted - DB storage pending migration'
-    );
+    // Store in database
+    await storage.createMemorySummary({
+      userId,
+      title: 'Sensitive Data Update',
+      summaryText: 'Encrypted sensitive data entry.',
+      topics: ['sensitive', 'financial', 'medical'],
+      emotionalTone: 'neutral',
+      financialSummary: encryptedData.financialSummary,
+      medicalNotes: encryptedData.medicalNotes,
+    });
+
+    console.log('[MemoryService] Sensitive data encrypted and stored');
 
     return { success: true };
   } catch (error) {
@@ -1191,15 +1199,30 @@ export async function retrieveSensitiveMemory(userId: string): Promise<{
   error?: string;
 }> {
   try {
-    // TODO: Retrieve from DB (requires migration for new fields)
-    // For now, return empty data as placeholder
-    console.log(
-      '[MemoryService] Sensitive data retrieval - DB migration pending'
-    );
+    const sensitiveData = await storage.getLatestSensitiveMemory(userId);
+
+    let financialSummary: string | undefined;
+    let medicalNotes: string | undefined;
+
+    if (sensitiveData.financialSummary) {
+      try {
+        financialSummary = await decryptHomomorphic(sensitiveData.financialSummary);
+      } catch (err) {
+        console.error('Error decrypting financial summary:', err);
+      }
+    }
+
+    if (sensitiveData.medicalNotes) {
+      try {
+        medicalNotes = await decryptHomomorphic(sensitiveData.medicalNotes);
+      } catch (err) {
+        console.error('Error decrypting medical notes:', err);
+      }
+    }
 
     return {
-      financialSummary: undefined,
-      medicalNotes: undefined,
+      financialSummary,
+      medicalNotes,
       success: true,
     };
   } catch (error) {
@@ -1230,13 +1253,23 @@ export async function searchSensitiveMemory(
   error?: string;
 }> {
   try {
-    // TODO: Retrieve from DB (requires migration for new fields)
-    // For now, return no matches as placeholder
-    console.log('[MemoryService] Sensitive data search - DB migration pending');
+    const sensitiveData = await storage.getLatestSensitiveMemory(userId);
+
+    const encryptedData = field === 'financialSummary' ? sensitiveData.financialSummary : sensitiveData.medicalNotes;
+
+    if (!encryptedData) {
+      return {
+        matches: false,
+        score: 0,
+        success: true,
+      };
+    }
+
+    const result = await queryHomomorphic(encryptedData, query);
 
     return {
-      matches: false,
-      score: 0,
+      matches: result.matches,
+      score: result.score,
       success: true,
     };
   } catch (error) {

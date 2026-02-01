@@ -24,6 +24,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { encrypt, decrypt, isEncryptionEnabled, getMemoryKey } from './crypto';
+import { VectorClock, LWWRegister, ORSet, PNCounter, RGA } from './lib/crdt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,7 @@ export interface IStorage {
   // User Session methods
   createUserSession(session: any): Promise<any>;
   getUserSessionByToken(token: string): Promise<any | null>;
+  getActiveUserSessions(): Promise<UserSession[]>;
   deleteUserSession(sessionId: string): Promise<void>;
 
   createMessage(message: InsertMessage): Promise<Message>;
@@ -90,6 +92,7 @@ export interface IStorage {
   // Memory Summaries methods
   createMemorySummary(summary: InsertMemorySummary): Promise<MemorySummary>;
   getMemorySummaries(userId: string, limit?: number): Promise<MemorySummary[]>;
+  getLatestSensitiveMemory(userId: string): Promise<{ financialSummary: string | null; medicalNotes: string | null }>;
   searchMemorySummaries(
     userId: string,
     query: string,
@@ -104,6 +107,10 @@ export interface IStorage {
     videoId: string,
     userId: string
   ): Promise<YoutubeKnowledge | null>;
+  getYoutubeKnowledgeByVideoIds(
+    videoIds: string[],
+    userId: string
+  ): Promise<YoutubeKnowledge[]>;
   searchYoutubeKnowledge(filters: any): Promise<YoutubeKnowledge[]>;
   incrementYoutubeWatchCount(videoId: string, userId: string): Promise<void>;
 }
@@ -147,14 +154,16 @@ export interface VoiceConsent {
 export class SqliteStorage implements IStorage {
   private db: Database.Database;
 
-  constructor() {
+  constructor(dbPath: string = DB_PATH) {
     // Ensure memory directory exists
-    const memoryDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(memoryDir)) {
-      fs.mkdirSync(memoryDir, { recursive: true });
+    if (dbPath !== ':memory:') {
+      const memoryDir = path.dirname(dbPath);
+      if (!fs.existsSync(memoryDir)) {
+        fs.mkdirSync(memoryDir, { recursive: true });
+      }
     }
 
-    this.db = new Database(DB_PATH);
+    this.db = new Database(dbPath);
     this.initializeDatabase();
   }
 
@@ -220,9 +229,28 @@ export class SqliteStorage implements IStorage {
         );
         this.db.exec(`ALTER TABLE messages ADD COLUMN display_role TEXT`);
       }
+
+      // Check for CRDT columns
+      const hasVectorClock = msgCols.some(c => c.name === 'vector_clock');
+      const hasSiteId = msgCols.some(c => c.name === 'site_id');
+      const hasTombstone = msgCols.some(c => c.name === 'tombstone');
+
+      if (!hasVectorClock) {
+        console.log('sqlite: adding vector_clock to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN vector_clock TEXT`);
+      }
+      if (!hasSiteId) {
+        console.log('sqlite: adding site_id to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN site_id TEXT`);
+      }
+      if (!hasTombstone) {
+        console.log('sqlite: adding tombstone to messages');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN tombstone INTEGER DEFAULT 0`);
+      }
+
     } catch (err) {
       console.warn(
-        'sqlite: warning while ensuring messages.display_role column',
+        'sqlite: warning while ensuring messages columns',
         err
       );
     }
@@ -421,11 +449,34 @@ export class SqliteStorage implements IStorage {
         summary_text TEXT NOT NULL,
         topics TEXT, -- Stored as JSON string
         emotional_tone TEXT CHECK(emotional_tone IN ('positive', 'negative', 'neutral')),
+        financial_summary TEXT, -- Encrypted financial data
+        medical_notes TEXT, -- Encrypted medical data
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Migration: Add financial_summary and medical_notes columns if they don't exist
+    try {
+      const summaryCols = this.db
+        .prepare("PRAGMA table_info('memory_summaries')")
+        .all() as { name: string }[];
+
+      const hasFinancialSummary = summaryCols.some((c) => c.name === 'financial_summary');
+      if (!hasFinancialSummary) {
+        console.log('sqlite: migrating memory_summaries table to add financial_summary column');
+        this.db.exec(`ALTER TABLE memory_summaries ADD COLUMN financial_summary TEXT`);
+      }
+
+      const hasMedicalNotes = summaryCols.some((c) => c.name === 'medical_notes');
+      if (!hasMedicalNotes) {
+        console.log('sqlite: migrating memory_summaries table to add medical_notes column');
+        this.db.exec(`ALTER TABLE memory_summaries ADD COLUMN medical_notes TEXT`);
+      }
+    } catch (err) {
+      console.warn('sqlite: warning while ensuring memory_summaries sensitive columns', err);
+    }
 
     // Create youtube_knowledge_base table
     console.debug('sqlite: creating youtube_knowledge_base table');
@@ -471,7 +522,7 @@ export class SqliteStorage implements IStorage {
 
     const encryptionStatus = isEncryptionEnabled() ? 'enabled' : 'disabled';
     console.log(
-      `SQLite database initialized at: ${DB_PATH} (encryption: ${encryptionStatus})`
+      `SQLite database initialized at: ${this.db.name} (encryption: ${encryptionStatus})`
     );
 
     // Ensure default user exists for consent storage
@@ -590,6 +641,21 @@ export class SqliteStorage implements IStorage {
     );
     const session = stmt.get(token) as UserSession | undefined;
     return session || null;
+  }
+
+  async getActiveUserSessions(): Promise<UserSession[]> {
+    const stmt = this.db.prepare(
+      'SELECT * FROM user_sessions WHERE expires_at > ?'
+    );
+    const sessions = stmt.all(new Date().toISOString()) as any[];
+
+    return sessions.map((s) => ({
+      id: s.id,
+      userId: s.user_id,
+      sessionToken: s.session_token,
+      expiresAt: new Date(s.expires_at),
+      createdAt: new Date(s.created_at),
+    }));
   }
 
   async deleteUserSession(sessionId: string): Promise<void> {
@@ -1131,8 +1197,8 @@ export class SqliteStorage implements IStorage {
   ): Promise<MemorySummary> {
     const id = randomUUID();
     const stmt = this.db.prepare(`
-      INSERT INTO memory_summaries (id, user_id, title, summary_text, topics, emotional_tone)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO memory_summaries (id, user_id, title, summary_text, topics, emotional_tone, financial_summary, medical_notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       id,
@@ -1140,7 +1206,9 @@ export class SqliteStorage implements IStorage {
       summary.title,
       summary.summaryText,
       summary.topics ? JSON.stringify(summary.topics) : null,
-      summary.emotionalTone || null
+      summary.emotionalTone || null,
+      summary.financialSummary || null,
+      summary.medicalNotes || null
     );
 
     const created = await this.getMemorySummaryById(id);
@@ -1166,9 +1234,37 @@ export class SqliteStorage implements IStorage {
       summaryText: s.summary_text,
       topics: s.topics ? JSON.parse(s.topics) : [],
       emotionalTone: s.emotional_tone,
+      financialSummary: s.financial_summary,
+      medicalNotes: s.medical_notes,
       createdAt: new Date(s.created_at),
       updatedAt: new Date(s.updated_at),
     }));
+  }
+
+  async getLatestSensitiveMemory(
+    userId: string
+  ): Promise<{ financialSummary: string | null; medicalNotes: string | null }> {
+    const financialStmt = this.db.prepare(`
+      SELECT financial_summary FROM memory_summaries
+      WHERE user_id = ? AND financial_summary IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+
+    const medicalStmt = this.db.prepare(`
+      SELECT medical_notes FROM memory_summaries
+      WHERE user_id = ? AND medical_notes IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+
+    const financial = financialStmt.get(userId) as { financial_summary: string } | undefined;
+    const medical = medicalStmt.get(userId) as { medical_notes: string } | undefined;
+
+    return {
+      financialSummary: financial?.financial_summary || null,
+      medicalNotes: medical?.medical_notes || null,
+    };
   }
 
   async searchMemorySummaries(
@@ -1200,8 +1296,8 @@ export class SqliteStorage implements IStorage {
       summaryText: s.summary_text,
       topics: s.topics ? JSON.parse(s.topics) : [],
       emotionalTone: s.emotional_tone,
-      financialSummary: null,
-      medicalNotes: null,
+      financialSummary: s.financial_summary,
+      medicalNotes: s.medical_notes,
       createdAt: new Date(s.created_at),
       updatedAt: new Date(s.updated_at),
     }));
@@ -1220,8 +1316,8 @@ export class SqliteStorage implements IStorage {
       summaryText: summary.summary_text,
       topics: summary.topics ? JSON.parse(summary.topics) : [],
       emotionalTone: summary.emotional_tone,
-      financialSummary: null,
-      medicalNotes: null,
+      financialSummary: summary.financial_summary,
+      medicalNotes: summary.medical_notes,
       createdAt: new Date(summary.created_at),
       updatedAt: new Date(summary.updated_at),
     };
@@ -1293,6 +1389,22 @@ export class SqliteStorage implements IStorage {
     if (!video) return null;
 
     return this.parseYoutubeKnowledge(video);
+  }
+
+  async getYoutubeKnowledgeByVideoIds(
+    videoIds: string[],
+    userId: string
+  ): Promise<YoutubeKnowledge[]> {
+    if (videoIds.length === 0) return [];
+
+    const placeholders = videoIds.map(() => '?').join(',');
+    const stmt = this.db.prepare(
+      `SELECT * FROM youtube_knowledge_base WHERE video_id IN (${placeholders}) AND user_id = ?`
+    );
+
+    const videos = stmt.all(...videoIds, userId) as any[];
+
+    return videos.map((v) => this.parseYoutubeKnowledge(v));
   }
 
   async searchYoutubeKnowledge(filters: any): Promise<YoutubeKnowledge[]> {
@@ -1428,35 +1540,27 @@ export class SqliteStorage implements IStorage {
    * @returns Merged data with conflicts resolved
    */
   mergeCRDT(localData: any, remoteData: any): any {
-    console.log('📡 [CRDT] Merge operation called (STUB)');
+    console.log('📡 [CRDT] Merge operation called');
     console.log('📡 [CRDT] Local entries:', Object.keys(localData).length);
     console.log('📡 [CRDT] Remote entries:', Object.keys(remoteData).length);
-
-    // STUB: In production, implement actual CRDT merge logic
-    // For now, return a simple last-write-wins merge
 
     const merged = { ...localData };
 
     for (const [key, remoteValue] of Object.entries(remoteData)) {
       const localValue = localData[key];
 
-      // TODO: Replace with proper CRDT merge based on type
-      // - For LWW: Compare timestamps, keep newer
-      // - For OR-Set: Union of additions, apply removals
-      // - For Counters: Sum increments, handle decrements
-      // - For RGA: Merge ordered lists preserving causality
-
       if (!localValue) {
         // New entry from remote
         merged[key] = remoteValue;
         console.log(`📡 [CRDT] Added new entry: ${key}`);
-      } else if (this.shouldKeepRemoteValue(localValue, remoteValue)) {
-        // Remote is newer/preferred
-        merged[key] = remoteValue;
-        console.log(`📡 [CRDT] Updated entry: ${key}`);
       } else {
-        // Keep local value
-        console.log(`📡 [CRDT] Kept local entry: ${key}`);
+        // Conflict resolution
+        if (this.shouldKeepRemoteValue(localValue, remoteValue)) {
+          merged[key] = remoteValue;
+          console.log(`📡 [CRDT] Updated entry: ${key}`);
+        } else {
+          console.log(`📡 [CRDT] Kept local entry: ${key}`);
+        }
       }
     }
 
@@ -1469,31 +1573,43 @@ export class SqliteStorage implements IStorage {
   }
 
   /**
-   * P3.4: Helper to determine if remote value should be kept (STUB)
-   * In production, would use vector clocks or Lamport timestamps
+   * P3.4: Helper to determine if remote value should be kept
+   * Uses Vector Clocks if available, otherwise falls back to LWW with site ID tie-breaking
    */
   private shouldKeepRemoteValue(localValue: any, remoteValue: any): boolean {
-    // STUB: Simple timestamp comparison
-    // TODO: Implement proper causality checking with vector clocks
+    // 1. Try Vector Clock comparison
+    if (localValue.vector_clock && remoteValue.vector_clock) {
+      try {
+        const localVC = VectorClock.fromJSON(JSON.parse(localValue.vector_clock));
+        const remoteVC = VectorClock.fromJSON(JSON.parse(remoteValue.vector_clock));
+        const comparison = localVC.compare(remoteVC);
 
-    const localTimestamp = localValue.timestamp || localValue.updated_at || 0;
-    const remoteTimestamp =
-      remoteValue.timestamp || remoteValue.updated_at || 0;
+        if (comparison === 'less') return true; // Remote is strictly newer
+        if (comparison === 'greater') return false; // Local is strictly newer
+        if (comparison === 'equal') return false; // Same
 
-    // LWW (Last-Write-Wins) strategy
-    if (remoteTimestamp > localTimestamp) {
-      return true;
+        // Concurrent: fall through to LWW tie-breaker
+      } catch (e) {
+        console.warn('Failed to parse vector clocks', e);
+      }
     }
 
-    // If timestamps equal, use deterministic tie-breaking
-    // (e.g., higher site_id wins)
-    if (remoteTimestamp === localTimestamp) {
-      const localSiteId = localValue.site_id || '';
-      const remoteSiteId = remoteValue.site_id || '';
-      return remoteSiteId > localSiteId;
-    }
+    // 2. LWW (Last-Write-Wins) strategy
+    const localTimestamp = new Date(
+      localValue.timestamp || localValue.updated_at || localValue.created_at || 0
+    ).getTime();
+    const remoteTimestamp = new Date(
+      remoteValue.timestamp || remoteValue.updated_at || remoteValue.created_at || 0
+    ).getTime();
 
-    return false;
+    if (remoteTimestamp > localTimestamp) return true;
+    if (remoteTimestamp < localTimestamp) return false;
+
+    // Timestamps equal: Compare Site IDs for deterministic tie-breaking
+    const localSiteId = localValue.site_id || '';
+    const remoteSiteId = remoteValue.site_id || '';
+
+    return remoteSiteId > localSiteId;
   }
 
   /**
