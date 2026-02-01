@@ -125,6 +125,8 @@ export const insertMemorySummarySchema = createInsertSchema(
   summaryText: true,
   topics: true,
   emotionalTone: true,
+  financialSummary: true,
+  medicalNotes: true,
 });
 
 export type InsertMemorySummary = z.infer<typeof insertMemorySummarySchema>;
