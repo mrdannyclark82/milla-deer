@@ -28,6 +28,7 @@ export interface RepositoryData {
   issues?: IssueInfo[];
   pullRequests?: PullRequestInfo[];
   stats?: RepoStats;
+  files?: Array<{ path: string; content: string; language?: string }>;
 }
 
 export interface FileStructure {
@@ -164,6 +165,135 @@ function createGitHubErrorMessage(
 }
 
 /**
+ * Fetch repository files recursively
+ */
+async function fetchRepositoryFiles(
+  owner: string,
+  name: string,
+  headers: HeadersInit,
+  limit: number = 100
+): Promise<Array<{ path: string; content: string; language?: string }>> {
+  try {
+    // 1. Get the default branch (usually 'main' or 'master')
+    const repoResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${name}`,
+      { headers }
+    );
+    if (!repoResponse.ok) return [];
+    const repoData = await repoResponse.json();
+    const defaultBranch = repoData.default_branch || 'main';
+
+    // 2. Fetch the git tree recursively
+    const treeResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${name}/git/trees/${defaultBranch}?recursive=1`,
+      { headers }
+    );
+    if (!treeResponse.ok) return [];
+
+    const treeData = await treeResponse.json();
+    if (!treeData.tree || !Array.isArray(treeData.tree)) return [];
+
+    // 3. Filter for source code files
+    // Exclude images, binary files, lock files, minified files, etc.
+    const relevantExtensions = [
+      '.js',
+      '.jsx',
+      '.ts',
+      '.tsx',
+      '.py',
+      '.go',
+      '.java',
+      '.c',
+      '.cpp',
+      '.h',
+      '.hpp',
+      '.rs',
+      '.rb',
+      '.php',
+      '.html',
+      '.css',
+      '.json',
+      '.md',
+    ];
+
+    const sourceFiles = treeData.tree
+      .filter((node: any) => node.type === 'blob') // Files only
+      .filter((node: any) => {
+        const path = node.path.toLowerCase();
+        // Check extension
+        const hasValidExt = relevantExtensions.some((ext) =>
+          path.endsWith(ext)
+        );
+        // Exclude test files, minified files, node_modules, etc. to save tokens/time
+        const isExcluded =
+          path.includes('node_modules') ||
+          path.includes('dist/') ||
+          path.includes('build/') ||
+          path.includes('.min.') ||
+          path.includes('package-lock.json') ||
+          path.includes('yarn.lock') ||
+          path.includes('__tests__') ||
+          path.includes('.test.') ||
+          path.includes('.spec.');
+
+        return hasValidExt && !isExcluded;
+      })
+      // Prioritize root files and smaller path depths
+      .sort((a: any, b: any) => {
+        const depthA = a.path.split('/').length;
+        const depthB = b.path.split('/').length;
+        return depthA - depthB;
+      })
+      .slice(0, limit); // Limit to avoid rate limiting and huge payloads
+
+    // 4. Fetch content for each file
+    const filesWithContent = await Promise.all(
+      sourceFiles.map(async (file: any) => {
+        try {
+          const contentResponse = await fetch(file.url, { headers }); // Blob API
+          if (!contentResponse.ok) return null;
+          const contentData = await contentResponse.json();
+          // GitHub Blob API returns content in base64
+          const content = Buffer.from(contentData.content, 'base64').toString(
+            'utf-8'
+          );
+
+          // Determine language based on extension
+          const ext = file.path.split('.').pop()?.toLowerCase();
+          let language = 'text';
+          if (['js', 'jsx'].includes(ext)) language = 'javascript';
+          else if (['ts', 'tsx'].includes(ext)) language = 'typescript';
+          else if (ext === 'py') language = 'python';
+          else if (ext === 'go') language = 'go';
+          else if (ext === 'java') language = 'java';
+          else if (ext === 'rb') language = 'ruby';
+          else if (ext === 'php') language = 'php';
+          else if (ext === 'rs') language = 'rust';
+          else if (ext === 'c' || ext === 'cpp') language = 'cpp';
+
+          return {
+            path: file.path,
+            content,
+            language,
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch content for ${file.path}`, error);
+          return null;
+        }
+      })
+    );
+
+    return filesWithContent.filter(
+      (f): f is { path: string; content: string; language?: string } =>
+        f !== null
+    );
+  } catch (error) {
+    console.error('Error fetching repository files:', error);
+    return [];
+  }
+}
+
+/**
  * Fetch repository data from GitHub API
  */
 export async function fetchRepositoryData(
@@ -191,24 +321,31 @@ export async function fetchRepositoryData(
     const repoData = await repoResponse.json();
 
     // Fetch additional data in parallel
-    const [languagesData, readmeData, commitsData, issuesData, prData] =
-      await Promise.allSettled([
-        fetch(`${baseUrl}/${owner}/${name}/languages`, { headers }).then((r) =>
-          r.ok ? r.json() : {}
-        ),
-        fetch(`${baseUrl}/${owner}/${name}/readme`, { headers }).then((r) =>
-          r.ok ? r.json() : null
-        ),
-        fetch(`${baseUrl}/${owner}/${name}/commits?per_page=10`, {
-          headers,
-        }).then((r) => (r.ok ? r.json() : [])),
-        fetch(`${baseUrl}/${owner}/${name}/issues?state=open&per_page=10`, {
-          headers,
-        }).then((r) => (r.ok ? r.json() : [])),
-        fetch(`${baseUrl}/${owner}/${name}/pulls?state=open&per_page=10`, {
-          headers,
-        }).then((r) => (r.ok ? r.json() : [])),
-      ]);
+    const [
+      languagesData,
+      readmeData,
+      commitsData,
+      issuesData,
+      prData,
+      filesData,
+    ] = await Promise.allSettled([
+      fetch(`${baseUrl}/${owner}/${name}/languages`, { headers }).then((r) =>
+        r.ok ? r.json() : {}
+      ),
+      fetch(`${baseUrl}/${owner}/${name}/readme`, { headers }).then((r) =>
+        r.ok ? r.json() : null
+      ),
+      fetch(`${baseUrl}/${owner}/${name}/commits?per_page=10`, {
+        headers,
+      }).then((r) => (r.ok ? r.json() : [])),
+      fetch(`${baseUrl}/${owner}/${name}/issues?state=open&per_page=10`, {
+        headers,
+      }).then((r) => (r.ok ? r.json() : [])),
+      fetch(`${baseUrl}/${owner}/${name}/pulls?state=open&per_page=10`, {
+        headers,
+      }).then((r) => (r.ok ? r.json() : [])),
+      fetchRepositoryFiles(owner, name, headers, 100),
+    ]);
 
     // Process languages data
     const languages =
@@ -267,6 +404,16 @@ export async function fetchRepositoryData(
           }))
         : [];
 
+    // Process files data
+    const files =
+      filesData.status === 'fulfilled'
+        ? (filesData.value as Array<{
+            path: string;
+            content: string;
+            language?: string;
+          }>)
+        : [];
+
     return {
       info: repoInfo,
       description: repoData.description,
@@ -277,6 +424,7 @@ export async function fetchRepositoryData(
       recentCommits: commits,
       issues,
       pullRequests,
+      files,
       stats: {
         stars: repoData.stargazers_count,
         forks: repoData.forks_count,
