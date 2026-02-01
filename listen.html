@@ -81,8 +81,9 @@
                 audio: true,
               });
 
-              audioContext = new (window.AudioContext ||
-                window.webkitAudioContext)();
+              audioContext = new (
+                window.AudioContext || window.webkitAudioContext
+              )();
               const source = audioContext.createMediaStreamSource(mediaStream);
 
               mediaRecorder = new MediaRecorder(mediaStream, {

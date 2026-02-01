@@ -86,9 +86,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'
     }`}
   >
-    <span className={`transition-all duration-300 ${
-      isActive ? 'text-[#00f2ff]' : 'group-hover:text-[#00f2ff]'
-    }`}>
+    <span
+      className={`transition-all duration-300 ${
+        isActive ? 'text-[#00f2ff]' : 'group-hover:text-[#00f2ff]'
+      }`}
+    >
       {icon}
     </span>
     <span className="flex-1 text-left truncate">{label}</span>
@@ -125,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-64 flex flex-col shrink-0 z-20 h-screen overflow-hidden relative">
       {/* Glassmorphism background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0c021a]/95 to-[#1a0033]/95 backdrop-blur-xl border-r border-white/10" />
-      
+
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}

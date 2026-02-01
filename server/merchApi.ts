@@ -19,23 +19,25 @@ export interface MerchItem {
 export async function getMerchItems(): Promise<MerchItem[]> {
   try {
     // Placeholder URL - replace with actual merch API endpoint
-    const apiUrl = process.env.MERCH_API_URL || 'https://api.merchempire.com/items';
-    
+    const apiUrl =
+      process.env.MERCH_API_URL || 'https://api.merchempire.com/items';
+
     log(`Fetching merch items from ${apiUrl}`);
     const { data } = await axios.get<MerchItem[]>(apiUrl);
-    
+
     // Filter for hoodies and related items
-    const hoodieItems = data.filter(item => 
-      item.name.toLowerCase().includes('hoodie') ||
-      item.category?.toLowerCase() === 'apparel'
+    const hoodieItems = data.filter(
+      (item) =>
+        item.name.toLowerCase().includes('hoodie') ||
+        item.category?.toLowerCase() === 'apparel'
     );
-    
+
     log(`Found ${hoodieItems.length} hoodie items`);
     return hoodieItems;
   } catch (error) {
     log(`Merch API error: ${error}`);
     console.error('Merch API error:', error);
-    
+
     // Return sample items as fallback for development
     return [
       {
@@ -64,7 +66,7 @@ export async function getMerchItems(): Promise<MerchItem[]> {
 export async function getMerchItem(itemId: string): Promise<MerchItem | null> {
   try {
     const items = await getMerchItems();
-    return items.find(item => item.id === itemId) || null;
+    return items.find((item) => item.id === itemId) || null;
   } catch (error) {
     console.error('Error fetching merch item:', error);
     return null;
@@ -78,15 +80,15 @@ export async function getMerchItem(itemId: string): Promise<MerchItem | null> {
  */
 export async function createCheckoutSession(itemId: string): Promise<string> {
   log(`Creating checkout session for item ${itemId}`);
-  
+
   // TODO: Implement Stripe integration
   // This is a placeholder that returns a mock URL
   const item = await getMerchItem(itemId);
-  
+
   if (!item) {
     throw new Error('Item not found');
   }
-  
+
   // In production, this would create a Stripe checkout session
   // and return the session URL
   return `https://checkout.merchempire.com/session/${itemId}`;

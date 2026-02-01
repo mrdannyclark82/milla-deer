@@ -29,10 +29,10 @@ export async function specificProviderExample() {
   try {
     // Use Gemini 3 directly
     const response1 = await dispatchQuery('Tell me a joke', 'gemini3');
-    
+
     // Use local Gemma model
     const response2 = await dispatchQuery('What is TypeScript?', 'gemma-local');
-    
+
     return { gemini3: response1, gemma: response2 };
   } catch (error) {
     console.error('Provider query failed:', error);
@@ -53,7 +53,7 @@ export async function reasoningExample() {
       
       What would you recommend?
     `;
-    
+
     const recommendation = await gemini3R.reason(complexQuery);
     console.log('Recommendation:', recommendation);
     return recommendation;
@@ -70,15 +70,15 @@ export async function localInferenceExample() {
   try {
     // Initialize with a specific model
     await gemmaMP.setup('gemma-2b');
-    
+
     // Generate responses locally
     const response1 = await gemmaMP.generate('Hello, how are you?');
     console.log('Local response 1:', response1);
-    
+
     // With custom token limit
     const response2 = await gemmaMP.generate('Tell me about AI', 256);
     console.log('Local response 2:', response2);
-    
+
     return { response1, response2 };
   } catch (error) {
     console.error('Local inference failed:', error);
@@ -89,15 +89,18 @@ export async function localInferenceExample() {
 /**
  * Example 5: Integration in a chat/agent system
  */
-export async function chatAgentIntegration(userMessage: string, preferLocal: boolean = true) {
+export async function chatAgentIntegration(
+  userMessage: string,
+  preferLocal: boolean = true
+) {
   try {
     const provider = preferLocal ? 'gemma-local' : 'gemini3';
-    
+
     // Add context or system instructions if needed
     const contextualQuery = `User message: ${userMessage}`;
-    
+
     const response = await dispatchQuery(contextualQuery, provider);
-    
+
     return {
       success: true,
       response,
@@ -106,13 +109,13 @@ export async function chatAgentIntegration(userMessage: string, preferLocal: boo
     };
   } catch (error) {
     console.error('Chat integration failed:', error);
-    
+
     // Fallback to cloud if local fails
     if (preferLocal) {
       console.log('Retrying with cloud provider...');
       return chatAgentIntegration(userMessage, false);
     }
-    
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -129,7 +132,7 @@ export function detectPrivacyMode(): 'offline' | 'hybrid' | 'cloud' {
   const hasLocalModel = process.env.ENABLE_LOCAL_MODEL === 'true';
   const preferLocal = process.env.PREFER_LOCAL_MODEL === 'true';
   const hasCloudAPI = !!process.env.GEMINI_API_KEY;
-  
+
   if (hasLocalModel && preferLocal && !hasCloudAPI) {
     return 'offline';
   } else if (hasLocalModel && hasCloudAPI) {

@@ -4,7 +4,9 @@
  */
 
 const PROACTIVE_PORT = import.meta.env.VITE_PROACTIVE_PORT || '5001';
-const PROACTIVE_BASE_URL = import.meta.env.VITE_PROACTIVE_BASE_URL || `http://localhost:${PROACTIVE_PORT}`;
+const PROACTIVE_BASE_URL =
+  import.meta.env.VITE_PROACTIVE_BASE_URL ||
+  `http://localhost:${PROACTIVE_PORT}`;
 
 /**
  * Make a request to the proactive features server
@@ -15,10 +17,10 @@ export async function proactiveApiRequest(
 ): Promise<Response> {
   // Remove leading slash if present
   const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  
+
   // Construct full URL
   const url = `${PROACTIVE_BASE_URL}/${path}`;
-  
+
   return fetch(url, {
     ...options,
     headers: {

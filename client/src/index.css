@@ -76,19 +76,19 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   .glass {
     @apply bg-background/60 backdrop-blur-lg border border-white/10 shadow-lg;
   }
-  
+
   .glass-panel {
     @apply bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl;
   }
-  
+
   .glass-button {
     @apply bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 transition-all duration-300;
   }
@@ -209,7 +209,8 @@
 }
 
 @keyframes snowtwinkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     filter: brightness(1);
   }

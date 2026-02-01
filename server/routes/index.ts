@@ -16,16 +16,16 @@ import { registerPersonalTaskRoutes } from './personalTask.routes';
 export function registerModularRoutes(app: Express) {
   // Authentication routes
   registerAuthRoutes(app);
-  
+
   // Chat and AI routes
   registerChatRoutes(app);
-  
+
   // Agent and Task routes
   registerAgentRoutes(app);
-  
+
   // Media and Analysis routes
   registerMediaRoutes(app);
-  
+
   // Memory and Messaging routes
   registerMemoryRoutes(app);
 
@@ -37,6 +37,6 @@ export function registerModularRoutes(app: Express) {
   registerSandboxRoutes(app);
   registerGoogleRoutes(app);
   registerPersonalTaskRoutes(app);
-  
+
   return app;
 }

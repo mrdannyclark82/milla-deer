@@ -22,7 +22,9 @@ describe('Monitoring Routes', () => {
 
   describe('GET /api/feature-flags', () => {
     it('should return feature flags', async () => {
-      vi.spyOn(featureFlags, 'getFeatureFlags').mockReturnValue({ flag1: true } as any);
+      vi.spyOn(featureFlags, 'getFeatureFlags').mockReturnValue({
+        flag1: true,
+      } as any);
       const response = await request(app).get('/api/feature-flags');
 
       expect(response.status).toBe(200);

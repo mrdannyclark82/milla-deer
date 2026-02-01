@@ -60,7 +60,17 @@ export const FuturisticOrb: React.FC<FuturisticOrbProps> = ({
       drawGlow(ctx, size / 2, size / 2, size / 2, color, intensity);
 
       // Draw main orb
-      drawOrb(ctx, size / 2, size / 2, size / 2, time, color, isActive, isSpeaking, isListening);
+      drawOrb(
+        ctx,
+        size / 2,
+        size / 2,
+        size / 2,
+        time,
+        color,
+        isActive,
+        isSpeaking,
+        isListening
+      );
 
       // Update and draw particles
       updateParticles(ctx, newParticles, size / 2, size / 2, isActive);
@@ -113,7 +123,7 @@ export const FuturisticOrb: React.FC<FuturisticOrbProps> = ({
     gradient.addColorStop(0, `${color}33`);
     gradient.addColorStop(0.5, `${color}11`);
     gradient.addColorStop(1, 'transparent');
-    
+
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   };
@@ -190,7 +200,7 @@ export const FuturisticOrb: React.FC<FuturisticOrbProps> = ({
     time: number
   ) => {
     for (let i = 0; i < 3; i++) {
-      const ringRadius = radius + (time * 30 + i * 20) % 100;
+      const ringRadius = radius + ((time * 30 + i * 20) % 100);
       const alpha = 1 - ((time * 30 + i * 20) % 100) / 100;
 
       ctx.beginPath();

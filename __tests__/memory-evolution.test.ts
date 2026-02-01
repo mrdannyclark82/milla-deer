@@ -24,14 +24,14 @@ describe('Memory Evolution Engine', () => {
 
   it('should add memories', async () => {
     const id = await engine.addMemory('Test memory', ['test'], 0.8);
-    
+
     expect(id).toBeTruthy();
     expect(id.startsWith('mem_')).toBe(true);
   });
 
   it('should access and boost memory importance', async () => {
     const id = await engine.addMemory('Important memory', ['important'], 0.5);
-    
+
     const memory1 = await engine.accessMemory(id);
     expect(memory1).toBeTruthy();
     expect(memory1!.accessCount).toBe(1);
@@ -47,9 +47,9 @@ describe('Memory Evolution Engine', () => {
     await engine.addMemory('Cooking recipes', ['food'], 0.6);
 
     const results = await engine.searchMemories('programming', 5);
-    
+
     expect(results.length).toBeGreaterThan(0);
-    results.forEach(memory => {
+    results.forEach((memory) => {
       const hasTag = memory.tags.includes('programming');
       const hasContent = memory.content.toLowerCase().includes('programming');
       expect(hasTag || hasContent).toBe(true);

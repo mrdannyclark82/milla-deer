@@ -5,7 +5,7 @@ Run AI models locally for complete privacy and offline functionality!
 ## ✨ Why Use Local LLMs?
 
 - **🔒 Complete Privacy** - Your conversations never leave your computer
-- **💰 Zero API Costs** - No monthly fees or per-token charges  
+- **💰 Zero API Costs** - No monthly fees or per-token charges
 - **🌐 Works Offline** - No internet connection required
 - **⚡ Fast Responses** - Low latency, especially with smaller models
 - **🎛️ Full Control** - Choose and customize your own models
@@ -19,18 +19,21 @@ Ollama is the easiest way to run LLMs locally. It handles everything for you!
 ### Step 1: Install Ollama
 
 **macOS:**
+
 ```bash
 # Download and install from:
 https://ollama.com/download/Ollama.dmg
 ```
 
 **Windows:**
+
 ```bash
 # Download and install from:
 https://ollama.com/download/OllamaSetup.exe
 ```
 
 **Linux:**
+
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
@@ -40,21 +43,25 @@ curl -fsSL https://ollama.com/install.sh | sh
 Choose based on your available RAM:
 
 **Small (Recommended for 4-8GB RAM):**
+
 ```bash
 ollama pull gemma3:1b    # 815MB, great quality
 ```
 
 **Medium (For 8-16GB RAM):**
+
 ```bash
 ollama pull gemma3       # 3.3GB, excellent quality
 ```
 
 **Large (For 16+ GB RAM):**
+
 ```bash
 ollama pull gemma3:12b   # 8.1GB, best quality
 ```
 
 **Alternatives:**
+
 ```bash
 ollama pull llama3.2:1b  # 1.3GB, Meta's smallest model
 ollama pull phi4-mini    # 2.5GB, Microsoft's efficient model
@@ -90,14 +97,14 @@ npm run dev
 
 ## 📊 Model Comparison
 
-| Model | Size | RAM Needed | Speed | Quality | Best For |
-|-------|------|------------|-------|---------|----------|
-| gemma3:1b | 815MB | 4GB | ⚡⚡⚡ | ⭐⭐⭐ | Quick responses, low-end hardware |
-| gemma3 | 3.3GB | 8GB | ⚡⚡ | ⭐⭐⭐⭐ | Balanced performance |
-| gemma3:12b | 8.1GB | 16GB | ⚡ | ⭐⭐⭐⭐⭐ | Best quality |
-| llama3.2:1b | 1.3GB | 4GB | ⚡⚡⚡ | ⭐⭐⭐ | Alternative small model |
-| phi4-mini | 2.5GB | 6GB | ⚡⚡ | ⭐⭐⭐⭐ | Efficient, code-focused |
-| mistral | 4.1GB | 8GB | ⚡⚡ | ⭐⭐⭐⭐ | General purpose |
+| Model       | Size  | RAM Needed | Speed  | Quality    | Best For                          |
+| ----------- | ----- | ---------- | ------ | ---------- | --------------------------------- |
+| gemma3:1b   | 815MB | 4GB        | ⚡⚡⚡ | ⭐⭐⭐     | Quick responses, low-end hardware |
+| gemma3      | 3.3GB | 8GB        | ⚡⚡   | ⭐⭐⭐⭐   | Balanced performance              |
+| gemma3:12b  | 8.1GB | 16GB       | ⚡     | ⭐⭐⭐⭐⭐ | Best quality                      |
+| llama3.2:1b | 1.3GB | 4GB        | ⚡⚡⚡ | ⭐⭐⭐     | Alternative small model           |
+| phi4-mini   | 2.5GB | 6GB        | ⚡⚡   | ⭐⭐⭐⭐   | Efficient, code-focused           |
+| mistral     | 4.1GB | 8GB        | ⚡⚡   | ⭐⭐⭐⭐   | General purpose                   |
 
 ---
 
@@ -148,11 +155,13 @@ ollama rm gemma3:1b
 ### "Ollama is not running"
 
 **Fix:**
+
 ```bash
 ollama serve
 ```
 
 Check if it's running:
+
 ```bash
 curl http://localhost:11434/api/tags
 ```
@@ -160,6 +169,7 @@ curl http://localhost:11434/api/tags
 ### "No models found"
 
 **Fix:**
+
 ```bash
 ollama pull gemma3:1b
 ```
@@ -167,6 +177,7 @@ ollama pull gemma3:1b
 ### Slow Responses
 
 **Solutions:**
+
 1. Use a smaller model (gemma3:1b instead of gemma3:12b)
 2. Reduce `num_predict` in offlineModelService.ts
 3. Close other applications to free RAM
@@ -176,6 +187,7 @@ ollama pull gemma3:1b
 
 **Fix:**
 Use a smaller model:
+
 ```bash
 ollama pull gemma3:1b  # Smallest Gemma
 # or
@@ -187,6 +199,7 @@ ollama pull llama3.2:1b  # Even smaller
 ## 🔄 Fallback Behavior
 
 Milla-Rayne automatically falls back to cloud AI if:
+
 - Ollama is not running
 - No models are installed
 - Local inference fails
@@ -204,7 +217,7 @@ The `gemma.tflite` file in this directory was the original attempt to use Tensor
 ✅ No tokenizer configuration  
 ✅ Automatic model management  
 ✅ Better performance  
-✅ Easier to use  
+✅ Easier to use
 
 You can safely ignore or delete the `.tflite` file if using Ollama.
 
@@ -240,6 +253,7 @@ Milla: [using local gemma3:1b] I'm doing great! How can I help you today?
 ```
 
 Check the console for confirmation:
+
 ```
 [OfflineModel] ✅ Ollama is running!
 [OfflineModel] 🤖 Using model: gemma3:1b
@@ -249,4 +263,3 @@ Check the console for confirmation:
 ---
 
 **Happy chatting! 🚀**
-

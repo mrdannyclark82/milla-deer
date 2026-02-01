@@ -4,7 +4,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { MediaPipeLLMWrapper } from '../android/mp-llm-wrapper';
-import { ExecuTorchFallback, SmartFallbackOrchestrator } from '../android/executorch-fallback';
+import {
+  ExecuTorchFallback,
+  SmartFallbackOrchestrator,
+} from '../android/executorch-fallback';
 
 describe('MediaPipe LLM Wrapper', () => {
   let wrapper: MediaPipeLLMWrapper;
@@ -26,14 +29,14 @@ describe('MediaPipe LLM Wrapper', () => {
 
   it('should generate response', async () => {
     const response = await wrapper.generateResponse('Hello');
-    
+
     expect(response).toBeTruthy();
     expect(typeof response).toBe('string');
   });
 
   it('should get model info', () => {
     const info = wrapper.getModelInfo();
-    
+
     expect(info.initialized).toBe(true);
     expect(info.modelPath).toBe('test-gemma-2b.bin');
   });
@@ -60,7 +63,7 @@ describe('ExecuTorch Fallback', () => {
 
   it('should run inference', async () => {
     const result = await fallback.runInference('Test input');
-    
+
     expect(result.success).toBe(true);
     expect(result.output).toBeTruthy();
     expect(result.executionTimeMs).toBeGreaterThan(0);
@@ -68,12 +71,12 @@ describe('ExecuTorch Fallback', () => {
 
   it('should track fallback count', async () => {
     const statsBefore = fallback.getStats();
-    
+
     await fallback.runInference('Test 1');
     await fallback.runInference('Test 2');
-    
+
     const statsAfter = fallback.getStats();
-    
+
     expect(statsAfter.fallbackCount).toBe(statsBefore.fallbackCount + 2);
   });
 });
@@ -87,15 +90,14 @@ describe('Smart Fallback Orchestrator', () => {
       },
     };
 
-    const orchestrator = new SmartFallbackOrchestrator(
-      failingPrimary,
-      { modelPath: 'fallback.pte' }
-    );
+    const orchestrator = new SmartFallbackOrchestrator(failingPrimary, {
+      modelPath: 'fallback.pte',
+    });
 
     await orchestrator.initialize();
 
     const result = await orchestrator.infer('Test query');
-    
+
     expect(result).toBeTruthy();
   });
 });

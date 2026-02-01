@@ -39,9 +39,8 @@ async function main() {
 
   // Test 1: Calendar event detection
   await runTest('Detect calendar event requests', async () => {
-    const { detectBrowserToolRequest } = await import(
-      '../browserIntegrationService'
-    );
+    const { detectBrowserToolRequest } =
+      await import('../browserIntegrationService');
 
     const tests = [
       'Add a dentist appointment to my calendar for Tuesday',
@@ -61,9 +60,8 @@ async function main() {
 
   // Test 2: Note detection
   await runTest('Detect note-taking requests', async () => {
-    const { detectBrowserToolRequest } = await import(
-      '../browserIntegrationService'
-    );
+    const { detectBrowserToolRequest } =
+      await import('../browserIntegrationService');
 
     const tests = [
       'Add a note to remind me to call mom',
@@ -83,9 +81,8 @@ async function main() {
 
   // Test 3: Website navigation detection
   await runTest('Detect website navigation requests', async () => {
-    const { detectBrowserToolRequest } = await import(
-      '../browserIntegrationService'
-    );
+    const { detectBrowserToolRequest } =
+      await import('../browserIntegrationService');
 
     const tests = [
       'Open YouTube in the browser',
@@ -105,9 +102,8 @@ async function main() {
 
   // Test 4: No false positives
   await runTest('No false positives in normal conversation', async () => {
-    const { detectBrowserToolRequest } = await import(
-      '../browserIntegrationService'
-    );
+    const { detectBrowserToolRequest } =
+      await import('../browserIntegrationService');
 
     const tests = [
       'How are you today?',
@@ -175,9 +171,8 @@ async function main() {
 
   // Test 7: Calendar API without token
   await runTest('Calendar API returns error without token', async () => {
-    const { addEventToGoogleCalendar } = await import(
-      '../googleCalendarService'
-    );
+    const { addEventToGoogleCalendar } =
+      await import('../googleCalendarService');
 
     const result = await addEventToGoogleCalendar(
       'Test Event',

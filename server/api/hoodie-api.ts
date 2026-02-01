@@ -94,7 +94,7 @@ router.get('/', (req: Request, res: Response) => {
     let items = merchInventory;
 
     if (inStock === 'true') {
-      items = items.filter(item => item.inStock);
+      items = items.filter((item) => item.inStock);
     }
 
     res.json({
@@ -117,7 +117,7 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const item = merchInventory.find(i => i.id === id);
+    const item = merchInventory.find((i) => i.id === id);
 
     if (!item) {
       return res.status(404).json({
@@ -167,8 +167,8 @@ router.post('/order', async (req: Request, res: Response) => {
     const orderItems: OrderItem[] = [];
 
     for (const item of items) {
-      const merchItem = merchInventory.find(m => m.id === item.itemId);
-      
+      const merchItem = merchInventory.find((m) => m.id === item.itemId);
+
       if (!merchItem) {
         return res.status(400).json({
           success: false,
@@ -210,7 +210,9 @@ router.post('/order', async (req: Request, res: Response) => {
 
     orders.set(orderId, order);
 
-    console.log(`[MerchAPI] Created order ${orderId} for user ${userId}, total: $${total.toFixed(2)}`);
+    console.log(
+      `[MerchAPI] Created order ${orderId} for user ${userId}, total: $${total.toFixed(2)}`
+    );
 
     // In production, this would:
     // 1. Process payment
@@ -239,7 +241,7 @@ router.get('/orders/:userId', (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const userOrders = Array.from(orders.values())
-      .filter(order => order.userId === userId)
+      .filter((order) => order.userId === userId)
       .sort((a, b) => b.createdAt - a.createdAt);
 
     res.json({
@@ -261,7 +263,9 @@ router.get('/orders/:userId', (req: Request, res: Response) => {
  */
 router.get('/order/:orderId', (req: Request, res: Response) => {
   try {
-    const orderId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+    const orderId = Array.isArray(req.params.orderId)
+      ? req.params.orderId[0]
+      : req.params.orderId;
     const order = orders.get(orderId);
 
     if (!order) {
@@ -289,7 +293,9 @@ router.get('/order/:orderId', (req: Request, res: Response) => {
  */
 router.patch('/order/:orderId', (req: Request, res: Response) => {
   try {
-    const orderId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+    const orderId = Array.isArray(req.params.orderId)
+      ? req.params.orderId[0]
+      : req.params.orderId;
     const { status } = req.body;
 
     const order = orders.get(orderId);
@@ -301,7 +307,13 @@ router.patch('/order/:orderId', (req: Request, res: Response) => {
       });
     }
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = [
+      'pending',
+      'processing',
+      'shipped',
+      'delivered',
+      'cancelled',
+    ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

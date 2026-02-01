@@ -167,7 +167,10 @@ TOPICS: <topic1>, <topic2>, <topic3>, etc.`;
         return { summary, keyTopics: topics };
       }
     } catch (error) {
-      console.warn('AI analysis failed, falling back to basic analysis:', error);
+      console.warn(
+        'AI analysis failed, falling back to basic analysis:',
+        error
+      );
     }
   }
 

@@ -46,17 +46,19 @@ export class Gemma3nMobile {
       }
 
       console.log('[Gemma3n] Loading mobile-optimized Gemma 3n model...');
-      
+
       // Check available memory
       const availableMemory = await this.getAvailableMemory();
       if (availableMemory < this.config.memoryLimit!) {
-        throw new Error(`Insufficient memory: ${availableMemory}MB available, ${this.config.memoryLimit}MB required`);
+        throw new Error(
+          `Insufficient memory: ${availableMemory}MB available, ${this.config.memoryLimit}MB required`
+        );
       }
 
       const startTime = Date.now();
       this.model = await this.loadMobileModel();
       this.modelLoaded = true;
-      
+
       const loadTime = Date.now() - startTime;
       console.log(`[Gemma3n] Model loaded in ${loadTime}ms`);
     } catch (error) {
@@ -92,16 +94,18 @@ export class Gemma3nMobile {
     try {
       // Truncate prompt if too long for mobile
       const truncatedPrompt = this.truncatePrompt(prompt);
-      
+
       const result = await this.runMobileInference(truncatedPrompt);
-      
+
       const latencyMs = Date.now() - startTime;
       const memoryAfter = await this.getMemoryUsage();
       const memoryUsedMB = memoryAfter - memoryBefore;
 
       this.inferenceCount++;
 
-      console.log(`[Gemma3n] Inference #${this.inferenceCount} completed in ${latencyMs}ms, using ${memoryUsedMB}MB`);
+      console.log(
+        `[Gemma3n] Inference #${this.inferenceCount} completed in ${latencyMs}ms, using ${memoryUsedMB}MB`
+      );
 
       return {
         text: result,
@@ -134,7 +138,9 @@ export class Gemma3nMobile {
     if (prompt.length <= maxChars) {
       return prompt;
     }
-    console.log(`[Gemma3n] Truncating prompt from ${prompt.length} to ${maxChars} chars`);
+    console.log(
+      `[Gemma3n] Truncating prompt from ${prompt.length} to ${maxChars} chars`
+    );
     return prompt.substring(0, maxChars) + '...';
   }
 
@@ -189,6 +195,7 @@ export class Gemma3nMobile {
 
 // Export singleton for mobile use
 export const gemma3nMobile = new Gemma3nMobile({
-  modelPath: process.env.GEMMA3N_MODEL_PATH || 'locallm/gemma3n-quantized.tflite',
+  modelPath:
+    process.env.GEMMA3N_MODEL_PATH || 'locallm/gemma3n-quantized.tflite',
   quantized: true,
 });

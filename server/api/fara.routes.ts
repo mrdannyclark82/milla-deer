@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { faraService } from '../fara.service';
 
@@ -26,14 +25,13 @@ router.post('/run-task', (req, res) => {
     });
 
     taskStream.on('error', (err) => {
-        console.error('Fara task stream error:', err);
-        if (!res.headersSent) {
-            res.status(500).send({ error: 'Failed to run Fara task' });
-        } else {
-            res.end();
-        }
+      console.error('Fara task stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).send({ error: 'Failed to run Fara task' });
+      } else {
+        res.end();
+      }
     });
-
   } catch (error) {
     console.error('Failed to initiate Fara task:', error);
     res.status(500).send({ error: 'Failed to initiate Fara task' });
