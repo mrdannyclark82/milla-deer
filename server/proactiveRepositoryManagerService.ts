@@ -198,15 +198,22 @@ class ProactiveRepositoryManagerService {
     const topFeatures = getTopFeatureRecommendations(
       config.proactiveRepoManager.topFeatureRecommendations
     );
-    for (const feature of topFeatures) {
+
+    const actionPromises = topFeatures.map(async (feature) => {
       if (
-        feature.relevance >= config.proactiveRepoManager.featureRelevanceThreshold &&
+        feature.relevance >=
+          config.proactiveRepoManager.featureRelevanceThreshold &&
         feature.implementationComplexity !== 'high'
       ) {
-        const action = await this.createActionForFeature(feature);
-        if (action) {
-          newActions.push(action);
-        }
+        return this.createActionForFeature(feature);
+      }
+      return null;
+    });
+
+    const actions = await Promise.all(actionPromises);
+    for (const action of actions) {
+      if (action) {
+        newActions.push(action);
       }
     }
     return newActions;
