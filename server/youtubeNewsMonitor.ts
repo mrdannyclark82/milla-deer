@@ -187,25 +187,34 @@ export async function runDailyNewsSearch(
     analysisCount: 0,
   };
 
-  // Search each category
-  for (const category of NEWS_CATEGORIES) {
-    console.log(`🔍 Searching: ${category.name}`);
+  // Search all categories in parallel
+  console.log(
+    `🔍 Searching ${NEWS_CATEGORIES.length} categories in parallel...`
+  );
 
-    try {
-      const categoryNews = await searchCategoryNews(category, userId);
-
-      if (categoryNews.length > 0) {
-        digest.categories[category.name] = categoryNews;
-        digest.totalVideos += categoryNews.length;
-
-        // Add top story from high-priority categories to top stories
-        if (category.priority >= 8 && categoryNews.length > 0) {
-          digest.topStories.push(categoryNews[0]);
-        }
+  const results = await Promise.all(
+    NEWS_CATEGORIES.map(async (category) => {
+      console.log(`🔍 Searching: ${category.name}`);
+      try {
+        const news = await searchCategoryNews(category, userId);
+        return { category, news };
+      } catch (error) {
+        console.error(`Error searching ${category.name}:`, error);
+        return { category, news: [] };
       }
-    } catch (error) {
-      console.error(`Error searching ${category.name}:`, error);
-      // Continue with other categories
+    })
+  );
+
+  // Process results
+  for (const { category, news } of results) {
+    if (news.length > 0) {
+      digest.categories[category.name] = news;
+      digest.totalVideos += news.length;
+
+      // Add top story from high-priority categories to top stories
+      if (category.priority >= 8 && news.length > 0) {
+        digest.topStories.push(news[0]);
+      }
     }
   }
 
