@@ -75,9 +75,12 @@ class FeatureDiscoveryService {
 
     try {
       // Search for similar repositories
-      for (const keyword of this.SCAN_KEYWORDS.slice(0, 3)) {
-        const results = await searchRepositories(keyword, 5);
+      const searchPromises = this.SCAN_KEYWORDS.slice(0, 3).map((keyword) =>
+        searchRepositories(keyword, 5)
+      );
+      const searchResults = await Promise.all(searchPromises);
 
+      for (const results of searchResults) {
         for (const repo of results) {
           const insight = await this.analyzeRepository(
             repo.url,
