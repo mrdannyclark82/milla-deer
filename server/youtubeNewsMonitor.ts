@@ -12,6 +12,7 @@
  * - Trending topic detection
  */
 
+import pLimit from 'p-limit';
 import { searchVideos } from './googleYoutubeService';
 import { saveToKnowledgeBase } from './youtubeKnowledgeBase';
 import { analyzeVideoWithMillAlyzer } from './youtubeMillAlyzer';
@@ -318,25 +319,33 @@ export async function analyzeTopNews(
 ): Promise<number> {
   console.log(`🔬 Auto-analyzing top ${maxAnalyze} news stories...`);
 
-  let analyzedCount = 0;
+  // Limit concurrency to avoid rate limits
+  const limit = pLimit(3);
+  const storiesToAnalyze = digest.topStories.slice(0, maxAnalyze);
 
-  for (const story of digest.topStories.slice(0, maxAnalyze)) {
-    try {
-      console.log(`📊 Analyzing: ${story.title}`);
+  const results = await Promise.all(
+    storiesToAnalyze.map((story) =>
+      limit(async () => {
+        try {
+          console.log(`📊 Analyzing: ${story.title}`);
 
-      // Run millAlyzer analysis
-      const analysis = await analyzeVideoWithMillAlyzer(story.videoId);
+          // Run millAlyzer analysis
+          const analysis = await analyzeVideoWithMillAlyzer(story.videoId);
 
-      // Save to knowledge base
-      await saveToKnowledgeBase(analysis, userId);
+          // Save to knowledge base
+          await saveToKnowledgeBase(analysis, userId);
 
-      analyzedCount++;
-      console.log(`✅ Analyzed and saved: ${story.title}`);
-    } catch (error) {
-      console.error(`Error analyzing ${story.title}:`, error);
-      // Continue with next story
-    }
-  }
+          console.log(`✅ Analyzed and saved: ${story.title}`);
+          return true;
+        } catch (error) {
+          console.error(`Error analyzing ${story.title}:`, error);
+          return false;
+        }
+      })
+    )
+  );
+
+  const analyzedCount = results.filter(Boolean).length;
 
   console.log(
     `🎯 Auto-analysis complete: ${analyzedCount}/${maxAnalyze} stories analyzed`
