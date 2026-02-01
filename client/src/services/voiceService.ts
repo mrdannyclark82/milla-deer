@@ -389,6 +389,8 @@ class ElevenLabsTTS implements ITTSProvider {
  * Coqui TTS implementation (placeholder)
  */
 class CoquiTTS implements ITTSProvider {
+  private audio: HTMLAudioElement | null = null;
+
   async speak(request: VoiceSynthesisRequest): Promise<VoiceSynthesisResponse> {
     // TODO: Implement Coqui TTS integration
     console.warn(
@@ -401,7 +403,11 @@ class CoquiTTS implements ITTSProvider {
   }
 
   cancel(): void {
-    // TODO: Implement cancellation
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+      this.audio = null;
+    }
   }
 }
 
