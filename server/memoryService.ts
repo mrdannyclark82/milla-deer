@@ -1163,18 +1163,8 @@ export async function storeSensitiveMemory(
       console.log('🔒 Encrypted medical notes with HE');
     }
 
-    // Store in database
-    await storage.createMemorySummary({
-      userId,
-      title: 'Sensitive Data Update',
-      summaryText: 'Encrypted sensitive data entry.',
-      topics: ['sensitive', 'financial', 'medical'],
-      emotionalTone: 'neutral',
-      financialSummary: encryptedData.financialSummary,
-      medicalNotes: encryptedData.medicalNotes,
-    });
-
-    console.log('[MemoryService] Sensitive data encrypted and stored');
+    await storage.saveSensitiveMemory(userId, encryptedData);
+    console.log('[MemoryService] Sensitive data encrypted and stored in DB');
 
     return { success: true };
   } catch (error) {
@@ -1199,24 +1189,32 @@ export async function retrieveSensitiveMemory(userId: string): Promise<{
   error?: string;
 }> {
   try {
-    const sensitiveData = await storage.getLatestSensitiveMemory(userId);
+    const memory = await storage.getSensitiveMemory(userId);
+
+    if (!memory) {
+      return {
+        financialSummary: undefined,
+        medicalNotes: undefined,
+        success: true,
+      };
+    }
 
     let financialSummary: string | undefined;
     let medicalNotes: string | undefined;
 
-    if (sensitiveData.financialSummary) {
+    if (memory.financialSummary) {
       try {
-        financialSummary = await decryptHomomorphic(sensitiveData.financialSummary);
+        financialSummary = await decryptHomomorphic(memory.financialSummary);
       } catch (err) {
-        console.error('Error decrypting financial summary:', err);
+        console.error('Failed to decrypt financial summary:', err);
       }
     }
 
-    if (sensitiveData.medicalNotes) {
+    if (memory.medicalNotes) {
       try {
-        medicalNotes = await decryptHomomorphic(sensitiveData.medicalNotes);
+        medicalNotes = await decryptHomomorphic(memory.medicalNotes);
       } catch (err) {
-        console.error('Error decrypting medical notes:', err);
+        console.error('Failed to decrypt medical notes:', err);
       }
     }
 
@@ -1253,11 +1251,10 @@ export async function searchSensitiveMemory(
   error?: string;
 }> {
   try {
-    const sensitiveData = await storage.getLatestSensitiveMemory(userId);
+    // Retrieve encrypted data directly from storage
+    const memory = await storage.getSensitiveMemory(userId);
 
-    const encryptedData = field === 'financialSummary' ? sensitiveData.financialSummary : sensitiveData.medicalNotes;
-
-    if (!encryptedData) {
+    if (!memory) {
       return {
         matches: false,
         score: 0,
@@ -1265,7 +1262,18 @@ export async function searchSensitiveMemory(
       };
     }
 
-    const result = await queryHomomorphic(encryptedData, query);
+    const encryptedContent = memory[field];
+
+    if (!encryptedContent) {
+      return {
+        matches: false,
+        score: 0,
+        success: true,
+      };
+    }
+
+    // Use homomorphic query on the encrypted data
+    const result = await queryHomomorphic(encryptedContent, query);
 
     return {
       matches: result.matches,

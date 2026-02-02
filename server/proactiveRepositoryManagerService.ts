@@ -165,18 +165,11 @@ class ProactiveRepositoryManagerService {
       `📊 Found ${suggestions.length} improvement opportunities from user interactions`
     );
 
-    const suggestionsToProcess = suggestions.slice(
+    for (const suggestion of suggestions.slice(
       0,
       config.proactiveRepoManager.suggestionsSlice
-    );
-
-    const actions = await Promise.all(
-      suggestionsToProcess.map((suggestion) =>
-        this.createActionFromSuggestion(suggestion)
-      )
-    );
-
-    for (const action of actions) {
+    )) {
+      const action = await this.createActionFromSuggestion(suggestion);
       if (action) {
         newActions.push(action);
       }
@@ -198,22 +191,15 @@ class ProactiveRepositoryManagerService {
     const topFeatures = getTopFeatureRecommendations(
       config.proactiveRepoManager.topFeatureRecommendations
     );
-
-    const actionPromises = topFeatures.map(async (feature) => {
+    for (const feature of topFeatures) {
       if (
-        feature.relevance >=
-          config.proactiveRepoManager.featureRelevanceThreshold &&
+        feature.relevance >= config.proactiveRepoManager.featureRelevanceThreshold &&
         feature.implementationComplexity !== 'high'
       ) {
-        return this.createActionForFeature(feature);
-      }
-      return null;
-    });
-
-    const actions = await Promise.all(actionPromises);
-    for (const action of actions) {
-      if (action) {
-        newActions.push(action);
+        const action = await this.createActionForFeature(feature);
+        if (action) {
+          newActions.push(action);
+        }
       }
     }
     return newActions;

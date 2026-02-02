@@ -433,32 +433,22 @@ export async function analyzeRepositoryCode(
 ): Promise<CodeAnalysisResult> {
   const language = repoData.language || 'javascript';
 
-  const securityIssues: SecurityIssue[] = [];
-  const performanceIssues: PerformanceIssue[] = [];
-  const codeQualityIssues: CodeQualityIssue[] = [];
+  // For now, analyze the README as a sample
+  // In a full implementation, this would fetch and analyze actual source files
+  const sampleCode = repoData.readme || '';
 
-  // Analyze all source files if available
-  if (repoData.files && repoData.files.length > 0) {
-    for (const file of repoData.files) {
-      const fileLanguage = file.language || language;
-      securityIssues.push(
-        ...analyzeSecurityIssues(file.content, fileLanguage, file.path)
-      );
-      performanceIssues.push(
-        ...analyzePerformanceIssues(file.content, fileLanguage, file.path)
-      );
-      codeQualityIssues.push(
-        ...analyzeCodeQuality(file.content, fileLanguage, file.path)
-      );
-    }
-  } else {
-    // Fallback to analyzing the README as a sample if no files are available
-    const sampleCode = repoData.readme || '';
-    securityIssues.push(...analyzeSecurityIssues(sampleCode, language));
-    performanceIssues.push(...analyzePerformanceIssues(sampleCode, language));
-    codeQualityIssues.push(...analyzeCodeQuality(sampleCode, language));
-  }
+  // TODO: Fetch all source files from the repository and iterate through them for analysis.
+  // Example:
+  // for (const file of repoData.files) {
+  //   const fileContent = await fetchFileContent(file.path);
+  //   securityIssues.push(...analyzeSecurityIssues(fileContent, language, file.path));
+  //   performanceIssues.push(...analyzePerformanceIssues(fileContent, language, file.path));
+  //   codeQualityIssues.push(...analyzeCodeQuality(fileContent, language, file.path));
+  // }
 
+  const securityIssues = analyzeSecurityIssues(sampleCode, language);
+  const performanceIssues = analyzePerformanceIssues(sampleCode, language);
+  const codeQualityIssues = analyzeCodeQuality(sampleCode, language);
   const languageSpecificSuggestions = getLanguageSpecificSuggestions(language);
 
   // Add general security recommendations

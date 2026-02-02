@@ -12,8 +12,7 @@ data class Message(
     val id: Long = 0,
     val content: String,
     val role: String, // "user" or "assistant"
-    val timestamp: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = true // Default true for incoming, false for new outgoing
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 /**

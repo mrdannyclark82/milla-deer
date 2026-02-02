@@ -483,38 +483,18 @@ export async function refreshAccessTokenIfExpired(
 export async function scheduleTokenRotation(): Promise<void> {
   console.log('[Auth] Starting token rotation scheduler...');
 
-  const rotateTokens = async () => {
-    try {
-      console.log('[Auth] Running token rotation check...');
-      const sessions = await storage.getActiveUserSessions();
-      const uniqueUserIds = new Set(sessions.map((s) => s.userId));
+  // TODO: Get all active sessions from storage
+  // TODO: For each session, check if token needs refresh
+  // TODO: Call refreshAccessTokenIfExpired for expiring tokens
 
-      for (const userId of uniqueUserIds) {
-        try {
-          // Check for Google OAuth token
-          const googleToken = await storage.getOAuthToken(userId, 'google');
-          if (googleToken) {
-            await refreshAccessTokenIfExpired(
-              userId,
-              googleToken.accessToken,
-              googleToken.refreshToken
-            );
-          }
-        } catch (err) {
-          console.error(`[Auth] Error rotating token for user ${userId}:`, err);
-        }
-      }
-      console.log(
-        `[Auth] Token rotation check completed for ${uniqueUserIds.size} active users.`
-      );
-    } catch (error) {
-      console.error('[Auth] Error in token rotation scheduler:', error);
-    }
-  };
+  // Stub: Log that scheduler would run
+  console.log('[Auth] Token rotation scheduler initialized (stub)');
 
-  // Run immediately on start
-  await rotateTokens();
-
-  // Run every 30 minutes
-  setInterval(rotateTokens, 30 * 60 * 1000);
+  // In production, set up interval:
+  // setInterval(async () => {
+  //   const sessions = await storage.getActiveSessions();
+  //   for (const session of sessions) {
+  //     await refreshAccessTokenIfExpired(session.userId, session.accessToken, session.refreshToken);
+  //   }
+  // }, 30 * 60 * 1000); // Every 30 minutes
 }

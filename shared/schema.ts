@@ -49,10 +49,6 @@ export const messages = pgTable('messages', {
   displayRole: text('display_role'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   userId: varchar('user_id'),
-  // CRDT Fields
-  vectorClock: text('vector_clock'), // JSON string of vector clock
-  siteId: text('site_id'),
-  tombstone: boolean('tombstone').default(false),
 });
 
 export const aiUpdates = pgTable('ai_updates', {
@@ -111,6 +107,20 @@ export const memorySummaries = pgTable('memory_summaries', {
     enum: ['positive', 'negative', 'neutral'],
   }),
   // Sensitive PII fields - automatically encrypted with HE
+  // Kept here for backward compatibility if needed, but primary storage is now sensitive_memories table
+  financialSummary: text('financial_summary'), // Bank balances, income, investments (HE encrypted)
+  medicalNotes: text('medical_notes'), // Health conditions, medications, treatments (HE encrypted)
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const sensitiveMemories = pgTable('sensitive_memories', {
+  id: varchar('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   financialSummary: text('financial_summary'), // Bank balances, income, investments (HE encrypted)
   medicalNotes: text('medical_notes'), // Health conditions, medications, treatments (HE encrypted)
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -125,12 +135,21 @@ export const insertMemorySummarySchema = createInsertSchema(
   summaryText: true,
   topics: true,
   emotionalTone: true,
+});
+
+export const insertSensitiveMemorySchema = createInsertSchema(
+  sensitiveMemories
+).pick({
+  userId: true,
   financialSummary: true,
   medicalNotes: true,
 });
 
 export type InsertMemorySummary = z.infer<typeof insertMemorySummarySchema>;
 export type MemorySummary = typeof memorySummaries.$inferSelect;
+
+export type InsertSensitiveMemory = z.infer<typeof insertSensitiveMemorySchema>;
+export type SensitiveMemory = typeof sensitiveMemories.$inferSelect;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -147,9 +166,6 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   personalityMode: true,
   displayRole: true,
   userId: true,
-  vectorClock: true,
-  siteId: true,
-  tombstone: true,
 });
 
 export const insertAiUpdateSchema = createInsertSchema(aiUpdates).pick({

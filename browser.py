@@ -116,18 +116,21 @@ class BrowserAgentTool:
             await self.page.goto('https://calendar.google.com')
             await self.page.wait_for_load_state('networkidle')
             
-            # Wait for calendar to load and click create button
-            # Use wait_for_selector to avoid arbitrary sleep and handle dynamic loading
-            create_button = await self.page.wait_for_selector(
-                '[aria-label="Create"], button:has-text("Create")',
-                state='visible'
-            )
-            await create_button.click()
+            # Wait for calendar to load
+            await self.page.wait_for_timeout(2000)
+            
+            # Click create button
+            create_button = await self.page.query_selector('[aria-label="Create"]')
+            if create_button:
+                await create_button.click()
+            else:
+                # Try alternative selectors
+                await self.page.click('button:has-text("Create")')
+            
+            await self.page.wait_for_timeout(1000)
             
             # Click "Event" option
-            # Wait for the "Event" option to appear
-            event_option = await self.page.wait_for_selector('text=Event', state='visible')
-            await event_option.click()
+            await self.page.click('text=Event')
             
             # Fill in event details
             await self.page.fill('input[aria-label="Add title"]', title)
@@ -136,11 +139,9 @@ class BrowserAgentTool:
                 await self.page.fill('textarea[aria-label="Description"]', description)
             
             # Save the event
-            save_button = await self.page.wait_for_selector('button:has-text("Save")', state='visible')
-            await save_button.click()
+            await self.page.click('button:has-text("Save")')
             
-            # Wait for the save dialog to close
-            await self.page.wait_for_selector('button:has-text("Save")', state='detached')
+            await self.page.wait_for_timeout(2000)
             
             return {
                 "success": True,
@@ -181,24 +182,25 @@ class BrowserAgentTool:
             await self.page.wait_for_load_state('networkidle')
             
             # Wait for Keep to load
-            # Wait for the "Take a note..." input to be available
-            # Using a combined selector to handle potential UI variations
-            note_input = await self.page.wait_for_selector('[aria-label="Take a note..."], text="Take a note"', state='visible')
-            await note_input.click()
+            await self.page.wait_for_timeout(2000)
             
-            # Wait for the title input to appear
-            await self.page.wait_for_selector('input[aria-label="Title"]', state='visible')
+            # Click to create a new note
+            new_note = await self.page.query_selector('[aria-label="Take a note..."]')
+            if new_note:
+                await new_note.click()
+            else:
+                await self.page.click('text=Take a note')
+            
+            await self.page.wait_for_timeout(500)
             
             # Fill in note title and content
             await self.page.fill('input[aria-label="Title"]', title)
             await self.page.fill('div[aria-label="Take a note..."]', content)
             
             # Click close to save
-            close_button = await self.page.wait_for_selector('[aria-label="Close"]', state='visible')
-            await close_button.click()
+            await self.page.click('[aria-label="Close"]')
             
-            # Wait for the close button to disappear
-            await self.page.wait_for_selector('[aria-label="Close"]', state='detached')
+            await self.page.wait_for_timeout(1000)
             
             return {
                 "success": True,

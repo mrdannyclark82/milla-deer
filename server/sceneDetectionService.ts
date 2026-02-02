@@ -15,36 +15,6 @@ import {
   SmartHomeSensorData,
   mapSensorDataToSceneContext,
 } from './smartHomeService';
-import { SceneDetectionModel } from './sceneDetectionModel';
-import { generateSyntheticData } from './utils/sceneDataGenerator';
-import path from 'path';
-import fs from 'fs';
-
-// Initialize Scene Detection Model
-const model = new SceneDetectionModel();
-let modelReady = false;
-
-// Initialize model in background
-(async () => {
-  try {
-    const dataDir = path.join(process.cwd(), 'server', 'data', 'scene_model');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    const loaded = await model.load(dataDir);
-    if (!loaded) {
-      console.log('🔮 [Scene] No existing model found. Training new model...');
-      const trainingData = generateSyntheticData(1000);
-      await model.train(trainingData, 20);
-      await model.save(dataDir);
-    }
-    modelReady = true;
-    console.log('🔮 [Scene] Model ready for inference.');
-  } catch (error) {
-    console.error('🔮 [Scene] Failed to initialize model:', error);
-  }
-})();
 
 export type SceneLocation =
   | 'living_room'
@@ -420,38 +390,13 @@ export interface ProjectedStateContext {
 export function inferProjectedState(
   sensorData: SmartHomeSensorData
 ): ProjectedStateContext {
-  // Use ML model if ready
-  if (modelReady) {
-    const prediction = model.predict(sensorData);
-
-    // Map prediction to context
-    const suggestedSceneAdjustment = getSuggestionForState(prediction.state);
-
-    console.log(
-      `🔮 [Scene] ML Inferred state: ${prediction.state} (${(prediction.confidence * 100).toFixed(0)}% confidence)`
-    );
-
-    return {
-      state: prediction.state,
-      confidence: prediction.confidence,
-      factors: ['ML Model Inference'],
-      timestamp: Date.now(),
-      suggestedSceneAdjustment,
-    };
-  }
-
-  // Fallback to rule-based
-  return inferProjectedStateRuleBased(sensorData);
-}
-
-function inferProjectedStateRuleBased(sensorData: SmartHomeSensorData): ProjectedStateContext {
   const factors: string[] = [];
   let state: ProjectedState = 'unknown';
   let confidence = 0.5;
 
-  // Analyze motion patterns (extract from structured motion object)
-  const motion = sensorData.motion.detected;
-  const motionLevel = sensorData.motion.level;
+  // Analyze motion patterns
+  const motion = sensorData.motion?.detected || false;
+  const motionLevel = sensorData.motion?.level || 0;
 
   // Analyze location
   const location = sensorData.location || 'unknown';
@@ -459,6 +404,11 @@ function inferProjectedStateRuleBased(sensorData: SmartHomeSensorData): Projecte
   // Analyze time of day
   const hour = new Date().getHours();
   const isNight = hour >= 22 || hour < 6;
+  const isMorning = hour >= 6 && hour < 10;
+  const isEvening = hour >= 18 && hour < 22;
+
+  // STUB: Simple rule-based inference
+  // TODO: Replace with ML model trained on user patterns
 
   if (!motion && isNight) {
     state = 'sleeping';
@@ -490,10 +440,42 @@ function inferProjectedStateRuleBased(sensorData: SmartHomeSensorData): Projecte
     factors.push('No presence detected', 'No motion');
   }
 
-  const suggestedSceneAdjustment = getSuggestionForState(state);
+  // Suggest scene adjustments based on state
+  let suggestedSceneAdjustment;
+
+  switch (state) {
+    case 'sleeping':
+      suggestedSceneAdjustment = {
+        mood: 'calm' as SceneMood,
+        lighting: 'minimal',
+        ambient: 'quiet night sounds',
+      };
+      break;
+    case 'exercising':
+      suggestedSceneAdjustment = {
+        mood: 'energetic' as SceneMood,
+        lighting: 'bright',
+        ambient: 'upbeat music',
+      };
+      break;
+    case 'relaxing':
+      suggestedSceneAdjustment = {
+        mood: 'calm' as SceneMood,
+        lighting: 'soft',
+        ambient: 'gentle background',
+      };
+      break;
+    case 'working':
+      suggestedSceneAdjustment = {
+        mood: 'calm' as SceneMood,
+        lighting: 'focused',
+        ambient: 'productivity sounds',
+      };
+      break;
+  }
 
   console.log(
-    `🔮 [Scene] Rule-based Inferred state: ${state} (${(confidence * 100).toFixed(0)}% confidence)`
+    `🔮 [Scene] Inferred state: ${state} (${(confidence * 100).toFixed(0)}% confidence)`
   );
   console.log(`🔮 [Scene] Factors: ${factors.join(', ')}`);
 
@@ -504,37 +486,6 @@ function inferProjectedStateRuleBased(sensorData: SmartHomeSensorData): Projecte
     timestamp: Date.now(),
     suggestedSceneAdjustment,
   };
-}
-
-function getSuggestionForState(state: ProjectedState): { mood: SceneMood, lighting?: string, ambient?: string } | undefined {
-  switch (state) {
-    case 'sleeping':
-      return {
-        mood: 'calm',
-        lighting: 'minimal',
-        ambient: 'quiet night sounds',
-      };
-    case 'exercising':
-      return {
-        mood: 'energetic',
-        lighting: 'bright',
-        ambient: 'upbeat music',
-      };
-    case 'relaxing':
-      return {
-        mood: 'calm',
-        lighting: 'soft',
-        ambient: 'gentle background',
-      };
-    case 'working':
-      return {
-        mood: 'calm',
-        lighting: 'focused',
-        ambient: 'productivity sounds',
-      };
-    default:
-      return undefined;
-  }
 }
 
 /**
