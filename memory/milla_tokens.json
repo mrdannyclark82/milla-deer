@@ -1,5 +1,5 @@
 {
-  "tokenBalance": 7000,
+  "tokenBalance": 6850,
   "transactions": [
     {
       "id": "txn_1769156078158_ohrhabd1d",
@@ -4925,22 +4925,6 @@
       "category": "test_pass",
       "description": "Test passed: Fix: Consider adding security scanning to your CI/CD pipeline in fix-security-1769578713839",
       "relatedId": "feat_1769578714591_bfew6az5e"
-    },
-    {
-      "id": "txn_1769997726765_z99bae8pt",
-      "timestamp": 1769997726765,
-      "amount": 50,
-      "type": "earn",
-      "category": "bug_fix",
-      "description": "Fixed bug: Fixed test bug"
-    },
-    {
-      "id": "txn_1769997726767_5w3b1wbft",
-      "timestamp": 1769997726767,
-      "amount": 100,
-      "type": "earn",
-      "category": "feature_development",
-      "description": "Developed feature: Implemented test feature"
     }
   ],
   "goals": [
@@ -4999,5 +4983,5 @@
     "UNLOCK_PERFORMANCE_PROFILING",
     "UNLOCK_PERSONALITY_CUSTOMIZATION"
   ],
-  "lastUpdated": 1769997726767
+  "lastUpdated": 1769579198892
 }
