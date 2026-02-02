@@ -34,7 +34,7 @@ const searchTool = {
 };
 
 export async function generateGeminiResponse(
-  userMessage: string,
+  userMessage: string
   // conversationHistory: Array<{ role: 'user' | 'model'; content: string }> // Not used in this basic implementation but useful for full chat context
 ): Promise<GeminiResponse> {
   try {
@@ -47,11 +47,14 @@ export async function generateGeminiResponse(
     }
 
     const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', tools: [searchTool] });
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      tools: [searchTool],
+    });
 
     // Start a chat session with the model
     const chat = model.startChat({});
-    
+
     // Send the user message
     const result = await chat.sendMessage(userMessage);
     let response = result.response;
@@ -64,7 +67,10 @@ export async function generateGeminiResponse(
 
       if (functionCall.name === 'performWebSearch') {
         toolExecuted = true;
-        console.log('Gemini called performWebSearch with query:', functionCall.args.query);
+        console.log(
+          'Gemini called performWebSearch with query:',
+          functionCall.args.query
+        );
         const searchResponse = await performWebSearch(functionCall.args.query);
         toolResult = searchResponse; // Pass the whole searchResponse object
       }
@@ -115,4 +121,3 @@ export async function generateGeminiResponse(
     };
   }
 }
-

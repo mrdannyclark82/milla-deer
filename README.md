@@ -1,5 +1,5 @@
-
 # Milla-Rayne 🚀
+
 **The Context-Aware AI Assistant**
 
 Milla-Rayne is a pioneering digital intelligence platform designed as a devoted AI companion. It blends cutting-edge AI research with production-grade systems, offering a hybrid, decentralized, and edge-ready architecture for real-time, multimodal interaction.
@@ -7,6 +7,7 @@ Milla-Rayne is a pioneering digital intelligence platform designed as a devoted 
 ---
 
 ## ✨ Key Features
+
 - **Enhanced Web UI**: Modern "Futuristic Minimalist" interface featuring glassmorphism, neon accents (Cyan/Purple), and seamless 3D scene integration.
 - **Smart AI Orchestration**: Robust multi-provider dispatch system with strict priority (OpenAI → Anthropic → xAI → Mistral → OpenRouter) and automatic fallback.
 - **Poly-Model Synthesis**: Integrates Gemini, Mistral, OpenAI, xAI Grok, and more via secure dispatch.
@@ -24,6 +25,7 @@ Milla-Rayne is a pioneering digital intelligence platform designed as a devoted 
 ---
 
 ## 📂 Project Structure
+
 - `client/` – React frontend with adaptive scenes
 - `server/` – Node.js + Express backend with Drizzle ORM
 - `shared/` – Common utilities and types
@@ -36,25 +38,31 @@ Milla-Rayne is a pioneering digital intelligence platform designed as a devoted 
 ## 🚀 Quick Start
 
 ### Web App
+
 ```bash
 npm install
 cp .env.example .env   # Add your API keys
 npm run dev:all        # Start both main server (5000) and proactive server (5001)
 ```
+
 Open http://localhost:5000 to start chatting.
 
 **Note**: The application now runs two servers:
+
 - **Main Server (Port 5000)**: Handles core application features, chat, API routes
 - **Proactive Server (Port 5001)**: Handles background proactive features to prevent rate limiting
 
 To run servers separately:
+
 ```bash
 npm run dev              # Main server only (port 5000)
 npm run dev:proactive    # Proactive server only (port 5001)
 ```
 
 ### 🔒 Local LLM (Optional - For Privacy)
+
 Want to run AI models locally for complete privacy?
+
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
@@ -66,23 +74,29 @@ ollama pull gemma3:1b
 echo "ENABLE_LOCAL_MODEL=true" >> .env
 echo "PREFER_LOCAL_MODEL=true" >> .env
 ```
+
 See [LOCAL_LLM_SETUP.md](LOCAL_LLM_SETUP.md) for full instructions.
 
 ### CLI
+
 ```bash
 npm run dev   # Start server
 npm run cli   # Launch CLI
 ```
 
 ### Android
+
 Open `android/` in Android Studio, configure server URL, and run on emulator/device.
 
 ### Docker
+
 ```bash
 cp .env.example .env
 docker-compose up
 ```
+
 Or pull prebuilt image:
+
 ```bash
 docker pull ghcr.io/mrdannyclark82/milla-rayne:latest
 ```
@@ -92,6 +106,7 @@ docker pull ghcr.io/mrdannyclark82/milla-rayne:latest
 ## 🧠 Advanced AI Capabilities
 
 ### Agentic AI Patterns
+
 Milla-Rayne now includes advanced agentic AI dispatch for complex multi-step reasoning:
 
 ```typescript
@@ -106,12 +121,14 @@ const result = await agenticDispatch(
 ```
 
 Features:
+
 - Iterative task decomposition with feedback loops
 - Multi-step reasoning and planning
 - Self-correction and verification
 - Tool usage and external API integration
 
 ### On-Device AI (Android)
+
 Gemini Nano integration enables offline AI capabilities on Android devices:
 
 ```typescript
@@ -121,17 +138,19 @@ import { nano } from './gemini-nano';
 await nano.init();
 const result = await nano.generate({
   prompt: 'Explain quantum computing',
-  maxTokens: 2048
+  maxTokens: 2048,
 });
 ```
 
 Features:
+
 - Offline text and image generation
 - Automatic fallback to Gemma for unsupported operations
 - Low-latency local inference
 - 30%+ improvement in Android offline capabilities
 
 ### Multimodal Processing
+
 MediaPipe GenAI integration for vision and audio understanding:
 
 ```typescript
@@ -139,13 +158,17 @@ MediaPipe GenAI integration for vision and audio understanding:
 import { genai } from './mediapipe-genai';
 
 // Vision analysis
-const imageAnalysis = await genai.analyzeImage(imageFile, 'Describe this scene');
+const imageAnalysis = await genai.analyzeImage(
+  imageFile,
+  'Describe this scene'
+);
 
 // Audio transcription
 const transcript = await genai.audioToText(audioFile);
 ```
 
 Features:
+
 - Real-time vision understanding (object detection, scene analysis)
 - Audio processing (speech-to-text, audio classification)
 - Cross-modal generation
@@ -200,3 +223,4 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 [...standard MIT text...]
+```

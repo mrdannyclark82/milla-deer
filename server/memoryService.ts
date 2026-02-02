@@ -853,9 +853,8 @@ export async function getMemoryCoreContext(
   // Add sandbox test summary if query is about testing
   if (isSandboxQuery) {
     try {
-      const { getSandboxTestSummary } = await import(
-        './sandboxEnvironmentService'
-      );
+      const { getSandboxTestSummary } =
+        await import('./sandboxEnvironmentService');
       const sandboxSummary = getSandboxTestSummary();
       if (sandboxSummary) {
         contextString += `\n[Sandbox Testing Memory]:\n${sandboxSummary}\n`;

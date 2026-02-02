@@ -35,7 +35,9 @@ let totalLatency = 0;
 /**
  * Setup optimized WebSocket server with connection pooling
  */
-export function setupOptimizedWebSocketServer(httpServer: Server): WebSocketServer {
+export function setupOptimizedWebSocketServer(
+  httpServer: Server
+): WebSocketServer {
   console.log('🚀 Setting up optimized WebSocket server...');
 
   const wss = new WebSocketServer({
@@ -110,7 +112,9 @@ export function setupOptimizedWebSocketServer(httpServer: Server): WebSocketServ
     ws.on('close', () => {
       clearInterval(pingInterval);
       connections.delete(userId);
-      console.log(`❌ Client disconnected: ${userId} (Total: ${connections.size})`);
+      console.log(
+        `❌ Client disconnected: ${userId} (Total: ${connections.size})`
+      );
     });
 
     ws.on('error', (error) => {
@@ -196,7 +200,9 @@ async function handleStreamingMessage(
         totalMessages++;
         totalLatency += totalLatencyMs;
 
-        console.log(`✅ Stream complete: ${totalLatencyMs}ms (avg: ${Math.round(totalLatency / totalMessages)}ms)`);
+        console.log(
+          `✅ Stream complete: ${totalLatencyMs}ms (avg: ${Math.round(totalLatency / totalMessages)}ms)`
+        );
 
         // Send completion
         sendMessage(ws, {
@@ -250,7 +256,8 @@ export function getConnectionStats() {
   return {
     activeConnections: connections.size,
     totalMessages,
-    averageLatency: totalMessages > 0 ? Math.round(totalLatency / totalMessages) : 0,
+    averageLatency:
+      totalMessages > 0 ? Math.round(totalLatency / totalMessages) : 0,
     connections: Array.from(connections.values()).map((conn) => ({
       userId: conn.userId,
       connectionTime: conn.connectionTime,

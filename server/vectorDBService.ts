@@ -194,9 +194,8 @@ class VectorStore {
     // P2.2: If encrypted search requested, use HCF operations
     if (useEncrypted) {
       console.log('🔐 [HCF] Performing encrypted similarity search');
-      const { encryptVector, encryptedDistance } = await import(
-        './crypto/homomorphicProduction'
-      );
+      const { encryptVector, encryptedDistance } =
+        await import('./crypto/homomorphicProduction');
 
       // Encrypt query vector
       const encryptedQuery = encryptVector(queryEmbedding);

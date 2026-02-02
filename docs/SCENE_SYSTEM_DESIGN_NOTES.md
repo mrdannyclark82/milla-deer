@@ -3786,7 +3786,7 @@ This document provides manual testing steps to validate the adaptive scene gener
 
 ## Sign-Off
 
-**Tester:** ********\_\_\_********  
-**Date:** ********\_\_\_********  
+**Tester:** **\*\*\*\***\_\_\_**\*\*\*\***
+**Date:** **\*\*\*\***\_\_\_**\*\*\*\***
 **Status:** [ ] PASS [ ] FAIL [ ] NEEDS REVIEW  
 **Notes:**

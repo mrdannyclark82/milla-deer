@@ -11,7 +11,11 @@ interface OrbProps {
  * Dynamic animated orb component for visual polish
  * Provides smooth rotation animation with customizable appearance
  */
-const Orb: React.FC<OrbProps> = ({ size = 100, color = '#3b82f6', speed = 3000 }) => {
+const Orb: React.FC<OrbProps> = ({
+  size = 100,
+  color = '#3b82f6',
+  speed = 3000,
+}) => {
   const orbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

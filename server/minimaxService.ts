@@ -42,27 +42,31 @@ export async function generateMinimaxResponse(
   try {
     if (!process.env.MINIMAX_API_KEY || !client) {
       return {
-        content: 'Minimax integration is not configured. Please add your API key.',
+        content:
+          'Minimax integration is not configured. Please add your API key.',
         success: false,
         error: 'Missing API key',
       };
     }
 
     const messages: Array<{ role: string; content: string }> = [];
-    
+
     // System prompt
-    messages.push({ 
-        role: 'system', 
-        content: `${MILLA_CORE}\n\nYou are an expert coding assistant.` 
+    messages.push({
+      role: 'system',
+      content: `${MILLA_CORE}\n\nYou are an expert coding assistant.`,
     });
 
     // History
     if (context.conversationHistory) {
       const recentHistory = context.conversationHistory.slice(-4);
-      recentHistory.forEach(msg => {
-          if (msg.content && msg.content.trim()) {
-              messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content });
-          }
+      recentHistory.forEach((msg) => {
+        if (msg.content && msg.content.trim()) {
+          messages.push({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+          });
+        }
       });
     }
 

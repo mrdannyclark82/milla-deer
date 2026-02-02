@@ -5,7 +5,11 @@ import { validateSession } from '../authService';
  * Middleware to require authentication
  * Returns 401 if session is missing or invalid
  */
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const sessionToken = req.cookies.session_token;
 
   if (!sessionToken) {
@@ -26,7 +30,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
  * Middleware that optionally populates req.user if a valid session exists
  * Does NOT block the request if unauthenticated
  */
-export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
+export async function optionalAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const sessionToken = req.cookies.session_token;
 
   if (sessionToken) {

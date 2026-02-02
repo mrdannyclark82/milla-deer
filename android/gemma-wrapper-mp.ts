@@ -18,7 +18,9 @@ class MockMediaPipeLLM implements MediaPipeLLM {
 
   async infer(prompt: string, options: MediaPipeLLMOptions): Promise<string> {
     // Placeholder implementation
-    console.log(`MockMediaPipeLLM: Inferring with prompt (${prompt.length} chars), maxTokens: ${options.maxTokens}`);
+    console.log(
+      `MockMediaPipeLLM: Inferring with prompt (${prompt.length} chars), maxTokens: ${options.maxTokens}`
+    );
     return `Mock response for: ${prompt.substring(0, 50)}...`;
   }
 }
@@ -31,7 +33,9 @@ export class GemmaMPWrapper {
       // TODO: Replace with actual MediaPipe LLM when package is available
       // this.llm = new MediaPipeLLM(model);
       this.llm = new MockMediaPipeLLM(model);
-      console.log(`GemmaMP: Loaded ${model} via MediaPipe (mock implementation)`);
+      console.log(
+        `GemmaMP: Loaded ${model} via MediaPipe (mock implementation)`
+      );
     }
   }
 

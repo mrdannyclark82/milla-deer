@@ -20,7 +20,9 @@ export class Gemini3Reasoner {
 export function getGemini3Reasoner(): Gemini3Reasoner {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.warn('[Gemini3Reasoner] Warning: GEMINI_API_KEY not set in environment variables. Gemini 3 fallback will not work.');
+    console.warn(
+      '[Gemini3Reasoner] Warning: GEMINI_API_KEY not set in environment variables. Gemini 3 fallback will not work.'
+    );
   }
   return new Gemini3Reasoner(apiKey || '');
 }

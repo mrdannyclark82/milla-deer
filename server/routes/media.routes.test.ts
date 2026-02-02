@@ -48,7 +48,9 @@ describe('Media Routes', () => {
 
   describe('GET /api/scene/mood-backgrounds', () => {
     it('should return cached backgrounds', async () => {
-      vi.spyOn(moodBackground, 'getCachedMoodBackgrounds').mockReturnValue(['bg1.jpg']);
+      vi.spyOn(moodBackground, 'getCachedMoodBackgrounds').mockReturnValue([
+        'bg1.jpg',
+      ]);
       const response = await request(app).get('/api/scene/mood-backgrounds');
 
       expect(response.status).toBe(200);
