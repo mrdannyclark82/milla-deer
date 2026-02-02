@@ -15,9 +15,21 @@
           "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
           "files": [],
           "status": "testing",
-          "testsPassed": 2,
+          "testsPassed": 3,
           "testsFailed": 2,
           "addedAt": 1769578714591
+        },
+        {
+          "id": "feat_1769997726761_477f4vza8",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1769997726761
         }
       ],
       "readyForProduction": false,
@@ -57,6 +69,15 @@
           "passed": false,
           "details": "Some tests failed - review needed",
           "duration": 609.9937330985595
+        },
+        {
+          "id": "test_1769997726762_ze15ojmhe",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1769997726762,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1024.7468966012107
         }
       ]
     },
@@ -152,7 +173,18 @@
           "duration": 1402.6247357521493
         }
       ]
+    },
+    "sandbox_1769997726759_osx15if98": {
+      "id": "sandbox_1769997726759_osx15if98",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1769997726759",
+      "status": "active",
+      "createdAt": 1769997726759,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
     }
   },
-  "lastUpdated": 1769582787296
+  "lastUpdated": 1769997726762
 }
