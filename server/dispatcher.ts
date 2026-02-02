@@ -14,6 +14,8 @@ interface ModelHealth {
   available: boolean;
   lastCheck: number;
   failureCount: number;
+}
+
 import { OpenRouter } from 'openrouter'; // Assume existing import
 import { agenticDispatch } from './agentic-dispatch';
 
@@ -101,7 +103,20 @@ class Dispatcher {
               this.cache.delete(firstKey);
             }
           }
-  async dispatch(query: string, useAgenticMode: boolean = false): Promise<string> {
+        }
+        
+        return result;
+      } catch (e: any) {
+        console.error(`[Dispatcher] Model ${model} failed: ${e.message}`);
+        this.updateHealth(model, false);
+        continue;
+      }
+    }
+    
+    throw new Error('All models failed');
+  }
+
+  async dispatchAgentic(query: string, useAgenticMode: boolean = false): Promise<string> {
     // Use agentic dispatch for complex multi-step queries
     if (useAgenticMode) {
       try {

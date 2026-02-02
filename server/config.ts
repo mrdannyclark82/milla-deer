@@ -174,4 +174,8 @@ export const config = {
     modelPath: process.env.LOCAL_MODEL_PATH || 'locallm/gemma.tflite',
     preferLocal: process.env.PREFER_LOCAL_MODEL === 'true', // If true, use local by default
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+  },
 };

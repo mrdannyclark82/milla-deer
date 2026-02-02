@@ -1,0 +1,45 @@
+name: Fix Lockfile Conflicts
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  fix-lockfile:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/fix-lock')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Resolve and Regenerate
+        run: |
+          # 1. Pull the base branch (main/master) to get the latest changes
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 2. Merge base branch, preferring 'ours' for the lockfile conflict 
+          # or simply force-regenerating it.
+          git fetch origin ${{ github.event.issue.pull_request.base.ref }}
+          git merge origin/${{ github.event.issue.pull_request.base.ref }} --no-commit || true
+          
+          # 3. The "Nuclear" Lockfile Fix: Remove and Reinstall
+          rm package-lock.json
+          npm install
+          
+          # 4. Commit the fresh lockfile
+          git add package-lock.json
+          git commit -m "chore: automated package-lock.json conflict resolution" || echo "No changes to commit"
+          git push origin HEAD:${{ github.event.issue.pull_request.head.ref }}
