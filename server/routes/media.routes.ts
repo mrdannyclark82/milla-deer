@@ -16,6 +16,7 @@ import {
 import { generateImageWithVenice } from '../veniceImageService';
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { upload } from '../middleware/upload.middleware';
+import { cacheMiddleware } from '../middleware/caching';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -146,7 +147,7 @@ export function registerMediaRoutes(app: Express) {
     }
   }));
 
-  router.get('/scene/mood-backgrounds', asyncHandler(async (req, res) => {
+  router.get('/scene/mood-backgrounds', cacheMiddleware(300), asyncHandler(async (req, res) => {
     const cached = getCachedMoodBackgrounds();
     res.json({ success: true, backgrounds: cached });
   }));

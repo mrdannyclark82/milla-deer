@@ -12,6 +12,7 @@ import {
   getServerEvolutionHistory 
 } from '../selfEvolutionService';
 import { getMillaMoodData } from '../moodService';
+import { cacheMiddleware } from '../middleware/caching';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -85,7 +86,7 @@ export function registerSystemRoutes(app: Express) {
     res.json({ serverEvolutions, message: 'Self-improvement cycle initiated successfully', success: true });
   }));
 
-  router.get('/self-improvement/history', asyncHandler(async (req, res) => {
+  router.get('/self-improvement/history', cacheMiddleware(60), asyncHandler(async (req, res) => {
     const serverHistory = await getServerEvolutionHistory();
     const { type } = req.query;
 
