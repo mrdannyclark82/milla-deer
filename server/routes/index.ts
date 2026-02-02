@@ -10,6 +10,7 @@ import { registerSandboxRoutes } from './sandbox.routes';
 import { registerGoogleRoutes } from './google.routes';
 import { registerGoogleTtsRoutes } from './google-tts.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
+import { registerMerchRoutes } from './merch.routes';
 
 /**
  * Main router that aggregates all modular routes
@@ -39,6 +40,9 @@ export function registerModularRoutes(app: Express) {
   registerGoogleRoutes(app);
   registerGoogleTtsRoutes(app);
   registerPersonalTaskRoutes(app);
+
+  // Merch routes
+  registerMerchRoutes(app);
   
   return app;
 }
