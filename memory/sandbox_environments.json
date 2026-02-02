@@ -15,12 +15,12 @@
           "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
           "files": [],
           "status": "testing",
-          "testsPassed": 2,
-          "testsFailed": 3,
+          "testsPassed": 4,
+          "testsFailed": 2,
           "addedAt": 1769578714591
         },
         {
-          "id": "feat_1769931577492_eqf9r9sxn",
+          "id": "feat_1770000243679_seszmrtr2",
           "name": "Test Feature",
           "description": "Testing feature addition",
           "files": [
@@ -29,7 +29,19 @@
           "status": "draft",
           "testsPassed": 0,
           "testsFailed": 0,
-          "addedAt": 1769931577492
+          "addedAt": 1770000243679
+        },
+        {
+          "id": "feat_1770006388819_0tmeoce4s",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770006388819
         }
       ],
       "readyForProduction": false,
@@ -71,13 +83,22 @@
           "duration": 609.9937330985595
         },
         {
-          "id": "test_1769931577494_7k6k8ljzj",
+          "id": "test_1770000243680_ec76uj2bb",
           "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769931577494,
+          "timestamp": 1770000243680,
           "testType": "unit",
-          "passed": false,
-          "details": "Some tests failed - review needed",
-          "duration": 1103.428229124776
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 2027.982866832685
+        },
+        {
+          "id": "test_1770006388821_6xgocvmyr",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770006388821,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1489.9984601218312
         }
       ]
     },
@@ -174,17 +195,28 @@
         }
       ]
     },
-    "sandbox_1769931577489_tch466yvd": {
-      "id": "sandbox_1769931577489_tch466yvd",
+    "sandbox_1770000243678_3mcp3xrxd": {
+      "id": "sandbox_1770000243678_3mcp3xrxd",
       "name": "Test Sandbox",
       "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1769931577489",
+      "branchName": "sandbox/test-sandbox_1770000243678",
       "status": "active",
-      "createdAt": 1769931577489,
+      "createdAt": 1770000243678,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770006388818_0a3k0ehbs": {
+      "id": "sandbox_1770006388818_0a3k0ehbs",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770006388818",
+      "status": "active",
+      "createdAt": 1770006388818,
       "createdBy": "milla",
       "features": [],
       "readyForProduction": false
     }
   },
-  "lastUpdated": 1769931577494
+  "lastUpdated": 1770006388821
 }
