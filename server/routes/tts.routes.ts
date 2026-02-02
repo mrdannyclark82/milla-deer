@@ -1,5 +1,6 @@
 import { Router, type Express, Request, Response } from 'express';
 import { generateCoquiSpeech, getCoquiSpeechCacheStats } from '../api/coquiService';
+import { cacheMiddleware } from '../middleware/caching';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -38,7 +39,7 @@ export function registerTTSRoutes(app: Express) {
    * GET /api/coqui/stats
    * Get cache statistics
    */
-  router.get('/coqui/stats', asyncHandler(async (req: Request, res: Response) => {
+  router.get('/coqui/stats', cacheMiddleware(30), asyncHandler(async (req: Request, res: Response) => {
     const stats = getCoquiSpeechCacheStats();
     res.json({
       success: true,
