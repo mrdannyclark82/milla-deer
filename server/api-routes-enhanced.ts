@@ -4,11 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import {
-  streamAIResponse,
-  generateAIResponse,
-  convertToAISDKMessages,
-} from './ai-sdk-integration';
+import { streamAIResponse, generateAIResponse, convertToAISDKMessages } from './ai-sdk-integration';
 import { getRAGService } from './rag-service';
 import { getRedisCache } from './redis-cache-service';
 import { getVectorDB, initializeVectorDB } from './vector-db-service';
@@ -80,46 +76,43 @@ enhancedRouter.post('/api/chat', async (req: Request, res: Response) => {
  * POST /api/chat/generate
  * Non-streaming chat endpoint
  */
-enhancedRouter.post(
-  '/api/chat/generate',
-  async (req: Request, res: Response) => {
-    try {
-      const { messages, provider = 'openai', model, systemPrompt } = req.body;
+enhancedRouter.post('/api/chat/generate', async (req: Request, res: Response) => {
+  try {
+    const { messages, provider = 'openai', model, systemPrompt } = req.body;
 
-      if (!messages || !Array.isArray(messages)) {
-        return res.status(400).json({ error: 'Messages array required' });
-      }
-
-      // Check cache
-      const redisCache = getRedisCache();
-      const cachedResponse = await redisCache.getCachedLLMResponse(messages);
-
-      if (cachedResponse) {
-        return res.json({
-          content: cachedResponse,
-          cached: true,
-        });
-      }
-
-      // Generate response
-      const aiMessages = convertToAISDKMessages(messages);
-      const response = await generateAIResponse({
-        provider,
-        model,
-        messages: aiMessages,
-        systemPrompt,
-      });
-
-      // Cache response
-      await redisCache.cacheLLMResponse(messages, response);
-
-      res.json({ content: response, cached: false });
-    } catch (error: any) {
-      console.error('Generate API error:', error);
-      res.status(500).json({ error: error.message || 'Internal server error' });
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array required' });
     }
+
+    // Check cache
+    const redisCache = getRedisCache();
+    const cachedResponse = await redisCache.getCachedLLMResponse(messages);
+
+    if (cachedResponse) {
+      return res.json({
+        content: cachedResponse,
+        cached: true,
+      });
+    }
+
+    // Generate response
+    const aiMessages = convertToAISDKMessages(messages);
+    const response = await generateAIResponse({
+      provider,
+      model,
+      messages: aiMessages,
+      systemPrompt,
+    });
+
+    // Cache response
+    await redisCache.cacheLLMResponse(messages, response);
+
+    res.json({ content: response, cached: false });
+  } catch (error: any) {
+    console.error('Generate API error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
-);
+});
 
 /**
  * POST /api/rag/ingest
@@ -172,22 +165,19 @@ enhancedRouter.post('/api/rag/query', async (req: Request, res: Response) => {
  * DELETE /api/rag/document/:id
  * Delete document from RAG system
  */
-enhancedRouter.delete(
-  '/api/rag/document/:id',
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
+enhancedRouter.delete('/api/rag/document/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
-      const ragService = getRAGService();
-      await ragService.deleteDocument(id);
+    const ragService = getRAGService();
+    await ragService.deleteDocument(id);
 
-      res.json({ success: true, message: `Document ${id} deleted` });
-    } catch (error: any) {
-      console.error('RAG delete error:', error);
-      res.status(500).json({ error: error.message || 'Internal server error' });
-    }
+    res.json({ success: true, message: `Document ${id} deleted` });
+  } catch (error: any) {
+    console.error('RAG delete error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
-);
+});
 
 /**
  * GET /api/cache/stats
@@ -225,18 +215,15 @@ enhancedRouter.get('/api/vector/stats', async (req: Request, res: Response) => {
  * GET /api/websocket/stats
  * Get WebSocket connection statistics
  */
-enhancedRouter.get(
-  '/api/websocket/stats',
-  async (req: Request, res: Response) => {
-    try {
-      const stats = getConnectionStats();
-      res.json(stats);
-    } catch (error: any) {
-      console.error('WebSocket stats error:', error);
-      res.status(500).json({ error: error.message || 'Internal server error' });
-    }
+enhancedRouter.get('/api/websocket/stats', async (req: Request, res: Response) => {
+  try {
+    const stats = getConnectionStats();
+    res.json(stats);
+  } catch (error: any) {
+    console.error('WebSocket stats error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
-);
+});
 
 /**
  * GET /api/health

@@ -25,9 +25,7 @@ describe('Memory Routes', () => {
 
   describe('GET /api/messages', () => {
     it('should return messages from storage', async () => {
-      vi.spyOn(storage, 'getMessages').mockResolvedValue([
-        { id: '1', content: 'hello' } as any,
-      ]);
+      vi.spyOn(storage, 'getMessages').mockResolvedValue([{ id: '1', content: 'hello' } as any]);
       const response = await request(app).get('/api/messages');
 
       expect(response.status).toBe(200);
@@ -38,9 +36,7 @@ describe('Memory Routes', () => {
 
   describe('GET /api/knowledge', () => {
     it('should return knowledge items', async () => {
-      vi.spyOn(memoryService, 'searchKnowledge').mockResolvedValue([
-        { topic: 'test' } as any,
-      ]);
+      vi.spyOn(memoryService, 'searchKnowledge').mockResolvedValue([{ topic: 'test' } as any]);
       const response = await request(app).get('/api/knowledge');
 
       expect(response.status).toBe(200);

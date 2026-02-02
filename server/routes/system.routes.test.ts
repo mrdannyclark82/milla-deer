@@ -26,21 +26,15 @@ describe('System Routes', () => {
 
     // Default mocks
     vi.spyOn(circuitBreaker, 'getStatus').mockReturnValue({});
-    vi.spyOn(metacognitiveService, 'getSCPAQueueStatus').mockReturnValue({
-      queueSize: 0,
-      criticalFailures: 0,
-    } as any);
-    vi.spyOn(memoryScheduler, 'getSchedulerStatus').mockReturnValue({
-      isRunning: false,
-      successRate: 1,
-    } as any);
+    vi.spyOn(metacognitiveService, 'getSCPAQueueStatus').mockReturnValue({ queueSize: 0, criticalFailures: 0 } as any);
+    vi.spyOn(memoryScheduler, 'getSchedulerStatus').mockReturnValue({ isRunning: false, successRate: 1 } as any);
   });
 
   describe('GET /api/monitoring/health', () => {
     it('should return system health', async () => {
       vi.spyOn(agentController, 'getAllMetrics').mockReturnValue({});
       vi.spyOn(agentController, 'getRegisteredAgents').mockReturnValue([]);
-
+      
       const response = await request(app).get('/api/monitoring/health');
 
       expect(response.status).toBe(200);
@@ -51,10 +45,8 @@ describe('System Routes', () => {
 
   describe('GET /api/self-improvement/status', () => {
     it('should return evolution status', async () => {
-      vi.spyOn(selfEvolution, 'getServerEvolutionStatus').mockReturnValue({
-        isRunning: false,
-      } as any);
-
+      vi.spyOn(selfEvolution, 'getServerEvolutionStatus').mockReturnValue({ isRunning: false } as any);
+      
       const response = await request(app).get('/api/self-improvement/status');
 
       expect(response.status).toBe(200);

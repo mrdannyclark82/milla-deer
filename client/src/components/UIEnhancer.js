@@ -5,19 +5,13 @@ const UIEnhancer = () => {
   useEffect(() => {
     // Lazy loading for images
     const images = document.querySelectorAll('img[loading="lazy"]');
-    images.forEach((img) => (img.loading = 'lazy'));
+    images.forEach(img => img.loading = 'lazy');
 
     // Hover effects for buttons/links
     const interactables = document.querySelectorAll('.btn, a, li');
-    interactables.forEach((el) => {
-      el.addEventListener(
-        'mouseenter',
-        (e) => (e.target.style.transform = 'scale(1.05)')
-      );
-      el.addEventListener(
-        'mouseleave',
-        (e) => (e.target.style.transform = 'scale(1)')
-      );
+    interactables.forEach(el => {
+      el.addEventListener('mouseenter', (e) => e.target.style.transform = 'scale(1.05)');
+      el.addEventListener('mouseleave', (e) => e.target.style.transform = 'scale(1)');
     });
 
     // Simplified nav (add to your header)
@@ -50,12 +44,8 @@ const UIEnhancer = () => {
 
     // Accessibility (ARIA labels)
     const elements = document.querySelectorAll('[role], [aria-label]');
-    elements.forEach((el) => {
-      if (!el.hasAttribute('aria-label'))
-        el.setAttribute(
-          'aria-label',
-          el.textContent.trim() || 'Interactive element'
-        );
+    elements.forEach(el => {
+      if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', el.textContent.trim() || 'Interactive element');
     });
   }, []);
 

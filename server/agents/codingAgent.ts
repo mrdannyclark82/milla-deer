@@ -232,7 +232,9 @@ Format your response as JSON with keys: description, changes, reasoning.
 IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
 
       // Use Minimax service for coding tasks
-      const { generateMinimaxResponse } = await import('../minimaxService');
+      const { generateMinimaxResponse } = await import(
+        '../minimaxService'
+      );
 
       const result = await generateMinimaxResponse(
         prompt,
@@ -430,8 +432,8 @@ try {
 }
 
 /**
- * P2.5: Apply generated fix to codebase
- * This modifies files on the file system using the provided patch.
+ * P2.5: Apply generated fix to codebase (STUB)
+ * In production, this would actually modify files
  */
 export async function applyFixToCodebase(patch: {
   files: string[];

@@ -20,18 +20,10 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
-      const userData = {
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-      };
+      const userData = { username: 'testuser', email: 'test@example.com', password: 'password123' };
       vi.spyOn(authService, 'registerUser').mockResolvedValue({
         success: true,
-        user: {
-          id: '1',
-          username: 'testuser',
-          email: 'test@example.com',
-        } as any,
+        user: { id: '1', username: 'testuser', email: 'test@example.com' } as any,
       });
 
       const response = await request(app)
@@ -40,11 +32,7 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(authService.registerUser).toHaveBeenCalledWith(
-        'testuser',
-        'test@example.com',
-        'password123'
-      );
+      expect(authService.registerUser).toHaveBeenCalledWith('testuser', 'test@example.com', 'password123');
     });
 
     it('should return 400 if validation fails', async () => {
@@ -71,9 +59,7 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.header['set-cookie']).toBeDefined();
-      expect(response.header['set-cookie'][0]).toContain(
-        'session_token=mock-token'
-      );
+      expect(response.header['set-cookie'][0]).toContain('session_token=mock-token');
     });
 
     it('should return 401 for invalid credentials', async () => {

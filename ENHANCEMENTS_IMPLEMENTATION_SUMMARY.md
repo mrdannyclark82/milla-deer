@@ -321,12 +321,14 @@ All services are automatically initialized in `server/index.ts`:
 const { initializeAutomatedPR } = await import('./automatedPRService');
 await initializeAutomatedPR();
 
-const { initializeUserSurveys } =
-  await import('./userSatisfactionSurveyService');
+const { initializeUserSurveys } = await import(
+  './userSatisfactionSurveyService'
+);
 await initializeUserSurveys();
 
-const { initializePerformanceProfiling } =
-  await import('./performanceProfilingService');
+const { initializePerformanceProfiling } = await import(
+  './performanceProfilingService'
+);
 await initializePerformanceProfiling();
 ```
 

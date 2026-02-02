@@ -43,8 +43,7 @@ export async function generateVeniceResponse(
   try {
     if (!process.env.VENICE_API_KEY || !client) {
       return {
-        content:
-          'Venice integration is not configured. Please add your API key.',
+        content: 'Venice integration is not configured. Please add your API key.',
         success: false,
         error: 'Missing API key',
       };
@@ -59,7 +58,7 @@ export async function generateVeniceResponse(
 
     if (context.conversationHistory) {
       const recentHistory = context.conversationHistory.slice(-4);
-
+      
       const validMessages = recentHistory.filter(
         (msg) => msg.content && msg.content.trim().length > 0
       );

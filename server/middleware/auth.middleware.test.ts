@@ -30,11 +30,7 @@ describe('Auth Middleware', () => {
       req.cookies = { session_token: 'valid-token' };
       vi.mocked(validateSession).mockResolvedValue({
         valid: true,
-        user: {
-          id: 'user-123',
-          username: 'testuser',
-          email: 'test@example.com',
-        } as any,
+        user: { id: 'user-123', username: 'testuser', email: 'test@example.com' } as any,
       });
 
       await requireAuth(req as Request, res as Response, next);
@@ -49,9 +45,7 @@ describe('Auth Middleware', () => {
       await requireAuth(req as Request, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({ error: 'Unauthorized' })
-      );
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Unauthorized' }));
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -72,11 +66,7 @@ describe('Auth Middleware', () => {
       req.cookies = { session_token: 'valid-token' };
       vi.mocked(validateSession).mockResolvedValue({
         valid: true,
-        user: {
-          id: 'user-123',
-          username: 'testuser',
-          email: 'test@example.com',
-        } as any,
+        user: { id: 'user-123', username: 'testuser', email: 'test@example.com' } as any,
       });
 
       await optionalAuth(req as Request, res as Response, next);

@@ -45,7 +45,7 @@ export class Orchestrator {
     };
 
     // Initialize model health scores
-    this.config.fallbackChain.forEach((model) => {
+    this.config.fallbackChain.forEach(model => {
       this.modelHealth.set(model, 1.0);
     });
   }
@@ -56,10 +56,7 @@ export class Orchestrator {
   async initialize(): Promise<void> {
     console.log('[Orchestrator] Initializing...');
     console.log('[Orchestrator] Default model:', this.config.defaultModel);
-    console.log(
-      '[Orchestrator] Fallback chain:',
-      this.config.fallbackChain.join(' → ')
-    );
+    console.log('[Orchestrator] Fallback chain:', this.config.fallbackChain.join(' → '));
   }
 
   /**
@@ -72,9 +69,7 @@ export class Orchestrator {
       timestamp: Date.now(),
     };
 
-    console.log(
-      `[Orchestrator] Executing task ${fullTask.id} of type ${fullTask.type}`
-    );
+    console.log(`[Orchestrator] Executing task ${fullTask.id} of type ${fullTask.type}`);
 
     // Check cache first
     if (this.config.enableCaching) {
@@ -92,7 +87,7 @@ export class Orchestrator {
 
     try {
       const result = await this.executeWithFallback(fullTask);
-
+      
       // Cache the result
       if (this.config.enableCaching && result.success) {
         this.cacheResult(fullTask, result);
@@ -114,15 +109,13 @@ export class Orchestrator {
       // Skip unhealthy models
       const health = this.modelHealth.get(model) || 0;
       if (health < 0.3) {
-        console.log(
-          `[Orchestrator] Skipping unhealthy model ${model} (health: ${health.toFixed(2)})`
-        );
+        console.log(`[Orchestrator] Skipping unhealthy model ${model} (health: ${health.toFixed(2)})`);
         continue;
       }
 
       try {
         console.log(`[Orchestrator] Attempting ${model} for task ${task.id}`);
-
+        
         const result = await this.invokeModel(model, task);
         const latencyMs = Date.now() - startTime;
 
@@ -138,7 +131,7 @@ export class Orchestrator {
         };
       } catch (error: any) {
         console.warn(`[Orchestrator] Model ${model} failed:`, error.message);
-
+        
         // Update model health (failure)
         this.updateModelHealth(model, false);
 
@@ -210,7 +203,7 @@ export class Orchestrator {
    */
   private updateModelHealth(model: string, success: boolean): void {
     const currentHealth = this.modelHealth.get(model) || 1.0;
-
+    
     if (success) {
       // Slowly increase health
       this.modelHealth.set(model, Math.min(1.0, currentHealth + 0.1));
@@ -269,7 +262,7 @@ export class Orchestrator {
    * Utility delay function
    */
   private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

@@ -1,6 +1,6 @@
 /**
  * MediaPipe Integration Example
- *
+ * 
  * Example component demonstrating how to use the MediaPipe GenAI wrapper
  * for multimodal tasks like vision and audio processing.
  */
@@ -12,9 +12,7 @@ export function MediaPipeExample() {
   const [result, setResult] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -24,10 +22,7 @@ export function MediaPipeExample() {
       await genai.init();
 
       // Analyze the uploaded image
-      const analysis = await genai.analyzeImage(
-        file,
-        'Describe this image in detail'
-      );
+      const analysis = await genai.analyzeImage(file, 'Describe this image in detail');
       setResult(analysis);
     } catch (error) {
       console.error('Image analysis failed:', error);
@@ -37,9 +32,7 @@ export function MediaPipeExample() {
     }
   };
 
-  const handleAudioUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleAudioUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -62,11 +55,9 @@ export function MediaPipeExample() {
   return (
     <div className="mediapipe-example p-4 space-y-4">
       <h2 className="text-2xl font-bold">MediaPipe GenAI Demo</h2>
-
+      
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold">
-          Vision: Upload Image for Analysis
-        </h3>
+        <h3 className="text-lg font-semibold">Vision: Upload Image for Analysis</h3>
         <input
           type="file"
           accept="image/*"
@@ -77,9 +68,7 @@ export function MediaPipeExample() {
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold">
-          Audio: Upload Audio for Transcription
-        </h3>
+        <h3 className="text-lg font-semibold">Audio: Upload Audio for Transcription</h3>
         <input
           type="file"
           accept="audio/*"

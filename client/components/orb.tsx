@@ -42,14 +42,7 @@ const Orb: React.FC<OrbProps> = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Background glow
-      const glow = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        baseRadius * 2
-      );
+      const glow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius * 2);
       glow.addColorStop(0, `${color}22`);
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
@@ -62,14 +55,7 @@ const Orb: React.FC<OrbProps> = ({
       if (isListening) radius += Math.sin(time * 3) * 8;
 
       // Main orb
-      const gradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        radius
-      );
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       gradient.addColorStop(0, color);
       gradient.addColorStop(0.7, `${color}99`);
       gradient.addColorStop(1, `${color}00`);
@@ -120,9 +106,9 @@ const Orb: React.FC<OrbProps> = ({
   }, [isActive, isSpeaking, isListening, intensity, color, size]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={size}
+    <canvas 
+      ref={canvasRef} 
+      width={size} 
       height={size}
       style={{
         filter: isActive ? 'brightness(1.2)' : 'brightness(0.8)',

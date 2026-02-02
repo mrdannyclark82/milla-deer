@@ -24,28 +24,28 @@ const openai = new OpenAI({
 
 // Scene definitions
 const LOCATION_MOODS = {
-  living_room: 'calm and cozy',
-  bedroom: 'romantic and intimate',
-  kitchen: 'warm and inviting',
-  bathroom: 'peaceful and serene',
-  front_door: 'welcoming and energetic',
-  dining_room: 'elegant and comfortable',
-  outdoor: 'fresh and natural',
-  car: 'modern and functional',
+  'living_room': 'calm and cozy',
+  'bedroom': 'romantic and intimate',
+  'kitchen': 'warm and inviting',
+  'bathroom': 'peaceful and serene',
+  'front_door': 'welcoming and energetic',
+  'dining_room': 'elegant and comfortable',
+  'outdoor': 'fresh and natural',
+  'car': 'modern and functional',
 };
 
 const TIME_DESCRIPTIONS = {
-  dawn: 'early morning with soft golden light',
-  day: 'bright daylight',
-  dusk: 'warm evening twilight',
-  night: 'dim ambient lighting at night',
+  'dawn': 'early morning with soft golden light',
+  'day': 'bright daylight',
+  'dusk': 'warm evening twilight',
+  'night': 'dim ambient lighting at night',
 };
 
 const TIME_FILENAME_MAP = {
-  dawn: 'morning',
-  day: 'day',
-  dusk: 'dusk',
-  night: 'night',
+  'dawn': 'morning',
+  'day': 'day',
+  'dusk': 'dusk',
+  'night': 'night',
 };
 
 function generatePrompt(location, timeOfDay) {
@@ -75,11 +75,7 @@ async function generateImage(prompt, filename) {
     const arrayBuffer = await imageResponse.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const outputPath = path.join(
-      __dirname,
-      'client/public/assets/scenes',
-      filename
-    );
+    const outputPath = path.join(__dirname, 'client/public/assets/scenes', filename);
     fs.writeFileSync(outputPath, buffer);
 
     console.log(`Saved ${filename}`);
@@ -112,18 +108,12 @@ async function generateSceneImages() {
     await generateImage(prompt, filename);
 
     // Add delay to avoid rate limits
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   // Generate time variants for key locations
   console.log('Generating time-specific variants...');
-  const keyLocations = [
-    'living_room',
-    'bedroom',
-    'kitchen',
-    'bathroom',
-    'front_door',
-  ];
+  const keyLocations = ['living_room', 'bedroom', 'kitchen', 'bathroom', 'front_door'];
   const times = ['dawn', 'day', 'dusk', 'night'];
 
   for (const location of keyLocations) {
@@ -135,7 +125,7 @@ async function generateSceneImages() {
       await generateImage(prompt, filename);
 
       // Add delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 

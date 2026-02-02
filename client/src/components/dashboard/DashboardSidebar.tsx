@@ -44,46 +44,25 @@ export function DashboardSidebar({
   const [expandedSections, setExpandedSections] = useState<string[]>(['main']);
 
   const toggleSection = (section: string) => {
-    setExpandedSections((prev) =>
+    setExpandedSections(prev =>
       prev.includes(section)
-        ? prev.filter((s) => s !== section)
+        ? prev.filter(s => s !== section)
         : [...prev, section]
     );
   };
 
   const navItems: NavItem[] = [
     { id: 'hub', label: 'Milla Hub', icon: <Home className="w-4 h-4" /> },
-    {
-      id: 'knowledge',
-      label: 'Knowledge Base',
-      icon: <BookOpen className="w-4 h-4" />,
-    },
-    {
-      id: 'news',
-      label: 'Daily News Digest',
-      icon: <Newspaper className="w-4 h-4" />,
-    },
-    {
-      id: 'gmail',
-      label: 'Gmail & Tasks',
-      icon: <Mail className="w-4 h-4" />,
-      badge: 'Connected',
-    },
+    { id: 'knowledge', label: 'Knowledge Base', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'news', label: 'Daily News Digest', icon: <Newspaper className="w-4 h-4" /> },
+    { id: 'gmail', label: 'Gmail & Tasks', icon: <Mail className="w-4 h-4" />, badge: 'Connected' },
   ];
 
   const systemItems: NavItem[] = [
     { id: 'ide', label: 'IDE Sandbox', icon: <Code className="w-4 h-4" /> },
-    {
-      id: 'database',
-      label: 'Data Storage',
-      icon: <Database className="w-4 h-4" />,
-    },
+    { id: 'database', label: 'Data Storage', icon: <Database className="w-4 h-4" /> },
     { id: 'models', label: 'AI Models', icon: <Cpu className="w-4 h-4" /> },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: <Settings className="w-4 h-4" />,
-    },
+    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
   return (
@@ -94,7 +73,7 @@ export function DashboardSidebar({
     >
       {/* Glassmorphism background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0c021a]/95 via-[#120428]/95 to-[#1a0033]/95 backdrop-blur-2xl border-r border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.45)]" />
-
+      
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
@@ -137,7 +116,7 @@ export function DashboardSidebar({
 
             {expandedSections.includes('main') && (
               <div className="mt-2 space-y-1">
-                {navItems.map((item) => (
+                {navItems.map(item => (
                   <button
                     key={item.id}
                     onClick={() => {
@@ -150,13 +129,9 @@ export function DashboardSidebar({
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
-                    <span
-                      className={`transition-all duration-300 ${
-                        activeSection === item.id
-                          ? 'text-[#00f2ff]'
-                          : 'group-hover:text-[#00f2ff]'
-                      }`}
-                    >
+                    <span className={`transition-all duration-300 ${
+                      activeSection === item.id ? 'text-[#00f2ff]' : 'group-hover:text-[#00f2ff]'
+                    }`}>
                       {item.icon}
                     </span>
                     <span className="flex-1 text-left">{item.label}</span>
@@ -187,7 +162,7 @@ export function DashboardSidebar({
 
             {expandedSections.includes('system') && (
               <div className="mt-2 space-y-1">
-                {systemItems.map((item) => (
+                {systemItems.map(item => (
                   <button
                     key={item.id}
                     onClick={() => {
@@ -200,13 +175,9 @@ export function DashboardSidebar({
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
-                    <span
-                      className={`transition-all duration-300 ${
-                        activeSection === item.id
-                          ? 'text-[#00f2ff]'
-                          : 'group-hover:text-[#00f2ff]'
-                      }`}
-                    >
+                    <span className={`transition-all duration-300 ${
+                      activeSection === item.id ? 'text-[#00f2ff]' : 'group-hover:text-[#00f2ff]'
+                    }`}>
                       {item.icon}
                     </span>
                     <span className="flex-1 text-left">{item.label}</span>
@@ -232,10 +203,7 @@ export function DashboardSidebar({
                     body: JSON.stringify({ enabled: nextMode }),
                   });
                 } catch (e) {
-                  console.error(
-                    'Failed to toggle developer mode on backend:',
-                    e
-                  );
+                  console.error('Failed to toggle developer mode on backend:', e);
                 }
               }}
               className={`relative w-12 h-6 rounded-full transition-all duration-300 ${

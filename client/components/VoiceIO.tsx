@@ -40,8 +40,7 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
     // Initialize speech recognition
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
@@ -75,7 +74,7 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
       .map((result: any) => result[0].transcript)
       .join('');
 
-    setState((prev) => ({ ...prev, transcript }));
+    setState(prev => ({ ...prev, transcript }));
 
     if (event.results[0].isFinal) {
       if (onTranscript) {
@@ -86,7 +85,7 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
 
   const handleRecognitionError = (event: any) => {
     const error = new Error(`Speech recognition error: ${event.error}`);
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       error: error.message,
       isListening: false,
@@ -97,12 +96,12 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
   };
 
   const handleRecognitionEnd = () => {
-    setState((prev) => ({ ...prev, isListening: false }));
+    setState(prev => ({ ...prev, isListening: false }));
   };
 
   const startListening = () => {
     if (recognitionRef.current) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         isListening: true,
         transcript: '',
@@ -137,16 +136,16 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
     }
 
     utterance.onstart = () => {
-      setState((prev) => ({ ...prev, isSpeaking: true }));
+      setState(prev => ({ ...prev, isSpeaking: true }));
     };
 
     utterance.onend = () => {
-      setState((prev) => ({ ...prev, isSpeaking: false }));
+      setState(prev => ({ ...prev, isSpeaking: false }));
     };
 
     utterance.onerror = (event) => {
       console.error('Speech synthesis error:', event);
-      setState((prev) => ({ ...prev, isSpeaking: false }));
+      setState(prev => ({ ...prev, isSpeaking: false }));
     };
 
     synthRef.current.speak(utterance);
@@ -155,7 +154,7 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
   const stopSpeaking = () => {
     if (synthRef.current) {
       synthRef.current.cancel();
-      setState((prev) => ({ ...prev, isSpeaking: false }));
+      setState(prev => ({ ...prev, isSpeaking: false }));
     }
   };
 
@@ -198,9 +197,7 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
 
       {state.transcript && (
         <div className="transcript bg-gray-50 p-3 rounded-md mb-3">
-          <p className="text-xs font-semibold text-gray-600 mb-1">
-            Transcript:
-          </p>
+          <p className="text-xs font-semibold text-gray-600 mb-1">Transcript:</p>
           <p className="text-sm text-gray-800">{state.transcript}</p>
         </div>
       )}
@@ -213,21 +210,15 @@ export const VoiceIO: React.FC<VoiceIOProps> = ({
       )}
 
       <div className="status flex items-center gap-2 text-xs text-gray-500">
-        <div
-          className={`w-2 h-2 rounded-full ${
-            state.isListening
-              ? 'bg-green-500'
-              : state.isSpeaking
-                ? 'bg-blue-500'
-                : 'bg-gray-300'
-          }`}
-        ></div>
+        <div className={`w-2 h-2 rounded-full ${
+          state.isListening ? 'bg-green-500' : state.isSpeaking ? 'bg-blue-500' : 'bg-gray-300'
+        }`}></div>
         <span>
           {state.isListening
             ? 'Listening...'
             : state.isSpeaking
-              ? 'Speaking...'
-              : 'Ready'}
+            ? 'Speaking...'
+            : 'Ready'}
         </span>
       </div>
     </div>

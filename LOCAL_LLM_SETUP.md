@@ -27,27 +27,23 @@ npm run dev
 ## Why Use Local LLMs?
 
 ### 🔒 **Privacy First**
-
 - Your conversations **never leave your computer**
 - No data sent to OpenAI, Google, or any cloud service
 - Perfect for sensitive conversations
 - HIPAA/GDPR compliant by default
 
 ### 💰 **Zero Cost**
-
 - No API fees
 - No monthly subscriptions
 - No per-token charges
 - Run unlimited chats for free
 
 ### 🌐 **Works Offline**
-
 - No internet connection needed
 - Perfect for travel, remote areas, or offline work
 - Never blocked by network restrictions
 
 ### ⚡ **Fast & Reliable**
-
 - No network latency
 - No rate limits
 - No API outages
@@ -62,27 +58,23 @@ npm run dev
 Ollama is like Docker for LLMs - it makes running local models incredibly easy.
 
 **macOS:**
-
 1. Download: https://ollama.com/download/Ollama.dmg
 2. Open the DMG file
 3. Drag Ollama to Applications
 4. Launch Ollama (it runs in the menu bar)
 
 **Windows:**
-
 1. Download: https://ollama.com/download/OllamaSetup.exe
 2. Run the installer
 3. Follow the prompts
 4. Ollama starts automatically
 
 **Linux:**
-
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
 
 **Verify Installation:**
-
 ```bash
 ollama --version
 ```
@@ -98,7 +90,6 @@ Pick a model based on your RAM:
 ```bash
 ollama pull gemma3:1b
 ```
-
 - Size: 815MB
 - Quality: Good
 - Speed: Very fast
@@ -109,8 +100,7 @@ ollama pull gemma3:1b
 ```bash
 ollama pull gemma3
 ```
-
-- Size: 3.3GB
+- Size: 3.3GB  
 - Quality: Excellent
 - Speed: Fast
 - Best for: Daily use, great quality
@@ -120,7 +110,6 @@ ollama pull gemma3
 ```bash
 ollama pull gemma3:12b
 ```
-
 - Size: 8.1GB
 - Quality: Outstanding
 - Speed: Moderate
@@ -228,7 +217,6 @@ ollama list
 ```
 
 Output:
-
 ```
 NAME              SIZE    MODIFIED
 gemma3:1b         815MB   2 minutes ago
@@ -268,15 +256,15 @@ options: {
   temperature: 0.8,    // Creativity (0.0-1.0)
                        // Lower = more focused
                        // Higher = more creative
-
+  
   top_k: 40,          // Sampling diversity
                        // Lower = more consistent
                        // Higher = more varied
-
+  
   top_p: 0.9,         // Nucleus sampling
                        // Lower = more predictable
                        // Higher = more diverse
-
+  
   num_predict: 512,   // Max tokens to generate
                        // Lower = faster, shorter
                        // Higher = slower, longer
@@ -286,15 +274,13 @@ options: {
 ### Speed Up Responses
 
 1. **Use smaller models:**
-
    ```bash
    ollama pull gemma3:1b  # Instead of gemma3:12b
    ```
 
 2. **Reduce max tokens:**
-
    ```typescript
-   num_predict: 256; // Instead of 512
+   num_predict: 256  // Instead of 512
    ```
 
 3. **Close other apps** to free RAM
@@ -304,20 +290,18 @@ options: {
 ### Improve Quality
 
 1. **Use larger models:**
-
    ```bash
    ollama pull gemma3:12b  # Instead of gemma3:1b
    ```
 
 2. **Adjust temperature:**
-
    ```typescript
-   temperature: 0.7; // More focused (default 0.8)
+   temperature: 0.7  // More focused (default 0.8)
    ```
 
 3. **Increase max tokens:**
    ```typescript
-   num_predict: 1024; // Longer responses
+   num_predict: 1024  // Longer responses
    ```
 
 ---
@@ -327,7 +311,6 @@ options: {
 ### ❌ "Ollama is not running"
 
 **Solution:**
-
 ```bash
 # Start Ollama
 ollama serve
@@ -336,7 +319,6 @@ ollama serve
 ```
 
 **Verify:**
-
 ```bash
 curl http://localhost:11434/api/tags
 ```
@@ -348,13 +330,11 @@ Should return JSON with model list.
 ### ❌ "No models found"
 
 **Solution:**
-
 ```bash
 ollama pull gemma3:1b
 ```
 
 **Verify:**
-
 ```bash
 ollama list
 ```
@@ -366,31 +346,28 @@ ollama list
 **Solutions:**
 
 1. **Use smaller model:**
-
    ```bash
    ollama pull gemma3:1b
    ```
 
 2. **Check RAM usage:**
-
    ```bash
    # Linux/macOS
    free -h
-
+   
    # macOS
    top
-
+   
    # Windows
    Task Manager → Performance
    ```
-
+   
    Close other apps if RAM is low.
 
 3. **Reduce max tokens:**
    Edit `offlineModelService.ts`:
-
    ```typescript
-   num_predict: 256; // Down from 512
+   num_predict: 256  // Down from 512
    ```
 
 4. **Check CPU/GPU usage:**
@@ -417,7 +394,6 @@ ollama pull llama3.2:1b  # 1.3GB
 ```
 
 **RAM Requirements:**
-
 - 4GB RAM: gemma3:1b, llama3.2:1b
 - 8GB RAM: gemma3, phi4-mini, mistral
 - 16GB RAM: gemma3:12b, llama3.1
@@ -428,7 +404,6 @@ ollama pull llama3.2:1b  # 1.3GB
 ### ❌ "Cannot connect to Ollama"
 
 **Causes:**
-
 1. Ollama not running
 2. Wrong port
 3. Firewall blocking
@@ -436,7 +411,6 @@ ollama pull llama3.2:1b  # 1.3GB
 **Solution:**
 
 1. **Check if Ollama is running:**
-
    ```bash
    ps aux | grep ollama
    # or
@@ -444,21 +418,19 @@ ollama pull llama3.2:1b  # 1.3GB
    ```
 
 2. **Restart Ollama:**
-
    ```bash
    # Linux
    sudo systemctl restart ollama
-
+   
    # macOS/Windows
    Quit and relaunch Ollama app
    ```
 
 3. **Check port:**
-
    ```bash
    netstat -an | grep 11434
    ```
-
+   
    Should show: `127.0.0.1:11434 ... LISTEN`
 
 4. **Check firewall:**
@@ -504,7 +476,6 @@ LOCAL_MODEL_NAME=phi4-mini
 ### GPU Acceleration
 
 Ollama automatically uses your GPU if:
-
 - NVIDIA GPU (CUDA) ✅
 - AMD GPU (ROCm) ✅
 - Apple Silicon (Metal) ✅
@@ -516,16 +487,16 @@ No configuration needed!
 
 ## Comparison: Local vs Cloud
 
-| Feature          | Local (Ollama) | Cloud (OpenRouter/OpenAI) |
-| ---------------- | -------------- | ------------------------- |
-| **Privacy**      | ✅ Complete    | ⚠️ Data sent to API       |
-| **Cost**         | ✅ Free        | 💰 Pay per token          |
-| **Speed**        | ⚡ Fast (1-3s) | ⚡ Fast (1-2s)            |
-| **Quality**      | ⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐                |
-| **Offline**      | ✅ Yes         | ❌ No                     |
-| **Setup**        | 🔧 5 minutes   | ✅ Instant                |
-| **RAM Usage**    | 📊 1-8GB       | 📊 Minimal                |
-| **Model Choice** | 🎯 100+ models | 🎯 50+ models             |
+| Feature | Local (Ollama) | Cloud (OpenRouter/OpenAI) |
+|---------|----------------|--------------------------|
+| **Privacy** | ✅ Complete | ⚠️ Data sent to API |
+| **Cost** | ✅ Free | 💰 Pay per token |
+| **Speed** | ⚡ Fast (1-3s) | ⚡ Fast (1-2s) |
+| **Quality** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Offline** | ✅ Yes | ❌ No |
+| **Setup** | 🔧 5 minutes | ✅ Instant |
+| **RAM Usage** | 📊 1-8GB | 📊 Minimal |
+| **Model Choice** | 🎯 100+ models | 🎯 50+ models |
 
 ---
 
@@ -533,7 +504,7 @@ No configuration needed!
 
 1. ✅ **You have local LLM working!**
 2. 🎨 Try different models for comparison
-3. ⚙️ Tune parameters for your preference
+3. ⚙️ Tune parameters for your preference  
 4. 📊 Monitor RAM usage
 5. 🚀 Enjoy private, offline AI!
 

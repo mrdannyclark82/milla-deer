@@ -262,11 +262,8 @@ export const AdaptiveSceneManager: React.FC<AdaptiveSceneManagerProps> = ({
 
   // Check for seasonal scenes (e.g., snowy night in winter)
   const currentSeason = getCurrentSeason();
-  const seasonalScene = settings.winterTheme
-    ? SEASONAL_SCENES.snowy_night
-    : getSeasonalScene(currentSeason, timeOfDay);
-  const finalSceneConfig =
-    seasonalScene || getSceneForContext(timeOfDay, activeMood);
+  const seasonalScene = settings.winterTheme ? SEASONAL_SCENES.snowy_night : getSeasonalScene(currentSeason, timeOfDay);
+  const finalSceneConfig = seasonalScene || getSceneForContext(timeOfDay, activeMood);
   const sceneConfig = getSceneForContext(timeOfDay, activeMood);
 
   // Determine effective parallax intensity

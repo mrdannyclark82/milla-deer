@@ -197,10 +197,10 @@ export function initializeDailySuggestionScheduler(): void {
     console.error(`Invalid cron expression: "${cronSchedule}"`);
     return;
   }
-
+  
   const minute = parseInt(cronParts[0]);
   const hour = parseInt(cronParts[1]);
-
+  
   if (isNaN(minute) || isNaN(hour)) {
     console.error(`Invalid cron expression: "${cronSchedule}"`);
     return;

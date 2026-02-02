@@ -1,9 +1,9 @@
 import { Router, type Express } from 'express';
-import {
-  registerUser,
-  loginUser,
-  logoutUser,
-  validateSession,
+import { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  validateSession 
 } from '../authService';
 
 /**

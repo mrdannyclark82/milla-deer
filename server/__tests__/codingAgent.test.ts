@@ -9,18 +9,16 @@ import * as openrouterService from '../openrouterService.js';
 describe('CodingAgent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
+    
     // Mock OpenRouter service by default
-    vi.spyOn(openrouterService, 'generateOpenRouterResponse').mockResolvedValue(
-      {
-        content: JSON.stringify({
-          description: 'Mock AI-generated fix',
-          changes: 'Mock code changes',
-          reasoning: 'Mock reasoning',
-        }),
-        success: true,
-      }
-    );
+    vi.spyOn(openrouterService, 'generateOpenRouterResponse').mockResolvedValue({
+      content: JSON.stringify({
+        description: 'Mock AI-generated fix',
+        changes: 'Mock code changes',
+        reasoning: 'Mock reasoning',
+      }),
+      success: true,
+    });
   });
 
   describe('handleTask', () => {

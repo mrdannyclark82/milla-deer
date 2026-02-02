@@ -7,7 +7,6 @@ This PR implements a complete set of immersive, cyber-romantic themed UI compone
 ## Files Added
 
 ### Components (7 files)
-
 1. `client/src/AppShell.tsx` - Minimal wrapper preserving existing routes
 2. `client/src/components/GlowButton.tsx` - Button with glow effects and variants
 3. `client/src/components/Card.tsx` - Card components with glow styling
@@ -17,24 +16,20 @@ This PR implements a complete set of immersive, cyber-romantic themed UI compone
 7. `client/src/pages/Landing.tsx` - Complete landing page
 
 ### Styles (1 file)
-
 8. `client/src/styles/glow.css` - CSS utilities for glow effects
 
 ### Documentation (3 files)
-
 9. `docs/CYBER_ROMANTIC_UI_COMPONENTS.md` - Comprehensive component documentation
 10. `client/src/ComponentExamples.tsx` - Usage examples for all components
 11. `client/src/landing-main.tsx` - Alternative entry point for landing page
 
 ### Configuration (2 files modified)
-
 12. `tailwind.config.ts` - Extended theme with colors, shadows, animations
 13. `client/src/index.css` - Import glow.css
 
 ## Key Features
 
 ### Tailwind Theme Extensions
-
 - **Colors**: cyber-pink, cyber-purple, cyber-blue, neon variants
 - **Background Images**: cyber-grid, glow-gradient, radial/conic gradients
 - **Box Shadows**: glow-sm/md/lg/xl, neon-pink/blue
@@ -42,7 +37,6 @@ This PR implements a complete set of immersive, cyber-romantic themed UI compone
 - **Fonts**: Extended with fallback system fonts
 
 ### Components Features
-
 - **Accessibility**: All components have focus-visible ring states
 - **Responsive**: Grid layouts collapse on mobile, full-bleed hero
 - **High Contrast**: Text is readable on dark backgrounds
@@ -50,7 +44,6 @@ This PR implements a complete set of immersive, cyber-romantic themed UI compone
 - **Glow Effects**: Optional glow on buttons, cards, and inputs
 
 ### Styling System
-
 - **CSS Utilities**: 20+ utility classes in glow.css
 - **Component Props**: Configurable glow, size, variant options
 - **Consistent Theme**: All components use same color palette
@@ -59,16 +52,14 @@ This PR implements a complete set of immersive, cyber-romantic themed UI compone
 ## Usage
 
 ### Quick Integration
-
 ```tsx
 import Landing from '@/pages/Landing';
 
 // Use as standalone page
-<Landing />;
+<Landing />
 ```
 
 ### Individual Components
-
 ```tsx
 import GlowButton from '@/components/GlowButton';
 import Card from '@/components/Card';
@@ -77,15 +68,16 @@ import Card from '@/components/Card';
   <CardContent>
     <GlowButton variant="pink">Click Me</GlowButton>
   </CardContent>
-</Card>;
+</Card>
 ```
 
 ### Wrap Existing App
-
 ```tsx
 import AppShell from '@/AppShell';
 
-<AppShell>{/* Existing app content */}</AppShell>;
+<AppShell>
+  {/* Existing app content */}
+</AppShell>
 ```
 
 ## Testing
@@ -99,13 +91,11 @@ import AppShell from '@/AppShell';
 ## Responsive Behavior
 
 ### Breakpoints
-
 - **Mobile (< 768px)**: Single column layouts, stacked cards
 - **Tablet (768px - 1024px)**: 2-column grids
 - **Desktop (> 1024px)**: 3-column grids, full layout
 
 ### Components
-
 - **Hero**: Full-bleed on all screens
 - **Feature cards**: Responsive grid (1/2/3 columns)
 - **Header**: Collapses to hamburger menu on mobile

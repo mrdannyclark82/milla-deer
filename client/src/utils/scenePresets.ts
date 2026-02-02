@@ -126,9 +126,9 @@ export function getLocationMood(location: string): SceneMood {
 // Seasonal scenes for special themes
 export const SEASONAL_SCENES = {
   snowy_night: {
-    colors: ['#0F2027', '#203A43', '#2C5364', '#1A1A2E'], // Deep midnight blues with white accents
-    animations: ['gentle-wave', 'breathing', 'drift'], // Subtle breathing glow, gentle parallax
-    particles: { type: 'snowflakes', density: 'high', speed: 0.4 }, // Slow-moving snowflakes
+    colors: ["#0F2027", "#203A43", "#2C5364", "#1A1A2E"], // Deep midnight blues with white accents
+    animations: ["gentle-wave", "breathing", "drift"], // Subtle breathing glow, gentle parallax
+    particles: { type: "snowflakes", density: "high", speed: 0.4 }, // Slow-moving snowflakes
     interactive: true,
   } as SceneConfig,
 };
@@ -137,11 +137,8 @@ export const SEASONAL_SCENES = {
  * Get seasonal scene configuration
  * Currently supports snowy night theme
  */
-export function getSeasonalScene(
-  season: 'winter' | 'none' = 'none',
-  timeOfDay: TimeOfDay = 'night'
-): SceneConfig | null {
-  if (season === 'winter' && timeOfDay === 'night') {
+export function getSeasonalScene(season: "winter" | "none" = "none", timeOfDay: TimeOfDay = "night"): SceneConfig | null {
+  if (season === "winter" && timeOfDay === "night") {
     return SEASONAL_SCENES.snowy_night;
   }
   return null;
@@ -151,11 +148,11 @@ export function getSeasonalScene(
  * Detect current season based on date
  * Winter: December-February
  */
-export function getCurrentSeason(): 'winter' | 'none' {
+export function getCurrentSeason(): "winter" | "none" {
   const month = new Date().getMonth(); // 0-11
-  if (month === 11 || month === 0 || month === 1) {
-    // Dec, Jan, Feb
-    return 'winter';
+  if (month === 11 || month === 0 || month === 1) { // Dec, Jan, Feb
+    return "winter";
   }
-  return 'none';
+  return "none";
 }
+

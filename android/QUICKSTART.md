@@ -7,14 +7,12 @@
 The easiest way to start using Milla Rayne on Android!
 
 1. **Build the APK:**
-
    ```bash
    cd android
    ./gradlew assembleDebug
    ```
 
 2. **Install on your device:**
-
    ```bash
    adb install app/build/outputs/apk/debug/app-debug.apk
    ```
@@ -25,7 +23,6 @@ The easiest way to start using Milla Rayne on Android!
    - The app works 100% offline with no server needed
 
 **What you can do offline:**
-
 - ✅ Have basic conversations
 - ✅ Get time and date
 - ✅ Control device volume
@@ -37,7 +34,6 @@ The easiest way to start using Milla Rayne on Android!
 For advanced AI capabilities:
 
 1. **Start the server on your computer:**
-
    ```bash
    cd /path/to/Milla-Rayne
    npm run dev
@@ -50,13 +46,11 @@ For advanced AI capabilities:
 
 3. **Update the app's server URL:**
    Edit `android/app/src/main/java/com/millarayne/api/MillaApiClient.kt`:
-
    ```kotlin
    private const val BASE_URL = "http://YOUR_IP_HERE:5000/"
    ```
 
 4. **Build and install:**
-
    ```bash
    ./gradlew assembleDebug
    adb install app/build/outputs/apk/debug/app-debug.apk
@@ -67,7 +61,6 @@ For advanced AI capabilities:
 ## Quick Commands to Try
 
 ### Offline Mode
-
 - "Hello!" - Get a friendly greeting
 - "What time is it?" - Current time
 - "Tell me a joke" - Random joke
@@ -76,9 +69,7 @@ For advanced AI capabilities:
 - "Help" - See what I can do
 
 ### Online Mode
-
 Everything above, plus:
-
 - Complex questions and conversations
 - Weather information
 - Web searches
@@ -88,17 +79,14 @@ Everything above, plus:
 ## Troubleshooting
 
 **App won't connect to server?**
-
 - Don't worry! The app automatically switches to offline mode
 - You can still use all offline features
 
 **Want to force offline mode?**
-
 - Just use the app without starting the server
 - Or disconnect from WiFi/mobile data
 
 **App crashes?**
-
 - Check logs: `adb logcat -s MillaApp`
 - Report issues on GitHub
 

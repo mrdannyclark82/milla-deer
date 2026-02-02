@@ -44,11 +44,9 @@ export async function generateAnthropicResponse(
     // Add conversation history if available
     if (context.conversationHistory) {
       const recentHistory = context.conversationHistory.slice(-6);
-
+      
       // Filter empty messages
-      const validMessages = recentHistory.filter(
-        (msg) => msg.content && msg.content.trim().length > 0
-      );
+      const validMessages = recentHistory.filter(msg => msg.content && msg.content.trim().length > 0);
 
       // Ensure start with user
       let startIndex = 0;
@@ -75,11 +73,7 @@ export async function generateAnthropicResponse(
     // Add current user message
     if (userMessage && userMessage.trim().length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (
-        !lastMessage ||
-        lastMessage.role !== 'user' ||
-        lastMessage.content !== userMessage.trim()
-      ) {
+      if (!lastMessage || lastMessage.role !== 'user' || lastMessage.content !== userMessage.trim()) {
         messages.push({ role: 'user', content: userMessage.trim() });
       }
     } else {
@@ -97,8 +91,7 @@ export async function generateAnthropicResponse(
       messages: messages as any,
     });
 
-    const content =
-      response.content[0].type === 'text' ? response.content[0].text : '';
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
 
     if (!content) {
       return {

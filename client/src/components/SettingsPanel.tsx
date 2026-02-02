@@ -90,7 +90,7 @@ export default function SettingsPanel({
   onPersonalitySettingsChange,
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-
+  
   // Use external open state if provided, otherwise use internal
   const open = externalOpen !== undefined ? externalOpen : isOpen;
   const handleOpenChange = (newOpen: boolean) => {
@@ -100,7 +100,7 @@ export default function SettingsPanel({
       setIsOpen(newOpen);
     }
   };
-
+  
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState<{
     id: string;

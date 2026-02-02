@@ -1,10 +1,4 @@
-export type SceneLocation =
-  | 'living room'
-  | 'kitchen'
-  | 'bedroom'
-  | 'office'
-  | 'outside'
-  | 'unknown';
+export type SceneLocation = 'living room' | 'kitchen' | 'bedroom' | 'office' | 'outside' | 'unknown';
 
 class SceneService {
   private location: SceneLocation = 'living room';

@@ -18,7 +18,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 1. Greetings & Basic Conversation
 
 **Try these messages:**
-
 - "Hello"
 - "Hi there"
 - "Good morning"
@@ -31,7 +30,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 2. Time & Date Queries
 
 **Try these messages:**
-
 - "What time is it?"
 - "What's the current time?"
 - "What date is it today?"
@@ -44,9 +42,8 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 3. Math Calculations
 
 **Try these messages:**
-
 - "What is 5 + 3?"
-- "Calculate 25 \* 4"
+- "Calculate 25 * 4"
 - "15 - 7"
 - "100 / 4"
 
@@ -57,7 +54,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 4. Device Controls
 
 **Try these messages:**
-
 - "Volume up"
 - "Increase volume"
 - "Volume down"
@@ -72,7 +68,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 5. Entertainment
 
 **Try these messages:**
-
 - "Tell me a joke"
 - "Make me laugh"
 - "I need motivation"
@@ -85,7 +80,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 6. Identity & Help
 
 **Try these messages:**
-
 - "Who are you?"
 - "What's your name?"
 - "What can you do?"
@@ -98,7 +92,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 7. Goodbyes
 
 **Try these messages:**
-
 - "Goodbye"
 - "Bye"
 - "See you later"
@@ -110,7 +103,6 @@ Test the Milla Rayne Android app's offline capabilities!
 ### 8. Thank You
 
 **Try these messages:**
-
 - "Thank you"
 - "Thanks"
 
@@ -123,7 +115,6 @@ Test the Milla Rayne Android app's offline capabilities!
 These should gracefully explain they need a server:
 
 **Try these messages:**
-
 - "What's the weather?"
 - "How to bake a cake?"
 - "Search the web for..."
@@ -169,7 +160,6 @@ These should gracefully explain they need a server:
 ## 🐛 Bug Reporting
 
 If you find issues, note:
-
 - What message you sent
 - What you expected
 - What actually happened
@@ -184,7 +174,7 @@ If you find issues, note:
 
 - Empty messages (should not send)
 - Very long messages
-- Special characters (!@#$%^&\*)
+- Special characters (!@#$%^&*)
 - Emoji messages (😀🎉💜)
 - Multiple messages in quick succession
 

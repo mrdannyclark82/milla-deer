@@ -27,7 +27,7 @@ describe('Repository Cache Service', () => {
       repoUrl: 'https://github.com/test/repo',
       repoData: {},
       analysis: {},
-      timestamp: Date.now() - 31 * 60 * 1000, // 31 minutes ago
+      timestamp: Date.now() - (31 * 60 * 1000), // 31 minutes ago
     };
 
     repositoryCache.set(userId, data);
@@ -52,7 +52,7 @@ describe('Repository Cache Service', () => {
 
     repositoryCache.set(userId, data);
     repositoryCache.delete(userId);
-
+    
     expect(repositoryCache.get(userId)).toBeUndefined();
   });
 });

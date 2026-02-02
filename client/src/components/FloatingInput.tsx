@@ -33,31 +33,19 @@ export function FloatingInput({
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <div
-        className={`relative flex items-center gap-3 px-4 py-3 rounded-2xl backdrop-blur-xl transition-all duration-300 ${
-          isFocused
-            ? 'bg-white/10 border border-[#00f2ff]/50 shadow-[0_0_30px_rgba(0,242,255,0.2)]'
-            : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
-        }`}
-      >
+      <div className={`relative flex items-center gap-3 px-4 py-3 rounded-2xl backdrop-blur-xl transition-all duration-300 ${
+        isFocused
+          ? 'bg-white/10 border border-[#00f2ff]/50 shadow-[0_0_30px_rgba(0,242,255,0.2)]'
+          : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
+      }`}>
         {/* AI indicator */}
-        <div
-          className={`flex-shrink-0 transition-all duration-300 ${isLoading ? 'animate-pulse' : ''}`}
-        >
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              isLoading
-                ? 'bg-gradient-to-r from-[#00f2ff] to-[#ff00aa]'
-                : 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ff00aa]/20'
-            }`}
-          >
-            <svg
-              className={`w-4 h-4 ${isLoading ? 'text-white animate-spin' : 'text-[#00f2ff]'}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+        <div className={`flex-shrink-0 transition-all duration-300 ${isLoading ? 'animate-pulse' : ''}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            isLoading
+              ? 'bg-gradient-to-r from-[#00f2ff] to-[#ff00aa]'
+              : 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ff00aa]/20'
+          }`}>
+            <svg className={`w-4 h-4 ${isLoading ? 'text-white animate-spin' : 'text-[#00f2ff]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
             </svg>
           </div>
@@ -139,8 +127,8 @@ export function FloatingInput({
           }}
           disabled={isLoading}
           className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-            isListening
-              ? 'bg-[#ff00aa]/20 text-[#ff00aa] border border-[#ff00aa]/50 shadow-[0_0_20px_rgba(255,0,170,0.3)] animate-pulse'
+            isListening 
+              ? 'bg-[#ff00aa]/20 text-[#ff00aa] border border-[#ff00aa]/50 shadow-[0_0_20px_rgba(255,0,170,0.3)] animate-pulse' 
               : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
           title={isListening ? 'Stop listening' : 'Start voice input'}
@@ -162,12 +150,10 @@ export function FloatingInput({
           </svg>
         </button>
       </div>
-
+      
       {/* Keyboard hint */}
       <div className="flex justify-center mt-2">
-        <span className="text-xs text-white/30">
-          Press Enter to send, or click the mic to speak
-        </span>
+        <span className="text-xs text-white/30">Press Enter to send, or click the mic to speak</span>
       </div>
     </div>
   );

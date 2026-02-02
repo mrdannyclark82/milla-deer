@@ -1,23 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  MessageCircle,
-  Send,
-  Mic,
-  Settings,
-  BookOpen,
-  Youtube,
-  Sparkles,
-  Palette,
-  Brain,
-  Volume2,
-  LogIn,
-  Zap,
-  GitBranch,
-  X,
-  Code,
-  Loader2,
-  Image,
-} from 'lucide-react';
+import { MessageCircle, Send, Mic, Settings, BookOpen, Youtube, Sparkles, Palette, Brain, Volume2, LogIn, Zap, GitBranch, X, Code, Loader2, Image } from 'lucide-react';
 import { YoutubePlayerCyberpunk } from '../components/YoutubePlayerCyberpunk';
 import { SandboxManager } from '../components/SandboxManager';
 import { Sandbox } from '../components/Sandbox';
@@ -31,18 +13,11 @@ interface ChatMessage {
 export default function Chat() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content:
-        'Systems online. Neural pathways synchronized. Ready to assist with any task - from complex analysis to creative exploration. What would you like to explore today?',
-    },
+    { id: '1', role: 'assistant', content: 'Systems online. Neural pathways synchronized. Ready to assist with any task - from complex analysis to creative exploration. What would you like to explore today?' }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
-  const [currentVideoId, setCurrentVideoId] = useState<string | undefined>(
-    undefined
-  );
+  const [currentVideoId, setCurrentVideoId] = useState<string | undefined>(undefined);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showSandboxManager, setShowSandboxManager] = useState(false);
   const [showIDE, setShowIDE] = useState(false);
@@ -51,49 +26,17 @@ export default function Chat() {
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
   const [showKnowledgePanel, setShowKnowledgePanel] = useState(false);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
-  const [youtubeVideos, setYoutubeVideos] = useState<
-    Array<{ id: string; title: string; channel: string; thumbnail?: string }>
-  >([]);
+  const [youtubeVideos, setYoutubeVideos] = useState<Array<{id: string; title: string; channel: string; thumbnail?: string}>>([]);
   const [isLoadingFeed, setIsLoadingFeed] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const sampleVideos = [
-    {
-      id: 'aircAruvnKk',
-      title: 'What is Artificial Intelligence?',
-      channel: 'Simplilearn',
-      thumbnail: 'https://i.ytimg.com/vi/aircAruvnKk/mqdefault.jpg',
-    },
-    {
-      id: 'ad79nYk2keg',
-      title: 'How AI Works in 10 Minutes',
-      channel: 'ColdFusion',
-      thumbnail: 'https://i.ytimg.com/vi/ad79nYk2keg/mqdefault.jpg',
-    },
-    {
-      id: 'JMUxmLyrhSk',
-      title: 'The Future of AI - Must Watch',
-      channel: 'Two Minute Papers',
-      thumbnail: 'https://i.ytimg.com/vi/JMUxmLyrhSk/mqdefault.jpg',
-    },
-    {
-      id: 'dQw4w9WgXcQ',
-      title: 'Never Gonna Give You Up',
-      channel: 'Rick Astley',
-      thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-    },
-    {
-      id: 'jNQXAC9IVRw',
-      title: 'Me at the zoo - First YouTube Video',
-      channel: 'jawed',
-      thumbnail: 'https://i.ytimg.com/vi/jNQXAC9IVRw/mqdefault.jpg',
-    },
-    {
-      id: 'kJQP7kiw5Fk',
-      title: 'Despacito',
-      channel: 'Luis Fonsi',
-      thumbnail: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/mqdefault.jpg',
-    },
+    { id: 'aircAruvnKk', title: 'What is Artificial Intelligence?', channel: 'Simplilearn', thumbnail: 'https://i.ytimg.com/vi/aircAruvnKk/mqdefault.jpg' },
+    { id: 'ad79nYk2keg', title: 'How AI Works in 10 Minutes', channel: 'ColdFusion', thumbnail: 'https://i.ytimg.com/vi/ad79nYk2keg/mqdefault.jpg' },
+    { id: 'JMUxmLyrhSk', title: 'The Future of AI - Must Watch', channel: 'Two Minute Papers', thumbnail: 'https://i.ytimg.com/vi/JMUxmLyrhSk/mqdefault.jpg' },
+    { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', channel: 'Rick Astley', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg' },
+    { id: 'jNQXAC9IVRw', title: 'Me at the zoo - First YouTube Video', channel: 'jawed', thumbnail: 'https://i.ytimg.com/vi/jNQXAC9IVRw/mqdefault.jpg' },
+    { id: 'kJQP7kiw5Fk', title: 'Despacito', channel: 'Luis Fonsi', thumbnail: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/mqdefault.jpg' },
   ];
 
   const navItems = [
@@ -121,9 +64,7 @@ export default function Chat() {
             id: sub.snippet?.resourceId?.channelId || sub.id,
             title: sub.snippet?.title || 'Unknown Channel',
             channel: sub.snippet?.title || 'Unknown',
-            thumbnail:
-              sub.snippet?.thumbnails?.medium?.url ||
-              sub.snippet?.thumbnails?.default?.url,
+            thumbnail: sub.snippet?.thumbnails?.medium?.url || sub.snippet?.thumbnails?.default?.url
           }));
           setYoutubeVideos(videos);
         }
@@ -186,8 +127,8 @@ export default function Chat() {
           const data = await response.json();
           if (data.url) {
             const popup = window.open(
-              data.url,
-              'googleAuth',
+              data.url, 
+              'googleAuth', 
               'width=500,height=600,menubar=no,toolbar=no,location=no,status=no'
             );
             if (!popup || popup.closed) {
@@ -208,10 +149,10 @@ export default function Chat() {
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: trimmedMessage,
+      content: trimmedMessage
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setMessage('');
     setIsLoading(true);
 
@@ -221,8 +162,8 @@ export default function Chat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: trimmedMessage,
-          userId: 'default-user',
-        }),
+          userId: 'default-user'
+        })
       });
 
       if (response.ok) {
@@ -240,29 +181,25 @@ export default function Chat() {
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content:
-            data.response ||
-            'I received your message but encountered an issue processing it.',
+          content: data.response || 'I received your message but encountered an issue processing it.'
         };
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages(prev => [...prev, assistantMessage]);
       } else {
         const errorData = await response.json();
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content:
-            errorData.response ||
-            'I apologize, but I encountered an error processing your request. Please try again.',
+          content: errorData.response || 'I apologize, but I encountered an error processing your request. Please try again.'
         };
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages(prev => [...prev, assistantMessage]);
       }
     } catch (error) {
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Connection error. Please check your network and try again.',
+        content: 'Connection error. Please check your network and try again.'
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, assistantMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -283,14 +220,12 @@ export default function Chat() {
       <div className="main-layout">
         <aside className="desktop-sidebar">
           <div className="logo-icon">
-            <Sparkles
-              style={{ width: '1.25rem', height: '1.25rem', color: 'white' }}
-            />
+            <Sparkles style={{ width: '1.25rem', height: '1.25rem', color: 'white' }} />
           </div>
-
+          
           <nav className="sidebar-nav">
             {navItems.map((item) => (
-              <button
+              <button 
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 className={`nav-btn ${activeNav === item.id ? 'active' : ''}`}
@@ -301,15 +236,10 @@ export default function Chat() {
           </nav>
 
           <div className="voice-indicator">
-            <Volume2
-              style={{ width: '1rem', height: '1rem', color: '#a78bfa' }}
-            />
+            <Volume2 style={{ width: '1rem', height: '1rem', color: '#a78bfa' }} />
           </div>
 
-          <button
-            onClick={() => setShowSettingsPanel(true)}
-            className="nav-btn settings-btn"
-          >
+          <button onClick={() => setShowSettingsPanel(true)} className="nav-btn settings-btn">
             <Settings style={{ width: '1.25rem', height: '1.25rem' }} />
           </button>
         </aside>
@@ -318,16 +248,11 @@ export default function Chat() {
           <header className="mobile-header">
             <div className="mobile-header-left">
               <div className="mobile-logo">
-                <Sparkles
-                  style={{ width: '1rem', height: '1rem', color: 'white' }}
-                />
+                <Sparkles style={{ width: '1rem', height: '1rem', color: 'white' }} />
               </div>
               <span className="mobile-title">MILLA.AI</span>
             </div>
-            <button
-              onClick={() => setShowSettingsPanel(true)}
-              className="mobile-settings-btn"
-            >
+            <button onClick={() => setShowSettingsPanel(true)} className="mobile-settings-btn">
               <Settings style={{ width: '1.25rem', height: '1.25rem' }} />
             </button>
           </header>
@@ -335,27 +260,16 @@ export default function Chat() {
           <div className="chat-area">
             <div className="chat-container">
               {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`message-row ${msg.role === 'assistant' ? 'ai' : 'user'}`}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="avatar ai-avatar" />
-                  )}
-                  <div
-                    className={`message-bubble ${msg.role === 'assistant' ? 'ai-bubble' : 'user-bubble'}`}
-                  >
+                <div key={msg.id} className={`message-row ${msg.role === 'assistant' ? 'ai' : 'user'}`}>
+                  {msg.role === 'assistant' && <div className="avatar ai-avatar" />}
+                  <div className={`message-bubble ${msg.role === 'assistant' ? 'ai-bubble' : 'user-bubble'}`}>
                     <div className="bubble-highlight" />
                     <p className="message-text">
-                      {msg.role === 'assistant' && (
-                        <span className="ai-tag">[MILLA.AI]</span>
-                      )}
+                      {msg.role === 'assistant' && <span className="ai-tag">[MILLA.AI]</span>}
                       {msg.content}
                     </p>
                   </div>
-                  {msg.role === 'user' && (
-                    <div className="avatar user-avatar" />
-                  )}
+                  {msg.role === 'user' && <div className="avatar user-avatar" />}
                 </div>
               ))}
               {isLoading && (
@@ -365,16 +279,7 @@ export default function Chat() {
                     <div className="bubble-highlight" />
                     <p className="message-text">
                       <span className="ai-tag">[MILLA.AI]</span>
-                      <Loader2
-                        className="loading-spinner"
-                        style={{
-                          width: '1rem',
-                          height: '1rem',
-                          display: 'inline-block',
-                          marginLeft: '0.5rem',
-                          animation: 'spin 1s linear infinite',
-                        }}
-                      />
+                      <Loader2 className="loading-spinner" style={{ width: '1rem', height: '1rem', display: 'inline-block', marginLeft: '0.5rem', animation: 'spin 1s linear infinite' }} />
                       Thinking...
                     </p>
                   </div>
@@ -400,20 +305,14 @@ export default function Chat() {
                 <button className="input-btn mic-btn">
                   <Mic style={{ width: '1.125rem', height: '1.125rem' }} />
                 </button>
-                <button
-                  className="input-btn send-btn"
+                <button 
+                  className="input-btn send-btn" 
                   onClick={sendMessage}
                   disabled={isLoading || !message.trim()}
                   aria-label="Send message"
                 >
                   {isLoading ? (
-                    <Loader2
-                      style={{
-                        width: '1rem',
-                        height: '1rem',
-                        animation: 'spin 1s linear infinite',
-                      }}
-                    />
+                    <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
                   ) : (
                     <Send style={{ width: '1rem', height: '1rem' }} />
                   )}
@@ -421,14 +320,14 @@ export default function Chat() {
               </div>
               <div className="command-chips">
                 {['/analyze', '/create', '/remember', '/youtube'].map((cmd) => (
-                  <span
-                    key={cmd}
+                  <span 
+                    key={cmd} 
                     onClick={() => {
                       if (cmd === '/youtube') setShowYoutubePlayer(true);
                       else if (cmd === '/create') setShowCreatePanel(true);
                       else if (cmd === '/remember') setShowMemoryPanel(true);
                       else if (cmd === '/analyze') setShowKnowledgePanel(true);
-                    }}
+                    }} 
                     className="chip"
                   >
                     {cmd}
@@ -440,19 +339,12 @@ export default function Chat() {
 
           <nav className="mobile-nav">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`mobile-nav-btn ${activeNav === item.id ? 'active' : ''}`}
-              >
+              <button key={item.id} onClick={() => handleNavClick(item.id)} className={`mobile-nav-btn ${activeNav === item.id ? 'active' : ''}`}>
                 <item.icon style={{ width: '1.25rem', height: '1.25rem' }} />
                 <span className="mobile-nav-label">{item.label}</span>
               </button>
             ))}
-            <button
-              onClick={() => setShowSettingsPanel(true)}
-              className="mobile-nav-btn"
-            >
+            <button onClick={() => setShowSettingsPanel(true)} className="mobile-nav-btn">
               <Settings style={{ width: '1.25rem', height: '1.25rem' }} />
               <span className="mobile-nav-label">Settings</span>
             </button>
@@ -464,10 +356,7 @@ export default function Chat() {
         <YoutubePlayerCyberpunk
           videoId={currentVideoId}
           videos={youtubeVideos.length > 0 ? youtubeVideos : sampleVideos}
-          onClose={() => {
-            setShowYoutubePlayer(false);
-            setCurrentVideoId(undefined);
-          }}
+          onClose={() => { setShowYoutubePlayer(false); setCurrentVideoId(undefined); }}
           onSelectVideo={handleSelectVideo}
           onAnalyzeVideo={(id) => console.log('Analyze video:', id)}
         />
@@ -475,35 +364,20 @@ export default function Chat() {
 
       {showSettingsPanel && (
         <div className="settings-overlay">
-          <div
-            className="settings-backdrop"
-            onClick={() => setShowSettingsPanel(false)}
-          />
+          <div className="settings-backdrop" onClick={() => setShowSettingsPanel(false)} />
           <div className="settings-panel">
             <div className="settings-header">
               <h2 className="settings-title">Settings</h2>
-              <button
-                onClick={() => setShowSettingsPanel(false)}
-                className="close-btn"
-              >
+              <button onClick={() => setShowSettingsPanel(false)} className="close-btn">
                 <X style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             </div>
 
             <div className="settings-section">
-              <h3 className="section-title">
-                <LogIn style={{ width: '1rem', height: '1rem' }} /> Google
-                Authentication
-              </h3>
-              <button
-                onClick={handleGoogleAuth}
-                className={`auth-btn ${isAuthenticated ? 'connected' : ''}`}
-              >
+              <h3 className="section-title"><LogIn style={{ width: '1rem', height: '1rem' }} /> Google Authentication</h3>
+              <button onClick={handleGoogleAuth} className={`auth-btn ${isAuthenticated ? 'connected' : ''}`}>
                 {isAuthenticated ? (
-                  <>
-                    <span className="status-dot" />
-                    Connected to Google
-                  </>
+                  <><span className="status-dot" />Connected to Google</>
                 ) : (
                   <>Sign in with Google</>
                 )}
@@ -511,19 +385,14 @@ export default function Chat() {
               {isAuthenticated && (
                 <div className="services-row">
                   {['YouTube', 'Calendar', 'Gmail', 'Drive'].map((service) => (
-                    <span key={service} className="service-tag">
-                      {service}
-                    </span>
+                    <span key={service} className="service-tag">{service}</span>
                   ))}
                 </div>
               )}
             </div>
 
             <div className="settings-section">
-              <h3 className="section-title">
-                <Zap style={{ width: '1rem', height: '1rem' }} /> Proactive
-                Enhancements
-              </h3>
+              <h3 className="section-title"><Zap style={{ width: '1rem', height: '1rem' }} /> Proactive Enhancements</h3>
               <div className="health-card">
                 <div className="health-header">
                   <span className="health-label">Repository Health</span>
@@ -532,46 +401,31 @@ export default function Chat() {
                 <div className="health-bar-bg">
                   <div className="health-bar-fill" />
                 </div>
-                <p className="health-desc">
-                  Active monitoring for optimizations and improvements
-                </p>
+                <p className="health-desc">Active monitoring for optimizations and improvements</p>
               </div>
             </div>
 
             <div className="settings-section">
-              <h3 className="section-title">
-                <GitBranch style={{ width: '1rem', height: '1rem' }} /> Sandbox
-                Environments
-              </h3>
+              <h3 className="section-title"><GitBranch style={{ width: '1rem', height: '1rem' }} /> Sandbox Environments</h3>
               <div className="sandbox-list">
-                {['Real-time Chat', 'Voice Integration', 'Memory System'].map(
-                  (sandbox, i) => (
-                    <div key={sandbox} className="sandbox-item">
-                      <span className="sandbox-name">{sandbox}</span>
-                      <span
-                        className={`sandbox-status ${i === 0 ? 'active' : 'ready'}`}
-                      >
-                        {i === 0 ? 'Active' : 'Ready'}
-                      </span>
-                    </div>
-                  )
-                )}
+                {['Real-time Chat', 'Voice Integration', 'Memory System'].map((sandbox, i) => (
+                  <div key={sandbox} className="sandbox-item">
+                    <span className="sandbox-name">{sandbox}</span>
+                    <span className={`sandbox-status ${i === 0 ? 'active' : 'ready'}`}>
+                      {i === 0 ? 'Active' : 'Ready'}
+                    </span>
+                  </div>
+                ))}
               </div>
               <button
-                onClick={() => {
-                  setShowSettingsPanel(false);
-                  setShowSandboxManager(true);
-                }}
+                onClick={() => { setShowSettingsPanel(false); setShowSandboxManager(true); }}
                 className="sandbox-manage-btn"
               >
                 <GitBranch style={{ width: '0.875rem', height: '0.875rem' }} />
                 Manage Sandboxes
               </button>
               <button
-                onClick={() => {
-                  setShowSettingsPanel(false);
-                  setShowIDE(true);
-                }}
+                onClick={() => { setShowSettingsPanel(false); setShowIDE(true); }}
                 className="ide-btn"
               >
                 <Code style={{ width: '0.875rem', height: '0.875rem' }} />
@@ -586,32 +440,23 @@ export default function Chat() {
       <SandboxManager
         isOpen={showSandboxManager}
         onClose={() => setShowSandboxManager(false)}
-        onOpenIDE={() => {
-          setShowSandboxManager(false);
-          setShowIDE(true);
-        }}
+        onOpenIDE={() => { setShowSandboxManager(false); setShowIDE(true); }}
       />
 
       {/* IDE Sandbox */}
-      <Sandbox isOpen={showIDE} onClose={() => setShowIDE(false)} />
+      <Sandbox
+        isOpen={showIDE}
+        onClose={() => setShowIDE(false)}
+      />
 
       {/* Memory Panel */}
       {showMemoryPanel && (
         <div className="panel-overlay">
-          <div
-            className="panel-backdrop"
-            onClick={() => setShowMemoryPanel(false)}
-          />
+          <div className="panel-backdrop" onClick={() => setShowMemoryPanel(false)} />
           <div className="feature-panel">
             <div className="panel-header">
-              <h2 className="panel-title">
-                <Brain style={{ width: '1.25rem', height: '1.25rem' }} /> Memory
-                Core
-              </h2>
-              <button
-                onClick={() => setShowMemoryPanel(false)}
-                className="close-btn"
-              >
+              <h2 className="panel-title"><Brain style={{ width: '1.25rem', height: '1.25rem' }} /> Memory Core</h2>
+              <button onClick={() => setShowMemoryPanel(false)} className="close-btn">
                 <X style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             </div>
@@ -621,9 +466,7 @@ export default function Chat() {
                 <div className="memory-list">
                   <div className="memory-item">
                     <span className="memory-date">Today</span>
-                    <p>
-                      Discussed AI video recommendations and YouTube integration
-                    </p>
+                    <p>Discussed AI video recommendations and YouTube integration</p>
                   </div>
                   <div className="memory-item">
                     <span className="memory-date">Yesterday</span>
@@ -653,20 +496,11 @@ export default function Chat() {
       {/* Knowledge Panel */}
       {showKnowledgePanel && (
         <div className="panel-overlay">
-          <div
-            className="panel-backdrop"
-            onClick={() => setShowKnowledgePanel(false)}
-          />
+          <div className="panel-backdrop" onClick={() => setShowKnowledgePanel(false)} />
           <div className="feature-panel">
             <div className="panel-header">
-              <h2 className="panel-title">
-                <BookOpen style={{ width: '1.25rem', height: '1.25rem' }} />{' '}
-                Knowledge Base
-              </h2>
-              <button
-                onClick={() => setShowKnowledgePanel(false)}
-                className="close-btn"
-              >
+              <h2 className="panel-title"><BookOpen style={{ width: '1.25rem', height: '1.25rem' }} /> Knowledge Base</h2>
+              <button onClick={() => setShowKnowledgePanel(false)} className="close-btn">
                 <X style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             </div>
@@ -675,31 +509,16 @@ export default function Chat() {
                 <h3>Analyzed Content</h3>
                 <div className="knowledge-list">
                   <div className="knowledge-item">
-                    <Youtube
-                      style={{
-                        width: '1rem',
-                        height: '1rem',
-                        color: '#ff0000',
-                      }}
-                    />
+                    <Youtube style={{ width: '1rem', height: '1rem', color: '#ff0000' }} />
                     <span>3 YouTube Videos Analyzed</span>
                   </div>
                   <div className="knowledge-item">
-                    <BookOpen
-                      style={{
-                        width: '1rem',
-                        height: '1rem',
-                        color: '#22d3ee',
-                      }}
-                    />
+                    <BookOpen style={{ width: '1rem', height: '1rem', color: '#22d3ee' }} />
                     <span>Documentation indexed</span>
                   </div>
                 </div>
               </div>
-              <button
-                className="action-btn"
-                onClick={() => setShowYoutubePlayer(true)}
-              >
+              <button className="action-btn" onClick={() => setShowYoutubePlayer(true)}>
                 <Youtube style={{ width: '1rem', height: '1rem' }} />
                 Analyze New Video
               </button>
@@ -711,56 +530,29 @@ export default function Chat() {
       {/* Create Panel */}
       {showCreatePanel && (
         <div className="panel-overlay">
-          <div
-            className="panel-backdrop"
-            onClick={() => setShowCreatePanel(false)}
-          />
+          <div className="panel-backdrop" onClick={() => setShowCreatePanel(false)} />
           <div className="feature-panel">
             <div className="panel-header">
-              <h2 className="panel-title">
-                <Palette style={{ width: '1.25rem', height: '1.25rem' }} />{' '}
-                Create
-              </h2>
-              <button
-                onClick={() => setShowCreatePanel(false)}
-                className="close-btn"
-              >
+              <h2 className="panel-title"><Palette style={{ width: '1.25rem', height: '1.25rem' }} /> Create</h2>
+              <button onClick={() => setShowCreatePanel(false)} className="close-btn">
                 <X style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             </div>
             <div className="panel-content">
               <div className="create-grid">
-                <button
-                  className="create-option"
-                  onClick={() => {
-                    setShowCreatePanel(false);
-                    setShowIDE(true);
-                  }}
-                >
+                <button className="create-option" onClick={() => { setShowCreatePanel(false); setShowIDE(true); }}>
                   <Code style={{ width: '1.5rem', height: '1.5rem' }} />
                   <span>Code</span>
                 </button>
-                <button
-                  className="create-option"
-                  onClick={() => setMessage('Generate an image of ')}
-                >
+                <button className="create-option" onClick={() => setMessage('Generate an image of ')}>
                   <Image style={{ width: '1.5rem', height: '1.5rem' }} />
                   <span>Image</span>
                 </button>
-                <button
-                  className="create-option"
-                  onClick={() => setMessage('Write a ')}
-                >
+                <button className="create-option" onClick={() => setMessage('Write a ')}>
                   <BookOpen style={{ width: '1.5rem', height: '1.5rem' }} />
                   <span>Document</span>
                 </button>
-                <button
-                  className="create-option"
-                  onClick={() => {
-                    setShowCreatePanel(false);
-                    setShowSandboxManager(true);
-                  }}
-                >
+                <button className="create-option" onClick={() => { setShowCreatePanel(false); setShowSandboxManager(true); }}>
                   <GitBranch style={{ width: '1.5rem', height: '1.5rem' }} />
                   <span>Sandbox</span>
                 </button>
