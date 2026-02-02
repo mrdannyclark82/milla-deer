@@ -16,6 +16,8 @@ import type {
   UserSession,
   MemorySummary,
   InsertMemorySummary,
+  SensitiveMemory,
+  InsertSensitiveMemory,
   YoutubeKnowledge,
   InsertYoutubeKnowledge,
 } from '../shared/schema';
@@ -96,6 +98,13 @@ export interface IStorage {
     limit?: number
   ): Promise<MemorySummary[]>;
 
+  // Sensitive Memory methods
+  getSensitiveMemory(userId: string): Promise<SensitiveMemory | undefined>;
+  saveSensitiveMemory(
+    userId: string,
+    data: InsertSensitiveMemory
+  ): Promise<SensitiveMemory>;
+
   // YouTube Knowledge Base methods
   saveYoutubeKnowledge(
     knowledge: InsertYoutubeKnowledge
@@ -161,6 +170,8 @@ export class SqliteStorage implements IStorage {
   private initializeDatabase(): void {
     // Enable WAL mode for better performance
     this.db.pragma('journal_mode = WAL');
+    // Enable foreign keys
+    this.db.pragma('foreign_keys = ON');
 
     // Create users table
     console.debug('sqlite: creating users table');
@@ -421,6 +432,20 @@ export class SqliteStorage implements IStorage {
         summary_text TEXT NOT NULL,
         topics TEXT, -- Stored as JSON string
         emotional_tone TEXT CHECK(emotional_tone IN ('positive', 'negative', 'neutral')),
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create sensitive_memories table
+    console.debug('sqlite: creating sensitive_memories table');
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS sensitive_memories (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        financial_summary TEXT,
+        medical_notes TEXT,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -1225,6 +1250,69 @@ export class SqliteStorage implements IStorage {
       createdAt: new Date(summary.created_at),
       updatedAt: new Date(summary.updated_at),
     };
+  }
+
+  // Sensitive Memory methods
+  async getSensitiveMemory(
+    userId: string
+  ): Promise<SensitiveMemory | undefined> {
+    // Only get the most recent entry for the user if multiple exist (though ideally 1:1)
+    const stmt = this.db.prepare(
+      'SELECT * FROM sensitive_memories WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1'
+    );
+    const memory = stmt.get(userId) as any;
+
+    if (!memory) return undefined;
+
+    return {
+      id: memory.id,
+      userId: memory.user_id,
+      financialSummary: memory.financial_summary,
+      medicalNotes: memory.medical_notes,
+      createdAt: new Date(memory.created_at),
+      updatedAt: new Date(memory.updated_at),
+    };
+  }
+
+  async saveSensitiveMemory(
+    userId: string,
+    data: InsertSensitiveMemory
+  ): Promise<SensitiveMemory> {
+    // Check if entry exists for user
+    const existing = await this.getSensitiveMemory(userId);
+
+    if (existing) {
+      const stmt = this.db.prepare(`
+        UPDATE sensitive_memories
+        SET financial_summary = ?, medical_notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ?
+      `);
+      stmt.run(
+        data.financialSummary || null,
+        data.medicalNotes || null,
+        userId
+      );
+
+      const updated = await this.getSensitiveMemory(userId);
+      if (!updated) throw new Error('Failed to update sensitive memory');
+      return updated;
+    } else {
+      const id = randomUUID();
+      const stmt = this.db.prepare(`
+        INSERT INTO sensitive_memories (id, user_id, financial_summary, medical_notes)
+        VALUES (?, ?, ?, ?)
+      `);
+      stmt.run(
+        id,
+        userId,
+        data.financialSummary || null,
+        data.medicalNotes || null
+      );
+
+      const created = await this.getSensitiveMemory(userId);
+      if (!created) throw new Error('Failed to create sensitive memory');
+      return created;
+    }
   }
 
   // ===========================================================================================
