@@ -4,7 +4,6 @@
  * Production-ready with metadata tracking and observability
  */
 
-import pLimit from 'p-limit';
 import { generateAIResponse } from './ai-sdk-integration';
 import { getVectorDB } from './vector-db-service';
 import type { VectorUpsertOptions } from './vector-db-service';
@@ -157,25 +156,24 @@ export class RAGService {
       console.log(`  └─ Document ${doc.id}: ${chunks.length} chunks`);
 
       // Generate embeddings and store
-      const limit = pLimit(10);
-      const vectors: VectorUpsertOptions[] = await Promise.all(
-        chunks.map((chunk, i) =>
-          limit(async () => {
-            const embedding = await generateEmbedding(chunk);
-            return {
-              id: `${doc.id}_chunk_${i}`,
-              values: embedding,
-              content: chunk,
-              metadata: {
-                documentId: doc.id,
-                chunkIndex: i,
-                timestamp: Date.now(),
-                ...doc.metadata,
-              },
-            };
-          })
-        )
-      );
+      const vectors: VectorUpsertOptions[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const embedding = await generateEmbedding(chunk);
+
+        vectors.push({
+          id: `${doc.id}_chunk_${i}`,
+          values: embedding,
+          content: chunk,
+          metadata: {
+            documentId: doc.id,
+            chunkIndex: i,
+            timestamp: Date.now(),
+            ...doc.metadata,
+          },
+        });
+      }
 
       // Batch upsert to vector DB
       await this.vectorDB.upsert(vectors);
@@ -248,7 +246,10 @@ Answer:`;
   /**
    * Rerank results using AI-based relevance scoring
    */
-  private async rerankResults(query: string, results: any[]): Promise<any[]> {
+  private async rerankResults(
+    query: string,
+    results: any[]
+  ): Promise<any[]> {
     // Simple reranking based on keyword matching
     // In production, use cross-encoder models for better accuracy
     const queryTokens = query.toLowerCase().split(/\s+/);

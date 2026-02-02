@@ -54,10 +54,6 @@ class SandboxEnvironmentService {
     'sandbox_environments.json'
   );
   private readonly SANDBOX_PREFIX = 'sandbox/';
-  private isSaving: boolean = false;
-  private pendingSavePromise: Promise<void> | null = null;
-  private resolvePending?: () => void;
-  private rejectPending?: (err: any) => void;
 
   async initialize(): Promise<void> {
     await this.loadSandboxes();
@@ -115,11 +111,19 @@ class SandboxEnvironmentService {
     const execAsync = promisify(exec);
 
     try {
-      // Create branch (from current HEAD) without checking it out
-      await execAsync(`git branch ${branchName}`);
+      // Get current branch
+      const { stdout: currentBranch } = await execAsync(
+        'git rev-parse --abbrev-ref HEAD'
+      );
+
+      // Create and checkout new branch
+      await execAsync(`git checkout -b ${branchName}`);
 
       // Push to remote
       await execAsync(`git push -u origin ${branchName}`);
+
+      // Switch back to original branch
+      await execAsync(`git checkout ${currentBranch.trim()}`);
     } catch (error) {
       throw new Error(
         `Failed to create git branch: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -392,37 +396,14 @@ class SandboxEnvironmentService {
    * Save sandboxes to file
    */
   private async saveSandboxes(): Promise<void> {
-    if (!this.isSaving) {
-      this.isSaving = true;
-      try {
-        const data = {
-          sandboxes: Object.fromEntries(this.sandboxes),
-          lastUpdated: Date.now(),
-        };
-        await fs.writeFile(this.SANDBOX_FILE, JSON.stringify(data, null, 2));
-      } catch (error) {
-        console.error('Error saving sandboxes:', error);
-      } finally {
-        this.isSaving = false;
-        if (this.pendingSavePromise) {
-          const resolve = this.resolvePending!;
-          const reject = this.rejectPending!;
-          this.pendingSavePromise = null;
-          this.resolvePending = undefined;
-          this.rejectPending = undefined;
-
-          this.saveSandboxes().then(resolve, reject);
-        }
-      }
-    } else {
-      if (this.pendingSavePromise) {
-        return this.pendingSavePromise;
-      }
-      this.pendingSavePromise = new Promise((resolve, reject) => {
-        this.resolvePending = resolve;
-        this.rejectPending = reject;
-      });
-      return this.pendingSavePromise;
+    try {
+      const data = {
+        sandboxes: Object.fromEntries(this.sandboxes),
+        lastUpdated: Date.now(),
+      };
+      await fs.writeFile(this.SANDBOX_FILE, JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error('Error saving sandboxes:', error);
     }
   }
 }

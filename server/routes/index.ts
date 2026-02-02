@@ -9,7 +9,6 @@ import { registerMonitoringRoutes } from './monitoring.routes';
 import { registerSandboxRoutes } from './sandbox.routes';
 import { registerGoogleRoutes } from './google.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
-import { registerTTSRoutes } from './tts.routes';
 
 /**
  * Main router that aggregates all modular routes
@@ -38,9 +37,6 @@ export function registerModularRoutes(app: Express) {
   registerSandboxRoutes(app);
   registerGoogleRoutes(app);
   registerPersonalTaskRoutes(app);
-
-  // TTS routes
-  registerTTSRoutes(app);
   
   return app;
 }

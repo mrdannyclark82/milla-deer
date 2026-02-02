@@ -12,7 +12,6 @@
  * - Trending topic detection
  */
 
-import pLimit from 'p-limit';
 import { searchVideos } from './googleYoutubeService';
 import { saveToKnowledgeBase } from './youtubeKnowledgeBase';
 import { analyzeVideoWithMillAlyzer } from './youtubeMillAlyzer';
@@ -188,34 +187,25 @@ export async function runDailyNewsSearch(
     analysisCount: 0,
   };
 
-  // Search all categories in parallel
-  console.log(
-    `🔍 Searching ${NEWS_CATEGORIES.length} categories in parallel...`
-  );
+  // Search each category
+  for (const category of NEWS_CATEGORIES) {
+    console.log(`🔍 Searching: ${category.name}`);
 
-  const results = await Promise.all(
-    NEWS_CATEGORIES.map(async (category) => {
-      console.log(`🔍 Searching: ${category.name}`);
-      try {
-        const news = await searchCategoryNews(category, userId);
-        return { category, news };
-      } catch (error) {
-        console.error(`Error searching ${category.name}:`, error);
-        return { category, news: [] };
+    try {
+      const categoryNews = await searchCategoryNews(category, userId);
+
+      if (categoryNews.length > 0) {
+        digest.categories[category.name] = categoryNews;
+        digest.totalVideos += categoryNews.length;
+
+        // Add top story from high-priority categories to top stories
+        if (category.priority >= 8 && categoryNews.length > 0) {
+          digest.topStories.push(categoryNews[0]);
+        }
       }
-    })
-  );
-
-  // Process results
-  for (const { category, news } of results) {
-    if (news.length > 0) {
-      digest.categories[category.name] = news;
-      digest.totalVideos += news.length;
-
-      // Add top story from high-priority categories to top stories
-      if (category.priority >= 8 && news.length > 0) {
-        digest.topStories.push(news[0]);
-      }
+    } catch (error) {
+      console.error(`Error searching ${category.name}:`, error);
+      // Continue with other categories
     }
   }
 
@@ -328,33 +318,25 @@ export async function analyzeTopNews(
 ): Promise<number> {
   console.log(`🔬 Auto-analyzing top ${maxAnalyze} news stories...`);
 
-  // Limit concurrency to avoid rate limits
-  const limit = pLimit(3);
-  const storiesToAnalyze = digest.topStories.slice(0, maxAnalyze);
+  let analyzedCount = 0;
 
-  const results = await Promise.all(
-    storiesToAnalyze.map((story) =>
-      limit(async () => {
-        try {
-          console.log(`📊 Analyzing: ${story.title}`);
+  for (const story of digest.topStories.slice(0, maxAnalyze)) {
+    try {
+      console.log(`📊 Analyzing: ${story.title}`);
 
-          // Run millAlyzer analysis
-          const analysis = await analyzeVideoWithMillAlyzer(story.videoId);
+      // Run millAlyzer analysis
+      const analysis = await analyzeVideoWithMillAlyzer(story.videoId);
 
-          // Save to knowledge base
-          await saveToKnowledgeBase(analysis, userId);
+      // Save to knowledge base
+      await saveToKnowledgeBase(analysis, userId);
 
-          console.log(`✅ Analyzed and saved: ${story.title}`);
-          return true;
-        } catch (error) {
-          console.error(`Error analyzing ${story.title}:`, error);
-          return false;
-        }
-      })
-    )
-  );
-
-  const analyzedCount = results.filter(Boolean).length;
+      analyzedCount++;
+      console.log(`✅ Analyzed and saved: ${story.title}`);
+    } catch (error) {
+      console.error(`Error analyzing ${story.title}:`, error);
+      // Continue with next story
+    }
+  }
 
   console.log(
     `🎯 Auto-analysis complete: ${analyzedCount}/${maxAnalyze} stories analyzed`

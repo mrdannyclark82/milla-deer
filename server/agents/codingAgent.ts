@@ -1,8 +1,5 @@
 import { BaseAgent } from './base';
 import { AgentTask } from './taskStorage';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { promises as fs } from 'fs';
 import {
   createSandbox,
   addFeatureToSandbox,
@@ -19,8 +16,6 @@ import {
   type PerformanceIssue,
   type CodeQualityIssue,
 } from '../codeAnalysisService';
-
-const execAsync = promisify(exec);
 
 export interface IssueIdentification {
   issueType: 'bug' | 'enhancement' | 'security' | 'performance';
@@ -333,265 +328,124 @@ export async function generateFix(failureContext: any): Promise<{
     changes: string;
     description: string;
     testPlan: string;
-    fileContents?: Record<string, string>;
   };
   error?: string;
 }> {
   console.log(`🔧 [SCPA] Generating fix for ${failureContext.agentName}`);
   console.log(`🔧 [SCPA] Error: ${failureContext.error}`);
 
-  let fix: any;
+  // STUB: In production, this would:
+  // 1. Analyze the error stack trace
+  // 2. Locate the failing code
+  // 3. Use LLM to understand the bug
+  // 4. Generate a code fix
+  // 5. Create test cases to verify the fix
 
-  // 1. Attempt to generate real fix using AI
-  try {
-    // Dynamic import to avoid circular dependencies if any
-    const { generateMinimaxResponse } = await import('../minimaxService');
+  // Mock fix generation based on error pattern
+  const errorStr = String(failureContext.error);
+  let mockFix: any;
 
-    const prompt = `You are an expert software engineer.
-An agent named "${failureContext.agentName}" failed with the following error:
-"${failureContext.error}"
-
-Please analyze this error and generate a code fix.
-Return the response as a valid JSON object with the following structure:
-{
-  "description": "Description of the fix",
-  "reasoning": "Why this fixes the issue",
-  "files": ["server/agents/${failureContext.agentName}.ts"],
-  "changes": "Summary of changes",
-  "fileContents": {
-      "server/agents/${failureContext.agentName}.ts": "FULL NEW CONTENT OF THE FILE"
-  },
-  "testPlan": "How to verify this fix"
+  if (errorStr.includes('undefined') || errorStr.includes('null')) {
+    mockFix = {
+      files: [`server/agents/${failureContext.agentName}.ts`],
+      changes: `
+// Add null check before accessing property
+if (!variable) {
+  console.warn('Variable is null/undefined, using default');
+  variable = defaultValue;
 }
-IMPORTANT:
-1. Provide the FULL content of the files in fileContents, not just a diff.
-2. Ensure the JSON is valid.
-3. If you cannot determine the file path, assume "server/agents/${failureContext.agentName}.ts".
-`;
-
-    const result = await generateMinimaxResponse(
-      prompt,
-      {
-        conversationHistory: [],
-        userName: 'SCPA_System',
-      },
-      8192 // Large context for full file generation
-    );
-
-    if (result.success) {
-      try {
-        const cleanContent = result.content.replace(/```json/g, '').replace(/```/g, '').trim();
-        fix = JSON.parse(cleanContent);
-        // Ensure fileContents exists
-        if (!fix.fileContents && fix.changes) {
-            fix.fileContents = {}; // Fallback will use 'changes' as simple write if single file
-        }
-        console.log(`✅ [SCPA] AI generated fix for ${failureContext.agentName}`);
-      } catch (parseError) {
-        console.warn('⚠️ [SCPA] Failed to parse AI response, falling back to mock.', parseError);
-      }
-    }
-  } catch (aiError) {
-    console.warn('⚠️ [SCPA] AI service error, falling back to mock.', aiError);
-  }
-
-  // 2. Fallback to mock fix if AI failed
-  if (!fix) {
-    const errorStr = String(failureContext.error);
-
-    if (errorStr.includes('undefined') || errorStr.includes('null')) {
-      fix = {
-        files: [`server/agents/${failureContext.agentName}.ts`],
-        changes: `// Add null check stub`,
-        description: 'Added null/undefined safety check',
-        testPlan: 'Test with null input, verify no crash and proper fallback',
-      };
-    } else if (errorStr.includes('timeout') || errorStr.includes('ETIMEDOUT')) {
-      fix = {
-        files: [`server/agents/${failureContext.agentName}.ts`],
-        changes: `// Add retry logic stub`,
-        description: 'Added retry logic and increased timeout',
-        testPlan: 'Test with slow network, verify retries work',
-      };
-    } else if (errorStr.includes('parse') || errorStr.includes('JSON')) {
-      fix = {
-        files: [`server/agents/${failureContext.agentName}.ts`],
-        changes: `// Add JSON parse error handling stub`,
-        description: 'Added JSON parsing error handling',
-        testPlan: 'Test with invalid JSON, verify graceful fallback',
-      };
-    } else {
-      fix = {
-        files: [`server/agents/${failureContext.agentName}.ts`],
-        changes: `// Add generic error handling stub`,
-        description: 'Added comprehensive error handling',
-        testPlan: 'Test error scenarios, verify proper logging and fallback',
-      };
-    }
-    console.log(`✅ [SCPA] Mock fix generated for ${failureContext.agentName}`);
-  }
-
-  console.log(`📝 [SCPA] Fix description: ${fix.description}`);
-
-  // 3. Production Workflow: Sandbox -> Apply -> Test -> PR
-  let sandboxId: string | undefined;
-  let originalBranch = 'main'; // Default assumption
-
-  try {
-    // Capture current branch to switch back later
-    const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD');
-    originalBranch = stdout.trim();
-  } catch (e) {
-    console.warn('Could not determine current branch, defaulting to main');
-  }
-
-  try {
-    // 3.1 Create Sandbox
-    console.log('📦 [SCPA] Creating sandbox environment...');
-    const sandbox = await createSandbox({
-        name: `scpa-fix-${Date.now()}`,
-        description: `Auto-fix for ${failureContext.agentName}: ${fix.description}`,
-        createdBy: 'milla'
-    });
-    sandboxId = sandbox.id;
-
-    // 3.2 Checkout Branch (CAUTION: This changes the working directory state)
-    console.log(`🌿 [SCPA] Checking out branch ${sandbox.branchName}`);
-    try {
-        // Fetch to ensure we know about the new branch if it was pushed
-        await execAsync(`git fetch origin ${sandbox.branchName}`);
-        await execAsync(`git checkout ${sandbox.branchName}`);
-    } catch (checkoutError) {
-        // If git checkout fails (e.g. dirty working directory), we might abort or try to stash?
-        // For safety, we abort workflow if we can't switch context cleanly.
-        throw new Error(`Failed to checkout sandbox branch: ${checkoutError}`);
-    }
-
-    // 3.3 Apply Fix
-    console.log('🔧 [SCPA] Applying fix...');
-    const applied = await applyFixToCodebase(fix);
-    if (!applied) {
-        throw new Error('Failed to apply fix to files');
-    }
-
-    // 3.4 Run Tests
-    console.log('🧪 [SCPA] Verifying fix...');
-    const testResult = await runRealTests(fix.files);
-
-    if (testResult.passed) {
-        console.log('✅ [SCPA] Tests passed!');
-
-        // 3.5 Commit and Push
-        try {
-            await execAsync(`git add .`);
-            await execAsync(`git commit -m "fix: ${fix.description}"`);
-            await execAsync(`git push origin ${sandbox.branchName}`);
-        } catch (gitError) {
-             throw new Error(`Failed to commit/push: ${gitError}`);
-        }
-
-        // 3.6 Create PR
-        console.log('🚀 [SCPA] Creating PR...');
-        await createPRForSandbox({
-            sandboxId: sandbox.id,
-            title: `Fix: ${fix.description}`,
-            description: `Automated fix for error in ${failureContext.agentName}.\n\nError: ${failureContext.error}\n\nReasoning: ${fix.reasoning || fix.description}`,
-            branch: sandbox.branchName,
-            files: fix.files
-        });
-
-        // Mark ready
-        await markSandboxForMerge(sandbox.id);
-    } else {
-        console.warn('❌ [SCPA] Tests failed:', testResult.output);
-        // We return success: false so the caller knows the fix failed verification.
-        // We do NOT revert the branch changes here, but we will switch back to original branch.
-        return {
-            success: false,
-            patch: fix,
-            error: 'Tests failed after applying fix:\n' + testResult.output
-        };
-    }
-
-  } catch (workflowError: any) {
-    console.error('❌ [SCPA] Workflow failed:', workflowError);
-    return {
-        success: false,
-        patch: fix,
-        error: workflowError.message
+`,
+      description: 'Added null/undefined safety check',
+      testPlan: 'Test with null input, verify no crash and proper fallback',
     };
-  } finally {
-    // 4. Cleanup: Always switch back to original branch
-    try {
-        console.log(`🔙 [SCPA] Returning to branch ${originalBranch}`);
-        await execAsync(`git checkout ${originalBranch}`);
-    } catch (e) {
-        console.error(`CRITICAL: Failed to switch back to original branch ${originalBranch}!`, e);
-    }
+  } else if (errorStr.includes('timeout') || errorStr.includes('ETIMEDOUT')) {
+    mockFix = {
+      files: [`server/agents/${failureContext.agentName}.ts`],
+      changes: `
+// Increase timeout and add retry logic
+const result = await retry(
+  () => apiCall(),
+  { retries: 3, timeout: 60000 }
+);
+`,
+      description: 'Added retry logic and increased timeout',
+      testPlan: 'Test with slow network, verify retries work',
+    };
+  } else if (errorStr.includes('parse') || errorStr.includes('JSON')) {
+    mockFix = {
+      files: [`server/agents/${failureContext.agentName}.ts`],
+      changes: `
+// Add JSON parsing error handling
+try {
+  const data = JSON.parse(response);
+} catch (parseError) {
+  console.error('JSON parse failed:', parseError);
+  return fallbackValue;
+}
+`,
+      description: 'Added JSON parsing error handling',
+      testPlan: 'Test with invalid JSON, verify graceful fallback',
+    };
+  } else {
+    // Generic error handling fix
+    mockFix = {
+      files: [`server/agents/${failureContext.agentName}.ts`],
+      changes: `
+// Add generic error handling
+try {
+  // Original code here
+} catch (error) {
+  console.error('Operation failed:', error);
+  // Log to monitoring service
+  await reportError(error);
+  // Return safe fallback
+  return defaultResponse;
+}
+`,
+      description: 'Added comprehensive error handling',
+      testPlan: 'Test error scenarios, verify proper logging and fallback',
+    };
   }
+
+  console.log(`✅ [SCPA] Mock fix generated for ${failureContext.agentName}`);
+  console.log(`📝 [SCPA] Fix description: ${mockFix.description}`);
+
+  // TODO: In production:
+  // 1. Actually modify the file with the fix
+  // 2. Run tests in sandbox environment
+  // 3. If tests pass, create PR
+  // 4. If tests fail, iterate on the fix
+  // const sandbox = await createSandbox(`scpa-fix-${Date.now()}`);
+  // await applyPatch(sandbox, mockFix);
+  // const testResults = await runTests(sandbox);
+  // if (testResults.passed) {
+  //   await createPRForSandbox(sandbox);
+  // }
 
   return {
     success: true,
-    patch: fix,
+    patch: mockFix,
   };
 }
 
 /**
- * Helper: Run tests in the current environment
- */
-async function runRealTests(files?: string[]): Promise<{ passed: boolean; output: string }> {
-  console.log('🧪 [SCPA] Running tests...');
-  try {
-    // If specific files are provided, target them. Otherwise run all tests.
-    // Note: This assumes we are in the root or can reach vitest.
-    const cmd = files && files.length > 0
-      ? `npx vitest run ${files.join(' ')} --passWithNoTests`
-      : 'npx vitest run --passWithNoTests';
-
-    const { stdout, stderr } = await execAsync(cmd);
-    return { passed: true, output: stdout + '\n' + stderr };
-  } catch (error: any) {
-    console.log('❌ [SCPA] Tests failed');
-    return { passed: false, output: (error.stdout || '') + '\n' + (error.stderr || '') };
-  }
-}
-
-/**
- * P2.5: Apply generated fix to codebase
- * This modifies the actual files on disk
+ * P2.5: Apply generated fix to codebase (STUB)
+ * In production, this would actually modify files
  */
 export async function applyFixToCodebase(patch: any): Promise<boolean> {
-  console.log(`🔧 [SCPA] Applying fix to codebase`);
+  console.log(`🔧 [SCPA] Applying fix to codebase (STUB)`);
   console.log(`📁 [SCPA] Files to modify: ${patch.files.join(', ')}`);
 
-  try {
-    // If the patch provides full file content in 'changes' (which we will prompt AI for)
-    // or if we have a structured patch.
-    // For now, assuming patch.changes contains the NEW content for the file.
-    // If there are multiple files, this simple logic assumes 'changes' is a map or we handle one file.
-    // TODO: Enhance to handle multi-file patches properly.
+  // STUB: Would actually modify files here
+  // TODO: Use fs to read/write files with the patch
+  // for (const file of patch.files) {
+  //   const content = await fs.readFile(file, 'utf-8');
+  //   const updated = applyPatch(content, patch.changes);
+  //   await fs.writeFile(file, updated);
+  // }
 
-    if (patch.fileContents) {
-        // New format: { fileContents: { 'path/to/file': 'content' } }
-        for (const [filepath, content] of Object.entries(patch.fileContents)) {
-            await fs.writeFile(filepath, content as string);
-            console.log(`✓ Updated ${filepath}`);
-        }
-    } else if (patch.files.length === 1) {
-        // Fallback/Legacy: Single file update
-        await fs.writeFile(patch.files[0], patch.changes);
-        console.log(`✓ Updated ${patch.files[0]}`);
-    } else {
-        console.warn('⚠️ [SCPA] Complex patch format not fully supported yet for multiple files without fileContents map.');
-        return false;
-    }
-
-    console.log(`✅ [SCPA] Fix applied successfully`);
-    return true;
-  } catch (error) {
-    console.error(`❌ [SCPA] Failed to apply fix:`, error);
-    return false;
-  }
+  console.log(`✅ [SCPA] Fix applied successfully (STUB)`);
+  return true;
 }
 
 // Register the coding agent with the registry for task-based operations

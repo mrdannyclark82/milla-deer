@@ -532,33 +532,16 @@ export async function semanticSearchVideos(
     // Retrieve full video details for each result
     const videos: Array<{ video: YoutubeKnowledge; similarity: number }> = [];
 
-    // Collect all video IDs to fetch in batch (N+1 optimization)
-    const videoIds = results
-      .map((r) => r.entry.metadata.videoId)
-      .filter((id): id is string => !!id);
-
-    if (videoIds.length > 0) {
-      // Remove duplicates for efficient fetching
-      const uniqueVideoIds = Array.from(new Set(videoIds));
-
-      // Batch fetch video details
-      const videoList = await storage.getYoutubeKnowledgeByVideoIds(
-        uniqueVideoIds,
-        userId
-      );
-
-      // Create lookup map
-      const videoMap = new Map<string, YoutubeKnowledge>();
-      for (const v of videoList) {
-        videoMap.set(v.videoId, v);
-      }
-
-      // Reconstruct results preserving order and similarity
-      for (const result of results) {
-        const videoId = result.entry.metadata.videoId;
-        if (videoId && videoMap.has(videoId)) {
+    for (const result of results) {
+      const videoId = result.entry.metadata.videoId;
+      if (videoId) {
+        const video = await storage.getYoutubeKnowledgeByVideoId(
+          videoId,
+          userId
+        );
+        if (video) {
           videos.push({
-            video: videoMap.get(videoId)!,
+            video,
             similarity: result.similarity,
           });
         }

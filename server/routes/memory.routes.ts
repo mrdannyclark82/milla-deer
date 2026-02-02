@@ -69,7 +69,7 @@ export function registerMemoryRoutes(app: Express) {
   // Create a new message
   router.post('/messages', asyncHandler(async (req, res) => {
     const { conversationHistory, userName: rawUserName, imageData, ...messageData } = req.body;
-    const userName = typeof rawUserName === 'string' && rawUserName.length <= 128 ? rawUserName : 'Danny Ray';
+    let userName = typeof rawUserName === 'string' && rawUserName.length <= 128 ? rawUserName : 'Danny Ray';
     
     const validatedData = insertMessageSchema.parse(messageData);
     const message = await storage.createMessage(validatedData);
