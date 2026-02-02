@@ -5,7 +5,7 @@
       "name": "fix-security-1769578713839",
       "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
       "branchName": "sandbox/fix-security-1769578713839_1769578713839",
-      "status": "archived",
+      "status": "active",
       "createdAt": 1769578713839,
       "createdBy": "milla",
       "features": [
@@ -20,7 +20,7 @@
           "addedAt": 1769578714591
         },
         {
-          "id": "feat_1769925176285_lk00suues",
+          "id": "feat_1770000243679_seszmrtr2",
           "name": "Test Feature",
           "description": "Testing feature addition",
           "files": [
@@ -29,7 +29,7 @@
           "status": "draft",
           "testsPassed": 0,
           "testsFailed": 0,
-          "addedAt": 1769925176285
+          "addedAt": 1770000243679
         }
       ],
       "readyForProduction": false,
@@ -71,23 +71,22 @@
           "duration": 609.9937330985595
         },
         {
-          "id": "test_1769925176287_pk2ntx423",
+          "id": "test_1770000243680_ec76uj2bb",
           "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769925176287,
+          "timestamp": 1770000243680,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 1148.7359059758373
+          "duration": 2027.982866832685
         }
-      ],
-      "notes": "Archived: Security scanning already implemented via codeql.yml"
+      ]
     },
     "sandbox_1769579199262_lpzlpiwbp": {
       "id": "sandbox_1769579199262_lpzlpiwbp",
       "name": "fix-security-1769579199261",
       "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
       "branchName": "sandbox/fix-security-1769579199261_1769579199262",
-      "status": "archived",
+      "status": "active",
       "createdAt": 1769579199262,
       "createdBy": "milla",
       "features": [
@@ -131,15 +130,14 @@
           "details": "Some tests failed - review needed",
           "duration": 1017.7943189346963
         }
-      ],
-      "notes": "Archived: Security scanning already implemented via codeql.yml"
+      ]
     },
     "sandbox_1769582785905_77btqnx7p": {
       "id": "sandbox_1769582785905_77btqnx7p",
       "name": "fix-security-1769582785905",
       "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
       "branchName": "sandbox/fix-security-1769582785905_1769582785905",
-      "status": "archived",
+      "status": "active",
       "createdAt": 1769582785905,
       "createdBy": "milla",
       "features": [
@@ -174,20 +172,19 @@
           "details": "All tests passed successfully",
           "duration": 1402.6247357521493
         }
-      ],
-      "notes": "Archived: Security scanning already implemented via codeql.yml"
+      ]
     },
-    "sandbox_1769925176282_8ku85d9yo": {
-      "id": "sandbox_1769925176282_8ku85d9yo",
+    "sandbox_1770000243678_3mcp3xrxd": {
+      "id": "sandbox_1770000243678_3mcp3xrxd",
       "name": "Test Sandbox",
       "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1769925176282",
+      "branchName": "sandbox/test-sandbox_1770000243678",
       "status": "active",
-      "createdAt": 1769925176282,
+      "createdAt": 1770000243678,
       "createdBy": "milla",
       "features": [],
       "readyForProduction": false
     }
   },
-  "lastUpdated": 1769960247775
+  "lastUpdated": 1770000243680
 }

@@ -9,31 +9,5 @@ node_modules
 Dockerfile
 docker-compose.yml
 .env
-.env.local
 npm-debug.log
 .DS_Store
-
-# Editor directories
-.vscode
-.idea
-.idx
-.replit
-
-# Testing and coverage
-coverage
-__tests__
-*.test.ts
-*.spec.ts
-*.map
-
-# Logs
-*.log
-
-# Temporary files
-tmp
-temp
-
-# Memory databases (usually mounted as volumes)
-memory/*.db*
-memory/*.sqlite*
-memory/*.txt.migrated*

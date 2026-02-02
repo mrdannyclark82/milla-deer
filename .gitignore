@@ -32,6 +32,6 @@ venv/
 .venv/
 
 # Database
-memory/*.db*
-*.db-shm
-*.db-wal
+memory/*.db
+memory/*.db-shm
+memory/*.db-wal

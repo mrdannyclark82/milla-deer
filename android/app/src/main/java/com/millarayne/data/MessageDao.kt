@@ -22,10 +22,4 @@ interface MessageDao {
 
     @Query("SELECT COUNT(*) FROM messages")
     suspend fun getMessageCount(): Int
-
-    @Query("SELECT * FROM messages WHERE isSynced = 0 AND role = 'user'")
-    suspend fun getUnsyncedMessages(): List<Message>
-
-    @Query("UPDATE messages SET isSynced = 1 WHERE id = :messageId")
-    suspend fun markAsSynced(messageId: Long)
 }
