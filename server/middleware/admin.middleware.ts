@@ -14,11 +14,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const xAdminToken = req.headers['x-admin-token'];
 
   let token = '';
-  if (
-    authHeader &&
-    typeof authHeader === 'string' &&
-    authHeader.startsWith('Bearer ')
-  ) {
+  if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7);
   } else if (xAdminToken && typeof xAdminToken === 'string') {
     token = xAdminToken;

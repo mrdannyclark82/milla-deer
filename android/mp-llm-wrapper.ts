@@ -78,11 +78,11 @@ export class MediaPipeLLMWrapper {
 
     try {
       console.log('[MediaPipe] Generating response...');
-
+      
       // Mock implementation - actual call would be:
       // const result = await this.llmInference.generateResponse(prompt);
       const result = await this.mockGenerate(prompt);
-
+      
       return result.text;
     } catch (error) {
       console.error('[MediaPipe] Generation failed:', error);
@@ -106,7 +106,7 @@ export class MediaPipeLLMWrapper {
 
       const words = `MediaPipe streaming response to: ${prompt}`.split(' ');
       for (const word of words) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 100));
         yield word + ' ';
       }
     } catch (error) {

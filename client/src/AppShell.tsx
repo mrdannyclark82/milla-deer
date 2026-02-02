@@ -10,7 +10,11 @@ export interface AppShellProps {
  * This component is intentionally minimal to avoid breaking existing navigation.
  */
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  return <div className="app-shell">{children}</div>;
+  return (
+    <div className="app-shell">
+      {children}
+    </div>
+  );
 };
 
 AppShell.displayName = 'AppShell';

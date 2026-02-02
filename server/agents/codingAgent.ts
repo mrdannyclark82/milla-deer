@@ -16,8 +16,6 @@ import {
   type PerformanceIssue,
   type CodeQualityIssue,
 } from '../codeAnalysisService';
-import * as fs from 'fs/promises';
-import { applyPatch } from 'diff';
 
 export interface IssueIdentification {
   issueType: 'bug' | 'enhancement' | 'security' | 'performance';
@@ -225,14 +223,15 @@ class CodingAgent extends BaseAgent {
 
 Please provide:
 1. A clear description of the fix
-2. The specific code changes needed in Unified Diff format (compatible with 'diff' or 'patch' utilities)
+2. The specific code changes needed
 3. Why this fix resolves the issue
 
-Format your response as JSON with keys: description, changes, reasoning.
-IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
+Format your response as JSON with keys: description, changes, reasoning`;
 
       // Use Minimax service for coding tasks
-      const { generateMinimaxResponse } = await import('../minimaxService');
+      const { generateMinimaxResponse } = await import(
+        '../minimaxService'
+      );
 
       const result = await generateMinimaxResponse(
         prompt,
@@ -430,47 +429,23 @@ try {
 }
 
 /**
- * P2.5: Apply generated fix to codebase
- * This modifies files on the file system using the provided patch.
+ * P2.5: Apply generated fix to codebase (STUB)
+ * In production, this would actually modify files
  */
-export async function applyFixToCodebase(patch: {
-  files: string[];
-  changes: string;
-}): Promise<boolean> {
-  console.log(`🔧 [SCPA] Applying fix to codebase`);
+export async function applyFixToCodebase(patch: any): Promise<boolean> {
+  console.log(`🔧 [SCPA] Applying fix to codebase (STUB)`);
   console.log(`📁 [SCPA] Files to modify: ${patch.files.join(', ')}`);
 
-  try {
-    for (const file of patch.files) {
-      try {
-        const content = await fs.readFile(file, 'utf-8');
-        const updated = applyPatch(content, patch.changes);
+  // STUB: Would actually modify files here
+  // TODO: Use fs to read/write files with the patch
+  // for (const file of patch.files) {
+  //   const content = await fs.readFile(file, 'utf-8');
+  //   const updated = applyPatch(content, patch.changes);
+  //   await fs.writeFile(file, updated);
+  // }
 
-        if (updated === false) {
-          console.error(`❌ [SCPA] Failed to apply patch to ${file}`);
-          return false;
-        }
-
-        await fs.writeFile(file, updated);
-        console.log(`✅ [SCPA] Successfully patched ${file}`);
-      } catch (err) {
-        console.error(
-          `❌ [SCPA] Error accessing file ${file}:`,
-          err instanceof Error ? err.message : err
-        );
-        return false;
-      }
-    }
-
-    console.log(`✅ [SCPA] Fix applied successfully`);
-    return true;
-  } catch (error) {
-    console.error(
-      `❌ [SCPA] Error applying fix:`,
-      error instanceof Error ? error.message : error
-    );
-    return false;
-  }
+  console.log(`✅ [SCPA] Fix applied successfully (STUB)`);
+  return true;
 }
 
 // Register the coding agent with the registry for task-based operations

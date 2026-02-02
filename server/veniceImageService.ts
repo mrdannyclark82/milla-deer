@@ -36,23 +36,24 @@ export async function generateImageWithVenice(
 
   try {
     const response = await client.images.generate({
-      model: 'fluency', // Venice default or specific model
+      model: "fluency", // Venice default or specific model
       prompt: prompt,
       n: 1,
-      size: '1024x1024',
+      size: "1024x1024",
     });
 
     if (response.data && response.data.length > 0 && response.data[0].url) {
-      return {
-        success: true,
-        imageUrl: response.data[0].url,
-      };
+        return {
+            success: true,
+            imageUrl: response.data[0].url
+        };
     }
 
     return {
-      success: false,
-      error: 'No image URL returned from Venice.',
+        success: false,
+        error: "No image URL returned from Venice."
     };
+
   } catch (error) {
     return {
       success: false,

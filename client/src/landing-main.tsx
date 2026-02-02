@@ -5,7 +5,7 @@ import './index.css';
 
 /**
  * Landing Page Demo Entry Point
- *
+ * 
  * This file can be used to preview the Landing page in isolation.
  * To use it, temporarily modify vite.config.ts to point to this file
  * or create a separate build configuration.

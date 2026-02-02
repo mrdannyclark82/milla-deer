@@ -42,11 +42,7 @@ export class MemoryEvolutionEngine {
       ...config,
     };
 
-    this.historyPath = path.join(
-      process.cwd(),
-      'memory',
-      'evolution_history.json'
-    );
+    this.historyPath = path.join(process.cwd(), 'memory', 'evolution_history.json');
   }
 
   /**
@@ -55,18 +51,14 @@ export class MemoryEvolutionEngine {
   async initialize(): Promise<void> {
     try {
       console.log('[MemoryEvolution] Initializing...');
-
+      
       // Load existing memories
       await this.loadMemories();
 
       // Start evolution cycle
       this.startEvolutionCycle();
 
-      console.log(
-        '[MemoryEvolution] Initialized with',
-        this.memories.size,
-        'memories'
-      );
+      console.log('[MemoryEvolution] Initialized with', this.memories.size, 'memories');
     } catch (error) {
       console.error('[MemoryEvolution] Initialization failed:', error);
       throw error;
@@ -76,11 +68,7 @@ export class MemoryEvolutionEngine {
   /**
    * Add a new memory
    */
-  async addMemory(
-    content: string,
-    tags: string[] = [],
-    importance: number = 0.5
-  ): Promise<string> {
+  async addMemory(content: string, tags: string[] = [], importance: number = 0.5): Promise<string> {
     const id = this.generateId();
     const memory: Memory = {
       id,
@@ -94,9 +82,7 @@ export class MemoryEvolutionEngine {
     };
 
     this.memories.set(id, memory);
-    console.log(
-      `[MemoryEvolution] Added memory ${id} with importance ${importance}`
-    );
+    console.log(`[MemoryEvolution] Added memory ${id} with importance ${importance}`);
 
     // Check if we need to prune
     if (this.memories.size > this.config.maxMemories) {
@@ -115,14 +101,9 @@ export class MemoryEvolutionEngine {
 
     memory.accessCount++;
     memory.lastAccessed = Date.now();
-    memory.importance = Math.min(
-      1.0,
-      memory.importance * this.config.accessBoost
-    );
+    memory.importance = Math.min(1.0, memory.importance * this.config.accessBoost);
 
-    console.log(
-      `[MemoryEvolution] Accessed memory ${id}, new importance: ${memory.importance.toFixed(3)}`
-    );
+    console.log(`[MemoryEvolution] Accessed memory ${id}, new importance: ${memory.importance.toFixed(3)}`);
 
     return memory;
   }
@@ -142,7 +123,7 @@ export class MemoryEvolutionEngine {
         score += 0.5;
       }
 
-      if (memory.tags.some((tag) => tag.toLowerCase().includes(queryLower))) {
+      if (memory.tags.some(tag => tag.toLowerCase().includes(queryLower))) {
         score += 0.3;
       }
 
@@ -173,7 +154,7 @@ export class MemoryEvolutionEngine {
    */
   private async evolveMemories(): Promise<void> {
     console.log('[MemoryEvolution] Starting evolution cycle...');
-
+    
     const now = Date.now();
     let decayed = 0;
     let pruned = 0;
@@ -184,10 +165,7 @@ export class MemoryEvolutionEngine {
       const daysSinceAccess = timeSinceAccess / (1000 * 60 * 60 * 24);
 
       // Apply exponential decay based on time
-      const decayFactor = Math.pow(
-        this.config.importanceDecayRate,
-        daysSinceAccess
-      );
+      const decayFactor = Math.pow(this.config.importanceDecayRate, daysSinceAccess);
       memory.importance *= decayFactor;
 
       if (memory.importance > 0.01) {
@@ -201,9 +179,7 @@ export class MemoryEvolutionEngine {
     // Save evolved state
     await this.saveMemories();
 
-    console.log(
-      `[MemoryEvolution] Evolution complete: ${decayed} decayed, ${pruned} pruned, ${this.memories.size} remaining`
-    );
+    console.log(`[MemoryEvolution] Evolution complete: ${decayed} decayed, ${pruned} pruned, ${this.memories.size} remaining`);
   }
 
   /**
@@ -220,7 +196,7 @@ export class MemoryEvolutionEngine {
     }
 
     // Remove low-importance memories
-    toPrune.forEach((id) => this.memories.delete(id));
+    toPrune.forEach(id => this.memories.delete(id));
 
     const pruned = beforeSize - this.memories.size;
     if (pruned > 0) {
@@ -237,20 +213,16 @@ export class MemoryEvolutionEngine {
     try {
       const data = await fs.readFile(this.historyPath, 'utf-8');
       const memoriesArray: Memory[] = JSON.parse(data);
-
+      
       this.memories.clear();
-      memoriesArray.forEach((memory) => {
+      memoriesArray.forEach(memory => {
         this.memories.set(memory.id, memory);
       });
 
-      console.log(
-        `[MemoryEvolution] Loaded ${this.memories.size} memories from disk`
-      );
+      console.log(`[MemoryEvolution] Loaded ${this.memories.size} memories from disk`);
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        console.log(
-          '[MemoryEvolution] No existing memory file found, starting fresh'
-        );
+        console.log('[MemoryEvolution] No existing memory file found, starting fresh');
       } else {
         console.error('[MemoryEvolution] Failed to load memories:', error);
       }
@@ -263,13 +235,8 @@ export class MemoryEvolutionEngine {
   private async saveMemories(): Promise<void> {
     try {
       const memoriesArray = Array.from(this.memories.values());
-      await fs.writeFile(
-        this.historyPath,
-        JSON.stringify(memoriesArray, null, 2)
-      );
-      console.log(
-        `[MemoryEvolution] Saved ${memoriesArray.length} memories to disk`
-      );
+      await fs.writeFile(this.historyPath, JSON.stringify(memoriesArray, null, 2));
+      console.log(`[MemoryEvolution] Saved ${memoriesArray.length} memories to disk`);
     } catch (error) {
       console.error('[MemoryEvolution] Failed to save memories:', error);
     }
@@ -286,13 +253,10 @@ export class MemoryEvolutionEngine {
    * Get evolution statistics
    */
   getStats() {
-    const importances = Array.from(this.memories.values()).map(
-      (m) => m.importance
-    );
+    const importances = Array.from(this.memories.values()).map(m => m.importance);
     return {
       totalMemories: this.memories.size,
-      averageImportance:
-        importances.reduce((a, b) => a + b, 0) / importances.length || 0,
+      averageImportance: importances.reduce((a, b) => a + b, 0) / importances.length || 0,
       maxImportance: Math.max(...importances, 0),
       minImportance: Math.min(...importances, 1),
     };

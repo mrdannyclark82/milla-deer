@@ -166,50 +166,48 @@ export function VideoAnalysisPanel({
               )}
             </button>
           </div>
-        ) : (
-          <div
-            className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-[#00f2ff]/30 hover:bg-[#00f2ff]/5 transition-all cursor-pointer"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="w-8 h-8 text-white/30 mx-auto mb-2" />
-            <p className="text-sm text-white/50">Drop video file here</p>
-            <p className="text-xs text-white/30 mt-1">or click to browse</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files?.[0])}
-            />
-          </div>
-        )}
-      </div>
+         ) : (
+           <div
+             className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-[#00f2ff]/30 hover:bg-[#00f2ff]/5 transition-all cursor-pointer"
+             onDragOver={(e) => e.preventDefault()}
+             onDrop={handleDrop}
+             onClick={() => fileInputRef.current?.click()}
+           >
+             <Upload className="w-8 h-8 text-white/30 mx-auto mb-2" />
+             <p className="text-sm text-white/50">Drop video file here</p>
+             <p className="text-xs text-white/30 mt-1">or click to browse</p>
+             <input
+               ref={fileInputRef}
+               type="file"
+               accept="video/*"
+               className="hidden"
+               onChange={(e) => handleFileSelect(e.target.files?.[0])}
+             />
+           </div>
+         )}
+       </div>
 
-      {/* Recent analyses */}
-      <div className="px-4 py-3 border-t border-white/5">
-        <div className="text-xs text-white/40 mb-2">Recent</div>
-        <div className="space-y-1">
-          {recentItems.length === 0 ? (
-            <div className="text-xs text-white/30 px-2 py-1.5">
-              No analyses yet
-            </div>
-          ) : (
-            recentItems.map((item, i) => (
-              <div
-                key={`${item}-${i}`}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
-              >
-                <Play className="w-3 h-3 text-white/30" />
-                <span className="text-xs text-white/60 truncate">{item}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
+       {/* Recent analyses */}
+       <div className="px-4 py-3 border-t border-white/5">
+         <div className="text-xs text-white/40 mb-2">Recent</div>
+         <div className="space-y-1">
+           {recentItems.length === 0 ? (
+             <div className="text-xs text-white/30 px-2 py-1.5">No analyses yet</div>
+           ) : (
+             recentItems.map((item, i) => (
+               <div
+                 key={`${item}-${i}`}
+                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
+               >
+                 <Play className="w-3 h-3 text-white/30" />
+                 <span className="text-xs text-white/60 truncate">{item}</span>
+               </div>
+             ))
+           )}
+         </div>
+       </div>
+     </div>
+   );
 }
 
 export default VideoAnalysisPanel;

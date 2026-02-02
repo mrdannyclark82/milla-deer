@@ -18,11 +18,7 @@ export interface IChatStorage {
   createConversation(title: string): Promise<Conversation>;
   deleteConversation(id: number): Promise<void>;
   getMessagesByConversation(conversationId: number): Promise<ChatMessage[]>;
-  createMessage(
-    conversationId: number,
-    role: string,
-    content: string
-  ): Promise<ChatMessage>;
+  createMessage(conversationId: number, role: string, content: string): Promise<ChatMessage>;
 }
 
 class MemoryChatStorage implements IChatStorage {
@@ -57,17 +53,11 @@ class MemoryChatStorage implements IChatStorage {
     this.messages.delete(id);
   }
 
-  async getMessagesByConversation(
-    conversationId: number
-  ): Promise<ChatMessage[]> {
+  async getMessagesByConversation(conversationId: number): Promise<ChatMessage[]> {
     return this.messages.get(conversationId) || [];
   }
 
-  async createMessage(
-    conversationId: number,
-    role: string,
-    content: string
-  ): Promise<ChatMessage> {
+  async createMessage(conversationId: number, role: string, content: string): Promise<ChatMessage> {
     const message: ChatMessage = {
       id: this.nextMessageId++,
       conversationId,
@@ -83,3 +73,4 @@ class MemoryChatStorage implements IChatStorage {
 }
 
 export const chatStorage: IChatStorage = new MemoryChatStorage();
+

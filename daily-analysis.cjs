@@ -20,21 +20,16 @@ const config = {
     'langchain-ai/langchainjs',
     'microsoft/semantic-kernel',
     'transformerlab/transformerlab-app',
-    'lobehub/lobe-chat',
+    'lobehub/lobe-chat'
   ],
-  newsKeywords: [
-    'AI assistant',
-    'conversational AI',
-    'local LLM',
-    'AI framework',
-  ],
+  newsKeywords: ['AI assistant', 'conversational AI', 'local LLM', 'AI framework'],
 };
 
 class DailyAnalyzer {
   constructor() {
     this.report = {
       timestamp: new Date().toISOString(),
-      sections: [],
+      sections: []
     };
   }
 
@@ -66,20 +61,20 @@ class DailyAnalyzer {
       totalLines: 0,
       fileTypes: {},
       directories: new Set(),
-      recentChanges: [],
+      recentChanges: []
     };
 
     const walkDir = (dir, depth = 0) => {
       if (depth > 3) return; // Limit depth
-
+      
       const skipDirs = ['node_modules', '.git', 'dist', 'build', 'coverage'];
-
+      
       try {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
-
+        
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-
+          
           if (entry.isDirectory()) {
             if (!skipDirs.includes(entry.name)) {
               stats.directories.add(entry.name);
@@ -89,7 +84,7 @@ class DailyAnalyzer {
             stats.totalFiles++;
             const ext = path.extname(entry.name);
             stats.fileTypes[ext] = (stats.fileTypes[ext] || 0) + 1;
-
+            
             // Count lines for text files
             if (['.ts', '.js', '.tsx', '.jsx', '.md', '.json'].includes(ext)) {
               try {
@@ -111,12 +106,10 @@ class DailyAnalyzer {
     this.report.sections.push({
       title: 'Repository Deep Dive',
       data: stats,
-      summary: `Analyzed ${stats.totalFiles} files across ${stats.directories.size} directories with ${stats.totalLines.toLocaleString()} lines of code.`,
+      summary: `Analyzed ${stats.totalFiles} files across ${stats.directories.size} directories with ${stats.totalLines.toLocaleString()} lines of code.`
     });
 
-    console.log(
-      `  ✓ Found ${stats.totalFiles} files, ${stats.totalLines.toLocaleString()} lines`
-    );
+    console.log(`  ✓ Found ${stats.totalFiles} files, ${stats.totalLines.toLocaleString()} lines`);
   }
 
   async scanRivals() {
@@ -127,12 +120,12 @@ class DailyAnalyzer {
     for (const repo of config.competitors) {
       try {
         const [owner, name] = repo.split('/');
-
+        
         const headers = {
-          Accept: 'application/vnd.github.v3+json',
-          'User-Agent': 'Milla-Rayne-Empire-Bot',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'Milla-Rayne-Empire-Bot'
         };
-
+        
         if (config.githubToken) {
           headers['Authorization'] = `Bearer ${config.githubToken}`;
         }
@@ -161,18 +154,18 @@ class DailyAnalyzer {
           language: repoInfo.language,
           recentCommits: commits.length,
           lastCommitDate: commits[0]?.commit?.author?.date || 'N/A',
-          description: repoInfo.description,
+          description: repoInfo.description
         });
 
         console.log(`  ✓ ${repo}: ${repoInfo.stargazers_count} ⭐`);
 
         // Rate limiting delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.log(`  ⚠️  ${repo}: ${error.message}`);
         rivalData.push({
           name: repo,
-          error: error.message,
+          error: error.message
         });
       }
     }
@@ -180,7 +173,7 @@ class DailyAnalyzer {
     this.report.sections.push({
       title: 'GitHub Rival Scan',
       data: rivalData,
-      summary: `Scanned ${config.competitors.length} rival repositories. Top performer: ${rivalData.sort((a, b) => (b.stars || 0) - (a.stars || 0))[0]?.name || 'N/A'}`,
+      summary: `Scanned ${config.competitors.length} rival repositories. Top performer: ${rivalData.sort((a, b) => (b.stars || 0) - (a.stars || 0))[0]?.name || 'N/A'}`
     });
   }
 
@@ -196,62 +189,50 @@ class DailyAnalyzer {
 
       const response = await axios.get(newsUrl, {
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         },
-        timeout: 10000,
+        timeout: 10000
       });
 
       const $ = cheerio.load(response.data);
 
       // Parse news articles (structure may vary)
-      $('article, .xrnccd')
-        .slice(0, 10)
-        .each((i, elem) => {
-          const $elem = $(elem);
-          const title = $elem.find('h3, h4, a').first().text().trim();
-          const link = $elem.find('a').first().attr('href');
-          const source = $elem.find('.wEwyrc, .vr1PYe').text().trim();
+      $('article, .xrnccd').slice(0, 10).each((i, elem) => {
+        const $elem = $(elem);
+        const title = $elem.find('h3, h4, a').first().text().trim();
+        const link = $elem.find('a').first().attr('href');
+        const source = $elem.find('.wEwyrc, .vr1PYe').text().trim();
 
-          if (title && title.length > 10) {
-            newsItems.push({
-              title,
-              source: source || 'Unknown',
-              link: link ? `https://news.google.com${link}` : null,
-              relevance: this.calculateRelevance(title),
-            });
-          }
-        });
+        if (title && title.length > 10) {
+          newsItems.push({
+            title,
+            source: source || 'Unknown',
+            link: link ? `https://news.google.com${link}` : null,
+            relevance: this.calculateRelevance(title)
+          });
+        }
+      });
 
       console.log(`  ✓ Found ${newsItems.length} news items`);
     } catch (error) {
       console.log(`  ⚠️  News gathering failed: ${error.message}`);
       newsItems.push({
         title: 'News scraping temporarily unavailable',
-        error: error.message,
+        error: error.message
       });
     }
 
     this.report.sections.push({
       title: 'News Intelligence',
       data: newsItems.slice(0, 10),
-      summary: `Gathered ${newsItems.length} relevant news items from the AI ecosystem.`,
+      summary: `Gathered ${newsItems.length} relevant news items from the AI ecosystem.`
     });
   }
 
   calculateRelevance(title) {
-    const keywords = [
-      'AI',
-      'LLM',
-      'assistant',
-      'chatbot',
-      'GPT',
-      'machine learning',
-      'conversational',
-    ];
+    const keywords = ['AI', 'LLM', 'assistant', 'chatbot', 'GPT', 'machine learning', 'conversational'];
     const lowerTitle = title.toLowerCase();
-    return keywords.filter((kw) => lowerTitle.includes(kw.toLowerCase()))
-      .length;
+    return keywords.filter(kw => lowerTitle.includes(kw.toLowerCase())).length;
   }
 
   async generateCodeSamples() {
@@ -378,10 +359,7 @@ export class IntelligenceGatherer {
 }
 `;
 
-    fs.writeFileSync(
-      path.join(GENERATED_DIR, 'intelligence-gatherer.ts'),
-      gathererCode
-    );
+    fs.writeFileSync(path.join(GENERATED_DIR, 'intelligence-gatherer.ts'), gathererCode);
 
     // Generate analysis-config.json
     const configData = {
@@ -393,13 +371,13 @@ export class IntelligenceGatherer {
         notificationChannels: ['email'],
         dataRetention: 30,
         competitors: config.competitors,
-        monitoringEnabled: true,
+        monitoringEnabled: true
       },
       thresholds: {
         starGrowthAlert: 100,
         issueCountAlert: 50,
-        commitFrequencyAlert: 10,
-      },
+        commitFrequencyAlert: 10
+      }
     };
 
     fs.writeFileSync(
@@ -458,12 +436,12 @@ Customize as needed for your empire building operations.
         markdown += `- **Total Files:** ${stats.totalFiles}\n`;
         markdown += `- **Total Lines:** ${stats.totalLines.toLocaleString()}\n`;
         markdown += `- **Directories:** ${stats.directories.size}\n\n`;
-
+        
         markdown += `### File Types\n\n`;
         const sortedTypes = Object.entries(stats.fileTypes)
           .sort(([, a], [, b]) => b - a)
           .slice(0, 10);
-
+        
         for (const [ext, count] of sortedTypes) {
           markdown += `- ${ext || 'no extension'}: ${count} files\n`;
         }
@@ -474,7 +452,7 @@ Customize as needed for your empire building operations.
         markdown += `### Competitor Analysis\n\n`;
         markdown += `| Repository | Stars | Forks | Open Issues | Last Commit |\n`;
         markdown += `|------------|-------|-------|-------------|-------------|\n`;
-
+        
         for (const rival of section.data) {
           if (rival.error) {
             markdown += `| ${rival.name} | ❌ Error | - | - | - |\n`;
@@ -488,7 +466,7 @@ Customize as needed for your empire building operations.
       if (section.title === 'News Intelligence') {
         markdown += `### Top Headlines\n\n`;
         const topNews = section.data.slice(0, 10);
-
+        
         for (let i = 0; i < topNews.length; i++) {
           const item = topNews[i];
           if (item.error) {
@@ -496,8 +474,7 @@ Customize as needed for your empire building operations.
           } else {
             markdown += `${i + 1}. **${item.title}**\n`;
             if (item.source) markdown += `   - Source: ${item.source}\n`;
-            if (item.relevance)
-              markdown += `   - Relevance Score: ${item.relevance}/5\n`;
+            if (item.relevance) markdown += `   - Relevance Score: ${item.relevance}/5\n`;
           }
           markdown += `\n`;
         }
@@ -524,7 +501,7 @@ Customize as needed for your empire building operations.
     console.log('📦 Creating updates.zip...');
 
     const zip = new AdmZip();
-
+    
     // Add all files from generated directory
     const files = fs.readdirSync(GENERATED_DIR);
     for (const file of files) {
@@ -539,7 +516,7 @@ Customize as needed for your empire building operations.
 
 // Execute
 const analyzer = new DailyAnalyzer();
-analyzer.run().catch((error) => {
+analyzer.run().catch(error => {
   console.error('Fatal error:', error);
   process.exit(1);
 });

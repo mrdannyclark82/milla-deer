@@ -1,10 +1,10 @@
 /**
  * Gemini Nano GenAI Integration
- *
+ * 
  * This module provides a TypeScript/JavaScript wrapper for Google's Gemini Nano
  * on-device AI model. It enables offline text and image generation capabilities
  * for Android devices.
- *
+ * 
  * Features:
  * - Offline text generation
  * - Image understanding and generation
@@ -62,10 +62,10 @@ class GeminiNanoClient {
       // Initialize Gemini Nano model
       // This is a placeholder - actual implementation depends on SDK
       console.log('Initializing Gemini Nano...');
-
+      
       // Check if Gemini Nano is available on device
       const isAvailable = await this.checkAvailability();
-
+      
       if (!isAvailable && this.config.fallbackToGemma) {
         console.warn('Gemini Nano not available, falling back to Gemma');
         await this.initGemmaFallback();
@@ -77,7 +77,7 @@ class GeminiNanoClient {
       console.log('Gemini Nano initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Gemini Nano:', error);
-
+      
       if (this.config.fallbackToGemma) {
         await this.initGemmaFallback();
       } else {
@@ -139,11 +139,11 @@ class GeminiNanoClient {
       };
     } catch (error) {
       console.error('Generation failed:', error);
-
+      
       if (this.config.fallbackToGemma) {
         return this.generateWithGemma(options);
       }
-
+      
       throw error;
     }
   }
@@ -151,16 +151,14 @@ class GeminiNanoClient {
   /**
    * Generate text using Gemma fallback
    */
-  private async generateWithGemma(
-    options: GenerationOptions
-  ): Promise<GenerationResult> {
+  private async generateWithGemma(options: GenerationOptions): Promise<GenerationResult> {
     const startTime = Date.now();
-
+    
     console.log('Using Gemma fallback for generation');
-
+    
     // Placeholder for Gemma generation
     const text = `Gemma fallback response to: ${options.prompt}`;
-
+    
     return {
       text,
       tokensUsed: text.split(' ').length,
@@ -175,7 +173,7 @@ class GeminiNanoClient {
   private async invokeModel(prompt: string, options: any): Promise<string> {
     // Placeholder - actual implementation would interface with native bridge
     // to call Gemini Nano on Android
-
+    
     // Simulate API call
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -187,10 +185,7 @@ class GeminiNanoClient {
   /**
    * Process image with vision capabilities
    */
-  async processImage(
-    imageData: string | Blob,
-    prompt: string
-  ): Promise<GenerationResult> {
+  async processImage(imageData: string | Blob, prompt: string): Promise<GenerationResult> {
     if (!this.initialized) {
       await this.init();
     }
@@ -200,7 +195,7 @@ class GeminiNanoClient {
     try {
       // Placeholder for image processing
       const text = `Image analysis: ${prompt}`;
-
+      
       return {
         text,
         tokensUsed: text.split(' ').length,

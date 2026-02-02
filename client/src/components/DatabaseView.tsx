@@ -13,30 +13,10 @@ export function DatabaseView() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard
-              label="Total Memories"
-              value="1,248"
-              icon={<Brain className="w-4 h-4" />}
-              color="text-purple-400"
-            />
-            <StatCard
-              label="Vector Indices"
-              value="16"
-              icon={<Activity className="w-4 h-4" />}
-              color="text-blue-400"
-            />
-            <StatCard
-              label="Storage Used"
-              value="45 MB"
-              icon={<HardDrive className="w-4 h-4" />}
-              color="text-yellow-400"
-            />
-            <StatCard
-              label="Uptime"
-              value="99.9%"
-              icon={<Activity className="w-4 h-4" />}
-              color="text-green-400"
-            />
+            <StatCard label="Total Memories" value="1,248" icon={<Brain className="w-4 h-4" />} color="text-purple-400" />
+            <StatCard label="Vector Indices" value="16" icon={<Activity className="w-4 h-4" />} color="text-blue-400" />
+            <StatCard label="Storage Used" value="45 MB" icon={<HardDrive className="w-4 h-4" />} color="text-yellow-400" />
+            <StatCard label="Uptime" value="99.9%" icon={<Activity className="w-4 h-4" />} color="text-green-400" />
           </div>
           <div className="mt-6 h-64 bg-black/20 rounded-lg border border-white/5 flex items-center justify-center text-white/30">
             Memory distribution visualization coming soon
@@ -85,24 +65,12 @@ export function DatabaseView() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-}) {
+function StatCard({ label, value, icon, color }: { label: string; value: string; icon: React.ReactNode; color: string }) {
   return (
     <div className="bg-white/5 rounded-lg p-4 border border-white/10">
       <div className={`flex items-center gap-2 mb-2 ${color}`}>
         {icon}
-        <span className="text-xs font-medium uppercase tracking-wider opacity-80">
-          {label}
-        </span>
+        <span className="text-xs font-medium uppercase tracking-wider opacity-80">{label}</span>
       </div>
       <div className="text-2xl font-bold text-white">{value}</div>
     </div>

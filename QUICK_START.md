@@ -88,7 +88,6 @@ All environment variables are already set in the sandbox. To modify:
 2. Restart the servers for changes to take effect
 
 Key variables:
-
 - `PORT` - Main server port (default: 5000)
 - `PROACTIVE_PORT` - Proactive server port (default: 5001)
 - `OPENROUTER_API_KEY` - For AI responses (currently not set)
@@ -100,14 +99,12 @@ Key variables:
 ## Testing the Application
 
 ### Web Interface Test
-
 1. Open http://localhost:5000 in your browser
 2. Type a message in the chat input
 3. Click send or press Enter
 4. Milla should respond with a contextual message
 
 ### API Test
-
 ```bash
 # Health check
 curl http://localhost:5001/health
@@ -121,7 +118,6 @@ curl http://localhost:5000/health
 ## Troubleshooting
 
 ### Servers Not Starting
-
 ```bash
 # Check if ports are in use
 lsof -i :5000
@@ -136,7 +132,6 @@ npm run dev:all
 ```
 
 ### Database Issues
-
 ```bash
 # Delete and recreate database
 rm -f memory/milla.db
@@ -144,7 +139,6 @@ npm run dev:all  # Will recreate on startup
 ```
 
 ### TypeScript Errors
-
 ```bash
 # Check for errors
 npm run check
@@ -158,14 +152,12 @@ npm run check
 ## Features Available
 
 ### ✅ Core Features
-
 - Real-time chat with Milla
 - Memory system (SQLite with encryption)
 - Multi-personality modes
 - Session tracking
 
 ### ✅ Agent System
-
 - Coding Agent (automated fixes)
 - Image Generation Agent
 - Enhancement Search Agent
@@ -175,7 +167,6 @@ npm run check
 - YouTube Agent
 
 ### ✅ Proactive Features
-
 - Repository management
 - Autonomous code improvements
 - Feature discovery
@@ -183,7 +174,6 @@ npm run check
 - Daily suggestions (if enabled)
 
 ### ✅ Advanced Features
-
 - Voice interaction (if configured)
 - YouTube analysis
 - Visual recognition
@@ -204,7 +194,6 @@ npm run check
    - Firebase for additional features
 
 3. **Fix TypeScript Errors** for production:
-
    ```bash
    npm run check
    # Fix reported errors

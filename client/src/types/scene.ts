@@ -6,13 +6,7 @@ export type SceneMood =
   | 'playful';
 export type TimeOfDay = 'dawn' | 'day' | 'dusk' | 'night';
 export type AvatarState = 'neutral' | 'thinking' | 'responding' | 'listening';
-export type ParticleType =
-  | 'stars'
-  | 'sparkles'
-  | 'hearts'
-  | 'petals'
-  | 'mist'
-  | 'snowflakes';
+export type ParticleType = 'stars' | 'sparkles' | 'hearts' | 'petals' | 'mist' | 'snowflakes';
 
 // Role-play scene locations (Phase 3)
 export type SceneLocation =

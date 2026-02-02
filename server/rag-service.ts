@@ -246,7 +246,10 @@ Answer:`;
   /**
    * Rerank results using AI-based relevance scoring
    */
-  private async rerankResults(query: string, results: any[]): Promise<any[]> {
+  private async rerankResults(
+    query: string,
+    results: any[]
+  ): Promise<any[]> {
     // Simple reranking based on keyword matching
     // In production, use cross-encoder models for better accuracy
     const queryTokens = query.toLowerCase().split(/\s+/);

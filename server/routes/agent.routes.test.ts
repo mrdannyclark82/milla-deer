@@ -36,9 +36,7 @@ describe('Agent Routes', () => {
 
   describe('GET /api/user-tasks', () => {
     it('should return user tasks', async () => {
-      vi.spyOn(userTaskService, 'getUserTasks').mockReturnValue([
-        { id: '1', title: 'Task 1' } as any,
-      ]);
+      vi.spyOn(userTaskService, 'getUserTasks').mockReturnValue([{ id: '1', title: 'Task 1' } as any]);
       const response = await request(app).get('/api/user-tasks');
 
       expect(response.status).toBe(200);
@@ -56,10 +54,7 @@ describe('Agent Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.response).toBe('Agent response');
-      expect(agentController.dispatch).toHaveBeenCalledWith(
-        'TestAgent',
-        'Do something'
-      );
+      expect(agentController.dispatch).toHaveBeenCalledWith('TestAgent', 'Do something');
     });
   });
 });

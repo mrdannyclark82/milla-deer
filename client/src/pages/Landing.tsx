@@ -1,12 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
-import Card, {
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '../components/Card';
+import Card, { CardHeader, CardTitle, CardDescription, CardContent } from '../components/Card';
 import GlowButton from '../components/GlowButton';
 import { Input, Textarea, Label } from '../components/FormControls';
 
@@ -22,7 +17,7 @@ const Landing: React.FC = () => {
           <h2 className="text-4xl font-bold text-center mb-12 text-high-contrast glow-text text-cyber-pink">
             Powerful Features
           </h2>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card glow>
               <CardHeader>
@@ -33,8 +28,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Seamlessly switch between devices with synchronized
-                  conversations and context.
+                  Seamlessly switch between devices with synchronized conversations and context.
                 </p>
               </CardContent>
             </Card>
@@ -48,8 +42,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Deep understanding of your needs through continuous learning
-                  and adaptation.
+                  Deep understanding of your needs through continuous learning and adaptation.
                 </p>
               </CardContent>
             </Card>
@@ -63,8 +56,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Talk naturally with high-quality voice synthesis and
-                  recognition.
+                  Talk naturally with high-quality voice synthesis and recognition.
                 </p>
               </CardContent>
             </Card>
@@ -78,8 +70,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Share and explore multimedia content together in an immersive
-                  experience.
+                  Share and explore multimedia content together in an immersive experience.
                 </p>
               </CardContent>
             </Card>
@@ -93,8 +84,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Choose from multiple AI models, voices, and appearance
-                  settings.
+                  Choose from multiple AI models, voices, and appearance settings.
                 </p>
               </CardContent>
             </Card>
@@ -108,8 +98,7 @@ const Landing: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-slate-300">
-                  Contribute, extend, and customize with full access to the
-                  codebase.
+                  Contribute, extend, and customize with full access to the codebase.
                 </p>
               </CardContent>
             </Card>
@@ -124,20 +113,19 @@ const Landing: React.FC = () => {
             <h2 className="text-4xl font-bold text-center mb-12 text-high-contrast glow-text text-cyber-pink">
               About Milla-Rayne
             </h2>
-
+            
             <Card animated className="mb-8">
               <CardContent>
                 <p className="text-slate-300 text-lg leading-relaxed mb-4">
-                  Milla-Rayne is a sophisticated, context-aware AI assistant
-                  designed for rich, personal interaction. Built as a full-stack
-                  monorepo with a clear separation between client, server, and
-                  shared components, it offers multiple ways to connect and
-                  engage.
+                  Milla-Rayne is a sophisticated, context-aware AI assistant designed for rich, 
+                  personal interaction. Built as a full-stack monorepo with a clear separation 
+                  between client, server, and shared components, it offers multiple ways to 
+                  connect and engage.
                 </p>
                 <p className="text-slate-300 text-lg leading-relaxed">
-                  With support for multiple AI providers, voice interaction, and
-                  immersive scenes, Milla-Rayne creates a unique companionship
-                  experience that adapts to your needs and preferences.
+                  With support for multiple AI providers, voice interaction, and immersive 
+                  scenes, Milla-Rayne creates a unique companionship experience that adapts 
+                  to your needs and preferences.
                 </p>
               </CardContent>
             </Card>
@@ -152,7 +140,7 @@ const Landing: React.FC = () => {
             <h2 className="text-4xl font-bold text-center mb-12 text-high-contrast glow-text text-cyber-pink">
               Get In Touch
             </h2>
-
+            
             <Card glow>
               <CardContent>
                 <form className="space-y-6">

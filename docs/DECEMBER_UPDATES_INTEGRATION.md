@@ -9,7 +9,6 @@ This document explains how to integrate the new features added in the December 8
 A future-ready wrapper for MediaPipe's Gemma integration. Currently uses a mock implementation until the official MediaPipe LLM package is released.
 
 **Usage:**
-
 ```typescript
 import { gemmaMP } from './android/gemma-wrapper-mp';
 
@@ -26,7 +25,6 @@ console.log(response);
 Edge reasoning fallback using Google's Gemini API. Currently uses Gemini 1.5 Flash as a stepping stone to Gemini 3.
 
 **Usage:**
-
 ```typescript
 import { gemini3R } from './server/dispatcher/gemini3-reason';
 
@@ -40,7 +38,6 @@ console.log(response);
 Multi-LLM fallback chain that tries local models first, then falls back to cloud services.
 
 **Usage:**
-
 ```typescript
 import { dispatchQuery } from './server/dispatcher/fallback-dispatcher';
 
@@ -57,13 +54,12 @@ console.log(response2);
 A React component that displays the current privacy/power mode to users.
 
 **Usage:**
-
 ```tsx
 import LowPowerPrivacy from './client/src/components/privacy/LowPowerPrivacy';
 
 function MyApp() {
   const [mode, setMode] = useState<'offline' | 'hybrid' | 'cloud'>('hybrid');
-
+  
   return (
     <div>
       <LowPowerPrivacy mode={mode} />
@@ -90,15 +86,13 @@ LOCAL_MODEL_PATH=locallm/gemma.tflite
 ## Integration Steps
 
 1. **Import and use the dispatcher in your agent initialization:**
-
    ```typescript
    import { dispatchQuery } from './server/dispatcher/fallback-dispatcher';
-
+   
    const response = await dispatchQuery(userInput);
    ```
 
 2. **Add the LowPowerPrivacy component to your UI where mode toggles:**
-
    ```tsx
    <LowPowerPrivacy mode={currentMode} />
    ```

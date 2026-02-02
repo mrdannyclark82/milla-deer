@@ -10,7 +10,7 @@ async function sendCallback(url, body = undefined, options = {}) {
   let fetchFn = global.fetch;
   if (typeof fetchFn !== 'function') {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+       
 
       const { fetch: undiciFetch } = require('undici');
       fetchFn = undiciFetch;
@@ -28,9 +28,8 @@ async function sendCallback(url, body = undefined, options = {}) {
     throw new TypeError('url must be a string');
   }
 
-  const controller = new (
-    global.AbortController || require('abort-controller')
-  )();
+  const controller = new (global.AbortController ||
+    require('abort-controller'))();
   const timeoutMs = options.timeout || DEFAULT_TIMEOUT_MS;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 

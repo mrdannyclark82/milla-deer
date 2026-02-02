@@ -26,7 +26,7 @@ export interface TokenTransaction {
   relatedId?: string; // ID of related sandbox, feature, or task
 }
 
-export type RewardType =
+export type RewardType = 
   | 'UNLOCK_ADVANCED_DEBUGGING'
   | 'UNLOCK_BACKGROUND_CONTROL'
   | 'UNLOCK_PERSONALITY_CUSTOMIZATION'
@@ -388,7 +388,7 @@ class TokenIncentiveService {
       'UNLOCK_PERSONALITY_CUSTOMIZATION',
       'UNLOCK_PERFORMANCE_PROFILING',
       'UNLOCK_AI_MODEL_SELECTION',
-      'UNLOCK_ADVANCED_MEMORY',
+      'UNLOCK_ADVANCED_MEMORY'
     ];
     return rewardTypes.includes(value);
   }

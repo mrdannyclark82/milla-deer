@@ -5,10 +5,7 @@
  * analyze GitHub repositories for users.
  */
 
-import {
-  generateGeminiResponse,
-  generateOpenRouterResponse,
-} from './openrouterService';
+import { generateGeminiResponse, generateOpenRouterResponse } from './openrouterService';
 import { generateAIResponse } from './openaiService';
 import { generateOpenAIResponse } from './openaiChatService';
 
@@ -333,45 +330,21 @@ Keep your response conversational and supportive, as you're helping your partner
 
   // Try multiple AI providers in order of preference
   const providers = [
-    {
-      name: 'OpenAI',
-      fn: async () =>
-        await generateOpenAIResponse(analysisPrompt, baseContext, MAX_TOKENS),
-    },
-    {
-      name: 'Gemini',
-      fn: async () =>
-        await generateGeminiResponse(analysisPrompt, simpleContext),
-    },
-    {
-      name: 'OpenRouter',
-      fn: async () =>
-        await generateOpenRouterResponse(
-          analysisPrompt,
-          baseContext,
-          MAX_TOKENS
-        ),
-    },
+    { name: 'OpenAI', fn: async () => await generateOpenAIResponse(analysisPrompt, baseContext, MAX_TOKENS) },
+    { name: 'Gemini', fn: async () => await generateGeminiResponse(analysisPrompt, simpleContext) },
+    { name: 'OpenRouter', fn: async () => await generateOpenRouterResponse(analysisPrompt, baseContext, MAX_TOKENS) },
   ];
 
   for (const provider of providers) {
     try {
       console.log(`🔍 Trying ${provider.name} for repository analysis...`);
       const aiResponse = await provider.fn();
-
-      if (
-        aiResponse.success &&
-        aiResponse.content &&
-        aiResponse.content.trim()
-      ) {
-        console.log(
-          `✅ ${provider.name} provided repository analysis successfully`
-        );
+      
+      if (aiResponse.success && aiResponse.content && aiResponse.content.trim()) {
+        console.log(`✅ ${provider.name} provided repository analysis successfully`);
         return parseAnalysisResponse(aiResponse.content);
       }
-      console.log(
-        `⚠️ ${provider.name} returned empty or unsuccessful response`
-      );
+      console.log(`⚠️ ${provider.name} returned empty or unsuccessful response`);
     } catch (error) {
       console.warn(`⚠️ ${provider.name} analysis failed:`, error);
     }
@@ -501,18 +474,7 @@ function generateFallbackAnalysis(repoData: RepositoryData): {
   insights: string[];
   recommendations: string[];
 } {
-  const {
-    info,
-    description,
-    language,
-    languages,
-    stats,
-    topics,
-    recentCommits,
-    issues,
-    pullRequests,
-    readme,
-  } = repoData;
+  const { info, description, language, languages, stats, topics, recentCommits, issues, pullRequests, readme } = repoData;
 
   let analysis = `Hey love! I've analyzed the **${info.fullName}** repository for you. Here's what I found:\n\n`;
 
@@ -555,7 +517,7 @@ function generateFallbackAnalysis(repoData: RepositoryData): {
   // Recent activity
   if (recentCommits && recentCommits.length > 0) {
     analysis += `**Recent Activity:**\n`;
-    recentCommits.slice(0, 3).forEach((commit) => {
+    recentCommits.slice(0, 3).forEach(commit => {
       analysis += `- ${commit.message.split('\n')[0]} (by ${commit.author})\n`;
     });
     analysis += '\n';
@@ -563,19 +525,15 @@ function generateFallbackAnalysis(repoData: RepositoryData): {
 
   // Generate intelligent insights
   const insights: string[] = [];
-
+  
   if (stats) {
     if (stats.stars > 1000) {
-      insights.push(
-        'This is a highly popular repository with strong community interest'
-      );
+      insights.push('This is a highly popular repository with strong community interest');
     } else if (stats.stars > 100) {
       insights.push('This repository has good community traction');
     }
-
-    const daysSinceUpdate = Math.floor(
-      (Date.now() - new Date(stats.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    
+    const daysSinceUpdate = Math.floor((Date.now() - new Date(stats.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
     if (daysSinceUpdate < 7) {
       insights.push('Very actively maintained with recent updates');
     } else if (daysSinceUpdate < 30) {
@@ -583,20 +541,16 @@ function generateFallbackAnalysis(repoData: RepositoryData): {
     } else if (daysSinceUpdate > 365) {
       insights.push('May be abandoned or stable - check for recent activity');
     }
-
+    
     if (stats.forks > stats.stars * 0.3) {
-      insights.push(
-        'High fork-to-star ratio indicates active development community'
-      );
+      insights.push('High fork-to-star ratio indicates active development community');
     }
   }
-
+  
   if (language) {
-    insights.push(
-      `Built primarily with ${language} for the core functionality`
-    );
+    insights.push(`Built primarily with ${language} for the core functionality`);
   }
-
+  
   if (readme && readme.length > 500) {
     insights.push('Well-documented with comprehensive README');
   } else if (!readme || readme.length < 100) {
@@ -605,35 +559,23 @@ function generateFallbackAnalysis(repoData: RepositoryData): {
 
   // Generate recommendations
   const recommendations: string[] = [];
-
-  recommendations.push(
-    'Review the README and documentation to understand the project setup'
-  );
-
+  
+  recommendations.push('Review the README and documentation to understand the project setup');
+  
   if (issues && issues.length > 0) {
-    recommendations.push(
-      `Check the ${issues.length} open issues for areas where you could contribute`
-    );
+    recommendations.push(`Check the ${issues.length} open issues for areas where you could contribute`);
   }
-
+  
   if (pullRequests && pullRequests.length > 0) {
-    recommendations.push(
-      `Review the ${pullRequests.length} open pull requests to understand ongoing work`
-    );
+    recommendations.push(`Review the ${pullRequests.length} open pull requests to understand ongoing work`);
   }
-
+  
   if (stats && stats.openIssues > 20) {
-    recommendations.push(
-      'Consider helping with issue triage if you want to contribute'
-    );
+    recommendations.push('Consider helping with issue triage if you want to contribute');
   }
-
-  recommendations.push(
-    'Clone the repository and explore the codebase structure'
-  );
-  recommendations.push(
-    'Look at the test suite to understand expected behavior'
-  );
+  
+  recommendations.push('Clone the repository and explore the codebase structure');
+  recommendations.push('Look at the test suite to understand expected behavior');
 
   analysis += `This is a comprehensive analysis based on the repository's public metadata, sweetheart. The codebase appears to be ${stats && stats.openIssues < 10 ? 'well-maintained' : 'actively developed'} and could be a great learning resource or contribution opportunity! 💜`;
 

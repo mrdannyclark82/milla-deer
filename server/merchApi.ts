@@ -1,6 +1,8 @@
-// hoodie-api.ts - Simple merch API (expand with Stripe integration)
+// Merch API with Stripe Integration
 import axios from 'axios';
 import { log } from './vite';
+import Stripe from 'stripe';
+import { config } from './config';
 
 export interface MerchItem {
   id: string;
@@ -11,33 +13,35 @@ export interface MerchItem {
   category?: string;
 }
 
+// Initialize Stripe if secret key is available
+const stripe = config.stripe.secretKey
+  ? new Stripe(config.stripe.secretKey, {
+      apiVersion: '2025-02-24.acacia',
+    })
+  : null;
+
 /**
- * Get merchandise items, particularly hoodies
- * This is a placeholder implementation that will be expanded with Stripe integration
+ * Get merchandise items
  * @returns Array of merchandise items
  */
 export async function getMerchItems(): Promise<MerchItem[]> {
   try {
-    // Placeholder URL - replace with actual merch API endpoint
-    const apiUrl =
-      process.env.MERCH_API_URL || 'https://api.merchempire.com/items';
-
+    const apiUrl = process.env.MERCH_API_URL || 'https://api.merchempire.com/items';
+    
     log(`Fetching merch items from ${apiUrl}`);
-    const { data } = await axios.get<MerchItem[]>(apiUrl);
-
+    const { data } = await axios.get<MerchItem[]>(apiUrl, { timeout: 3000 });
+    
     // Filter for hoodies and related items
-    const hoodieItems = data.filter(
-      (item) =>
-        item.name.toLowerCase().includes('hoodie') ||
-        item.category?.toLowerCase() === 'apparel'
+    const hoodieItems = data.filter(item => 
+      item.name.toLowerCase().includes('hoodie') ||
+      item.category?.toLowerCase() === 'apparel'
     );
-
+    
     log(`Found ${hoodieItems.length} hoodie items`);
     return hoodieItems;
   } catch (error) {
-    log(`Merch API error: ${error}`);
-    console.error('Merch API error:', error);
-
+    log(`Merch API error (using fallback): ${error}`);
+    
     // Return sample items as fallback for development
     return [
       {
@@ -66,7 +70,7 @@ export async function getMerchItems(): Promise<MerchItem[]> {
 export async function getMerchItem(itemId: string): Promise<MerchItem | null> {
   try {
     const items = await getMerchItems();
-    return items.find((item) => item.id === itemId) || null;
+    return items.find(item => item.id === itemId) || null;
   } catch (error) {
     console.error('Error fetching merch item:', error);
     return null;
@@ -74,22 +78,57 @@ export async function getMerchItem(itemId: string): Promise<MerchItem | null> {
 }
 
 /**
- * Initialize Stripe checkout session (placeholder for future implementation)
+ * Initialize Stripe checkout session
  * @param itemId - The item ID to purchase
+ * @param origin - The origin URL for redirects
  * @returns Checkout session URL
  */
-export async function createCheckoutSession(itemId: string): Promise<string> {
+export async function createCheckoutSession(itemId: string, origin: string = 'http://localhost:5000'): Promise<string> {
   log(`Creating checkout session for item ${itemId}`);
-
-  // TODO: Implement Stripe integration
-  // This is a placeholder that returns a mock URL
+  
   const item = await getMerchItem(itemId);
-
+  
   if (!item) {
     throw new Error('Item not found');
   }
 
-  // In production, this would create a Stripe checkout session
-  // and return the session URL
-  return `https://checkout.merchempire.com/session/${itemId}`;
+  if (!stripe) {
+    log('Stripe not configured, returning mock URL');
+    return `https://checkout.merchempire.com/session/${itemId}?mock=true`;
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              description: item.description,
+              // images: item.imageUrl ? [item.imageUrl] : [],
+            },
+            unit_amount: Math.round(item.price * 100), // Stripe expects cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${origin}/merch/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/merch?canceled=true`,
+      metadata: {
+        itemId: item.id,
+      },
+    });
+
+    if (!session.url) {
+      throw new Error('Failed to create Stripe session URL');
+    }
+
+    return session.url;
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    throw new Error('Failed to initiate checkout');
+  }
 }

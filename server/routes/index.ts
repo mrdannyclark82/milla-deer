@@ -9,6 +9,7 @@ import { registerMonitoringRoutes } from './monitoring.routes';
 import { registerSandboxRoutes } from './sandbox.routes';
 import { registerGoogleRoutes } from './google.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
+import { registerMerchRoutes } from './merch.routes';
 
 /**
  * Main router that aggregates all modular routes
@@ -16,16 +17,16 @@ import { registerPersonalTaskRoutes } from './personalTask.routes';
 export function registerModularRoutes(app: Express) {
   // Authentication routes
   registerAuthRoutes(app);
-
+  
   // Chat and AI routes
   registerChatRoutes(app);
-
+  
   // Agent and Task routes
   registerAgentRoutes(app);
-
+  
   // Media and Analysis routes
   registerMediaRoutes(app);
-
+  
   // Memory and Messaging routes
   registerMemoryRoutes(app);
 
@@ -38,5 +39,8 @@ export function registerModularRoutes(app: Express) {
   registerGoogleRoutes(app);
   registerPersonalTaskRoutes(app);
 
+  // Merch routes
+  registerMerchRoutes(app);
+  
   return app;
 }

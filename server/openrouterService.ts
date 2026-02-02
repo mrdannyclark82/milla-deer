@@ -34,7 +34,7 @@ export async function generateOpenRouterResponse(
   try {
     // Use model from context if provided, otherwise use a free model
     const model = context.model || config.openrouter.grok4Model;
-
+    
     // Determine which API key to use based on model or context
     let openrouterKey = context.apiKey;
     if (!openrouterKey) {
@@ -47,18 +47,18 @@ export async function generateOpenRouterResponse(
         openrouterKey = config.openrouter.geminiFlashApiKey;
       } else {
         // Default fallback order
-        openrouterKey =
+        openrouterKey = 
           config.openrouter.grok4ApiKey ||
           config.openrouter.katCoderApiKey ||
           config.openrouter.geminiFlashApiKey ||
-          config.openrouter.minimaxApiKey ||
+          config.openrouter.minimaxApiKey || 
           config.openrouter.apiKey;
       }
     }
-
+    
     console.log('OpenRouter API Key:', openrouterKey);
     console.log('OpenRouter Model:', model);
-
+    
     if (!openrouterKey || openrouterKey === 'your_openrouter_api_key_here') {
       // Temporary fallback for demo purposes - in production, add your OPENROUTER_MINIMAX_API_KEY or OPENROUTER_API_KEY
       console.log(

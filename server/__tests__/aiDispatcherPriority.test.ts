@@ -10,20 +10,11 @@ import { config } from '../config';
 // Mock all dependencies
 vi.mock('../openaiChatService', () => ({ generateOpenAIResponse: vi.fn() }));
 vi.mock('../anthropicService', () => ({ generateAnthropicResponse: vi.fn() }));
-vi.mock('../xaiService', () => ({
-  generateXAIResponse: vi.fn(),
-  PersonalityContext: {},
-}));
+vi.mock('../xaiService', () => ({ generateXAIResponse: vi.fn(), PersonalityContext: {} }));
 vi.mock('../mistralService', () => ({ generateMistralResponse: vi.fn() }));
-vi.mock('../openrouterService', () => ({
-  generateOpenRouterResponse: vi.fn(),
-  generateGrokResponse: vi.fn(),
-}));
+vi.mock('../openrouterService', () => ({ generateOpenRouterResponse: vi.fn(), generateGrokResponse: vi.fn() }));
 vi.mock('../geminiService', () => ({ generateGeminiResponse: vi.fn() }));
-vi.mock('../memoryService', () => ({
-  searchMemoryCore: vi.fn().mockResolvedValue([]),
-  getSemanticMemoryContext: vi.fn().mockResolvedValue(''),
-}));
+vi.mock('../memoryService', () => ({ searchMemoryCore: vi.fn().mockResolvedValue([]), getSemanticMemoryContext: vi.fn().mockResolvedValue('') }));
 vi.mock('../xaiTracker', () => ({
   startReasoningSession: vi.fn().mockReturnValue('test-session-id'),
   trackCommandIntent: vi.fn(),
@@ -31,13 +22,7 @@ vi.mock('../xaiTracker', () => ({
   trackResponseGeneration: vi.fn(),
   addReasoningStep: vi.fn(),
 }));
-vi.mock('../storage', () => ({
-  storage: {
-    getUserPreferredAIModel: vi
-      .fn()
-      .mockRejectedValue(new Error('No preference')),
-  },
-}));
+vi.mock('../storage', () => ({ storage: { getUserPreferredAIModel: vi.fn().mockRejectedValue(new Error('No preference')) } }));
 
 describe('AI Dispatcher Priority Chain', () => {
   beforeEach(() => {
@@ -51,22 +36,14 @@ describe('AI Dispatcher Priority Chain', () => {
     config.openrouter = { apiKey: 'or-test', grok1ApiKey: 'grok-test' };
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  afterEach(() => { vi.restoreAllMocks(); });
 
-  const mockFail = (mockFn: any) =>
-    mockFn.mockResolvedValue({ success: false, error: 'Failed' });
-  const mockSuccess = (mockFn: any, name: string) =>
-    mockFn.mockResolvedValue({ success: true, content: `${name} Response` });
+  const mockFail = (mockFn: any) => mockFn.mockResolvedValue({ success: false, error: 'Failed' });
+  const mockSuccess = (mockFn: any, name: string) => mockFn.mockResolvedValue({ success: true, content: `${name} Response` });
 
   it('1. OpenAI succeeds -> Stop', async () => {
     mockSuccess(openaiChatService.generateOpenAIResponse as any, 'OpenAI');
-    await dispatchAIResponse('Try OpenAI', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
+    await dispatchAIResponse('Try OpenAI', { userId: 'u1', conversationHistory: [], userName: 'User' });
     expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
     expect(anthropicService.generateAnthropicResponse).not.toHaveBeenCalled();
   });
@@ -75,11 +52,7 @@ describe('AI Dispatcher Priority Chain', () => {
     mockFail(openaiChatService.generateOpenAIResponse as any);
     mockSuccess(anthropicService.generateAnthropicResponse as any, 'Anthropic');
 
-    await dispatchAIResponse('Try Anthropic', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
+    await dispatchAIResponse('Try Anthropic', { userId: 'u1', conversationHistory: [], userName: 'User' });
 
     expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
     expect(anthropicService.generateAnthropicResponse).toHaveBeenCalled();
@@ -91,11 +64,7 @@ describe('AI Dispatcher Priority Chain', () => {
     mockFail(anthropicService.generateAnthropicResponse as any);
     mockSuccess(xaiService.generateXAIResponse as any, 'xAI');
 
-    await dispatchAIResponse('Try xAI', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
+    await dispatchAIResponse('Try xAI', { userId: 'u1', conversationHistory: [], userName: 'User' });
 
     expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
     expect(anthropicService.generateAnthropicResponse).toHaveBeenCalled();
@@ -109,11 +78,7 @@ describe('AI Dispatcher Priority Chain', () => {
     mockFail(xaiService.generateXAIResponse as any);
     mockSuccess(mistralService.generateMistralResponse as any, 'Mistral');
 
-    await dispatchAIResponse('Try Mistral', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
+    await dispatchAIResponse('Try Mistral', { userId: 'u1', conversationHistory: [], userName: 'User' });
 
     expect(mistralService.generateMistralResponse).toHaveBeenCalled();
     expect(openrouterService.generateOpenRouterResponse).not.toHaveBeenCalled();
@@ -124,16 +89,9 @@ describe('AI Dispatcher Priority Chain', () => {
     mockFail(anthropicService.generateAnthropicResponse as any);
     mockFail(xaiService.generateXAIResponse as any);
     mockFail(mistralService.generateMistralResponse as any);
-    mockSuccess(
-      openrouterService.generateOpenRouterResponse as any,
-      'OpenRouter'
-    );
+    mockSuccess(openrouterService.generateOpenRouterResponse as any, 'OpenRouter');
 
-    await dispatchAIResponse('Try OpenRouter', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
+    await dispatchAIResponse('Try OpenRouter', { userId: 'u1', conversationHistory: [], userName: 'User' });
 
     expect(openrouterService.generateOpenRouterResponse).toHaveBeenCalled();
   });

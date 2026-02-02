@@ -47,7 +47,7 @@ export class ExecuTorchFallback {
       // 1. Load the ExecuTorch runtime
       // 2. Load the exported model (.pte file)
       // 3. Configure XNNPACK or other backends
-
+      
       this.module = await this.loadModule();
       this.initialized = true;
 
@@ -96,7 +96,7 @@ export class ExecuTorchFallback {
       // 1. Tokenize input
       // 2. Run forward pass through model
       // 3. Decode output tokens
-
+      
       const output = await this.execute(input);
       const executionTimeMs = Date.now() - startTime;
 
@@ -124,9 +124,7 @@ export class ExecuTorchFallback {
     // Mock execution
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(
-          `ExecuTorch fallback response to: ${input.substring(0, 40)}...`
-        );
+        resolve(`ExecuTorch fallback response to: ${input.substring(0, 40)}...`);
       }, 150);
     });
   }
@@ -196,14 +194,12 @@ export class SmartFallbackOrchestrator {
       const result = await this.primaryMethod.infer(input);
       return result.text || result;
     } catch (primaryError) {
-      console.warn(
-        '[SmartFallback] Primary method failed, using ExecuTorch fallback'
-      );
+      console.warn('[SmartFallback] Primary method failed, using ExecuTorch fallback');
       console.error('[SmartFallback] Primary error:', primaryError);
-
+      
       // Fall back to ExecuTorch
       const fallbackResult = await this.execuTorch.runInference(input);
-
+      
       if (fallbackResult.success) {
         return fallbackResult.output;
       } else {

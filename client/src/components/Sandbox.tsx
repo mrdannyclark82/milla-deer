@@ -97,11 +97,7 @@ export const Sandbox: React.FC<SandboxProps> = ({
   const [files, setFiles] = useState<VirtualFile[]>([
     { name: 'index.html', content: getDefaultHtml(), language: 'html' },
     { name: 'style.css', content: getDefaultCss(), language: 'css' },
-    {
-      name: 'script.js',
-      content: initialCode || getDefaultJs(),
-      language: 'javascript',
-    },
+    { name: 'script.js', content: initialCode || getDefaultJs(), language: 'javascript' },
     { name: 'main.py', content: getDefaultPython(), language: 'python' },
     { name: 'app.ts', content: getDefaultTypeScript(), language: 'typescript' },
     { name: 'README.md', content: getDefaultMarkdown(), language: 'markdown' },
@@ -334,7 +330,9 @@ export const Sandbox: React.FC<SandboxProps> = ({
     if (!repoUrl) return;
 
     // Parse owner/repo from URL
-    const match = repoUrl.match(/github\.com\/([^/]+)\/([^/\s]+)/i);
+    const match = repoUrl.match(
+      /github\.com\/([^/]+)\/([^/\s]+)/i
+    );
     if (!match) {
       setRepoError('Invalid GitHub URL format');
       return;
@@ -471,17 +469,14 @@ export const Sandbox: React.FC<SandboxProps> = ({
 
   if (!isOpen) return null;
 
-  const containerClasses = embedded
-    ? 'relative w-full h-full min-h-[600px] flex flex-col bg-[#0f0f1a]/98 backdrop-blur-lg rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden'
-    : 'fixed inset-4 flex flex-col bg-[#0f0f1a]/98 backdrop-blur-lg rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden';
+  const containerClasses = embedded 
+    ? "relative w-full h-full min-h-[600px] flex flex-col bg-[#0f0f1a]/98 backdrop-blur-lg rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden"
+    : "fixed inset-4 flex flex-col bg-[#0f0f1a]/98 backdrop-blur-lg rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden";
 
   return (
     <div
       className={containerClasses}
-      style={{
-        width: !embedded && width ? `${width}px` : undefined,
-        zIndex: embedded ? 1 : 300,
-      }}
+      style={{ width: !embedded && width ? `${width}px` : undefined, zIndex: embedded ? 1 : 300 }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a0a12]/60">
@@ -684,7 +679,9 @@ export const Sandbox: React.FC<SandboxProps> = ({
                   ) : (
                     <File className="w-4 h-4 text-blue-400" />
                   )}
-                  <span className="truncate">{node.path.split('/').pop()}</span>
+                  <span className="truncate">
+                    {node.path.split('/').pop()}
+                  </span>
                 </div>
               ))}
             </ScrollArea>

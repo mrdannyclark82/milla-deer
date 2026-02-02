@@ -145,8 +145,7 @@ export class RedisCacheService {
     if (!this.isAvailable()) return;
 
     try {
-      const serialized =
-        typeof value === 'object' ? JSON.stringify(value) : value;
+      const serialized = typeof value === 'object' ? JSON.stringify(value) : value;
       await this.client!.setex(key, ttl, serialized);
     } catch (error) {
       console.error('Cache set error:', error);
@@ -232,8 +231,7 @@ export class RedisCacheService {
     if (!this.isAvailable()) return;
 
     try {
-      const serialized =
-        typeof message === 'object' ? JSON.stringify(message) : message;
+      const serialized = typeof message === 'object' ? JSON.stringify(message) : message;
       await this.client!.publish(channel, serialized);
       console.log(`📢 Published to ${channel}`);
     } catch (error) {

@@ -104,6 +104,7 @@ Click "Sync Project with Gradle Files" or let Android Studio do it automatically
   ```bash
   cd .. && npm run dev
   ```
+  
 - **Offline Mode** (standalone): Works without server with limited features
   - Pattern-based responses for common queries
   - Local device controls (volume, WiFi, etc.)
@@ -153,6 +154,7 @@ The app automatically detects if the server is available:
   - Handles basic queries and conversations
   - Provides device control commands
   - Shows "🔌 Offline Mode" indicator
+  
 - **Online Mode**: When connected to the server, full AI capabilities are available
   - Advanced AI responses
   - Full context awareness
@@ -275,21 +277,18 @@ The app's offline mode provides a robust standalone experience:
 ### ✅ What Works Offline
 
 **Basic Conversation:**
-
 - Greetings and farewells
 - Simple questions and answers
 - Thank you responses
 - Identity questions ("Who are you?", "What's your name?")
 
 **Utilities:**
-
 - Current time and date
 - Day of the week
 - Basic math calculations (e.g., "what is 5 + 3?")
 - Jokes and motivational quotes
 
 **Device Control:**
-
 - Volume up/down
 - Mute/unmute
 - Media playback control (play/pause)
@@ -297,7 +296,6 @@ The app's offline mode provides a robust standalone experience:
 - Brightness controls
 
 **Smart Home (placeholder):**
-
 - Light on/off commands
 - Thermostat controls
 - Extensible plugin system
@@ -363,7 +361,6 @@ The Android app is optimized for both online and offline operation:
 - **Minimal Wake Locks**: No unnecessary wake locks or alarms
 
 ## Known Limitations
-
 - **Offline mode limitations:**
   - Pattern-based responses only (not true AI)
   - Limited knowledge base

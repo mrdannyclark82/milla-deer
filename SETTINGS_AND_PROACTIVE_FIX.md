@@ -10,14 +10,12 @@ This document describes the fixes implemented to resolve the white screen issue 
 
 **Root Cause**: A syntax error in `SettingsPanel.tsx` line 926 where `\n\n` was rendered as literal text instead of being interpreted as whitespace.
 
-**Solution**:
-
+**Solution**: 
 - Removed the `\n\n` literal string from the JSX
 - Verified all component imports and dependencies are correct
 - Fixed TypeScript configuration error in `server/config.ts`
 
 **Files Changed**:
-
 - `client/src/components/SettingsPanel.tsx` - Fixed syntax error
 - `server/config.ts` - Fixed missing closing brace
 
@@ -28,14 +26,12 @@ This document describes the fixes implemented to resolve the white screen issue 
 **Root Cause**: All API routes, including high-frequency proactive polling endpoints, were served from the same server with a restrictive rate limit (100 requests per 15 minutes).
 
 **Solution**:
-
 - Created a separate Express server (`proactiveServer.ts`) that runs on port 5001
 - Moved all proactive feature routes (`/api/milla/*`) to the new server
 - Configured higher rate limits for the proactive server (500 requests per 15 minutes)
 - Updated client code to use the new proactive server for relevant API calls
 
 **Files Changed**:
-
 - `server/proactiveServer.ts` - New server for proactive features (port 5001)
 - `server/routes.ts` - Commented out proactive routes registration
 - `client/src/lib/proactiveApi.ts` - New utility for proactive API calls
@@ -48,7 +44,6 @@ This document describes the fixes implemented to resolve the white screen issue 
 ## Architecture Changes
 
 ### Before
-
 ```
 ┌─────────────────────────┐
 │   Main Server (5000)    │
@@ -59,7 +54,6 @@ This document describes the fixes implemented to resolve the white screen issue 
 ```
 
 ### After
-
 ```
 ┌─────────────────────────┐     ┌──────────────────────────┐
 │   Main Server (5000)    │     │ Proactive Server (5001)  │
@@ -72,28 +66,24 @@ This document describes the fixes implemented to resolve the white screen issue 
 ## Usage
 
 ### Running Both Servers Together (Recommended)
-
 ```bash
 npm run dev:all
 ```
 
 This starts:
-
 - Main server on port 5000
 - Proactive server on port 5001
 
 ### Running Servers Separately
-
 ```bash
 # Terminal 1 - Main server
 npm run dev
 
-# Terminal 2 - Proactive server
+# Terminal 2 - Proactive server  
 npm run dev:proactive
 ```
 
 ### Production
-
 ```bash
 # Build both servers
 npm run build
@@ -123,7 +113,6 @@ A test script is provided to verify all changes:
 ```
 
 This checks:
-
 1. Port availability (5000, 5001)
 2. TypeScript compilation
 3. Proactive server file exists
@@ -137,13 +126,11 @@ This checks:
 If you have existing code that calls proactive endpoints:
 
 **Before:**
-
 ```typescript
 const response = await fetch('/api/milla/tokens/rewards');
 ```
 
 **After:**
-
 ```typescript
 import { proactiveGet } from '@/lib/proactiveApi';
 const data = await proactiveGet('/api/milla/tokens/rewards');
@@ -174,7 +161,6 @@ All endpoints under `/api/milla/` are now handled by the proactive server:
 ## Troubleshooting
 
 ### Port Already in Use
-
 ```bash
 # Kill processes on ports 5000 and 5001
 lsof -ti:5000 | xargs kill -9
@@ -182,15 +168,12 @@ lsof -ti:5001 | xargs kill -9
 ```
 
 ### Proactive Server Not Starting
-
 Check that:
-
 1. Port 5001 is available
 2. `PROACTIVE_PORT` is set in `.env` (or defaults to 5001)
 3. All dependencies are installed: `npm install`
 
 ### Settings Still Showing White Screen
-
 1. Clear browser cache
 2. Check browser console for errors
 3. Verify the SettingsPanel.tsx fix is applied

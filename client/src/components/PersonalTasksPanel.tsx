@@ -16,7 +16,7 @@ import {
   Palette,
   Book,
   ListTodo,
-  Loader2,
+  Loader2
 } from 'lucide-react';
 
 interface PersonalTask {
@@ -87,22 +87,14 @@ export function PersonalTasksPanel() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'self_reflection':
-        return <User className="w-3 h-3" />;
-      case 'improvement':
-        return <ArrowUp className="w-3 h-3" />;
-      case 'glitch_analysis':
-        return <Bug className="w-3 h-3" />;
-      case 'memory_processing':
-        return <Brain className="w-3 h-3" />;
-      case 'relationship_growth':
-        return <Heart className="w-3 h-3" />;
-      case 'creative_exploration':
-        return <Palette className="w-3 h-3" />;
-      case 'diary_entry':
-        return <Book className="w-3 h-3" />;
-      default:
-        return <ListTodo className="w-3 h-3" />;
+      case 'self_reflection': return <User className="w-3 h-3" />;
+      case 'improvement': return <ArrowUp className="w-3 h-3" />;
+      case 'glitch_analysis': return <Bug className="w-3 h-3" />;
+      case 'memory_processing': return <Brain className="w-3 h-3" />;
+      case 'relationship_growth': return <Heart className="w-3 h-3" />;
+      case 'creative_exploration': return <Palette className="w-3 h-3" />;
+      case 'diary_entry': return <Book className="w-3 h-3" />;
+      default: return <ListTodo className="w-3 h-3" />;
     }
   };
 
@@ -157,9 +149,9 @@ export function PersonalTasksPanel() {
         {/* Recent Tasks */}
         <div className="space-y-2 flex-1 overflow-y-auto pr-2">
           {tasksLoading ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-            </div>
+             <div className="flex justify-center p-4">
+               <Loader2 className="w-6 h-6 animate-spin text-white/40" />
+             </div>
           ) : tasks.length === 0 ? (
             <div className="text-center text-gray-400 py-8 flex flex-col items-center">
               <Moon className="w-8 h-8 mb-2 opacity-50" />

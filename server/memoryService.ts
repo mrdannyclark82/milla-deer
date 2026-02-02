@@ -9,6 +9,7 @@ import {
   queryHomomorphic,
   isHomomorphicallyEncrypted,
 } from './crypto/homomorphicProduction';
+import { storage } from './storage';
 
 export interface MemoryData {
   content: string;
@@ -852,8 +853,9 @@ export async function getMemoryCoreContext(
   // Add sandbox test summary if query is about testing
   if (isSandboxQuery) {
     try {
-      const { getSandboxTestSummary } =
-        await import('./sandboxEnvironmentService');
+      const { getSandboxTestSummary } = await import(
+        './sandboxEnvironmentService'
+      );
       const sandboxSummary = getSandboxTestSummary();
       if (sandboxSummary) {
         contextString += `\n[Sandbox Testing Memory]:\n${sandboxSummary}\n`;
@@ -1161,11 +1163,8 @@ export async function storeSensitiveMemory(
       console.log('🔒 Encrypted medical notes with HE');
     }
 
-    // TODO: Store encrypted data (requires DB migration for new fields)
-    // For now, this is a placeholder showing the architecture
-    console.log(
-      '[MemoryService] Sensitive data encrypted - DB storage pending migration'
-    );
+    await storage.saveSensitiveMemory(userId, encryptedData);
+    console.log('[MemoryService] Sensitive data encrypted and stored in DB');
 
     return { success: true };
   } catch (error) {
@@ -1190,15 +1189,38 @@ export async function retrieveSensitiveMemory(userId: string): Promise<{
   error?: string;
 }> {
   try {
-    // TODO: Retrieve from DB (requires migration for new fields)
-    // For now, return empty data as placeholder
-    console.log(
-      '[MemoryService] Sensitive data retrieval - DB migration pending'
-    );
+    const memory = await storage.getSensitiveMemory(userId);
+
+    if (!memory) {
+      return {
+        financialSummary: undefined,
+        medicalNotes: undefined,
+        success: true,
+      };
+    }
+
+    let financialSummary: string | undefined;
+    let medicalNotes: string | undefined;
+
+    if (memory.financialSummary) {
+      try {
+        financialSummary = await decryptHomomorphic(memory.financialSummary);
+      } catch (err) {
+        console.error('Failed to decrypt financial summary:', err);
+      }
+    }
+
+    if (memory.medicalNotes) {
+      try {
+        medicalNotes = await decryptHomomorphic(memory.medicalNotes);
+      } catch (err) {
+        console.error('Failed to decrypt medical notes:', err);
+      }
+    }
 
     return {
-      financialSummary: undefined,
-      medicalNotes: undefined,
+      financialSummary,
+      medicalNotes,
       success: true,
     };
   } catch (error) {
@@ -1229,13 +1251,33 @@ export async function searchSensitiveMemory(
   error?: string;
 }> {
   try {
-    // TODO: Retrieve from DB (requires migration for new fields)
-    // For now, return no matches as placeholder
-    console.log('[MemoryService] Sensitive data search - DB migration pending');
+    // Retrieve encrypted data directly from storage
+    const memory = await storage.getSensitiveMemory(userId);
+
+    if (!memory) {
+      return {
+        matches: false,
+        score: 0,
+        success: true,
+      };
+    }
+
+    const encryptedContent = memory[field];
+
+    if (!encryptedContent) {
+      return {
+        matches: false,
+        score: 0,
+        success: true,
+      };
+    }
+
+    // Use homomorphic query on the encrypted data
+    const result = await queryHomomorphic(encryptedContent, query);
 
     return {
-      matches: false,
-      score: 0,
+      matches: result.matches,
+      score: result.score,
       success: true,
     };
   } catch (error) {

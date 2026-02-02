@@ -22,7 +22,7 @@ describe('GemmaMPWrapper', () => {
   it('should generate response', async () => {
     const prompt = 'Hello, how are you?';
     const response = await wrapper.generate(prompt);
-
+    
     expect(response).toBeDefined();
     expect(typeof response).toBe('string');
     expect(response.length).toBeGreaterThan(0);
@@ -32,7 +32,7 @@ describe('GemmaMPWrapper', () => {
     const prompt = 'Tell me a story';
     const maxTokens = 256;
     const response = await wrapper.generate(prompt, maxTokens);
-
+    
     expect(response).toBeDefined();
     expect(typeof response).toBe('string');
   });
@@ -40,7 +40,7 @@ describe('GemmaMPWrapper', () => {
   it('should auto-setup if generate called before setup', async () => {
     const newWrapper = new GemmaMPWrapper();
     const response = await newWrapper.generate('Test query');
-
+    
     expect(response).toBeDefined();
   });
 });
