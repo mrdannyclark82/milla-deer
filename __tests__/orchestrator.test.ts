@@ -20,7 +20,7 @@ describe('Orchestrator', () => {
 
   it('should initialize successfully', async () => {
     const stats = orchestrator.getStats();
-    
+
     expect(stats.modelHealth).toBeDefined();
     expect(Object.keys(stats.modelHealth).length).toBeGreaterThan(0);
   });
@@ -62,7 +62,7 @@ describe('Orchestrator', () => {
 
   it('should clear cache', () => {
     orchestrator.clearCache();
-    
+
     const stats = orchestrator.getStats();
     expect(stats.cachedResults).toBe(0);
   });

@@ -31,9 +31,8 @@ describe('Browser Integration Service', () => {
 
   describe('Google Calendar Integration', () => {
     test('should parse date and time correctly for "tomorrow at 2pm"', async () => {
-      const { addEventToGoogleCalendar } = await import(
-        '../googleCalendarService'
-      );
+      const { addEventToGoogleCalendar } =
+        await import('../googleCalendarService');
 
       // This will fail without a valid token, but we can test the parsing logic
       const result = await addEventToGoogleCalendar(
@@ -47,9 +46,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should parse date and time correctly for "next Tuesday at 10:30am"', async () => {
-      const { addEventToGoogleCalendar } = await import(
-        '../googleCalendarService'
-      );
+      const { addEventToGoogleCalendar } =
+        await import('../googleCalendarService');
 
       const result = await addEventToGoogleCalendar(
         'Team Meeting',
@@ -62,9 +60,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should handle invalid date formats gracefully', async () => {
-      const { addEventToGoogleCalendar } = await import(
-        '../googleCalendarService'
-      );
+      const { addEventToGoogleCalendar } =
+        await import('../googleCalendarService');
 
       const result = await addEventToGoogleCalendar(
         'Event',
@@ -99,9 +96,8 @@ describe('Browser Integration Service', () => {
 
   describe('Browser Tool Detection', () => {
     test('should detect calendar event requests', async () => {
-      const { detectBrowserToolRequest } = await import(
-        '../browserIntegrationService'
-      );
+      const { detectBrowserToolRequest } =
+        await import('../browserIntegrationService');
 
       const testCases = [
         'Add a dentist appointment to my calendar for Tuesday',
@@ -117,9 +113,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should detect note-taking requests', async () => {
-      const { detectBrowserToolRequest } = await import(
-        '../browserIntegrationService'
-      );
+      const { detectBrowserToolRequest } =
+        await import('../browserIntegrationService');
 
       const testCases = [
         'Add a note to remind me to call mom',
@@ -135,9 +130,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should detect website navigation requests', async () => {
-      const { detectBrowserToolRequest } = await import(
-        '../browserIntegrationService'
-      );
+      const { detectBrowserToolRequest } =
+        await import('../browserIntegrationService');
 
       const testCases = [
         'Open YouTube in the browser',
@@ -153,9 +147,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should detect web search requests', async () => {
-      const { detectBrowserToolRequest } = await import(
-        '../browserIntegrationService'
-      );
+      const { detectBrowserToolRequest } =
+        await import('../browserIntegrationService');
 
       const testCases = [
         'Search for best Italian restaurants',
@@ -170,9 +163,8 @@ describe('Browser Integration Service', () => {
     });
 
     test('should not detect tool requests in normal conversation', async () => {
-      const { detectBrowserToolRequest } = await import(
-        '../browserIntegrationService'
-      );
+      const { detectBrowserToolRequest } =
+        await import('../browserIntegrationService');
 
       const testCases = [
         'How are you today?',

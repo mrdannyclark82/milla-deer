@@ -13,10 +13,7 @@
       "estimatedValue": 8,
       "discoveredAt": 1768500074704,
       "status": "in_sandbox",
-      "tags": [
-        "chat",
-        "realtime"
-      ]
+      "tags": ["chat", "realtime"]
     },
     {
       "id": "feat_1768500074704_349xgf9c5",
@@ -46,10 +43,7 @@
       "estimatedValue": 8,
       "discoveredAt": 1768500074704,
       "status": "discovered",
-      "tags": [
-        "chat",
-        "analytics"
-      ]
+      "tags": ["chat", "analytics"]
     }
   ],
   "repositories": [
@@ -58,11 +52,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -71,11 +61,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -111,11 +97,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -205,11 +187,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -218,11 +196,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -258,11 +232,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -352,11 +322,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -365,11 +331,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -405,11 +367,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -499,11 +457,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -512,11 +466,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -552,11 +502,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -646,11 +592,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -659,11 +601,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -699,11 +637,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -793,11 +727,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -806,11 +736,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -846,11 +772,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -940,11 +862,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -953,11 +871,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -993,11 +907,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1087,11 +997,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1100,11 +1006,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1140,11 +1042,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1234,11 +1132,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1247,11 +1141,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1287,11 +1177,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1381,11 +1267,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1394,11 +1276,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1434,11 +1312,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1528,11 +1402,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1541,11 +1411,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1581,11 +1447,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1675,11 +1537,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1688,11 +1546,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1728,11 +1582,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1822,11 +1672,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1835,11 +1681,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -1875,11 +1717,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -1969,11 +1807,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -1982,11 +1816,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2022,11 +1852,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2116,11 +1942,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2129,11 +1951,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2169,11 +1987,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2263,11 +2077,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2276,11 +2086,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2316,11 +2122,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2410,11 +2212,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2423,11 +2221,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2463,11 +2257,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2557,11 +2347,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2570,11 +2356,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2610,11 +2392,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2704,11 +2482,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2717,11 +2491,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2757,11 +2527,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2851,11 +2617,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -2864,11 +2626,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -2904,11 +2662,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -2998,11 +2752,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -3011,11 +2761,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -3051,11 +2797,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -3145,11 +2887,7 @@
       "repositoryName": "NextChat",
       "stars": 87057,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074704
     },
@@ -3158,11 +2896,7 @@
       "repositoryName": "chatbox",
       "stars": 38133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500074705
     },
@@ -3198,11 +2932,7 @@
       "repositoryName": "awesome-chatgpt-prompts",
       "stars": 142374,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1768500076537
     },
@@ -3292,11 +3022,7 @@
       "repositoryName": "NextChat",
       "stars": 87127,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769156077209
     },
@@ -3314,11 +3040,7 @@
       "repositoryName": "chatbox",
       "stars": 38239,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769156077209
     },
@@ -3435,11 +3157,7 @@
       "repositoryName": "NextChat",
       "stars": 87133,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769279468227
     },
@@ -3457,11 +3175,7 @@
       "repositoryName": "chatbox",
       "stars": 38251,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769279468227
     },
@@ -3578,11 +3292,7 @@
       "repositoryName": "NextChat",
       "stars": 87140,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769374554382
     },
@@ -3600,11 +3310,7 @@
       "repositoryName": "chatbox",
       "stars": 38260,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769374554383
     },
@@ -3721,11 +3427,7 @@
       "repositoryName": "NextChat",
       "stars": 87146,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769471754468
     },
@@ -3752,11 +3454,7 @@
       "repositoryName": "chatbox",
       "stars": 38281,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769471754469
     },
@@ -3864,11 +3562,7 @@
       "repositoryName": "NextChat",
       "stars": 87153,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769560174402
     },
@@ -3895,11 +3589,7 @@
       "repositoryName": "chatbox",
       "stars": 38295,
       "language": "TypeScript",
-      "features": [
-        "Real-time Chat",
-        "Message History",
-        "Chat Analytics"
-      ],
+      "features": ["Real-time Chat", "Message History", "Chat Analytics"],
       "interestingPatterns": [],
       "scannedAt": 1769560174402
     },

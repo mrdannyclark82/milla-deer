@@ -43,7 +43,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
         if (data.success) {
           const unlocked = data.rewards.includes('UNLOCK_BACKGROUND_CONTROL');
           setHasBackgroundControl(unlocked);
-          
+
           // If unlocked and has a mood set, fetch the background
           if (unlocked && settings.mood) {
             fetchMoodBackground(settings.mood);
@@ -89,7 +89,7 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
     setSettings(updated);
     saveSceneSettings(updated);
     onSettingsChange?.(updated);
-    
+
     // If mood changed and background control is unlocked, fetch mood background
     if (key === 'mood' && hasBackgroundControl) {
       fetchMoodBackground(value as string);
@@ -101,14 +101,19 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
     try {
       const response = await fetch(`/api/scene/mood-background/${mood}`);
       const data = await response.json();
-      
+
       if (data.success && data.imageUrl) {
-        console.log(`Mood background loaded for ${mood}:`, data.cached ? 'cached' : 'generated');
+        console.log(
+          `Mood background loaded for ${mood}:`,
+          data.cached ? 'cached' : 'generated'
+        );
         // The background will be applied by the scene manager
         // Trigger a scene update event if needed
-        window.dispatchEvent(new CustomEvent('moodBackgroundUpdated', {
-          detail: { mood, imageUrl: data.imageUrl }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('moodBackgroundUpdated', {
+            detail: { mood, imageUrl: data.imageUrl },
+          })
+        );
       }
     } catch (error) {
       console.error('Failed to fetch mood background:', error);
@@ -155,7 +160,11 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
           <Select
             value={settings.mood}
             onValueChange={(value) => updateSetting('mood', value as SceneMood)}
-            disabled={!settings.enabled || settings.sceneBackgroundFromRP || !hasBackgroundControl}
+            disabled={
+              !settings.enabled ||
+              settings.sceneBackgroundFromRP ||
+              !hasBackgroundControl
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -179,13 +188,13 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
         <div className="space-y-2">
           <label className="text-sm font-medium">Winter Theme</label>
           <Button
-            variant={settings.winterTheme ? "default" : "outline"}
+            variant={settings.winterTheme ? 'default' : 'outline'}
             size="sm"
-            onClick={() => updateSetting("winterTheme", !settings.winterTheme)}
+            onClick={() => updateSetting('winterTheme', !settings.winterTheme)}
             aria-pressed={settings.winterTheme}
             disabled={!settings.enabled}
           >
-            {settings.winterTheme ? "ON" : "OFF"}
+            {settings.winterTheme ? 'ON' : 'OFF'}
           </Button>
           <p className="text-xs text-muted-foreground">
             Force snowy night scene (overrides seasonal detection)

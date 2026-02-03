@@ -51,7 +51,7 @@ export const ReasonGemini3: React.FC<ReasonGemini3Props> = ({
         {
           step: 2,
           thought: 'Retrieving relevant context and knowledge...',
-          confidence: 0.90,
+          confidence: 0.9,
           timestamp: Date.now() + 500,
         },
         {
@@ -64,15 +64,15 @@ export const ReasonGemini3: React.FC<ReasonGemini3Props> = ({
 
       // Simulate step-by-step reasoning
       for (const step of steps) {
-        await new Promise(resolve => setTimeout(resolve, 600));
-        setReasoning(prev => [...prev, step]);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        setReasoning((prev) => [...prev, step]);
       }
 
       // Simulate final result
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const finalResult = `Gemini reasoning result for: ${input.substring(0, 50)}...`;
       setResult(finalResult);
-      
+
       if (onComplete) {
         onComplete(finalResult);
       }
@@ -86,14 +86,18 @@ export const ReasonGemini3: React.FC<ReasonGemini3Props> = ({
   return (
     <div className="reason-gemini3 p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg shadow-lg">
       <div className="header mb-4">
-        <h3 className="text-xl font-bold text-purple-700">Gemini 3 Reasoning</h3>
+        <h3 className="text-xl font-bold text-purple-700">
+          Gemini 3 Reasoning
+        </h3>
         <p className="text-sm text-gray-600">Chain-of-Thought Processing</p>
       </div>
 
       {isProcessing && (
         <div className="processing flex items-center gap-2 mb-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-          <span className="text-purple-600 text-sm">Processing reasoning chain...</span>
+          <span className="text-purple-600 text-sm">
+            Processing reasoning chain...
+          </span>
         </div>
       )}
 
@@ -126,7 +130,9 @@ export const ReasonGemini3: React.FC<ReasonGemini3Props> = ({
 
       {result && (
         <div className="result bg-purple-100 p-4 rounded-md border-2 border-purple-300">
-          <h4 className="text-sm font-semibold text-purple-700 mb-2">Final Result:</h4>
+          <h4 className="text-sm font-semibold text-purple-700 mb-2">
+            Final Result:
+          </h4>
           <p className="text-gray-800">{result}</p>
         </div>
       )}

@@ -44,13 +44,15 @@ export const ChatView: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setHistory(prev => [...prev, userMsg]);
+    setHistory((prev) => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/chat`, { message: userMsg.content });
+      const response = await axios.post(`${API_BASE_URL}/api/chat`, {
+        message: userMsg.content,
+      });
       const reply = response.data.response || response.data;
 
       const assistantMsg: Message = {
@@ -59,7 +61,7 @@ export const ChatView: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
 
-      setHistory(prev => [...prev, assistantMsg]);
+      setHistory((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
       setError(err.message || 'Failed to send message');
     } finally {
@@ -69,7 +71,12 @@ export const ChatView: React.FC = () => {
 
   return (
     <Box flexDirection="column" height="100%">
-      <Box flexGrow={1} flexDirection="column" justifyContent="flex-end" overflow="hidden">
+      <Box
+        flexGrow={1}
+        flexDirection="column"
+        justifyContent="flex-end"
+        overflow="hidden"
+      >
         {history.slice(-15).map((msg, i) => (
           <Box key={i} flexDirection="column" marginBottom={1}>
             <Text color={msg.role === 'user' ? 'cyan' : 'magenta'} bold>
@@ -79,20 +86,18 @@ export const ChatView: React.FC = () => {
           </Box>
         ))}
         {isLoading && (
-            <Box>
-                <Text color="magenta"><Spinner type="dots" /> Milla is thinking...</Text>
-            </Box>
+          <Box>
+            <Text color="magenta">
+              <Spinner type="dots" /> Milla is thinking...
+            </Text>
+          </Box>
         )}
         {error && <Text color="red">Error: {error}</Text>}
       </Box>
 
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text color="cyan">You: </Text>
-        <TextInput
-            value={input}
-            onChange={setInput}
-            onSubmit={handleSubmit}
-        />
+        <TextInput value={input} onChange={setInput} onSubmit={handleSubmit} />
       </Box>
     </Box>
   );

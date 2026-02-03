@@ -5,7 +5,8 @@ import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
 
 // Default to a local Coqui TTS server or a placeholder
-const COQUI_TTS_API_URL = process.env.COQUI_TTS_API_URL || 'http://localhost:5002/api/tts';
+const COQUI_TTS_API_URL =
+  process.env.COQUI_TTS_API_URL || 'http://localhost:5002/api/tts';
 
 // Cache for generated speech files (500 files, ~50MB max, 7-day TTL)
 const speechCache = new LRUCache<string, string>({
@@ -36,24 +37,34 @@ export async function generateCoquiSpeech(
   // Check cache first
   const cachedFile = speechCache.get(cacheKey);
   if (cachedFile) {
-    console.log(`[Coqui] Voice cache hit for text: "${text.substring(0, 50)}..."`);
+    console.log(
+      `[Coqui] Voice cache hit for text: "${text.substring(0, 50)}..."`
+    );
 
     // Verify file still exists
-    const audioDir = path.resolve(process.cwd(), 'client', 'public', 'audio', 'coqui');
+    const audioDir = path.resolve(
+      process.cwd(),
+      'client',
+      'public',
+      'audio',
+      'coqui'
+    );
     const fileName = cachedFile.split('/').pop();
     if (fileName) {
-       const audioFilePath = path.join(audioDir, fileName);
-       if (fs.existsSync(audioFilePath)) {
-         return cachedFile;
-       } else {
-         // File was deleted, remove from cache
-         console.log(`[Coqui] Cached file no longer exists, regenerating...`);
-         speechCache.delete(cacheKey);
-       }
+      const audioFilePath = path.join(audioDir, fileName);
+      if (fs.existsSync(audioFilePath)) {
+        return cachedFile;
+      } else {
+        // File was deleted, remove from cache
+        console.log(`[Coqui] Cached file no longer exists, regenerating...`);
+        speechCache.delete(cacheKey);
+      }
     }
   }
 
-  console.log(`[Coqui] Voice cache miss for text: "${text.substring(0, 50)}..."`);
+  console.log(
+    `[Coqui] Voice cache miss for text: "${text.substring(0, 50)}..."`
+  );
 
   try {
     // Attempt to call the Coqui TTS API
@@ -62,7 +73,7 @@ export async function generateCoquiSpeech(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'audio/wav', // Coqui often returns wav
+        Accept: 'audio/wav', // Coqui often returns wav
       },
       body: JSON.stringify({
         text: text,
@@ -88,7 +99,13 @@ export async function generateCoquiSpeech(
     const audioBuffer = await response.buffer();
 
     // Ensure directory exists
-    const audioDir = path.resolve(process.cwd(), 'client', 'public', 'audio', 'coqui');
+    const audioDir = path.resolve(
+      process.cwd(),
+      'client',
+      'public',
+      'audio',
+      'coqui'
+    );
     if (!fs.existsSync(audioDir)) {
       fs.mkdirSync(audioDir, { recursive: true });
     }

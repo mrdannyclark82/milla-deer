@@ -39,9 +39,21 @@ describe('Repository File Fetching and Analysis', () => {
         ok: true,
         json: async () => ({
           tree: [
-            { path: 'src/index.ts', type: 'blob', url: 'http://api.github.com/blob/1' },
-            { path: 'README.md', type: 'blob', url: 'http://api.github.com/blob/2' },
-            { path: 'image.png', type: 'blob', url: 'http://api.github.com/blob/3' }, // Should be ignored
+            {
+              path: 'src/index.ts',
+              type: 'blob',
+              url: 'http://api.github.com/blob/1',
+            },
+            {
+              path: 'README.md',
+              type: 'blob',
+              url: 'http://api.github.com/blob/2',
+            },
+            {
+              path: 'image.png',
+              type: 'blob',
+              url: 'http://api.github.com/blob/3',
+            }, // Should be ignored
           ],
         }),
       };
@@ -66,14 +78,19 @@ describe('Repository File Fetching and Analysis', () => {
           return Promise.resolve(mockTreeResponse);
         } else if (url.includes('/repos/testowner/testrepo')) {
           // Matches basic info, languages, readme, commits, issues, pulls
-          if (url.endsWith('/testrepo')) return Promise.resolve(mockRepoResponse);
+          if (url.endsWith('/testrepo'))
+            return Promise.resolve(mockRepoResponse);
           // Return empty array for list endpoints (commits, issues, pulls)
-          if (url.includes('/commits') || url.includes('/issues') || url.includes('/pulls')) {
-             return Promise.resolve({ ok: true, json: async () => [] });
+          if (
+            url.includes('/commits') ||
+            url.includes('/issues') ||
+            url.includes('/pulls')
+          ) {
+            return Promise.resolve({ ok: true, json: async () => [] });
           }
           // Return null/empty for readme if not specifically mocked or ensure it has content
           if (url.includes('/readme')) {
-              return Promise.resolve({ ok: false }); // simulate 404 for readme to avoid parsing error
+            return Promise.resolve({ ok: false }); // simulate 404 for readme to avoid parsing error
           }
           // Return empty/dummy for others
           return Promise.resolve({ ok: true, json: async () => ({}) });
@@ -85,17 +102,18 @@ describe('Repository File Fetching and Analysis', () => {
         return Promise.resolve({ ok: false });
       });
 
-      const result = await repositoryAnalysisService.fetchRepositoryData(repoInfo);
+      const result =
+        await repositoryAnalysisService.fetchRepositoryData(repoInfo);
 
       expect(result.files).toBeDefined();
       expect(result.files?.length).toBeGreaterThan(0);
 
-      const indexFile = result.files?.find(f => f.path === 'src/index.ts');
+      const indexFile = result.files?.find((f) => f.path === 'src/index.ts');
       expect(indexFile).toBeDefined();
       expect(indexFile?.content).toBe('console.log("hello");');
       expect(indexFile?.language).toBe('typescript');
 
-      const readmeFile = result.files?.find(f => f.path === 'README.md');
+      const readmeFile = result.files?.find((f) => f.path === 'README.md');
       expect(readmeFile).toBeDefined();
       expect(readmeFile?.content).toBe('# Readme');
     });
@@ -122,7 +140,9 @@ describe('Repository File Fetching and Analysis', () => {
       const result = await codeAnalysisService.analyzeRepositoryCode(repoData);
 
       expect(result.securityIssues.length).toBeGreaterThan(0);
-      const evalIssue = result.securityIssues.find(i => i.file === 'bad.js' && i.type.includes('eval'));
+      const evalIssue = result.securityIssues.find(
+        (i) => i.file === 'bad.js' && i.type.includes('eval')
+      );
       expect(evalIssue).toBeDefined();
       expect(evalIssue?.severity).toBe('critical');
 

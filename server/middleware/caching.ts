@@ -8,7 +8,7 @@ const routeCache = new LRUCache<string, { body: any; headers: any }>({
   maxSize: 50 * 1024 * 1024, // 50MB
   sizeCalculation: (value) => {
     return JSON.stringify(value).length;
-  }
+  },
 });
 
 /**
@@ -48,10 +48,14 @@ export function cacheMiddleware(ttlSeconds?: number) {
         // Use custom TTL if provided, otherwise default
         const ttl = ttlSeconds ? ttlSeconds * 1000 : undefined;
 
-        routeCache.set(cacheKey, {
-          body,
-          headers,
-        }, { ttl });
+        routeCache.set(
+          cacheKey,
+          {
+            body,
+            headers,
+          },
+          { ttl }
+        );
       }
 
       res.set('X-Cache', 'MISS');

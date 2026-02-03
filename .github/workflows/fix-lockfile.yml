@@ -29,16 +29,16 @@ jobs:
           # 1. Pull the base branch (main/master) to get the latest changes
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           # 2. Merge base branch, preferring 'ours' for the lockfile conflict 
           # or simply force-regenerating it.
           git fetch origin ${{ github.event.issue.pull_request.base.ref }}
           git merge origin/${{ github.event.issue.pull_request.base.ref }} --no-commit || true
-          
+
           # 3. The "Nuclear" Lockfile Fix: Remove and Reinstall
           rm package-lock.json
           npm install
-          
+
           # 4. Commit the fresh lockfile
           git add package-lock.json
           git commit -m "chore: automated package-lock.json conflict resolution" || echo "No changes to commit"

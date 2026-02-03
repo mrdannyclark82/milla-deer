@@ -28,11 +28,7 @@ export function isYouTubeRequest(message: string): boolean {
   const lowerMessage = message.toLowerCase();
 
   // Improved: Don't trigger on GitHub, GitLab, Bitbucket links (check actual host)
-  const forbiddenHosts = [
-    'github.com',
-    'gitlab.com',
-    'bitbucket.org'
-  ];
+  const forbiddenHosts = ['github.com', 'gitlab.com', 'bitbucket.org'];
 
   // Find all URLs in the message
   // This regex matches http and https URLs; could be improved for broader cases
@@ -43,7 +39,11 @@ export function isYouTubeRequest(message: string): boolean {
     try {
       const urlObj = new URL(urlStr);
       const hostname = urlObj.hostname.replace(/^www\./, '').replace(/\.$/, '');
-      if (forbiddenHosts.some(host => hostname === host || hostname.endsWith('.' + host))) {
+      if (
+        forbiddenHosts.some(
+          (host) => hostname === host || hostname.endsWith('.' + host)
+        )
+      ) {
         return false;
       }
     } catch (e) {

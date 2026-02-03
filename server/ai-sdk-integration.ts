@@ -75,7 +75,9 @@ export async function streamAIResponse(options: AIStreamOptions) {
  * Generate complete AI response (non-streaming)
  * Useful for internal processing where streaming isn't needed
  */
-export async function generateAIResponse(options: AIGenerateOptions): Promise<string> {
+export async function generateAIResponse(
+  options: AIGenerateOptions
+): Promise<string> {
   const {
     provider = 'openai',
     model,

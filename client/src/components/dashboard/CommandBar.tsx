@@ -55,13 +55,19 @@ export function CommandBar({
             }`}
           >
             {/* AI indicator */}
-            <div className={`flex-shrink-0 transition-all duration-300 ${isLoading ? 'animate-pulse' : ''}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                isLoading
-                  ? 'bg-gradient-to-r from-[#00f2ff] to-[#ff00aa] animate-spin'
-                  : 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ff00aa]/20'
-              }`}>
-                <Sparkles className={`w-4 h-4 ${isLoading ? 'text-white' : 'text-[#00f2ff]'}`} />
+            <div
+              className={`flex-shrink-0 transition-all duration-300 ${isLoading ? 'animate-pulse' : ''}`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isLoading
+                    ? 'bg-gradient-to-r from-[#00f2ff] to-[#ff00aa] animate-spin'
+                    : 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ff00aa]/20'
+                }`}
+              >
+                <Sparkles
+                  className={`w-4 h-4 ${isLoading ? 'text-white' : 'text-[#00f2ff]'}`}
+                />
               </div>
             </div>
 
@@ -89,7 +95,11 @@ export function CommandBar({
                   : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
             </button>
 
             {/* Send button */}
@@ -109,7 +119,9 @@ export function CommandBar({
 
         {/* Keyboard hint */}
         <div className="flex justify-center mt-2">
-          <span className="text-xs text-white/30">Press Enter to send, or click the mic to speak</span>
+          <span className="text-xs text-white/30">
+            Press Enter to send, or click the mic to speak
+          </span>
         </div>
       </div>
     </div>

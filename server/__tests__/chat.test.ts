@@ -10,7 +10,7 @@ import * as sceneDetectionService from '../sceneDetectionService';
 import * as authService from '../authService';
 
 vi.mock('../services/chatOrchestrator.service', () => ({
-  validateAndSanitizePrompt: vi.fn(p => p),
+  validateAndSanitizePrompt: vi.fn((p) => p),
   generateAIResponse: vi.fn().mockResolvedValue({ content: 'Mock response' }),
   shouldMillaRespond: vi.fn().mockResolvedValue({ shouldRespond: true }),
   generateFollowUpMessages: vi.fn().mockResolvedValue([]),
@@ -32,7 +32,9 @@ vi.mock('../sceneDetectionService', () => ({
 
 vi.mock('../authService', () => ({
   validateSession: vi.fn().mockResolvedValue({ valid: false }),
-  getUserAIModel: vi.fn().mockResolvedValue({ success: true, model: 'minimax' }),
+  getUserAIModel: vi
+    .fn()
+    .mockResolvedValue({ success: true, model: 'minimax' }),
   updateUserAIModel: vi.fn().mockResolvedValue({ success: true }),
 }));
 
@@ -57,7 +59,8 @@ describe('Chat API', () => {
 
   it('should return the graceful fallback for "what\'s new" when no updates are available', async () => {
     vi.mocked(chatOrchestrator.generateAIResponse).mockResolvedValueOnce({
-        content: "I don't have any new AI updates to share right now, sweetheart."
+      content:
+        "I don't have any new AI updates to share right now, sweetheart.",
     });
 
     const response = await request(app)

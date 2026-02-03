@@ -91,7 +91,7 @@ export function loadSceneSettings(): SceneSettings {
         typeof settings.winterTheme === 'boolean'
           ? settings.winterTheme
           : false,
-          
+
       sceneBackgroundFromRP:
         typeof settings.sceneBackgroundFromRP === 'boolean'
           ? settings.sceneBackgroundFromRP

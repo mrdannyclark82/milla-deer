@@ -18,16 +18,16 @@ import { registerMerchRoutes } from './merch.routes';
 export function registerModularRoutes(app: Express) {
   // Authentication routes
   registerAuthRoutes(app);
-  
+
   // Chat and AI routes
   registerChatRoutes(app);
-  
+
   // Agent and Task routes
   registerAgentRoutes(app);
-  
+
   // Media and Analysis routes
   registerMediaRoutes(app);
-  
+
   // Memory and Messaging routes
   registerMemoryRoutes(app);
 
@@ -43,6 +43,6 @@ export function registerModularRoutes(app: Express) {
 
   // Merch routes
   registerMerchRoutes(app);
-  
+
   return app;
 }

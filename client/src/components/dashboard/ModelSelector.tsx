@@ -51,12 +51,21 @@ interface ModelSelectorProps {
   onChange?: (model: AIModel) => void;
 }
 
-export function ModelSelector({ value, models = defaultModels, onChange }: ModelSelectorProps) {
+export function ModelSelector({
+  value,
+  models = defaultModels,
+  onChange,
+}: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [internalModel, setInternalModel] = useState<AIModel>(value ?? models[0]);
+  const [internalModel, setInternalModel] = useState<AIModel>(
+    value ?? models[0]
+  );
   const hasAnnouncedInitial = useRef(false);
 
-  const selectedModel = useMemo(() => value ?? internalModel, [value, internalModel]);
+  const selectedModel = useMemo(
+    () => value ?? internalModel,
+    [value, internalModel]
+  );
 
   useEffect(() => {
     if (value) {
@@ -100,7 +109,9 @@ export function ModelSelector({ value, models = defaultModels, onChange }: Model
       >
         <span className="text-[#00f2ff]">{selectedModel.icon}</span>
         <span className="text-white/80">{selectedModel.name}</span>
-        <ChevronDown className={`w-4 h-4 text-white/40 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-white/40 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {/* Dropdown */}
@@ -125,19 +136,25 @@ export function ModelSelector({ value, models = defaultModels, onChange }: Model
                       : 'hover:bg-white/5'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    selectedModel.id === model.id
-                      ? 'bg-gradient-to-r from-[#00f2ff]/30 to-[#ff00aa]/30 text-[#00f2ff]'
-                      : 'bg-white/5 text-white/40'
-                  }`}>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      selectedModel.id === model.id
+                        ? 'bg-gradient-to-r from-[#00f2ff]/30 to-[#ff00aa]/30 text-[#00f2ff]'
+                        : 'bg-white/5 text-white/40'
+                    }`}
+                  >
                     {model.icon}
                   </div>
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-white">{model.name}</span>
-                      <span className="text-[10px] text-white/40">{model.provider}</span>
+                      <span className="text-[10px] text-white/40">
+                        {model.provider}
+                      </span>
                     </div>
-                    <span className="text-xs text-white/40">{model.description}</span>
+                    <span className="text-xs text-white/40">
+                      {model.description}
+                    </span>
                   </div>
                   {selectedModel.id === model.id && (
                     <Check className="w-4 h-4 text-[#00f2ff]" />

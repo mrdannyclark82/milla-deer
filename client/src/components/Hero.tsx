@@ -21,7 +21,10 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
 
       {/* Gradient Overlays */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyber-pink/20 rounded-full blur-3xl animate-glow-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyber-purple/20 rounded-full blur-3xl animate-glow-pulse" style={{ animationDelay: '1s' }} />
+      <div
+        className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyber-purple/20 rounded-full blur-3xl animate-glow-pulse"
+        style={{ animationDelay: '1s' }}
+      />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-20">
@@ -31,14 +34,13 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
             <span className="block glow-text text-cyber-pink mb-2">
               Welcome to the Future
             </span>
-            <span className="block text-white">
-              of AI Companionship
-            </span>
+            <span className="block text-white">of AI Companionship</span>
           </h1>
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Experience a deeply personal, context-aware AI assistant designed for rich, meaningful interaction.
+            Experience a deeply personal, context-aware AI assistant designed
+            for rich, meaningful interaction.
           </p>
 
           {/* CTA Buttons */}
@@ -55,8 +57,18 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
             <div className="card-glow rounded-lg p-6 backdrop-blur-md bg-cyber-dark/60">
               <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center rounded-full bg-cyber-pink/20">
-                <svg className="w-6 h-6 text-cyber-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-6 h-6 text-cyber-pink"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-high-contrast mb-2">
@@ -69,8 +81,18 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
 
             <div className="card-glow rounded-lg p-6 backdrop-blur-md bg-cyber-dark/60">
               <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center rounded-full bg-neon-blue/20">
-                <svg className="w-6 h-6 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <svg
+                  className="w-6 h-6 text-neon-blue"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-high-contrast mb-2">
@@ -83,8 +105,18 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
 
             <div className="card-glow rounded-lg p-6 backdrop-blur-md bg-cyber-dark/60">
               <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center rounded-full bg-cyber-purple/20">
-                <svg className="w-6 h-6 text-cyber-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg
+                  className="w-6 h-6 text-cyber-purple"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-high-contrast mb-2">
@@ -100,8 +132,18 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-float-up">
-        <svg className="w-6 h-6 text-cyber-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        <svg
+          className="w-6 h-6 text-cyber-pink"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+          />
         </svg>
       </div>
     </section>

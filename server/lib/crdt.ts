@@ -1,4 +1,3 @@
-
 /**
  * Conflict-free Replicated Data Types (CRDTs) Library
  *
@@ -70,7 +69,7 @@ export class VectorClock {
   }
 
   toString(): string {
-      return JSON.stringify(this.toJSON());
+    return JSON.stringify(this.toJSON());
   }
 }
 
@@ -91,7 +90,10 @@ export class LWWRegister<T> {
 
   set(value: T, timestamp: Timestamp, siteId: SiteId): void {
     // Only update if the new timestamp is greater, or equal with higher siteId (tie-breaker)
-    if (timestamp > this.timestamp || (timestamp === this.timestamp && siteId > this.siteId)) {
+    if (
+      timestamp > this.timestamp ||
+      (timestamp === this.timestamp && siteId > this.siteId)
+    ) {
       this.value = value;
       this.timestamp = timestamp;
       this.siteId = siteId;
@@ -127,26 +129,26 @@ export class ORSet<T> {
     if (!this.elements.has(element)) return;
 
     if (tagsToRemove) {
-        // Remove specific instances (observed at start of remove op)
-        const currentTags = this.elements.get(element)!;
-        for (const tag of tagsToRemove) {
-            currentTags.delete(tag);
-        }
-        if (currentTags.size === 0) {
-            this.elements.delete(element);
-        }
-    } else {
-        // Clear all (local remove)
+      // Remove specific instances (observed at start of remove op)
+      const currentTags = this.elements.get(element)!;
+      for (const tag of tagsToRemove) {
+        currentTags.delete(tag);
+      }
+      if (currentTags.size === 0) {
         this.elements.delete(element);
+      }
+    } else {
+      // Clear all (local remove)
+      this.elements.delete(element);
     }
   }
 
   has(element: T): boolean {
-      return this.elements.has(element) && this.elements.get(element)!.size > 0;
+    return this.elements.has(element) && this.elements.get(element)!.size > 0;
   }
 
   values(): T[] {
-      return Array.from(this.elements.keys());
+    return Array.from(this.elements.keys());
   }
 
   merge(other: ORSet<T>): void {
@@ -167,13 +169,13 @@ export class ORSet<T> {
     // We just union the `elements` maps.
 
     for (const [elem, remoteTags] of other.elements.entries()) {
-        if (!this.elements.has(elem)) {
-            this.elements.set(elem, new Set());
-        }
-        const localTags = this.elements.get(elem)!;
-        for (const tag of remoteTags) {
-            localTags.add(tag);
-        }
+      if (!this.elements.has(elem)) {
+        this.elements.set(elem, new Set());
+      }
+      const localTags = this.elements.get(elem)!;
+      for (const tag of remoteTags) {
+        localTags.add(tag);
+      }
     }
     // Note: This implementation assumes "Add Wins" because we only add tags.
     // A removal in A that isn't reflected in B will be re-added if B has the tags.
@@ -183,12 +185,12 @@ export class ORSet<T> {
   }
 
   toJSON(): any {
-      const obj: any = {};
-      for (const [k, v] of this.elements.entries()) {
-          // Assuming T is string or can be key
-          obj[String(k)] = Array.from(v);
-      }
-      return obj;
+    const obj: any = {};
+    for (const [k, v] of this.elements.entries()) {
+      // Assuming T is string or can be key
+      obj[String(k)] = Array.from(v);
+    }
+    return obj;
   }
 }
 
@@ -281,19 +283,19 @@ export class RGA<T> {
       timestamp,
       siteId: this.siteId,
       next: null,
-      deleted: false
+      deleted: false,
     };
 
     if (targetId === null) {
-        // Insert at head (simplified: actually RGA usually has a virtual head)
-        // Here we handle head explicitly
-        newNode.next = this.head;
-        this.head = newId;
+      // Insert at head (simplified: actually RGA usually has a virtual head)
+      // Here we handle head explicitly
+      newNode.next = this.head;
+      this.head = newId;
     } else {
-        const target = this.nodes.get(targetId);
-        if (!target) throw new Error("Target node not found");
-        newNode.next = target.next;
-        target.next = newId;
+      const target = this.nodes.get(targetId);
+      if (!target) throw new Error('Target node not found');
+      newNode.next = target.next;
+      target.next = newId;
     }
 
     this.nodes.set(newId, newNode);
@@ -301,60 +303,60 @@ export class RGA<T> {
   }
 
   remove(id: string): void {
-      const node = this.nodes.get(id);
-      if (node) {
-          node.deleted = true;
-      }
+    const node = this.nodes.get(id);
+    if (node) {
+      node.deleted = true;
+    }
   }
 
   getValues(): T[] {
-      const result: T[] = [];
-      let currentId = this.head;
-      while (currentId) {
-          const node = this.nodes.get(currentId);
-          if (node) {
-            if (!node.deleted) {
-                result.push(node.value);
-            }
-            currentId = node.next;
-          } else {
-              break;
-          }
+    const result: T[] = [];
+    let currentId = this.head;
+    while (currentId) {
+      const node = this.nodes.get(currentId);
+      if (node) {
+        if (!node.deleted) {
+          result.push(node.value);
+        }
+        currentId = node.next;
+      } else {
+        break;
       }
-      return result;
+    }
+    return result;
   }
 
   // Simplified merge for RGA (complex in practice)
   // This expects the 'other' RGA to share history.
   // Real implementation requires transmitting operations or full graph traversal.
   merge(other: RGA<T>): void {
-     // For each node in other, if not in self, insert it.
-     // RGA insertion logic:
-     // 1. Find the node 'other' inserted after (let's say 'ref').
-     // 2. If 'ref' exists locally, we insert after 'ref'.
-     // 3. Handling concurrent inserts: if 'ref' already has a 'next' in local, we scan forward until we find a place where our timestamp is greater than the existing one.
+    // For each node in other, if not in self, insert it.
+    // RGA insertion logic:
+    // 1. Find the node 'other' inserted after (let's say 'ref').
+    // 2. If 'ref' exists locally, we insert after 'ref'.
+    // 3. Handling concurrent inserts: if 'ref' already has a 'next' in local, we scan forward until we find a place where our timestamp is greater than the existing one.
 
-     // This is a naive full-state merge stub.
-     // In a real RGA, we'd iterate through 'other's list and merge nodes.
+    // This is a naive full-state merge stub.
+    // In a real RGA, we'd iterate through 'other's list and merge nodes.
 
-     // STUB: Full implementation of RGA merge is O(N) or O(N*M) depending on implementation.
-     // For this task, we will assume nodes are just added to the map and linked properly.
-     // Since implementing full RGA merge is complex and error-prone without existing test vectors,
-     // I'll provide a 'best-effort' merge that works for appending.
+    // STUB: Full implementation of RGA merge is O(N) or O(N*M) depending on implementation.
+    // For this task, we will assume nodes are just added to the map and linked properly.
+    // Since implementing full RGA merge is complex and error-prone without existing test vectors,
+    // I'll provide a 'best-effort' merge that works for appending.
 
-     for (const [id, node] of other.nodes) {
-         if (!this.nodes.has(id)) {
-             // We need to find where to put it.
-             // This requires knowing its predecessor in 'other'.
-             // Since our structure doesn't store 'prev', this is hard with just the Map.
-             // BUT, if we iterate 'other' from head, we always know the predecessor.
-         } else {
-             // If we have it, check deletion status
-             const localNode = this.nodes.get(id)!;
-             if (node.deleted && !localNode.deleted) {
-                 localNode.deleted = true;
-             }
-         }
-     }
+    for (const [id, node] of other.nodes) {
+      if (!this.nodes.has(id)) {
+        // We need to find where to put it.
+        // This requires knowing its predecessor in 'other'.
+        // Since our structure doesn't store 'prev', this is hard with just the Map.
+        // BUT, if we iterate 'other' from head, we always know the predecessor.
+      } else {
+        // If we have it, check deletion status
+        const localNode = this.nodes.get(id)!;
+        if (node.deleted && !localNode.deleted) {
+          localNode.deleted = true;
+        }
+      }
+    }
   }
 }

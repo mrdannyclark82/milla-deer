@@ -28,17 +28,34 @@ export const Layout: React.FC = () => {
   return (
     <Box flexDirection="column" height="100%">
       {/* Header */}
-      <Box flexDirection="column" paddingX={1} borderStyle="single" borderColor="magenta">
+      <Box
+        flexDirection="column"
+        paddingX={1}
+        borderStyle="single"
+        borderColor="magenta"
+      >
         <Gradient name="pastel">
           <BigText text="Milla Rayne" font="simple" />
         </Gradient>
         <Box justifyContent="space-between">
-            <Box>
-                <TabButton isActive={activeTab === 'chat'} label="Chat (1)" onPress={() => setActiveTab('chat')} />
-                <TabButton isActive={activeTab === 'sandbox'} label="Sandbox (2)" onPress={() => setActiveTab('sandbox')} />
-                <TabButton isActive={activeTab === 'terminal'} label="Terminal (3)" onPress={() => setActiveTab('terminal')} />
-            </Box>
-            <VoiceControl />
+          <Box>
+            <TabButton
+              isActive={activeTab === 'chat'}
+              label="Chat (1)"
+              onPress={() => setActiveTab('chat')}
+            />
+            <TabButton
+              isActive={activeTab === 'sandbox'}
+              label="Sandbox (2)"
+              onPress={() => setActiveTab('sandbox')}
+            />
+            <TabButton
+              isActive={activeTab === 'terminal'}
+              label="Terminal (3)"
+              onPress={() => setActiveTab('terminal')}
+            />
+          </Box>
+          <VoiceControl />
         </Box>
       </Box>
 
@@ -49,7 +66,9 @@ export const Layout: React.FC = () => {
 
       {/* Footer / Status Bar */}
       <Box paddingX={1}>
-        <Text color="gray">Press 'Ctrl+C' to exit | Use numbers 1-3 to switch tabs</Text>
+        <Text color="gray">
+          Press 'Ctrl+C' to exit | Use numbers 1-3 to switch tabs
+        </Text>
       </Box>
 
       {/* Global Input Handler for Tabs */}
@@ -58,10 +77,18 @@ export const Layout: React.FC = () => {
   );
 };
 
-const TabButton: React.FC<{ isActive: boolean; label: string; onPress: () => void }> = ({ isActive, label }) => {
+const TabButton: React.FC<{
+  isActive: boolean;
+  label: string;
+  onPress: () => void;
+}> = ({ isActive, label }) => {
   return (
     <Box marginRight={2}>
-      <Text color={isActive ? 'magenta' : 'white'} bold={isActive} underline={isActive}>
+      <Text
+        color={isActive ? 'magenta' : 'white'}
+        bold={isActive}
+        underline={isActive}
+      >
         {label}
       </Text>
     </Box>
@@ -70,7 +97,9 @@ const TabButton: React.FC<{ isActive: boolean; label: string; onPress: () => voi
 
 import { useInput } from 'ink';
 
-const GlobalInputHandler: React.FC<{ setActiveTab: (tab: Tab) => void }> = ({ setActiveTab }) => {
+const GlobalInputHandler: React.FC<{ setActiveTab: (tab: Tab) => void }> = ({
+  setActiveTab,
+}) => {
   useInput((input, key) => {
     if (input === '1') setActiveTab('chat');
     if (input === '2') setActiveTab('sandbox');

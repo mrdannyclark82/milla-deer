@@ -13,7 +13,7 @@ export const STATES: ProjectedState[] = [
   'working',
   'relaxing',
   'away',
-  'unknown'
+  'unknown',
 ];
 
 // Define known locations for one-hot encoding
@@ -28,7 +28,7 @@ export const LOCATIONS = [
   'front_door',
   'car',
   'guest_room',
-  'unknown'
+  'unknown',
 ];
 
 export interface TrainingData {
@@ -56,28 +56,34 @@ export class SceneDetectionModel {
   private createModel(): tf.Sequential {
     const model = tf.sequential();
 
-    model.add(tf.layers.dense({
-      units: 32,
-      activation: 'relu',
-      inputShape: [this.INPUT_SHAPE]
-    }));
+    model.add(
+      tf.layers.dense({
+        units: 32,
+        activation: 'relu',
+        inputShape: [this.INPUT_SHAPE],
+      })
+    );
 
     model.add(tf.layers.dropout({ rate: 0.2 }));
 
-    model.add(tf.layers.dense({
-      units: 16,
-      activation: 'relu'
-    }));
+    model.add(
+      tf.layers.dense({
+        units: 16,
+        activation: 'relu',
+      })
+    );
 
-    model.add(tf.layers.dense({
-      units: STATES.length,
-      activation: 'softmax'
-    }));
+    model.add(
+      tf.layers.dense({
+        units: STATES.length,
+        activation: 'softmax',
+      })
+    );
 
     model.compile({
       optimizer: tf.train.adam(0.01),
       loss: 'categoricalCrossentropy',
-      metrics: ['accuracy']
+      metrics: ['accuracy'],
     });
 
     return model;
@@ -90,7 +96,7 @@ export class SceneDetectionModel {
     const date = new Date(data.timestamp);
     const hour = date.getHours();
     const normalizedHour = hour / 24;
-    const isNight = (hour >= 22 || hour < 6) ? 1 : 0;
+    const isNight = hour >= 22 || hour < 6 ? 1 : 0;
 
     // One-hot encode location
     const locationIndex = LOCATIONS.indexOf(data.location as string);
@@ -109,7 +115,7 @@ export class SceneDetectionModel {
       data.motion.detected ? 1 : 0,
       data.motion.level,
       data.presence ? 1 : 0,
-      ...locationVector
+      ...locationVector,
     ];
   }
 
@@ -117,14 +123,14 @@ export class SceneDetectionModel {
    * Train the model with provided data
    */
   async train(data: TrainingData[], epochs: number = 50): Promise<tf.History> {
-    console.log(`[SceneModel] Starting training with ${data.length} samples...`);
-
-    const xs = tf.tensor2d(
-      data.map(d => this.preprocess(d.input))
+    console.log(
+      `[SceneModel] Starting training with ${data.length} samples...`
     );
 
+    const xs = tf.tensor2d(data.map((d) => this.preprocess(d.input)));
+
     const ys = tf.tensor2d(
-      data.map(d => {
+      data.map((d) => {
         const index = STATES.indexOf(d.label);
         const vector = new Array(STATES.length).fill(0);
         if (index !== -1) vector[index] = 1;
@@ -139,10 +145,12 @@ export class SceneDetectionModel {
       callbacks: {
         onEpochEnd: (epoch, logs) => {
           if (epoch % 10 === 0) {
-            console.log(`[SceneModel] Epoch ${epoch}: loss=${logs?.loss.toFixed(4)}, acc=${logs?.acc.toFixed(4)}`);
+            console.log(
+              `[SceneModel] Epoch ${epoch}: loss=${logs?.loss.toFixed(4)}, acc=${logs?.acc.toFixed(4)}`
+            );
           }
-        }
-      }
+        },
+      },
     });
 
     xs.dispose();
@@ -156,7 +164,10 @@ export class SceneDetectionModel {
   /**
    * Predict state from sensor data
    */
-  predict(sensorData: SmartHomeSensorData): { state: ProjectedState; confidence: number } {
+  predict(sensorData: SmartHomeSensorData): {
+    state: ProjectedState;
+    confidence: number;
+  } {
     if (!this.isTrained) {
       console.warn('[SceneModel] Model not trained, returning unknown.');
       return { state: 'unknown', confidence: 0 };
@@ -179,7 +190,7 @@ export class SceneDetectionModel {
 
       return {
         state: STATES[maxIndex],
-        confidence: maxProb
+        confidence: maxProb,
       };
     });
   }
@@ -193,32 +204,63 @@ export class SceneDetectionModel {
         fs.mkdirSync(dirPath, { recursive: true });
       }
 
-      await this.model.save(tf.io.withSaveHandler(async (artifacts) => {
-        const modelJson = {
-          modelTopology: artifacts.modelTopology,
-          format: artifacts.format,
-          generatedBy: artifacts.generatedBy,
-          convertedBy: artifacts.convertedBy,
-          weightsManifest: [{
-            paths: ['./weights.bin'],
-            weights: artifacts.weightSpecs
-          }]
-        };
+      await this.model.save(
+        tf.io.withSaveHandler(async (artifacts) => {
+          const modelJson = {
+            modelTopology: artifacts.modelTopology,
+            format: artifacts.format,
+            generatedBy: artifacts.generatedBy,
+            convertedBy: artifacts.convertedBy,
+            weightsManifest: [
+              {
+                paths: ['./weights.bin'],
+                weights: artifacts.weightSpecs,
+              },
+            ],
+          };
 
-        fs.writeFileSync(path.join(dirPath, 'model.json'), JSON.stringify(modelJson, null, 2));
+          fs.writeFileSync(
+            path.join(dirPath, 'model.json'),
+            JSON.stringify(modelJson, null, 2)
+          );
 
-        if (artifacts.weightData) {
-          fs.writeFileSync(path.join(dirPath, 'weights.bin'), Buffer.from(artifacts.weightData));
-        }
+          if (artifacts.weightData) {
+            // Fix: Handle WeightData type (ArrayBuffer | ArrayBuffer[])
+            let buffer: Buffer;
+            let byteLength: number = 0;
 
-        return {
-          modelArtifactsInfo: {
-            dateSaved: new Date(),
-            modelTopologyType: 'JSON',
-            weightDataBytes: artifacts.weightData ? artifacts.weightData.byteLength : 0
+            if (Array.isArray(artifacts.weightData)) {
+                // If it's an array of ArrayBuffers, concatenate them
+                buffer = Buffer.concat(artifacts.weightData.map(ab => Buffer.from(ab)));
+                byteLength = artifacts.weightData.reduce((acc, b) => acc + b.byteLength, 0);
+            } else {
+                buffer = Buffer.from(artifacts.weightData);
+                byteLength = artifacts.weightData.byteLength;
+            }
+
+            fs.writeFileSync(
+              path.join(dirPath, 'weights.bin'),
+              buffer
+            );
+
+            return {
+                modelArtifactsInfo: {
+                  dateSaved: new Date(),
+                  modelTopologyType: 'JSON',
+                  weightDataBytes: byteLength
+                },
+            };
           }
-        };
-      }));
+
+          return {
+            modelArtifactsInfo: {
+              dateSaved: new Date(),
+              modelTopologyType: 'JSON',
+              weightDataBytes: 0,
+            },
+          };
+        })
+      );
       console.log(`[SceneModel] Model saved to ${dirPath}`);
     } catch (error) {
       console.error('[SceneModel] Failed to save model:', error);
@@ -234,7 +276,7 @@ export class SceneDetectionModel {
     const weightsPath = path.resolve(dirPath, 'weights.bin');
 
     if (!fs.existsSync(modelJsonPath) || !fs.existsSync(weightsPath)) {
-        return false;
+      return false;
     }
 
     try {
@@ -251,18 +293,19 @@ export class SceneDetectionModel {
           return {
             modelTopology: modelJson.modelTopology,
             weightSpecs: modelJson.weightsManifest[0].weights,
-            weightData: weightData
+            weightData: weightData,
           };
-        }
+        },
       };
 
-      this.model = await tf.loadLayersModel(handler);
+      // Fix: Cast Loaded Model to Sequential (since we saved a Sequential one)
+      this.model = (await tf.loadLayersModel(handler)) as tf.Sequential;
 
       // Recompile needed after loading
       this.model.compile({
         optimizer: tf.train.adam(0.01),
         loss: 'categoricalCrossentropy',
-        metrics: ['accuracy']
+        metrics: ['accuracy'],
       });
 
       this.isTrained = true;

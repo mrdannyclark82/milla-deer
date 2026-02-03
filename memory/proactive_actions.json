@@ -34,9 +34,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769156078170_iclej8or4"
-      ]
+      "relatedIds": ["sandbox_1769156078170_iclej8or4"]
     },
     {
       "id": "action_1769163439113_9xnilanbz",
@@ -46,9 +44,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769163264152_opim6eezt"
-      ]
+      "relatedIds": ["sandbox_1769163264152_opim6eezt"]
     },
     {
       "id": "action_1769183053127_i4sz6vvrd",
@@ -58,9 +54,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769174179114_rloykde77"
-      ]
+      "relatedIds": ["sandbox_1769174179114_rloykde77"]
     },
     {
       "id": "action_1769282552388_j2mk96onh",
@@ -70,9 +64,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769280873952_roahy1cyu"
-      ]
+      "relatedIds": ["sandbox_1769280873952_roahy1cyu"]
     },
     {
       "id": "action_1769283783526_6a2xcz3nv",
@@ -82,9 +74,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769282552401_0u84r6hgp"
-      ]
+      "relatedIds": ["sandbox_1769282552401_0u84r6hgp"]
     },
     {
       "id": "action_1769294523509_0ngr6r7ax",
@@ -94,9 +84,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769283783544_9yd1b48at"
-      ]
+      "relatedIds": ["sandbox_1769283783544_9yd1b48at"]
     },
     {
       "id": "action_1769305323510_82e1lm7mm",
@@ -106,9 +94,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769294523513_dq8tg6aub"
-      ]
+      "relatedIds": ["sandbox_1769294523513_dq8tg6aub"]
     },
     {
       "id": "action_1769308824464_fcf5m5wv4",
@@ -118,9 +104,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769308629261_v73m17uj9"
-      ]
+      "relatedIds": ["sandbox_1769308629261_v73m17uj9"]
     },
     {
       "id": "action_1769320553507_venle796c",
@@ -130,9 +114,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769309814914_bpxida7ga"
-      ]
+      "relatedIds": ["sandbox_1769309814914_bpxida7ga"]
     },
     {
       "id": "action_1769417753540_k0lkp568i",
@@ -142,9 +124,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769406954689_i9udy930g"
-      ]
+      "relatedIds": ["sandbox_1769406954689_i9udy930g"]
     },
     {
       "id": "action_1769439353547_0sdki6x4m",
@@ -154,9 +134,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769428554939_x38x2lua8"
-      ]
+      "relatedIds": ["sandbox_1769428554939_x38x2lua8"]
     },
     {
       "id": "action_1769450153552_v85mfyhux",
@@ -166,9 +144,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769439354902_ozxocg00d"
-      ]
+      "relatedIds": ["sandbox_1769439354902_ozxocg00d"]
     },
     {
       "id": "action_1769471755564_7a2j5offw",
@@ -178,9 +154,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769460955047_bogw4qb6g"
-      ]
+      "relatedIds": ["sandbox_1769460955047_bogw4qb6g"]
     },
     {
       "id": "action_1769493354031_v7ns4rwib",
@@ -190,9 +164,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769482556403_ky8tarb3z"
-      ]
+      "relatedIds": ["sandbox_1769482556403_ky8tarb3z"]
     },
     {
       "id": "action_1769504153569_9kf5vm8yb",
@@ -202,9 +174,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769493355764_t19pjbs7u"
-      ]
+      "relatedIds": ["sandbox_1769493355764_t19pjbs7u"]
     },
     {
       "id": "action_1769514953573_w5r3xn3b8",
@@ -214,9 +184,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769504154691_t0ol7c6ui"
-      ]
+      "relatedIds": ["sandbox_1769504154691_t0ol7c6ui"]
     },
     {
       "id": "action_1769536553581_mjdrxavll",
@@ -226,9 +194,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769525754523_rog5m6952"
-      ]
+      "relatedIds": ["sandbox_1769525754523_rog5m6952"]
     },
     {
       "id": "action_1769547353581_8pbmmrzaz",
@@ -238,9 +204,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769536557959_7ippotua6"
-      ]
+      "relatedIds": ["sandbox_1769536557959_7ippotua6"]
     },
     {
       "id": "action_1769557734477_8tyfmkj7u",
@@ -250,9 +214,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769557491775_him83eplp"
-      ]
+      "relatedIds": ["sandbox_1769557491775_him83eplp"]
     },
     {
       "id": "action_1769560175821_82ovl8yuf",
@@ -262,9 +224,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769558140049_3el37ydt8"
-      ]
+      "relatedIds": ["sandbox_1769558140049_3el37ydt8"]
     },
     {
       "id": "action_1769560885612_4qvq49l0i",
@@ -274,9 +234,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769560747574_7n63tgv1n"
-      ]
+      "relatedIds": ["sandbox_1769560747574_7n63tgv1n"]
     },
     {
       "id": "action_1769561991728_cmxcmddql",
@@ -286,9 +244,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769561175127_or41pbk7a"
-      ]
+      "relatedIds": ["sandbox_1769561175127_or41pbk7a"]
     },
     {
       "id": "action_1769569351937_vkbbhoclf",
@@ -298,9 +254,7 @@
       "status": "planned",
       "priority": "high",
       "estimatedImpact": 8,
-      "relatedIds": [
-        "sandbox_1769567306801_v1ggsa2ak"
-      ]
+      "relatedIds": ["sandbox_1769567306801_v1ggsa2ak"]
     }
   ],
   "lastCheck": 1769560175627,

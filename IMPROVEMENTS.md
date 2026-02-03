@@ -11,6 +11,7 @@ This document outlines the 6 major improvements implemented in the Milla-Claude 
 **File:** `server/ai-sdk-integration.ts`
 
 **Features:**
+
 - Provider-agnostic TypeScript toolkit for AI interactions
 - Standardized streaming with automatic token-by-token delivery
 - Support for OpenAI, Anthropic, and X.AI providers
@@ -18,12 +19,14 @@ This document outlines the 6 major improvements implemented in the Milla-Claude 
 - Built-in error handling and retry logic
 
 **Benefits:**
+
 - Reduced boilerplate code by ~40%
 - Better developer experience with TypeScript types
 - Industry-standard streaming implementation
 - Simplified provider switching
 
 **Usage:**
+
 ```typescript
 import { streamAIResponse, generateAIResponse } from './ai-sdk-integration';
 
@@ -47,6 +50,7 @@ const response = await generateAIResponse({
 **File:** `server/vector-db-service.ts`
 
 **Features:**
+
 - Production-grade vector storage with sub-100ms retrieval
 - Hybrid search (vector + metadata filtering)
 - Support for both Pinecone and ChromaDB
@@ -54,12 +58,14 @@ const response = await generateAIResponse({
 - Multi-tenancy with namespacing
 
 **Benefits:**
+
 - Superior memory recall for AI companion
 - Efficient similarity search for RAG
 - Metadata filtering for precise context
 - Built-in observability
 
 **Configuration:**
+
 ```env
 # Pinecone
 PINECONE_API_KEY=your_key_here
@@ -71,24 +77,27 @@ CHROMA_COLLECTION=milla-memories
 ```
 
 **Usage:**
+
 ```typescript
 import { initializeVectorDB } from './vector-db-service';
 
 const vectorDB = await initializeVectorDB('chroma');
 
 // Upsert vectors
-await vectorDB.upsert([{
-  id: 'memory_1',
-  values: embedding,
-  content: 'User loves coffee',
-  metadata: { userId: '123', timestamp: Date.now() }
-}]);
+await vectorDB.upsert([
+  {
+    id: 'memory_1',
+    values: embedding,
+    content: 'User loves coffee',
+    metadata: { userId: '123', timestamp: Date.now() },
+  },
+]);
 
 // Query
 const results = await vectorDB.query({
   vector: queryEmbedding,
   topK: 5,
-  filter: { userId: '123' }
+  filter: { userId: '123' },
 });
 ```
 
@@ -99,6 +108,7 @@ const results = await vectorDB.query({
 **File:** `server/optimized-websocket-service.ts`
 
 **Features:**
+
 - Sub-300ms latency for voice/chat responses
 - Token-by-token streaming for real-time UX
 - Persistent connections with health checks
@@ -106,12 +116,14 @@ const results = await vectorDB.query({
 - Compression with perMessageDeflate
 
 **Benefits:**
+
 - Target: <800ms total response time
 - 42% bandwidth reduction
 - Better connection management
 - Real-time performance metrics
 
 **Usage:**
+
 ```typescript
 import { setupOptimizedWebSocketServer } from './optimized-websocket-service';
 
@@ -123,12 +135,11 @@ const wss = setupOptimizedWebSocketServer(httpServer);
 ```
 
 **WebSocket Message Format:**
+
 ```json
 {
   "type": "chat",
-  "messages": [
-    { "role": "user", "content": "Hello!" }
-  ],
+  "messages": [{ "role": "user", "content": "Hello!" }],
   "provider": "openai",
   "requestId": "req_123"
 }
@@ -141,6 +152,7 @@ const wss = setupOptimizedWebSocketServer(httpServer);
 **File:** `client/src/components/AssistantUI.tsx`
 
 **Features:**
+
 - Production-ready chat interface
 - Built on Vercel AI SDK React hooks
 - Auto-scrolling and accessibility
@@ -148,12 +160,14 @@ const wss = setupOptimizedWebSocketServer(httpServer);
 - Embeddable widget component
 
 **Benefits:**
+
 - Reduces custom UI code by ~60%
 - Industry-standard UX patterns
 - Fully customizable with Tailwind/shadcn
 - Mobile-responsive
 
 **Usage:**
+
 ```tsx
 import { AssistantUI, AssistantWidget } from './components/AssistantUI';
 
@@ -171,6 +185,7 @@ import { AssistantUI, AssistantWidget } from './components/AssistantUI';
 **File:** `server/rag-service.ts`
 
 **Features:**
+
 - Document chunking with RecursiveCharacterTextSplitter
 - Embedding generation and storage
 - Hybrid retrieval (vector + keyword)
@@ -178,12 +193,14 @@ import { AssistantUI, AssistantWidget } from './components/AssistantUI';
 - Metadata tracking (chunk index, timestamps)
 
 **Benefits:**
+
 - Better context retrieval for AI responses
 - Simplified RAG pipeline setup
 - Production-ready observability
 - Configurable chunk size and overlap
 
 **Usage:**
+
 ```typescript
 import { getRAGService } from './rag-service';
 
@@ -194,15 +211,15 @@ await rag.ingestDocuments([
   {
     id: 'doc_1',
     content: 'Long document text...',
-    metadata: { source: 'user_upload' }
-  }
+    metadata: { source: 'user_upload' },
+  },
 ]);
 
 // Query
 const result = await rag.query({
   query: 'What is the document about?',
   topK: 5,
-  rerank: true
+  rerank: true,
 });
 
 console.log(result.answer);
@@ -216,6 +233,7 @@ console.log(result.sources);
 **File:** `server/redis-cache-service.ts`
 
 **Features:**
+
 - Distributed caching for LLM responses
 - Session management with TTL
 - Message queues for agent tasks
@@ -223,12 +241,14 @@ console.log(result.sources);
 - Automatic fallback to memory
 
 **Benefits:**
+
 - 30-50% LLM cost reduction through caching
 - Horizontal scaling support
 - Distributed session storage
 - Real-time communication
 
 **Configuration:**
+
 ```env
 # Redis (local)
 REDIS_URL=redis://localhost:6379
@@ -238,6 +258,7 @@ UPSTASH_REDIS_URL=your_upstash_url_here
 ```
 
 **Usage:**
+
 ```typescript
 import { getRedisCache } from './redis-cache-service';
 
@@ -255,7 +276,7 @@ await cache.cacheLLMResponse(messages, response);
 // Session management
 await cache.setSession('session_123', {
   userId: 'user_456',
-  conversationId: 'conv_789'
+  conversationId: 'conv_789',
 });
 
 // Message queues
@@ -270,6 +291,7 @@ const task = await cache.dequeue('agent_tasks');
 ### Chat Endpoints
 
 **POST /api/chat** - Stream chat responses
+
 ```json
 {
   "messages": [{ "role": "user", "content": "Hello" }],
@@ -280,6 +302,7 @@ const task = await cache.dequeue('agent_tasks');
 ```
 
 **POST /api/chat/generate** - Non-streaming chat
+
 ```json
 {
   "messages": [{ "role": "user", "content": "Hello" }],
@@ -290,6 +313,7 @@ const task = await cache.dequeue('agent_tasks');
 ### RAG Endpoints
 
 **POST /api/rag/ingest** - Ingest documents
+
 ```json
 {
   "documents": [
@@ -303,6 +327,7 @@ const task = await cache.dequeue('agent_tasks');
 ```
 
 **POST /api/rag/query** - Query documents
+
 ```json
 {
   "query": "What is the document about?",
@@ -346,14 +371,14 @@ UPSTASH_REDIS_URL=https://...upstash.io
 
 ## 🎯 Performance Targets
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Time to First Token (TTFT) | <300ms | ✅ |
-| Total Response Latency | <800ms | ✅ |
-| Vector Retrieval | <100ms | ✅ |
-| Cache Hit Latency | <10ms | ✅ |
-| WebSocket Bandwidth | -42% | ✅ |
-| LLM Cost Reduction | 30-50% | ✅ |
+| Metric                     | Target | Actual |
+| -------------------------- | ------ | ------ |
+| Time to First Token (TTFT) | <300ms | ✅     |
+| Total Response Latency     | <800ms | ✅     |
+| Vector Retrieval           | <100ms | ✅     |
+| Cache Hit Latency          | <10ms  | ✅     |
+| WebSocket Bandwidth        | -42%   | ✅     |
+| LLM Cost Reduction         | 30-50% | ✅     |
 
 ---
 
@@ -397,9 +422,11 @@ All services include built-in error handling and fallbacks:
 ## 🚦 Migration Guide
 
 ### Existing Code
+
 No breaking changes! All new services are additive.
 
 ### Gradual Adoption
+
 1. Start with Redis caching (immediate cost savings)
 2. Add Vercel AI SDK for new endpoints
 3. Migrate to Vector DB for better memory

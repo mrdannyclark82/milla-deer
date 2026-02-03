@@ -1,12 +1,12 @@
 /**
  * Agentic AI Dispatch System
- * 
+ *
  * This module implements an agentic AI dispatch pattern that enables:
  * - Iterative task resolution with feedback loops
  * - Multi-step reasoning and planning
  * - Tool usage and external API integration
  * - Self-correction and verification
- * 
+ *
  * Architecture:
  * - Agent orchestration with role-based delegation
  * - Task decomposition and parallel execution
@@ -50,7 +50,7 @@ interface AgentContext {
 
 /**
  * Agentic AI Dispatcher
- * 
+ *
  * Implements the agentic pattern with iterative refinement and multi-step reasoning
  */
 class AgenticDispatcher {
@@ -123,10 +123,11 @@ class AgenticDispatcher {
     if (task.requiresVerification && resolved) {
       this.log('Verifying result...');
       const verified = await this.verifyResult(finalAnswer, task);
-      
+
       if (!verified) {
         this.log('Verification failed, adding clarification');
-        finalAnswer += ' (Note: This answer may require additional verification)';
+        finalAnswer +=
+          ' (Note: This answer may require additional verification)';
       }
     }
 
@@ -157,7 +158,7 @@ class AgenticDispatcher {
 
     // Determine action based on current state
     const action = this.planNextAction(query, context, iteration);
-    
+
     // Generate reasoning
     const reasoning = this.generateReasoning(action, context);
 
@@ -182,7 +183,7 @@ class AgenticDispatcher {
     iteration: number
   ): string {
     // Simple planning logic - production would use LLM for planning
-    
+
     if (iteration === 1) {
       return 'analyze_query';
     }
@@ -209,14 +210,19 @@ class AgenticDispatcher {
    */
   private generateReasoning(action: string, context: AgentContext): string {
     const reasoningMap: Record<string, string> = {
-      analyze_query: 'Breaking down the user query to understand intent and requirements',
-      search_knowledge: 'Searching knowledge base and external sources for relevant information',
-      synthesize_answer: 'Combining gathered information into a coherent response',
+      analyze_query:
+        'Breaking down the user query to understand intent and requirements',
+      search_knowledge:
+        'Searching knowledge base and external sources for relevant information',
+      synthesize_answer:
+        'Combining gathered information into a coherent response',
       verify_answer: 'Checking answer accuracy and completeness',
       refine_answer: 'Improving answer based on verification feedback',
     };
 
-    return reasoningMap[action] || 'Executing next logical step in task resolution';
+    return (
+      reasoningMap[action] || 'Executing next logical step in task resolution'
+    );
   }
 
   /**
@@ -228,7 +234,7 @@ class AgenticDispatcher {
     context: AgentContext
   ): Promise<any> {
     // Placeholder - actual implementation would call appropriate services/tools
-    
+
     switch (action) {
       case 'analyze_query':
         return {
@@ -241,7 +247,11 @@ class AgenticDispatcher {
         return {
           sources: ['internal_kb', 'web_search'],
           results: [
-            { source: 'kb', relevance: 0.9, content: 'Relevant information...' },
+            {
+              source: 'kb',
+              relevance: 0.9,
+              content: 'Relevant information...',
+            },
           ],
         };
 
@@ -275,7 +285,7 @@ class AgenticDispatcher {
    */
   private isTaskResolved(step: TaskStep, task: AgenticTask): boolean {
     // Simple resolution check - production would be more sophisticated
-    
+
     if (step.action === 'verify_answer' && step.result.verified) {
       return true;
     }
@@ -311,13 +321,16 @@ class AgenticDispatcher {
   /**
    * Verify the result
    */
-  private async verifyResult(answer: string, task: AgenticTask): Promise<boolean> {
+  private async verifyResult(
+    answer: string,
+    task: AgenticTask
+  ): Promise<boolean> {
     // Placeholder - actual implementation would verify answer quality
     // Could use:
     // - Fact checking
     // - Consistency verification
     // - Source validation
-    
+
     return answer.length > 10; // Simple placeholder check
   }
 

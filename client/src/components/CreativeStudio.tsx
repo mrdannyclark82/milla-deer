@@ -38,18 +38,46 @@ interface GeneratedImage {
 
 type AspectRatio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 
-const ASPECT_RATIOS: { value: AspectRatio; label: string; icon: React.ReactNode }[] = [
+const ASPECT_RATIOS: {
+  value: AspectRatio;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
   { value: '1:1', label: 'Square', icon: <Square className="w-4 h-4" /> },
-  { value: '16:9', label: 'Landscape', icon: <RectangleHorizontal className="w-4 h-4" /> },
-  { value: '9:16', label: 'Portrait', icon: <RectangleVertical className="w-4 h-4" /> },
-  { value: '4:3', label: 'Standard', icon: <RectangleHorizontal className="w-4 h-4" /> },
-  { value: '3:4', label: 'Photo', icon: <RectangleVertical className="w-4 h-4" /> },
+  {
+    value: '16:9',
+    label: 'Landscape',
+    icon: <RectangleHorizontal className="w-4 h-4" />,
+  },
+  {
+    value: '9:16',
+    label: 'Portrait',
+    icon: <RectangleVertical className="w-4 h-4" />,
+  },
+  {
+    value: '4:3',
+    label: 'Standard',
+    icon: <RectangleHorizontal className="w-4 h-4" />,
+  },
+  {
+    value: '3:4',
+    label: 'Photo',
+    icon: <RectangleVertical className="w-4 h-4" />,
+  },
 ];
 
 const IMAGE_MODELS = [
   { value: 'flux', label: 'Flux', description: 'High quality, balanced' },
-  { value: 'flux-realism', label: 'Flux Realism', description: 'Photorealistic images' },
-  { value: 'flux-anime', label: 'Flux Anime', description: 'Anime/manga style' },
+  {
+    value: 'flux-realism',
+    label: 'Flux Realism',
+    description: 'Photorealistic images',
+  },
+  {
+    value: 'flux-anime',
+    label: 'Flux Anime',
+    description: 'Anime/manga style',
+  },
   { value: 'flux-3d', label: 'Flux 3D', description: '3D rendered images' },
   { value: 'turbo', label: 'Turbo', description: 'Fast generation' },
 ];
@@ -81,7 +109,9 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
-  const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -113,11 +143,11 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
       }
 
       const data = await response.json();
-      
+
       // Handle different response formats from various image generation backends
       // (Pollinations uses 'url', some use 'imageUrl', others use 'image')
       const imageUrl = data.url || data.imageUrl || data.image;
-      
+
       if (!imageUrl) {
         throw new Error('No image URL in response');
       }
@@ -246,7 +276,9 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
 
           {/* Aspect Ratio */}
           <div>
-            <label className="text-sm text-white/70 mb-2 block">Aspect Ratio</label>
+            <label className="text-sm text-white/70 mb-2 block">
+              Aspect Ratio
+            </label>
             <div className="flex gap-2">
               {ASPECT_RATIOS.map((ratio) => (
                 <Button
@@ -353,7 +385,9 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
               <div className="flex flex-col items-center text-white/40">
                 <ImageIcon className="w-16 h-16 mb-4 opacity-50" />
                 <p className="text-lg">No image selected</p>
-                <p className="text-sm">Generate an image or select from history</p>
+                <p className="text-sm">
+                  Generate an image or select from history
+                </p>
               </div>
             )}
           </div>

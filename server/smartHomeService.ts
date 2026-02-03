@@ -2,10 +2,15 @@ import { config } from './config';
 import { SceneLocation, TimeOfDay } from '../shared/sceneTypes';
 
 export interface SmartHomeSensorData {
+  timestamp: number;
+  location: string;
+  presence: boolean;
+  motion: {
+    detected: boolean;
+    level: number;
+  };
   lightLevel: 'dark' | 'dim' | 'normal' | 'bright';
   temperature: number; // in Celsius
-  motionDetected: boolean;
-  // Add more sensor data as needed
 }
 
 /**
@@ -18,13 +23,32 @@ export async function getSmartHomeSensorData(): Promise<SmartHomeSensorData | nu
   }
 
   // For now, return mock data
-  const hour = new Date().getHours();
+  const date = new Date();
+  const hour = date.getHours();
   const isNight = hour >= 20 || hour < 6;
 
+  // Random location
+  const locations = [
+    'living_room',
+    'bedroom',
+    'kitchen',
+    'workspace',
+    'unknown',
+  ];
+  const location = locations[Math.floor(Math.random() * locations.length)];
+
+  const motionDetected = Math.random() > 0.5;
+
   return {
+    timestamp: date.getTime(),
+    location: location,
+    presence: Math.random() > 0.2, // 80% chance of presence
+    motion: {
+      detected: motionDetected,
+      level: motionDetected ? Math.random() : 0,
+    },
     lightLevel: isNight ? 'dark' : 'normal',
     temperature: 22, // degrees Celsius
-    motionDetected: Math.random() > 0.5, // Random motion detection
   };
 }
 
@@ -47,7 +71,7 @@ export function mapSensorDataToSceneContext(sensorData: SmartHomeSensorData): {
   }
 
   // Example: Map motion detection to a potential location change (simplified)
-  if (sensorData.motionDetected) {
+  if (sensorData.motion.detected) {
     // In a real scenario, this would be more sophisticated, e.g., motion in kitchen -> kitchen scene
     // For now, we'll just log it.
     console.log(

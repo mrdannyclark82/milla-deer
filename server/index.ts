@@ -34,23 +34,30 @@ export async function initApp() {
   // Add Helmet security middleware
   try {
     const helmet = (await import('helmet')).default;
-    app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https:"],
-          connectSrc: ["'self'", "https:", "wss:"],
-          fontSrc: ["'self'", "data:"],
-          objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com", "https://www.youtube-nocookie.com"],
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'", 'https:', 'wss:'],
+            fontSrc: ["'self'", 'data:'],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: [
+              "'self'",
+              'https://www.youtube.com',
+              'https://youtube.com',
+              'https://www.youtube-nocookie.com',
+            ],
+          },
         },
-      },
-      crossOriginEmbedderPolicy: false, // Disable for development
-      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-    }));
+        crossOriginEmbedderPolicy: false, // Disable for development
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      })
+    );
     console.log('[Security] Helmet middleware enabled');
   } catch (error) {
     console.warn('[Security] Helmet not available, continuing without it');
@@ -80,7 +87,7 @@ export async function initApp() {
   // CORS Policy - Allow all origins in development for Replit preview
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    
+
     // In development, allow all origins for Replit preview compatibility
     if (origin) {
       res.header('Access-Control-Allow-Origin', origin);
@@ -158,7 +165,8 @@ export async function initApp() {
   await initializeMemoryCore();
 
   // Initialize Mood Background Service
-  const { initializeMoodBackgroundService } = await import('./moodBackgroundService');
+  const { initializeMoodBackgroundService } =
+    await import('./moodBackgroundService');
   await initializeMoodBackgroundService();
 
   // Initialize User Tasks system
@@ -172,21 +180,18 @@ export async function initApp() {
   await initializeServerSelfEvolution();
 
   // Initialize Visual Recognition system
-  const { initializeFaceRecognition } = await import(
-    './visualRecognitionService'
-  );
+  const { initializeFaceRecognition } =
+    await import('./visualRecognitionService');
   await initializeFaceRecognition();
 
   // Initialize Enhancement Task system
-  const { initializeEnhancementTaskSystem } = await import(
-    './enhancementService'
-  );
+  const { initializeEnhancementTaskSystem } =
+    await import('./enhancementService');
   await initializeEnhancementTaskSystem();
 
   // Initialize Daily Suggestions Scheduler
-  const { initializeDailySuggestionScheduler } = await import(
-    './dailySuggestionsService'
-  );
+  const { initializeDailySuggestionScheduler } =
+    await import('./dailySuggestionsService');
   initializeDailySuggestionScheduler();
 
   // Initialize AI Updates Scheduler
@@ -194,41 +199,35 @@ export async function initApp() {
   initializeAIUpdatesScheduler();
 
   // Initialize Proactive Repository Ownership System
-  const { initializeUserAnalytics } = await import(
-    './userInteractionAnalyticsService'
-  );
+  const { initializeUserAnalytics } =
+    await import('./userInteractionAnalyticsService');
   await initializeUserAnalytics();
 
-  const { initializeSandboxEnvironment } = await import(
-    './sandboxEnvironmentService'
-  );
+  const { initializeSandboxEnvironment } =
+    await import('./sandboxEnvironmentService');
   await initializeSandboxEnvironment();
 
-  const { initializeFeatureDiscovery } = await import(
-    './featureDiscoveryService'
-  );
+  const { initializeFeatureDiscovery } =
+    await import('./featureDiscoveryService');
   await initializeFeatureDiscovery();
 
   const { initializeTokenIncentive } = await import('./tokenIncentiveService');
   await initializeTokenIncentive();
 
-  const { initializeProactiveManager } = await import(
-    './proactiveRepositoryManagerService'
-  );
+  const { initializeProactiveManager } =
+    await import('./proactiveRepositoryManagerService');
   await initializeProactiveManager();
 
   // Initialize Enhanced Features
   const { initializeAutomatedPR } = await import('./automatedPRService');
   await initializeAutomatedPR();
 
-  const { initializeUserSurveys } = await import(
-    './userSatisfactionSurveyService'
-  );
+  const { initializeUserSurveys } =
+    await import('./userSatisfactionSurveyService');
   await initializeUserSurveys();
 
-  const { initializePerformanceProfiling } = await import(
-    './performanceProfilingService'
-  );
+  const { initializePerformanceProfiling } =
+    await import('./performanceProfilingService');
   await initializePerformanceProfiling();
 
   console.log(
@@ -260,9 +259,8 @@ export async function initApp() {
   console.log('✅ YouTubeAgent registered and ready');
 
   // Start email delivery loop if enabled
-  const { startEmailDeliveryLoop } = await import(
-    './agents/emailDeliveryWorker'
-  );
+  const { startEmailDeliveryLoop } =
+    await import('./agents/emailDeliveryWorker');
   startEmailDeliveryLoop();
 
   // Admin endpoints for email delivery (manual trigger)
@@ -282,9 +280,8 @@ export async function initApp() {
           return res.status(403).json({ error: 'Unauthorized' });
       }
 
-      const { deliverOutboxOnce } = await import(
-        './agents/emailDeliveryWorker'
-      );
+      const { deliverOutboxOnce } =
+        await import('./agents/emailDeliveryWorker');
       const summary = await deliverOutboxOnce();
       res.json({ success: true, summary });
     } catch (error) {
