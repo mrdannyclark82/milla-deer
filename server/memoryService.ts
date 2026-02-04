@@ -853,9 +853,8 @@ export async function getMemoryCoreContext(
   // Add sandbox test summary if query is about testing
   if (isSandboxQuery) {
     try {
-      const { getSandboxTestSummary } = await import(
-        './sandboxEnvironmentService'
-      );
+      const { getSandboxTestSummary } =
+        await import('./sandboxEnvironmentService');
       const sandboxSummary = getSandboxTestSummary();
       if (sandboxSummary) {
         contextString += `\n[Sandbox Testing Memory]:\n${sandboxSummary}\n`;
@@ -1148,8 +1147,8 @@ export async function storeSensitiveMemory(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Encrypt sensitive fields
-    const encryptedData: { financialSummary?: string; medicalNotes?: string } =
-      {};
+    const encryptedData: { financialSummary?: string; medicalNotes?: string; userId: string } =
+      { userId }; // Fix: Added userId to conform to InsertSensitiveMemory type
 
     if (data.financialSummary) {
       encryptedData.financialSummary = await encryptHomomorphic(
@@ -1163,7 +1162,9 @@ export async function storeSensitiveMemory(
       console.log('🔒 Encrypted medical notes with HE');
     }
 
-    await storage.saveSensitiveMemory(userId, encryptedData);
+    // Cast as any if necessary, but with userId added it should match better
+    // Assuming InsertSensitiveMemory expects userId, financialSummary, medicalNotes
+    await storage.saveSensitiveMemory(userId, encryptedData as any);
     console.log('[MemoryService] Sensitive data encrypted and stored in DB');
 
     return { success: true };

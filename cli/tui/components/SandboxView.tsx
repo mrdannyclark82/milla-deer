@@ -31,119 +31,145 @@ export const SandboxView: React.FC = () => {
         setSandboxes(res.data.sandboxes);
       }
     } catch (e: any) {
-        setError(e.message);
+      setError(e.message);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSelect = (item: any) => {
     if (item.value === 'create_new') {
-        setMode('create');
-        setFormStep(0);
-        setNewName('');
-        setNewDesc('');
+      setMode('create');
+      setFormStep(0);
+      setNewName('');
+      setNewDesc('');
     } else {
-        setSelectedSandbox(item.original);
-        setMode('details');
+      setSelectedSandbox(item.original);
+      setMode('details');
     }
   };
 
   const handleCreateSubmit = async () => {
     if (formStep === 0) {
-        setFormStep(1);
-        return;
+      setFormStep(1);
+      return;
     }
 
     setIsLoading(true);
     try {
-        const res = await axios.post(`${API_BASE_URL}/api/sandboxes`, {
-            name: newName,
-            description: newDesc,
-            createdBy: 'user'
-        });
-        if (res.data.success) {
-            await fetchSandboxes();
-            setMode('list');
-        }
-    } catch (e: any) {
-        setError(e.message);
+      const res = await axios.post(`${API_BASE_URL}/api/sandboxes`, {
+        name: newName,
+        description: newDesc,
+        createdBy: 'user',
+      });
+      if (res.data.success) {
+        await fetchSandboxes();
         setMode('list');
+      }
+    } catch (e: any) {
+      setError(e.message);
+      setMode('list');
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   useInput((input, key) => {
     if (mode === 'details' && (key.escape || input === 'b')) {
-        setMode('list');
+      setMode('list');
     }
     if (mode === 'create' && key.escape) {
-        setMode('list');
+      setMode('list');
     }
   });
 
   if (isLoading && mode === 'list') {
-      return <Text><Spinner type="dots" /> Loading sandboxes...</Text>;
+    return (
+      <Text>
+        <Spinner type="dots" /> Loading sandboxes...
+      </Text>
+    );
   }
 
   if (mode === 'create') {
-      return (
-          <Box flexDirection="column" padding={1} borderStyle="single">
-              <Text bold>Create New Sandbox</Text>
-              <Box marginY={1}>
-                  <Text>Name: </Text>
-                  {formStep === 0 ? (
-                    <TextInput value={newName} onChange={setNewName} onSubmit={handleCreateSubmit} />
-                  ) : (
-                    <Text color="green">{newName}</Text>
-                  )}
-              </Box>
-              {formStep === 1 && (
-                  <Box>
-                    <Text>Description: </Text>
-                    <TextInput value={newDesc} onChange={setNewDesc} onSubmit={handleCreateSubmit} />
-                  </Box>
-              )}
-              <Text color="gray" marginTop={1}>Press Enter to confirm, Esc to cancel</Text>
+    return (
+      <Box flexDirection="column" padding={1} borderStyle="single">
+        <Text bold>Create New Sandbox</Text>
+        <Box marginY={1}>
+          <Text>Name: </Text>
+          {formStep === 0 ? (
+            <TextInput
+              value={newName}
+              onChange={setNewName}
+              onSubmit={handleCreateSubmit}
+            />
+          ) : (
+            <Text color="green">{newName}</Text>
+          )}
+        </Box>
+        {formStep === 1 && (
+          <Box>
+            <Text>Description: </Text>
+            <TextInput
+              value={newDesc}
+              onChange={setNewDesc}
+              onSubmit={handleCreateSubmit}
+            />
           </Box>
-      );
+        )}
+        <Text color="gray" marginTop={1}>
+          Press Enter to confirm, Esc to cancel
+        </Text>
+      </Box>
+    );
   }
 
   if (mode === 'details' && selectedSandbox) {
-      return (
-          <Box flexDirection="column" padding={1}>
-              <Text bold color="magenta">{selectedSandbox.name}</Text>
-              <Text italic>{selectedSandbox.description}</Text>
-              <Box marginY={1} borderStyle="single" padding={1}>
-                  <Text>Status: {selectedSandbox.status}</Text>
-                  <Text>Branch: {selectedSandbox.branchName}</Text>
-                  <Text>Features: {selectedSandbox.features.length}</Text>
-              </Box>
-              <Text underline>Features:</Text>
-              {selectedSandbox.features.map((f: any) => (
-                  <Box key={f.id} marginLeft={2}>
-                      <Text>- {f.name} ({f.status})</Text>
-                  </Box>
-              ))}
-              <Text color="gray" marginTop={2}>Press 'b' or Esc to go back</Text>
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Text bold color="magenta">
+          {selectedSandbox.name}
+        </Text>
+        <Text italic>{selectedSandbox.description}</Text>
+        <Box marginY={1} borderStyle="single" padding={1}>
+          <Text>Status: {selectedSandbox.status}</Text>
+          <Text>Branch: {selectedSandbox.branchName}</Text>
+          <Text>Features: {selectedSandbox.features.length}</Text>
+        </Box>
+        <Text underline>Features:</Text>
+        {selectedSandbox.features.map((f: any) => (
+          <Box key={f.id} marginLeft={2}>
+            <Text>
+              - {f.name} ({f.status})
+            </Text>
           </Box>
-      );
+        ))}
+        <Text color="gray" marginTop={2}>
+          Press 'b' or Esc to go back
+        </Text>
+      </Box>
+    );
   }
 
-  const items = sandboxes.map(s => ({
-      label: s.name + (s.createdBy === 'milla' ? ' (AI)' : ''),
-      value: s.id,
-      original: s
+  const items = sandboxes.map((s) => ({
+    label: s.name + (s.createdBy === 'milla' ? ' (AI)' : ''),
+    value: s.id,
+    original: s,
   }));
 
-  items.unshift({ label: '+ Create New Sandbox', value: 'create_new', original: null });
+  items.unshift({
+    label: '+ Create New Sandbox',
+    value: 'create_new',
+    original: null,
+  });
 
   return (
     <Box flexDirection="column">
-        <Text bold underline marginBottom={1}>Active Sandboxes</Text>
-        <SelectInput items={items} onSelect={handleSelect} />
-        {error && <Text color="red">{error}</Text>}
+      <Text bold underline marginBottom={1}>
+        Active Sandboxes
+      </Text>
+      <SelectInput items={items} onSelect={handleSelect} />
+      {error && <Text color="red">{error}</Text>}
     </Box>
   );
 };

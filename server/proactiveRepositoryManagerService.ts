@@ -48,11 +48,17 @@ export enum ProactiveActionType {
   PrPreparation = 'pr_preparation',
   UserEngagement = 'user_engagement',
   AutonomousFix = 'autonomous_fix',
+  Performance = 'performance',
 }
 
 export interface Suggestion {
   id: string;
-  type: 'bug_fix' | 'optimization';
+  type:
+    | 'bug_fix'
+    | 'optimization'
+    | 'performance'
+    | 'feature_enhancement'
+    | 'new_feature';
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
   estimatedImpact: number;
@@ -179,7 +185,10 @@ class ProactiveRepositoryManagerService {
 
   private async _discoverAndEvaluateFeatures(): Promise<ProactiveAction[]> {
     const newActions: ProactiveAction[] = [];
-    if (Date.now() - this.lastCheck > config.proactiveRepoManager.featureDiscoveryInterval) {
+    if (
+      Date.now() - this.lastCheck >
+      config.proactiveRepoManager.featureDiscoveryInterval
+    ) {
       // Once per day
       console.log('🔍 Discovering new features from GitHub...');
       const patterns = getInteractionPatterns();
@@ -193,7 +202,8 @@ class ProactiveRepositoryManagerService {
     );
     for (const feature of topFeatures) {
       if (
-        feature.relevance >= config.proactiveRepoManager.featureRelevanceThreshold &&
+        feature.relevance >=
+          config.proactiveRepoManager.featureRelevanceThreshold &&
         feature.implementationComplexity !== 'high'
       ) {
         const action = await this.createActionForFeature(feature);
@@ -251,14 +261,12 @@ class ProactiveRepositoryManagerService {
       const repositoryPath = process.cwd();
       const result = await codingAgent.performAutomatedFixLifecycle({
         repositoryPath,
-        issueSource: 'proactive_cycle',
+        issueSource: 'code_analysis',
       });
 
       if (result.success) {
         const action: ProactiveAction = {
-          id: `action_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`,
+          id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           timestamp: Date.now(),
           type: ProactiveActionType.AutonomousFix,
           description: `Autonomous code improvement: ${result.message}`,
@@ -282,9 +290,7 @@ class ProactiveRepositoryManagerService {
           `✅ Autonomous code improvement completed: ${result.message}`
         );
       } else {
-        console.log(
-          `ℹ️ Autonomous code improvement result: ${result.message}`
-        );
+        console.log(`ℹ️ Autonomous code improvement result: ${result.message}`);
       }
     } catch (error) {
       console.error('Error in autonomous code improvement:', error);
@@ -309,7 +315,12 @@ class ProactiveRepositoryManagerService {
     const action: ProactiveAction = {
       id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
-      type: suggestion.type === 'bug_fix' ? ProactiveActionType.BugFix : ProactiveActionType.Optimization,
+      type:
+        suggestion.type === 'bug_fix'
+          ? ProactiveActionType.BugFix
+          : suggestion.type === 'performance'
+            ? ProactiveActionType.Performance
+            : ProactiveActionType.Optimization,
       description: suggestion.description,
       status: 'planned',
       priority: suggestion.priority,
@@ -457,10 +468,14 @@ class ProactiveRepositoryManagerService {
         tokensEarned = prReward.amount;
         break;
       case ProactiveActionType.AutonomousFix:
-        const autonomousReward = await awardTokensForBugFix(action.description, actionId);
+        const autonomousReward = await awardTokensForBugFix(
+          action.description,
+          actionId
+        );
         tokensEarned = autonomousReward.amount;
         break;
       case ProactiveActionType.Optimization:
+      case ProactiveActionType.Performance:
         tokensEarned = config.proactiveRepoManager.optimizationTokenAward;
         break;
     }
@@ -597,13 +612,27 @@ class ProactiveRepositoryManagerService {
         this.actions.reduce((sum, a) => sum + a.estimatedImpact, 0) / total ||
         0,
       byType: {
-        bugFix: this.actions.filter(a => a.type === ProactiveActionType.BugFix).length,
-        featureProposal: this.actions.filter(a => a.type === ProactiveActionType.FeatureProposal).length,
-        optimization: this.actions.filter(a => a.type === ProactiveActionType.Optimization).length,
-        sandboxCreation: this.actions.filter(a => a.type === ProactiveActionType.SandboxCreation).length,
-        prPreparation: this.actions.filter(a => a.type === ProactiveActionType.PrPreparation).length,
-        userEngagement: this.actions.filter(a => a.type === ProactiveActionType.UserEngagement).length,
-        autonomousFix: this.actions.filter(a => a.type === ProactiveActionType.AutonomousFix).length,
+        bugFix: this.actions.filter(
+          (a) => a.type === ProactiveActionType.BugFix
+        ).length,
+        featureProposal: this.actions.filter(
+          (a) => a.type === ProactiveActionType.FeatureProposal
+        ).length,
+        optimization: this.actions.filter(
+          (a) => a.type === ProactiveActionType.Optimization
+        ).length,
+        sandboxCreation: this.actions.filter(
+          (a) => a.type === ProactiveActionType.SandboxCreation
+        ).length,
+        prPreparation: this.actions.filter(
+          (a) => a.type === ProactiveActionType.PrPreparation
+        ).length,
+        userEngagement: this.actions.filter(
+          (a) => a.type === ProactiveActionType.UserEngagement
+        ).length,
+        autonomousFix: this.actions.filter(
+          (a) => a.type === ProactiveActionType.AutonomousFix
+        ).length,
       },
     };
   }

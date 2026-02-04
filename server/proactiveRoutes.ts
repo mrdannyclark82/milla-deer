@@ -306,12 +306,10 @@ export function registerProactiveRoutes(router: Router): void {
       res.json({ success: true, features, count: features.length });
     } catch (error) {
       console.error('Error discovering features from web:', error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: 'Failed to discover features from web',
-        });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to discover features from web',
+      });
     }
   });
 
@@ -322,12 +320,10 @@ export function registerProactiveRoutes(router: Router): void {
       res.json({ success: true, features, count: features.length });
     } catch (error) {
       console.error('Error discovering features from YouTube:', error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: 'Failed to discover features from YouTube',
-        });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to discover features from YouTube',
+      });
     }
   });
 
@@ -552,9 +548,8 @@ export function registerProactiveRoutes(router: Router): void {
   // User Survey Routes
   router.get('/api/milla/surveys/active', async (req, res) => {
     try {
-      const { getActiveSurvey } = await import(
-        './userSatisfactionSurveyService'
-      );
+      const { getActiveSurvey } =
+        await import('./userSatisfactionSurveyService');
       const survey = getActiveSurvey();
       res.json({ success: true, survey });
     } catch (error) {
@@ -565,9 +560,8 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.post('/api/milla/surveys/respond', async (req, res) => {
     try {
-      const { submitCompleteSurvey } = await import(
-        './userSatisfactionSurveyService'
-      );
+      const { submitCompleteSurvey } =
+        await import('./userSatisfactionSurveyService');
       const { surveyId, userId, responses, context } = req.body;
       const result = await submitCompleteSurvey({
         surveyId,
@@ -586,9 +580,8 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.get('/api/milla/surveys/:surveyId/analytics', async (req, res) => {
     try {
-      const { getSurveyAnalytics } = await import(
-        './userSatisfactionSurveyService'
-      );
+      const { getSurveyAnalytics } =
+        await import('./userSatisfactionSurveyService');
       const { surveyId } = req.params;
       const analytics = getSurveyAnalytics(surveyId);
       res.json({ success: true, analytics });
@@ -603,9 +596,8 @@ export function registerProactiveRoutes(router: Router): void {
   // Performance Profiling Routes
   router.get('/api/milla/performance/profiles', async (req, res) => {
     try {
-      const { getAllPerformanceProfiles } = await import(
-        './performanceProfilingService'
-      );
+      const { getAllPerformanceProfiles } =
+        await import('./performanceProfilingService');
       const profiles = getAllPerformanceProfiles();
       res.json({ success: true, profiles });
     } catch (error) {
@@ -616,9 +608,8 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.get('/api/milla/performance/slow', async (req, res) => {
     try {
-      const { getSlowOperations } = await import(
-        './performanceProfilingService'
-      );
+      const { getSlowOperations } =
+        await import('./performanceProfilingService');
       const threshold = req.query.threshold
         ? parseInt(req.query.threshold as string)
         : 3000;
@@ -634,9 +625,8 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.get('/api/milla/performance/alerts', async (req, res) => {
     try {
-      const { getUnacknowledgedPerformanceAlerts } = await import(
-        './performanceProfilingService'
-      );
+      const { getUnacknowledgedPerformanceAlerts } =
+        await import('./performanceProfilingService');
       const alerts = getUnacknowledgedPerformanceAlerts();
       res.json({ success: true, alerts });
     } catch (error) {
@@ -647,9 +637,8 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.get('/api/milla/performance/stats', async (req, res) => {
     try {
-      const { getPerformanceStatistics } = await import(
-        './performanceProfilingService'
-      );
+      const { getPerformanceStatistics } =
+        await import('./performanceProfilingService');
       const stats = getPerformanceStatistics();
       res.json({ success: true, stats });
     } catch (error) {
@@ -662,9 +651,8 @@ export function registerProactiveRoutes(router: Router): void {
     '/api/milla/performance/alerts/:id/acknowledge',
     async (req, res) => {
       try {
-        const { acknowledgePerformanceAlert } = await import(
-          './performanceProfilingService'
-        );
+        const { acknowledgePerformanceAlert } =
+          await import('./performanceProfilingService');
         const { id } = req.params;
         const acknowledged = await acknowledgePerformanceAlert(id);
         res.json({ success: acknowledged });

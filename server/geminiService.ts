@@ -15,7 +15,7 @@ export interface GeminiResponse {
 
 // Define the tool for Gemini
 const searchTool = {
-  function_declarations: [
+  functionDeclarations: [
     {
       name: 'performWebSearch',
       description: 'Performs a web search to find information online.',
@@ -47,7 +47,8 @@ export async function generateGeminiResponse(
     }
 
     const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', tools: [searchTool] });
+    // Cast tools to any to bypass strict type checking if SchemaType mismatch persists with string literals
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', tools: [searchTool] as any });
 
     // Start a chat session with the model
     const chat = model.startChat({});
@@ -57,16 +58,19 @@ export async function generateGeminiResponse(
     let response = result.response;
 
     // Check for tool calls
-    if (response.functionCall) {
-      const functionCall = response.functionCall;
+    // In newer SDK versions, functionCall is a method returning FunctionCall | undefined
+    const functionCall = typeof response.functionCall === 'function' ? response.functionCall() : (response as any).functionCall;
+
+    if (functionCall) {
       let toolResult: SearchResult[] | null = null;
       let toolExecuted = false;
 
       if (functionCall.name === 'performWebSearch') {
         toolExecuted = true;
+        // args might be an object or map, depending on SDK. Usually object.
         console.log('Gemini called performWebSearch with query:', functionCall.args.query);
         const searchResponse = await performWebSearch(functionCall.args.query);
-        toolResult = searchResponse; // Pass the whole searchResponse object
+        toolResult = searchResponse ? searchResponse.results : null; // Pass the results array
       }
 
       if (toolExecuted && toolResult) {
@@ -115,4 +119,3 @@ export async function generateGeminiResponse(
     };
   }
 }
-

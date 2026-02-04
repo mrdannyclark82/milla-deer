@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 
 vi.mock('../vite', async () => {
-  const actual = await vi.importActual('../vite') as any;
+  const actual = (await vi.importActual('../vite')) as any;
   return {
     ...actual,
     serveStatic: vi.fn(),
@@ -17,7 +17,9 @@ vi.mock('node-fetch', () => ({
 }));
 
 vi.mock('../aiDispatcherService', () => ({
-    dispatchAIResponse: vi.fn().mockResolvedValue({ content: 'This is a test AI response' }),
+  dispatchAIResponse: vi
+    .fn()
+    .mockResolvedValue({ content: 'This is a test AI response' }),
 }));
 
 let app: any; // Declare app variable

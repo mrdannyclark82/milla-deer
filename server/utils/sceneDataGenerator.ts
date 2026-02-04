@@ -12,7 +12,7 @@ const VALID_LOCATIONS: SceneLocationKey[] = [
   'outdoor',
   'dining_room',
   'front_door',
-  'guest_room'
+  'guest_room',
 ];
 
 /**
@@ -34,7 +34,8 @@ export function generateSyntheticData(count: number): TrainingData[] {
     const motionDetected = Math.random() > 0.3; // 70% chance of motion
     const motionLevel = motionDetected ? Math.random() : 0;
 
-    const location = VALID_LOCATIONS[Math.floor(Math.random() * VALID_LOCATIONS.length)];
+    const location =
+      VALID_LOCATIONS[Math.floor(Math.random() * VALID_LOCATIONS.length)];
     // 90% chance of being present
     const presence = Math.random() < 0.9;
 
@@ -44,10 +45,10 @@ export function generateSyntheticData(count: number): TrainingData[] {
       presence,
       motion: {
         detected: motionDetected,
-        level: motionLevel
+        level: motionLevel,
       },
       lightLevel: 'normal', // Not used in current rules but required by interface
-      temperature: 21
+      temperature: 21,
     };
 
     // 2. Apply Rule-Based Logic to get Label
@@ -56,14 +57,17 @@ export function generateSyntheticData(count: number): TrainingData[] {
 
     data.push({
       input: sensorData,
-      label
+      label,
     });
   }
 
   return data;
 }
 
-function applyRules(sensorData: SmartHomeSensorData, hour: number): ProjectedState {
+function applyRules(
+  sensorData: SmartHomeSensorData,
+  hour: number
+): ProjectedState {
   const motion = sensorData.motion.detected;
   const motionLevel = sensorData.motion.level;
   const location = sensorData.location;
@@ -85,15 +89,15 @@ function applyRules(sensorData: SmartHomeSensorData, hour: number): ProjectedSta
   } else if (!motion && !isNight) {
     state = 'relaxing';
   } else if (!motion && !sensorData.presence) {
-     // Note: Original rule was `!motion && sensorData.presence === false`
-     // But previous rules `!motion && isNight` and `!motion && !isNight` (relaxing)
-     // cover ALL !motion cases (Night vs Not Night).
-     // So `away` would never be reached in original logic if `!isNight` covers everything else?
-     // Wait, `!isNight` means day.
-     // If `!motion` and `isNight` -> sleeping.
-     // If `!motion` and `!isNight` -> relaxing.
-     // The original code had:
-     /*
+    // Note: Original rule was `!motion && sensorData.presence === false`
+    // But previous rules `!motion && isNight` and `!motion && !isNight` (relaxing)
+    // cover ALL !motion cases (Night vs Not Night).
+    // So `away` would never be reached in original logic if `!isNight` covers everything else?
+    // Wait, `!isNight` means day.
+    // If `!motion` and `isNight` -> sleeping.
+    // If `!motion` and `!isNight` -> relaxing.
+    // The original code had:
+    /*
       } else if (!motion && !isNight) {
         state = 'relaxing';
         confidence = 0.6;
@@ -101,23 +105,23 @@ function applyRules(sensorData: SmartHomeSensorData, hour: number): ProjectedSta
       } else if (!motion && sensorData.presence === false) {
         state = 'away';
      */
-     // Yes, strictly speaking `else if (!motion && !isNight)` catches everything else if (!motion).
-     // Unless `isNight` logic allows for a gap?
-     // isNight = hour >= 22 || hour < 6.
-     // !isNight = hour >= 6 && hour < 22.
-     // It covers all hours.
-     // So 'away' was unreachable in the original code for `!motion`.
+    // Yes, strictly speaking `else if (!motion && !isNight)` catches everything else if (!motion).
+    // Unless `isNight` logic allows for a gap?
+    // isNight = hour >= 22 || hour < 6.
+    // !isNight = hour >= 6 && hour < 22.
+    // It covers all hours.
+    // So 'away' was unreachable in the original code for `!motion`.
 
-     // However, I should try to fix this logical bug in the ML training data if I want 'away' to be learnable.
-     // A better rule for 'away' should be prioritized or checked differently.
+    // However, I should try to fix this logical bug in the ML training data if I want 'away' to be learnable.
+    // A better rule for 'away' should be prioritized or checked differently.
 
-     // Corrected Logic for Training Data (to improve on original):
-     state = 'away';
+    // Corrected Logic for Training Data (to improve on original):
+    state = 'away';
   }
 
   // Let's refine the logic to make 'away' reachable and more sensible
   if (!sensorData.presence) {
-      return 'away';
+    return 'away';
   }
 
   if (!motion && isNight) {

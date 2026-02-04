@@ -150,7 +150,9 @@ export async function searchVideos(
   try {
     // Try using Google API key first (doesn't require OAuth)
     const apiKey =
-      process.env.YOUTUBE_DATA_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_CLOUD_TTS_API_KEY;
+      process.env.YOUTUBE_DATA_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_CLOUD_TTS_API_KEY;
 
     if (apiKey) {
       console.log('Using YouTube Data API with API key for search:', query);
@@ -199,7 +201,8 @@ export async function searchVideos(
       console.log('[YouTube] OAuth not available, returning no results');
       return {
         success: false,
-        message: 'YouTube search requires either a YOUTUBE_DATA_API_KEY or Google authentication.',
+        message:
+          'YouTube search requires either a YOUTUBE_DATA_API_KEY or Google authentication.',
         error: 'NO_AUTH',
       };
     }

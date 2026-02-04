@@ -44,6 +44,7 @@ export interface IStorage {
   // User Session methods
   createUserSession(session: any): Promise<any>;
   getUserSessionByToken(token: string): Promise<any | null>;
+  getActiveUserSessions(): Promise<UserSession[]>;
   deleteUserSession(sessionId: string): Promise<void>;
 
   createMessage(message: InsertMessage): Promise<Message>;
@@ -615,6 +616,20 @@ export class SqliteStorage implements IStorage {
     );
     const session = stmt.get(token) as UserSession | undefined;
     return session || null;
+  }
+
+  async getActiveUserSessions(): Promise<UserSession[]> {
+    const stmt = this.db.prepare(
+      'SELECT * FROM user_sessions WHERE expires_at > CURRENT_TIMESTAMP'
+    );
+    const sessions = stmt.all() as any[];
+    return sessions.map((s) => ({
+      id: s.id,
+      userId: s.user_id,
+      sessionToken: s.session_token,
+      expiresAt: new Date(s.expires_at),
+      createdAt: new Date(s.created_at),
+    }));
   }
 
   async deleteUserSession(sessionId: string): Promise<void> {
@@ -1191,6 +1206,8 @@ export class SqliteStorage implements IStorage {
       summaryText: s.summary_text,
       topics: s.topics ? JSON.parse(s.topics) : [],
       emotionalTone: s.emotional_tone,
+      financialSummary: null,
+      medicalNotes: null,
       createdAt: new Date(s.created_at),
       updatedAt: new Date(s.updated_at),
     }));

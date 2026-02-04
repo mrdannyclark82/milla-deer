@@ -48,7 +48,7 @@ describe('SceneDetectionModel', () => {
       motion: { detected: false, level: 0 },
       presence: true,
       lightLevel: 'dark',
-      temperature: 20
+      temperature: 20,
     };
 
     const prediction = model.predict(sleepingData);
@@ -67,7 +67,7 @@ describe('SceneDetectionModel', () => {
       motion: { detected: true, level: 0.5 },
       presence: true,
       lightLevel: 'normal',
-      temperature: 22
+      temperature: 22,
     };
 
     const prediction = model.predict(cookingData);
@@ -83,12 +83,12 @@ describe('SceneDetectionModel', () => {
     expect(loaded).toBe(true);
 
     const data: SmartHomeSensorData = {
-        timestamp: Date.now(),
-        location: 'living_room',
-        motion: { detected: true, level: 0.5 },
-        presence: true,
-        lightLevel: 'normal',
-        temperature: 22
+      timestamp: Date.now(),
+      location: 'living_room',
+      motion: { detected: true, level: 0.5 },
+      presence: true,
+      lightLevel: 'normal',
+      temperature: 22,
     };
     const pred = newModel.predict(data);
     expect(pred.state).toBeDefined();

@@ -35,8 +35,10 @@ describe('FileStorage Performance', () => {
     // Setup mocks
     // Simulate a slow async read
     (fs.promises.readFile as any).mockImplementation(async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return JSON.stringify([{ id: '1', content: 'test', role: 'user', timestamp: new Date() }]);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return JSON.stringify([
+        { id: '1', content: 'test', role: 'user', timestamp: new Date() },
+      ]);
     });
 
     const start = Date.now();
@@ -70,7 +72,7 @@ describe('FileStorage Performance', () => {
     // Mock rename to be slow to simulate time taken to "commit" the save
     // This helps ensure serialization logic is exercised
     (fs.promises.rename as any).mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
     });
     // Mock writeFile
     (fs.promises.writeFile as any).mockResolvedValue(undefined);
@@ -84,9 +86,21 @@ describe('FileStorage Performance', () => {
     // In a race condition without queue, these might try to rename at same time or overlap in weird ways if logic wasn't sequential.
     // The queue ensures they run one after another.
     const start = Date.now();
-    const p1 = storage.createMessage({ content: '1', role: 'user', userId: 'u1' } as any);
-    const p2 = storage.createMessage({ content: '2', role: 'user', userId: 'u1' } as any);
-    const p3 = storage.createMessage({ content: '3', role: 'user', userId: 'u1' } as any);
+    const p1 = storage.createMessage({
+      content: '1',
+      role: 'user',
+      userId: 'u1',
+    } as any);
+    const p2 = storage.createMessage({
+      content: '2',
+      role: 'user',
+      userId: 'u1',
+    } as any);
+    const p3 = storage.createMessage({
+      content: '3',
+      role: 'user',
+      userId: 'u1',
+    } as any);
 
     await Promise.all([p1, p2, p3]);
     const duration = Date.now() - start;

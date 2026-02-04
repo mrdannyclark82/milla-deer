@@ -75,7 +75,9 @@ class VectorDatabaseService {
         console.log(`✅ ChromaDB collection '${this.collectionName}' ready`);
       } catch (error: any) {
         if (error.message?.includes('already exists')) {
-          console.log(`✅ ChromaDB collection '${this.collectionName}' already exists`);
+          console.log(
+            `✅ ChromaDB collection '${this.collectionName}' already exists`
+          );
         } else {
           console.error('❌ ChromaDB initialization error:', error);
         }
@@ -154,7 +156,8 @@ class VectorDatabaseService {
           results.push({
             id: queryResults.ids[0][i],
             score: 1 - (queryResults.distances[0][i] || 0), // Convert distance to similarity
-            metadata: (queryResults.metadatas?.[0]?.[i] as VectorMetadata) || {},
+            metadata:
+              (queryResults.metadatas?.[0]?.[i] as VectorMetadata) || {},
             content: queryResults.documents?.[0]?.[i] || '',
           });
         }

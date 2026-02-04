@@ -15,8 +15,8 @@
           "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
           "files": [],
           "status": "testing",
-          "testsPassed": 3,
-          "testsFailed": 3,
+          "testsPassed": 4,
+          "testsFailed": 4,
           "addedAt": 1769578714591
         },
         {
@@ -42,6 +42,30 @@
           "testsPassed": 0,
           "testsFailed": 0,
           "addedAt": 1770006439823
+        },
+        {
+          "id": "feat_1770137349157_i5t4rfm96",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770137349157
+        },
+        {
+          "id": "feat_1770137475677_fx5itnlth",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770137475677
         }
       ],
       "readyForProduction": false,
@@ -99,6 +123,24 @@
           "passed": false,
           "details": "Some tests failed - review needed",
           "duration": 908.6832047427827
+        },
+        {
+          "id": "test_1770137349158_c0xlxw5ek",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770137349158,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 2480.975710183223
+        },
+        {
+          "id": "test_1770137475678_d5ch87gpr",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770137475678,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1403.6738153965807
         }
       ]
     },
@@ -216,7 +258,29 @@
       "createdBy": "milla",
       "features": [],
       "readyForProduction": false
+    },
+    "sandbox_1770137349154_f8n9ouc4h": {
+      "id": "sandbox_1770137349154_f8n9ouc4h",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770137349154",
+      "status": "active",
+      "createdAt": 1770137349154,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770137475673_u1huz9zcd": {
+      "id": "sandbox_1770137475673_u1huz9zcd",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770137475673",
+      "status": "active",
+      "createdAt": 1770137475673,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
     }
   },
-  "lastUpdated": 1770006439824
+  "lastUpdated": 1770137475678
 }

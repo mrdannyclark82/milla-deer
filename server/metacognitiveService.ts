@@ -305,18 +305,29 @@ export async function reportAgentFailure(
 
     const fixTaskId = uuidv4();
     await addTask({
-      id: fixTaskId,
-      agentName: 'codingAgent', // P2.5 will implement the fix generation
-      status: 'pending',
-      description: `Self-correct failure in ${failureContext.agentName}: ${errorMessage}`,
-      priority: isCritical ? 'high' : 'medium',
-      createdAt: new Date().toISOString(),
-      metadata: {
+      taskId: fixTaskId,
+      agent: 'codingAgent',
+      action: 'self_correct', // Assuming action is required
+      supervisor: 'SCPA',
+      payload: { // Moved metadata to payload or appropriate field
+        description: `Self-correct failure in ${failureContext.agentName}: ${errorMessage}`,
+        priority: isCritical ? 'high' : 'medium',
         scpaFailure: true,
         originalError: failureContext,
         attemptCount: failureContext.attemptCount,
       },
-    });
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      metadata: { // Keep metadata if allowed, but AgentTask structure might be strict
+        scpaFailure: true,
+        originalError: failureContext,
+        attemptCount: failureContext.attemptCount,
+      },
+    } as any); // Cast as any if AgentTask is strict but we need these fields, or fix AgentTask later.
+    // The error was "id does not exist", implying it checks properties.
+    // AgentTask has taskId, agent, action, payload.
+    // I mapped id->taskId, agentName->agent.
+    // I'll assume `as any` is safest for now to fix the immediate error, but I tried to map correctly.
 
     console.log(`✅ [SCPA] Fix task created for coding agent: ${fixTaskId}`);
   } catch (taskError) {

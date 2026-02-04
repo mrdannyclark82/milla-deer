@@ -82,23 +82,27 @@ describe('Merch Routes', () => {
       // So stripe should be initialized.
 
       expect(response.status).toBe(200);
-      expect(response.body.url).toBe('https://checkout.stripe.com/mock-session');
+      expect(response.body.url).toBe(
+        'https://checkout.stripe.com/mock-session'
+      );
 
-      expect(mockStripeSessionsCreate).toHaveBeenCalledWith(expect.objectContaining({
-        mode: 'payment',
-        success_url: expect.stringContaining('/merch/success'),
-        cancel_url: expect.stringContaining('/merch?canceled=true'),
-        line_items: expect.arrayContaining([
-          expect.objectContaining({
-            price_data: expect.objectContaining({
-              unit_amount: 4999, // 49.99 * 100
-              product_data: expect.objectContaining({
-                name: 'Milla-Rayne Empire Hoodie',
+      expect(mockStripeSessionsCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mode: 'payment',
+          success_url: expect.stringContaining('/merch/success'),
+          cancel_url: expect.stringContaining('/merch?canceled=true'),
+          line_items: expect.arrayContaining([
+            expect.objectContaining({
+              price_data: expect.objectContaining({
+                unit_amount: 4999, // 49.99 * 100
+                product_data: expect.objectContaining({
+                  name: 'Milla-Rayne Empire Hoodie',
+                }),
               }),
             }),
-          }),
-        ]),
-      }));
+          ]),
+        })
+      );
     });
 
     it('should handle item not found', async () => {

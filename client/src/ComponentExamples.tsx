@@ -1,6 +1,6 @@
 /**
  * Example: Using the New Cyber-Romantic UI Components
- * 
+ *
  * This file demonstrates how to use the newly added components
  * in the Milla-Rayne application.
  */
@@ -10,8 +10,20 @@ import AppShell from './AppShell';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import GlowButton from './components/GlowButton';
-import Card, { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './components/Card';
-import { Input, Textarea, Label, Checkbox, Select } from './components/FormControls';
+import Card, {
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from './components/Card';
+import {
+  Input,
+  Textarea,
+  Label,
+  Checkbox,
+  Select,
+} from './components/FormControls';
 import Landing from './pages/Landing';
 
 /**
@@ -80,7 +92,8 @@ export function CardExample() {
         </CardHeader>
         <CardContent>
           <p className="text-slate-300">
-            This is the main content of the card. It can contain any React elements.
+            This is the main content of the card. It can contain any React
+            elements.
           </p>
         </CardContent>
         <CardFooter>
@@ -211,9 +224,7 @@ export function GlowCSSExample() {
   return (
     <div className="p-8 bg-cyber-darker space-y-6">
       {/* Text glow */}
-      <h1 className="glow-text text-cyber-pink text-4xl">
-        Glowing Text
-      </h1>
+      <h1 className="glow-text text-cyber-pink text-4xl">Glowing Text</h1>
 
       {/* Button with custom glow */}
       <button className="btn-glow-pink px-6 py-3 rounded-lg text-white font-medium">
@@ -249,7 +260,7 @@ export function ResponsiveExample() {
   return (
     <div className="min-h-screen bg-cyber-darker">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Grid that collapses on mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -269,9 +280,7 @@ export function ResponsiveExample() {
               <CardTitle>Responsive Card 2</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-300">
-                Two columns on tablet
-              </p>
+              <p className="text-slate-300">Two columns on tablet</p>
             </CardContent>
           </Card>
 
@@ -280,9 +289,7 @@ export function ResponsiveExample() {
               <CardTitle>Responsive Card 3</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-300">
-                Three columns on desktop
-              </p>
+              <p className="text-slate-300">Three columns on desktop</p>
             </CardContent>
           </Card>
         </div>

@@ -26,10 +26,16 @@ export function BackgroundLayer() {
       }
     };
 
-    window.addEventListener('moodBackgroundUpdated', handleMoodBackgroundUpdate as EventListener);
-    
+    window.addEventListener(
+      'moodBackgroundUpdated',
+      handleMoodBackgroundUpdate as EventListener
+    );
+
     return () => {
-      window.removeEventListener('moodBackgroundUpdated', handleMoodBackgroundUpdate as EventListener);
+      window.removeEventListener(
+        'moodBackgroundUpdated',
+        handleMoodBackgroundUpdate as EventListener
+      );
     };
   }, []);
 
