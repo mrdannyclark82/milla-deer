@@ -5,7 +5,7 @@ import { analyzeTopNews, DailyNewsDigest } from '../youtubeNewsMonitor';
 vi.mock('../youtubeMillAlyzer', () => ({
   analyzeVideoWithMillAlyzer: vi.fn(async (videoId: string) => {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     return {
       videoId,
       title: 'Mock Title',
@@ -37,14 +37,16 @@ describe('Performance Benchmark: youtubeNewsMonitor', () => {
     const digest: DailyNewsDigest = {
       date: '2023-01-01',
       categories: {},
-      topStories: Array(5).fill(null).map((_, i) => ({
-        videoId: `vid-${i}`,
-        title: `Video ${i}`,
-        channel: 'Channel',
-        publishedAt: '2023-01-01',
-        category: 'Tech',
-        relevanceScore: 100,
-      })),
+      topStories: Array(5)
+        .fill(null)
+        .map((_, i) => ({
+          videoId: `vid-${i}`,
+          title: `Video ${i}`,
+          channel: 'Channel',
+          publishedAt: '2023-01-01',
+          category: 'Tech',
+          relevanceScore: 100,
+        })),
       totalVideos: 5,
       analysisCount: 0,
     };

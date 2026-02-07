@@ -1,5 +1,7 @@
-
-import { storeSensitiveMemory, retrieveSensitiveMemory } from '../server/memoryService';
+import {
+  storeSensitiveMemory,
+  retrieveSensitiveMemory,
+} from '../server/memoryService';
 import { storage } from '../server/storage';
 import Database from 'better-sqlite3';
 import path from 'path';
@@ -23,7 +25,7 @@ async function main() {
       username: `testuser_${Date.now()}`,
       email: `test_${Date.now()}@example.com`,
       password: 'password123',
-      preferredAiModel: 'minimax'
+      preferredAiModel: 'minimax',
     });
 
     // Override the generated ID with what we got (or just use the returned user.id)
@@ -35,7 +37,9 @@ async function main() {
       medicalNotes: 'Allergic to kryptonite',
     };
 
-    console.log(`\n--- Starting Sensitive Memory Verification for User: ${validUserId} ---`);
+    console.log(
+      `\n--- Starting Sensitive Memory Verification for User: ${validUserId} ---`
+    );
 
     // 1. Store Data
     console.log('\n1. Storing sensitive memory...');
@@ -50,14 +54,19 @@ async function main() {
     console.log('\n2. Retrieving sensitive memory...');
     const retrieveResult = await retrieveSensitiveMemory(validUserId);
     if (!retrieveResult.success) {
-      console.error('Failed to retrieve sensitive memory:', retrieveResult.error);
+      console.error(
+        'Failed to retrieve sensitive memory:',
+        retrieveResult.error
+      );
       process.exit(1);
     }
 
     // Verify content
     console.log('Retrieved Data:', retrieveResult);
-    if (retrieveResult.financialSummary === testData.financialSummary &&
-        retrieveResult.medicalNotes === testData.medicalNotes) {
+    if (
+      retrieveResult.financialSummary === testData.financialSummary &&
+      retrieveResult.medicalNotes === testData.medicalNotes
+    ) {
       console.log('✅ Retrieved data matches original data');
     } else {
       console.error('❌ Mismatch in retrieved data!');
@@ -71,7 +80,9 @@ async function main() {
     const db = new Database(DB_PATH);
 
     try {
-      const row = db.prepare('SELECT * FROM sensitive_memories WHERE user_id = ?').get(validUserId) as any;
+      const row = db
+        .prepare('SELECT * FROM sensitive_memories WHERE user_id = ?')
+        .get(validUserId) as any;
 
       if (!row) {
         console.error('❌ No record found in DB for user!');
@@ -83,23 +94,30 @@ async function main() {
       const financialEncrypted = row.financial_summary;
       const medicalEncrypted = row.medical_notes;
 
-      if (financialEncrypted === testData.financialSummary || medicalEncrypted === testData.medicalNotes) {
+      if (
+        financialEncrypted === testData.financialSummary ||
+        medicalEncrypted === testData.medicalNotes
+      ) {
         console.error('❌ Data is NOT encrypted in database!');
         process.exit(1);
-      } else if (financialEncrypted && medicalEncrypted &&
-                 financialEncrypted.includes('HE_v2:') && medicalEncrypted.includes('HE_v2:')) {
+      } else if (
+        financialEncrypted &&
+        medicalEncrypted &&
+        financialEncrypted.includes('HE_v2:') &&
+        medicalEncrypted.includes('HE_v2:')
+      ) {
         console.log('✅ Data appears to be encrypted (contains HE_v2 marker)');
       } else {
-        console.warn('⚠️ Data is different but does not have expected HE marker. Check encryption implementation.');
+        console.warn(
+          '⚠️ Data is different but does not have expected HE marker. Check encryption implementation.'
+        );
         console.log('Stored financial:', financialEncrypted);
       }
-
     } catch (error) {
       console.error('Error inspecting DB:', error);
     } finally {
       db.close();
     }
-
   } catch (error) {
     console.error('Error in test setup:', error);
     process.exit(1);

@@ -5,10 +5,13 @@ import './index.css';
 
 // Environment guard - ensure critical environment is loaded before rendering
 // In Vite, import.meta.env is always defined, but we check for proper initialization
-const envLoaded = typeof import.meta.env !== 'undefined' && import.meta.env.MODE !== undefined;
+const envLoaded =
+  typeof import.meta.env !== 'undefined' && import.meta.env.MODE !== undefined;
 if (!envLoaded) {
   const FallbackUI = () => (
-    <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'system-ui' }}>
+    <div
+      style={{ padding: '20px', textAlign: 'center', fontFamily: 'system-ui' }}
+    >
       <h1>Environment Configuration Error</h1>
       <p>The application environment is not properly configured.</p>
       <p>Please refresh the page or contact support if the issue persists.</p>

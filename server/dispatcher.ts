@@ -29,10 +29,10 @@ class Dispatcher {
   constructor(config?: Partial<DispatcherConfig>) {
     this.models = [
       'gemini-flash',
-      'gemini-pro', 
+      'gemini-pro',
       'grok-4',
       'mistral',
-      'gemma-local'
+      'gemma-local',
     ];
 
     this.config = {
@@ -43,7 +43,7 @@ class Dispatcher {
     };
 
     // Initialize health tracking
-    this.models.forEach(model => {
+    this.models.forEach((model) => {
       this.modelHealth.set(model, {
         available: true,
         lastCheck: Date.now(),
@@ -58,7 +58,10 @@ class Dispatcher {
   /**
    * Dispatch query to available models with intelligent fallback
    */
-  async dispatch(query: string, useAgenticMode: boolean = false): Promise<string> {
+  async dispatch(
+    query: string,
+    useAgenticMode: boolean = false
+  ): Promise<string> {
     // Use agentic dispatch for complex multi-step queries
     if (useAgenticMode) {
       try {
@@ -87,7 +90,7 @@ class Dispatcher {
 
     for (const model of sortedModels) {
       const health = this.modelHealth.get(model);
-      
+
       // Skip unhealthy models
       if (health && !health.available && health.failureCount > 3) {
         // Special case: if it's the only model left, or strict fallback chain logic is needed, we might want to try anyway.
@@ -99,14 +102,14 @@ class Dispatcher {
       try {
         console.log(`[Dispatcher] Attempting ${model}...`);
         const result = await this.invokeModel(model, query);
-        
+
         // Update health on success
         this.updateHealth(model, true);
-        
+
         // Cache the result
         if (this.config.enableCache) {
           this.cache.set(query, result);
-          
+
           // Limit cache size
           if (this.cache.size > 500) {
             const firstKey = this.cache.keys().next().value;
@@ -117,7 +120,6 @@ class Dispatcher {
         }
 
         return result;
-
       } catch (e: any) {
         console.error(`[Dispatcher] Fallback from ${model}: ${e.message}`);
         this.updateHealth(model, false);
@@ -140,10 +142,10 @@ class Dispatcher {
     // Mock API call - replace with actual OpenRouter/API calls
     // For example:
     // return await OpenRouter.invoke(model, query);
-    
+
     // Simulate network delay and potential failure
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Simulate random failure for other models
     if (Math.random() > 0.85) {
       throw new Error(`${model} temporarily unavailable`);
@@ -160,9 +162,11 @@ class Dispatcher {
 
     // Check if offline service is available
     if (!offlineService.isAvailable()) {
-       // If the service isn't initialized/available, we can't use it.
-       // The service itself handles checking for Ollama.
-       throw new Error('Local Gemma service is not available (Ollama not running or no model found)');
+      // If the service isn't initialized/available, we can't use it.
+      // The service itself handles checking for Ollama.
+      throw new Error(
+        'Local Gemma service is not available (Ollama not running or no model found)'
+      );
     }
 
     const result = await offlineService.generateResponse(query);
@@ -181,11 +185,11 @@ class Dispatcher {
     return [...this.models].sort((a, b) => {
       const healthA = this.modelHealth.get(a)!;
       const healthB = this.modelHealth.get(b)!;
-      
+
       // Prioritize available models
       if (healthA.available && !healthB.available) return -1;
       if (!healthA.available && healthB.available) return 1;
-      
+
       // Then by failure count (lower is better)
       return healthA.failureCount - healthB.failureCount;
     });
@@ -216,11 +220,12 @@ class Dispatcher {
    */
   private startHealthMonitoring(): void {
     setInterval(() => {
-      this.models.forEach(model => {
+      this.models.forEach((model) => {
         const health = this.modelHealth.get(model);
         if (health && !health.available) {
           // Gradually recover failed models
-          if (Date.now() - health.lastCheck > 300000) { // 5 minutes
+          if (Date.now() - health.lastCheck > 300000) {
+            // 5 minutes
             console.log(`[Dispatcher] Attempting to recover ${model}`);
             health.failureCount = Math.max(0, health.failureCount - 1);
             if (health.failureCount === 0) {

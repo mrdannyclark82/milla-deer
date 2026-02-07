@@ -20,7 +20,13 @@ interface SettingSliderProps {
   color: string;
 }
 
-function SettingSlider({ label, value, onChange, icon, color }: SettingSliderProps) {
+function SettingSlider({
+  label,
+  value,
+  onChange,
+  icon,
+  color,
+}: SettingSliderProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -45,8 +51,15 @@ function SettingSlider({ label, value, onChange, icon, color }: SettingSliderPro
   );
 }
 
-export function ScoreSettings({ values, onChange, onClose }: ScoreSettingsProps) {
-  const updateValue = (key: keyof ScoreSettingsProps['values'], value: number) => {
+export function ScoreSettings({
+  values,
+  onChange,
+  onClose,
+}: ScoreSettingsProps) {
+  const updateValue = (
+    key: keyof ScoreSettingsProps['values'],
+    value: number
+  ) => {
     onChange({
       ...values,
       [key]: value,
@@ -75,7 +88,7 @@ export function ScoreSettings({ values, onChange, onClose }: ScoreSettingsProps)
           icon={<Sun className="w-4 h-4" />}
           color="text-[#00f2ff]"
         />
-        
+
         <SettingSlider
           label="Amplitude"
           value={values.amplitude}
@@ -83,7 +96,7 @@ export function ScoreSettings({ values, onChange, onClose }: ScoreSettingsProps)
           icon={<Waves className="w-4 h-4" />}
           color="text-[#ff00aa]"
         />
-        
+
         <SettingSlider
           label="Status"
           value={values.status}
@@ -91,7 +104,7 @@ export function ScoreSettings({ values, onChange, onClose }: ScoreSettingsProps)
           icon={<Activity className="w-4 h-4" />}
           color="text-[#7c3aed]"
         />
-        
+
         <SettingSlider
           label="Volume"
           value={values.volume}

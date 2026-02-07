@@ -7,7 +7,7 @@ import {
   clearSCPAQueue,
   reportAgentFailure,
   AgentFailureContext,
-  getSCPAQueueStatus
+  getSCPAQueueStatus,
 } from '../metacognitiveService';
 
 // Mock dependencies
@@ -69,16 +69,16 @@ describe('SCPA Priority Queue', () => {
     });
 
     it('should handle defaults', () => {
-        const context: AgentFailureContext = {
-            agentName: 'test',
-            taskId: '1',
-            error: 'error',
-            timestamp: Date.now(),
-            attemptCount: 1,
-            // Missing severity/impact
-        };
-        // Default severity Medium(20) + Default impact Medium(20) + 1 attempt(10) = 50
-        expect(calculatePriorityScore(context)).toBe(50);
+      const context: AgentFailureContext = {
+        agentName: 'test',
+        taskId: '1',
+        error: 'error',
+        timestamp: Date.now(),
+        attemptCount: 1,
+        // Missing severity/impact
+      };
+      // Default severity Medium(20) + Default impact Medium(20) + 1 attempt(10) = 50
+      expect(calculatePriorityScore(context)).toBe(50);
     });
   });
 

@@ -232,9 +232,7 @@ Format your response as JSON with keys: description, changes, reasoning.
 IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
 
       // Use Minimax service for coding tasks
-      const { generateMinimaxResponse } = await import(
-        '../minimaxService'
-      );
+      const { generateMinimaxResponse } = await import('../minimaxService');
 
       const result = await generateMinimaxResponse(
         prompt,

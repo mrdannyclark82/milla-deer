@@ -454,9 +454,8 @@ export async function applyRepositoryImprovements(
   githubToken?: string
 ): Promise<ModificationResult> {
   // Import GitHub API service dynamically to avoid circular dependencies
-  const { applyImprovementsViaPullRequest, validateGitHubToken } = await import(
-    './githubApiService'
-  );
+  const { applyImprovementsViaPullRequest, validateGitHubToken } =
+    await import('./githubApiService');
 
   // If GitHub token is provided, attempt to create a PR automatically
   if (githubToken) {

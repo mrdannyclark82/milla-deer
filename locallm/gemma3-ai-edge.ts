@@ -51,7 +51,7 @@ export class Gemma3AIEdge {
       // Note: @google/ai-edge is a placeholder - actual implementation would use TFLite or ONNX
       // For now, we'll create a mock implementation that can be replaced with actual AI Edge SDK
       this.model = await this.loadModel();
-      
+
       this.modelLoaded = true;
       const loadTime = Date.now() - startTime;
       console.log(`[Gemma3] Model loaded successfully in ${loadTime}ms`);
@@ -68,7 +68,7 @@ export class Gemma3AIEdge {
     // This would be replaced with actual AI Edge SDK calls
     // For example: import { GemmaModel } from '@google/ai-edge';
     // return await GemmaModel.load(this.config.modelPath);
-    
+
     return {
       loaded: true,
       path: this.config.modelPath,
@@ -96,7 +96,7 @@ export class Gemma3AIEdge {
     try {
       // Mock inference - replace with actual AI Edge inference
       const result = await this.runInference(prompt);
-      
+
       const latencyMs = Date.now() - startTime;
       const inferenceResult: InferenceResult = {
         text: result,
@@ -106,7 +106,7 @@ export class Gemma3AIEdge {
 
       // Cache the result
       this.cache.set(cacheKey, inferenceResult);
-      
+
       // Limit cache size
       if (this.cache.size > 100) {
         const firstKey = this.cache.keys().next().value;
@@ -127,12 +127,14 @@ export class Gemma3AIEdge {
   private async runInference(prompt: string): Promise<string> {
     // This would be replaced with actual inference call
     // For example: return await this.model.generate(prompt, this.config);
-    
+
     // Mock implementation
     const MAX_PROMPT_PREVIEW_LENGTH = 50;
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(`Gemma3 response to: ${prompt.substring(0, MAX_PROMPT_PREVIEW_LENGTH)}...`);
+        resolve(
+          `Gemma3 response to: ${prompt.substring(0, MAX_PROMPT_PREVIEW_LENGTH)}...`
+        );
       }, 100);
     });
   }

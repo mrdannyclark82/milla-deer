@@ -1,9 +1,9 @@
 /**
  * MediaPipe GenAI Integration
- * 
+ *
  * This module provides multimodal AI capabilities using Google's MediaPipe GenAI.
  * It enables vision, audio, and cross-modal understanding for rich user interactions.
- * 
+ *
  * Features:
  * - Vision understanding (object detection, scene analysis)
  * - Audio processing (speech-to-text, audio classification)
@@ -86,10 +86,10 @@ class MediaPipeGenAI {
    */
   private async initVisionModel(): Promise<void> {
     console.log('Loading MediaPipe Vision model...');
-    
+
     // Placeholder - actual implementation would load the vision model
     // Example: const vision = await FilesetResolver.forVisionTasks(wasmPath);
-    
+
     this.visionModel = {
       ready: true,
       type: 'vision',
@@ -101,9 +101,9 @@ class MediaPipeGenAI {
    */
   private async initAudioModel(): Promise<void> {
     console.log('Loading MediaPipe Audio model...');
-    
+
     // Placeholder - actual implementation would load the audio model
-    
+
     this.audioModel = {
       ready: true,
       type: 'audio',
@@ -113,7 +113,10 @@ class MediaPipeGenAI {
   /**
    * Apply GenAI to various modalities
    */
-  async apply(modality: string, input: VisionInput | AudioInput): Promise<MediaPipeResult> {
+  async apply(
+    modality: string,
+    input: VisionInput | AudioInput
+  ): Promise<MediaPipeResult> {
     if (!this.initialized) {
       await this.init();
     }
@@ -144,7 +147,9 @@ class MediaPipeGenAI {
       console.error(`MediaPipe ${modality} processing failed:`, error);
       return {
         success: false,
-        data: { error: error instanceof Error ? error.message : 'Unknown error' },
+        data: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
         processingTimeMs: Date.now() - startTime,
         modality: modality as any,
       };
@@ -167,14 +172,16 @@ class MediaPipeGenAI {
     // - Scene understanding
     // - OCR
     // - Face detection
-    
+
     return {
       type: input.type,
       detections: [
         { label: 'person', confidence: 0.95, bbox: [0, 0, 100, 100] },
         { label: 'laptop', confidence: 0.87, bbox: [50, 50, 150, 150] },
       ],
-      sceneDescription: input.prompt ? `Response to: ${input.prompt}` : 'Indoor office setting',
+      sceneDescription: input.prompt
+        ? `Response to: ${input.prompt}`
+        : 'Indoor office setting',
       timestamp: Date.now(),
     };
   }
@@ -190,7 +197,7 @@ class MediaPipeGenAI {
     console.log(`Processing audio: ${input.operation}`);
 
     // Placeholder - actual implementation would process the audio
-    
+
     switch (input.operation) {
       case 'transcribe':
         return {
@@ -198,21 +205,21 @@ class MediaPipeGenAI {
           confidence: 0.92,
           language: 'en',
         };
-      
+
       case 'classify':
         return {
           classification: 'speech',
           confidence: 0.88,
           categories: ['human_voice', 'male', 'conversational'],
         };
-      
+
       case 'analyze':
         return {
           duration: 5.2,
           sentiment: 'positive',
           keywords: ['meeting', 'project', 'deadline'],
         };
-      
+
       default:
         throw new Error(`Unsupported audio operation: ${input.operation}`);
     }
@@ -270,16 +277,16 @@ class MediaPipeGenAI {
 
     // Placeholder - actual implementation would process video frames
     const results: any[] = [];
-    
+
     // Simulate processing
     for (let i = 0; i < 5; i++) {
       const frameResult = await this.processVision({
         type: 'image',
         data: videoElement,
       });
-      
+
       results.push(frameResult);
-      
+
       if (onFrame) {
         onFrame(frameResult);
       }
@@ -304,9 +311,4 @@ export const genai = new MediaPipeGenAI();
 
 // Export class for custom instances
 export { MediaPipeGenAI };
-export type {
-  MediaPipeConfig,
-  VisionInput,
-  AudioInput,
-  MediaPipeResult,
-};
+export type { MediaPipeConfig, VisionInput, AudioInput, MediaPipeResult };

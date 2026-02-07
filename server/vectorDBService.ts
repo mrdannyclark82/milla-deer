@@ -194,9 +194,8 @@ class VectorStore {
     // P2.2: If encrypted search requested, use HCF operations
     if (useEncrypted) {
       console.log('🔐 [HCF] Performing encrypted similarity search');
-      const { encryptVector, encryptedDistance } = await import(
-        './crypto/homomorphicProduction'
-      );
+      const { encryptVector, encryptedDistance } =
+        await import('./crypto/homomorphicProduction');
 
       // Encrypt query vector
       const encryptedQuery = encryptVector(queryEmbedding);
@@ -444,6 +443,20 @@ class VectorDBService {
   }
 
   /**
+   * Generate embedding (wrapper for testability)
+   */
+  async generateEmbedding(text: string): Promise<number[] | null> {
+    return generateEmbedding(text);
+  }
+
+  /**
+   * Generate embeddings batch (wrapper for testability)
+   */
+  async generateEmbeddings(texts: string[]): Promise<(number[] | null)[]> {
+    return generateEmbeddings(texts);
+  }
+
+  /**
    * Add content to vector database with automatic embedding generation
    */
   async addContent(
@@ -451,7 +464,7 @@ class VectorDBService {
     content: string,
     metadata: VectorEntry['metadata']
   ): Promise<boolean> {
-    const embedding = await generateEmbedding(content);
+    const embedding = await this.generateEmbedding(content);
 
     if (!embedding) {
       console.warn(`Failed to generate embedding for content: ${id}`);
@@ -480,7 +493,7 @@ class VectorDBService {
     }>
   ): Promise<number> {
     const texts = items.map((item) => item.content);
-    const embeddings = await generateEmbeddings(texts);
+    const embeddings = await this.generateEmbeddings(texts);
 
     const entries: VectorEntry[] = [];
     let successCount = 0;
@@ -516,7 +529,7 @@ class VectorDBService {
       userId?: string;
     } = {}
   ): Promise<SearchResult[]> {
-    const embedding = await generateEmbedding(query);
+    const embedding = await this.generateEmbedding(query);
 
     if (!embedding) {
       console.warn('Failed to generate embedding for query');

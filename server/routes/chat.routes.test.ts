@@ -62,7 +62,10 @@ describe('Chat Routes', () => {
 
   describe('POST /api/chat', () => {
     it('should return AI response for a message', async () => {
-      vi.spyOn(chatOrchestrator, 'validateAndSanitizePrompt').mockImplementation(p => p);
+      vi.spyOn(
+        chatOrchestrator,
+        'validateAndSanitizePrompt'
+      ).mockImplementation((p) => p);
       vi.spyOn(chatOrchestrator, 'generateAIResponse').mockResolvedValue({
         content: 'Hello Danny!',
       });

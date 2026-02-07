@@ -152,9 +152,8 @@ export async function getEmailContent(
       `[Browser Integration] Getting email content for message ID: ${messageId}`
     );
 
-    const { getEmailContent: getContent } = await import(
-      './googleGmailService'
-    );
+    const { getEmailContent: getContent } =
+      await import('./googleGmailService');
     const result = await getContent('default-user', messageId);
 
     return {
@@ -281,9 +280,8 @@ export async function addCalendarEvent(
     );
 
     // Use actual Google Calendar API
-    const { addEventToGoogleCalendar } = await import(
-      './googleCalendarService'
-    );
+    const { addEventToGoogleCalendar } =
+      await import('./googleCalendarService');
     const result = await addEventToGoogleCalendar(
       title,
       date,

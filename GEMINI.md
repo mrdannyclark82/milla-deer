@@ -70,6 +70,7 @@ npm run cli
 
 1.  **Build the application:**
     This command bundles the client and server for production.
+
     ```bash
     npm run build
     ```
@@ -84,6 +85,7 @@ npm run cli
 The project can be easily deployed using Docker.
 
 1.  **Build and run with Docker Compose:**
+
     ```bash
     # Ensure your .env file is configured
     docker-compose up

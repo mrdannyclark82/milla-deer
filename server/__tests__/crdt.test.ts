@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { VectorClock, LWWRegister, ORSet, PNCounter, RGA } from '../lib/crdt';
 
@@ -110,78 +109,88 @@ describe('CRDT Library', () => {
   });
 
   describe('Merge Logic (Integration Mock)', () => {
-      // Replicating the logic in SqliteStorage.mergeCRDT/shouldKeepRemoteValue
-      function shouldKeepRemoteValue(localValue: any, remoteValue: any): boolean {
-          if (localValue.vector_clock && remoteValue.vector_clock) {
-            try {
-                const localVC = VectorClock.fromJSON(JSON.parse(localValue.vector_clock));
-                const remoteVC = VectorClock.fromJSON(JSON.parse(remoteValue.vector_clock));
-                const comparison = localVC.compare(remoteVC);
-                if (comparison === 'less') return true;
-                if (comparison === 'greater') return false;
-                if (comparison === 'equal') return false;
-            } catch (e) { }
-        }
-
-        const localTimestamp = new Date(localValue.timestamp || 0).getTime();
-        const remoteTimestamp = new Date(remoteValue.timestamp || 0).getTime();
-
-        if (remoteTimestamp > localTimestamp) return true;
-        if (remoteTimestamp < localTimestamp) return false;
-
-        const localSiteId = localValue.site_id || '';
-        const remoteSiteId = remoteValue.site_id || '';
-        return remoteSiteId > localSiteId;
+    // Replicating the logic in SqliteStorage.mergeCRDT/shouldKeepRemoteValue
+    function shouldKeepRemoteValue(localValue: any, remoteValue: any): boolean {
+      if (localValue.vector_clock && remoteValue.vector_clock) {
+        try {
+          const localVC = VectorClock.fromJSON(
+            JSON.parse(localValue.vector_clock)
+          );
+          const remoteVC = VectorClock.fromJSON(
+            JSON.parse(remoteValue.vector_clock)
+          );
+          const comparison = localVC.compare(remoteVC);
+          if (comparison === 'less') return true;
+          if (comparison === 'greater') return false;
+          if (comparison === 'equal') return false;
+        } catch (e) {}
       }
 
-      it('should prefer vector clock causality', () => {
-          const vc1 = new VectorClock({A: 1});
-          const vc2 = new VectorClock({A: 2}); // Newer
+      const localTimestamp = new Date(localValue.timestamp || 0).getTime();
+      const remoteTimestamp = new Date(remoteValue.timestamp || 0).getTime();
 
-          const local = { vector_clock: JSON.stringify(vc1.toJSON()), content: 'old' };
-          const remote = { vector_clock: JSON.stringify(vc2.toJSON()), content: 'new' };
+      if (remoteTimestamp > localTimestamp) return true;
+      if (remoteTimestamp < localTimestamp) return false;
 
-          expect(shouldKeepRemoteValue(local, remote)).toBe(true);
-          expect(shouldKeepRemoteValue(remote, local)).toBe(false);
-      });
+      const localSiteId = localValue.site_id || '';
+      const remoteSiteId = remoteValue.site_id || '';
+      return remoteSiteId > localSiteId;
+    }
 
-      it('should fall back to LWW if vector clocks missing', () => {
-          const local = { timestamp: '2023-01-01T12:00:00Z', content: 'old' };
-          const remote = { timestamp: '2023-01-02T12:00:00Z', content: 'new' };
+    it('should prefer vector clock causality', () => {
+      const vc1 = new VectorClock({ A: 1 });
+      const vc2 = new VectorClock({ A: 2 }); // Newer
 
-          expect(shouldKeepRemoteValue(local, remote)).toBe(true);
-      });
+      const local = {
+        vector_clock: JSON.stringify(vc1.toJSON()),
+        content: 'old',
+      };
+      const remote = {
+        vector_clock: JSON.stringify(vc2.toJSON()),
+        content: 'new',
+      };
 
-      it('should use siteId tie-breaker', () => {
-          const time = '2023-01-01T12:00:00Z';
-          const local = { timestamp: time, site_id: 'A', content: 'valA' };
-          const remote = { timestamp: time, site_id: 'B', content: 'valB' };
+      expect(shouldKeepRemoteValue(local, remote)).toBe(true);
+      expect(shouldKeepRemoteValue(remote, local)).toBe(false);
+    });
 
-          // B > A, so remote wins
-          expect(shouldKeepRemoteValue(local, remote)).toBe(true);
+    it('should fall back to LWW if vector clocks missing', () => {
+      const local = { timestamp: '2023-01-01T12:00:00Z', content: 'old' };
+      const remote = { timestamp: '2023-01-02T12:00:00Z', content: 'new' };
 
-          // Reverse: A < B, local (B) wins against remote (A) -> shouldKeepRemote = false
-          expect(shouldKeepRemoteValue(remote, local)).toBe(false);
-      });
+      expect(shouldKeepRemoteValue(local, remote)).toBe(true);
+    });
 
-      it('should handle concurrent vector clocks via LWW', () => {
-          const vcA = new VectorClock({A: 1, B: 0});
-          const vcB = new VectorClock({A: 0, B: 1}); // Concurrent
+    it('should use siteId tie-breaker', () => {
+      const time = '2023-01-01T12:00:00Z';
+      const local = { timestamp: time, site_id: 'A', content: 'valA' };
+      const remote = { timestamp: time, site_id: 'B', content: 'valB' };
 
-          const local = {
-              vector_clock: JSON.stringify(vcA.toJSON()),
-              timestamp: '2023-01-01T10:00:00Z',
-              site_id: 'A'
-          };
-          const remote = {
-              vector_clock: JSON.stringify(vcB.toJSON()),
-              timestamp: '2023-01-01T11:00:00Z', // Newer physical time
-              site_id: 'B'
-          };
+      // B > A, so remote wins
+      expect(shouldKeepRemoteValue(local, remote)).toBe(true);
 
-          // Comparison is 'concurrent', so it falls through to LWW
-          // Remote is newer, so it should be kept
-          expect(shouldKeepRemoteValue(local, remote)).toBe(true);
-      });
+      // Reverse: A < B, local (B) wins against remote (A) -> shouldKeepRemote = false
+      expect(shouldKeepRemoteValue(remote, local)).toBe(false);
+    });
+
+    it('should handle concurrent vector clocks via LWW', () => {
+      const vcA = new VectorClock({ A: 1, B: 0 });
+      const vcB = new VectorClock({ A: 0, B: 1 }); // Concurrent
+
+      const local = {
+        vector_clock: JSON.stringify(vcA.toJSON()),
+        timestamp: '2023-01-01T10:00:00Z',
+        site_id: 'A',
+      };
+      const remote = {
+        vector_clock: JSON.stringify(vcB.toJSON()),
+        timestamp: '2023-01-01T11:00:00Z', // Newer physical time
+        site_id: 'B',
+      };
+
+      // Comparison is 'concurrent', so it falls through to LWW
+      // Remote is newer, so it should be kept
+      expect(shouldKeepRemoteValue(local, remote)).toBe(true);
+    });
   });
 });

@@ -25,28 +25,22 @@ export function AssistantUI({
   welcomeMessage = "Hi! I'm Milla, your AI companion. How can I help you today?",
   className = '',
 }: AssistantUIProps) {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-  } = useChat({
-    api: apiEndpoint,
-    initialMessages: welcomeMessage
-      ? [
-          {
-            id: 'welcome',
-            role: 'assistant',
-            content: welcomeMessage,
-          },
-        ]
-      : [],
-    body: {
-      systemPrompt,
-    },
-  });
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } =
+    useChat({
+      api: apiEndpoint,
+      initialMessages: welcomeMessage
+        ? [
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: welcomeMessage,
+            },
+          ]
+        : [],
+      body: {
+        systemPrompt,
+      },
+    });
 
   return (
     <Card className={`flex flex-col h-full ${className}`}>

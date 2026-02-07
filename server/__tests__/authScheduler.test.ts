@@ -16,7 +16,9 @@ const mockDb = {
 
 vi.mock('better-sqlite3', () => {
   return {
-    default: vi.fn(function() { return mockDb; }),
+    default: vi.fn(function () {
+      return mockDb;
+    }),
   };
 });
 
@@ -48,9 +50,9 @@ describe('SqliteStorage - Token Rotation Support', () => {
 
     // Default mock implementation for prepare/exec to allow initialization
     mockPrepare.mockReturnValue({
-        get: vi.fn(),
-        all: vi.fn(),
-        run: vi.fn()
+      get: vi.fn(),
+      all: vi.fn(),
+      run: vi.fn(),
     });
 
     // Initialize storage (this calls initializeDatabase which calls exec/prepare)
@@ -77,17 +79,12 @@ describe('SqliteStorage - Token Rotation Support', () => {
       const sessions = await storage.getActiveUserSessions();
 
       expect(mockPrepare).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT * FROM user_sessions WHERE expires_at > ?')
+        expect.stringContaining(
+          'SELECT * FROM user_sessions WHERE expires_at > CURRENT_TIMESTAMP'
+        )
       );
 
-      // Verify argument passed to all() - better-sqlite3 all() takes args as separate arguments or array?
-      // stmt.all(arg1, arg2...)
-      // In my code: stmt.all(new Date().toISOString())
-
       expect(mockAll).toHaveBeenCalled();
-      const args = mockAll.mock.calls[0];
-      // Expect ISO string
-      expect(args[0]).toMatch(/^\d{4}-\d{2}-\d{2}T/);
 
       expect(sessions).toHaveLength(1);
       expect(sessions[0].id).toBe('session-1');

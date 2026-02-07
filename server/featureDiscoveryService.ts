@@ -400,37 +400,39 @@ class FeatureDiscoveryService {
       const { performWebSearch } = await import('./searchService');
 
       for (const term of searchTerms) {
-        const results = await performWebSearch(term);
+        const searchResponse = await performWebSearch(term);
 
-        for (const result of results.slice(0, 5)) {
-          // Extract features from web search results
-          const feature: DiscoveredFeature = {
-            id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: this.extractFeatureNameFromText(result.title),
-            description: result.snippet || result.title,
-            source: 'web',
-            sourceUrl: result.url,
-            popularity: 5, // Base popularity for web sources
-            relevance: this.calculateWebResultRelevance(
-              result.title,
-              result.snippet
-            ),
-            implementationComplexity: 'medium',
-            estimatedValue: 6,
-            discoveredAt: Date.now(),
-            status: 'discovered',
-            tags: this.extractTagsFromText(result.title + ' ' + result.snippet),
-          };
+        if (searchResponse && searchResponse.results) {
+          for (const result of searchResponse.results.slice(0, 5)) {
+            // Extract features from web search results
+            const feature: DiscoveredFeature = {
+              id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              name: this.extractFeatureNameFromText(result.title),
+              description: result.description || result.title,
+              source: 'web',
+              sourceUrl: result.url,
+              popularity: 5, // Base popularity for web sources
+              relevance: this.calculateWebResultRelevance(
+                result.title,
+                result.description || ''
+              ),
+              implementationComplexity: 'medium',
+              estimatedValue: 6,
+              discoveredAt: Date.now(),
+              status: 'discovered',
+              tags: this.extractTagsFromText(result.title + ' ' + (result.description || '')),
+            };
 
-          const existing = this.discoveredFeatures.find(
-            (f) =>
-              f.name.toLowerCase() === feature.name.toLowerCase() &&
-              f.source === feature.source
-          );
+            const existing = this.discoveredFeatures.find(
+              (f) =>
+                f.name.toLowerCase() === feature.name.toLowerCase() &&
+                f.source === feature.source
+            );
 
-          if (!existing) {
-            this.discoveredFeatures.push(feature);
-            newFeatures.push(feature);
+            if (!existing) {
+              this.discoveredFeatures.push(feature);
+              newFeatures.push(feature);
+            }
           }
         }
       }
@@ -453,45 +455,44 @@ class FeatureDiscoveryService {
     const newFeatures: DiscoveredFeature[] = [];
 
     try {
-      const { searchYouTubeVideos } = await import('./youtubeService');
+      const { searchVideos } = await import('./googleYoutubeService');
 
       for (const term of searchTerms) {
-        const videos = await searchYouTubeVideos(term, 5);
+        const result = await searchVideos(undefined, term, 5);
 
-        for (const video of videos) {
-          // Extract features from YouTube video titles and descriptions
-          const feature: DiscoveredFeature = {
-            id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: this.extractFeatureNameFromText(video.title),
-            description: `Feature inspired by YouTube video: ${video.title}`,
-            source: 'youtube',
-            sourceUrl: `https://youtube.com/watch?v=${video.videoId}`,
-            popularity: Math.min(
-              10,
-              Math.floor(Math.log10((video.views || 1000) / 100))
-            ),
-            relevance: this.calculateYouTubeRelevance(
-              video.title,
-              video.description
-            ),
-            implementationComplexity: 'medium',
-            estimatedValue: 7,
-            discoveredAt: Date.now(),
-            status: 'discovered',
-            tags: this.extractTagsFromText(
-              video.title + ' ' + (video.description || '')
-            ),
-          };
+        if (result.success && result.data) {
+          for (const video of result.data) {
+            // Extract features from YouTube video titles and descriptions
+            const feature: DiscoveredFeature = {
+              id: `feat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              name: this.extractFeatureNameFromText(video.snippet?.title || video.title || 'Unknown Video'),
+              description: `Feature inspired by YouTube video: ${video.snippet?.title || video.title}`,
+              source: 'youtube',
+              sourceUrl: `https://youtube.com/watch?v=${video.id?.videoId || video.videoId}`,
+              popularity: 5, // Default if views not available in search snippet
+              relevance: this.calculateYouTubeRelevance(
+                video.snippet?.title || '',
+                video.snippet?.description || ''
+              ),
+              implementationComplexity: 'medium',
+              estimatedValue: 7,
+              discoveredAt: Date.now(),
+              status: 'discovered',
+              tags: this.extractTagsFromText(
+                (video.snippet?.title || '') + ' ' + (video.snippet?.description || '')
+              ),
+            };
 
-          const existing = this.discoveredFeatures.find(
-            (f) =>
-              f.name.toLowerCase() === feature.name.toLowerCase() &&
-              f.source === feature.source
-          );
+            const existing = this.discoveredFeatures.find(
+              (f) =>
+                f.name.toLowerCase() === feature.name.toLowerCase() &&
+                f.source === feature.source
+            );
 
-          if (!existing) {
-            this.discoveredFeatures.push(feature);
-            newFeatures.push(feature);
+            if (!existing) {
+              this.discoveredFeatures.push(feature);
+              newFeatures.push(feature);
+            }
           }
         }
       }
@@ -630,7 +631,7 @@ class FeatureDiscoveryService {
         features = features.filter((f) => f.source === filters.source);
       }
       if (filters.minRelevance) {
-        features = features.filter((f) => f.relevance >= filters.minRelevance);
+        features = features.filter((f) => f.relevance >= (filters.minRelevance || 0));
       }
       if (filters.tags && filters.tags.length > 0) {
         features = features.filter((f) =>

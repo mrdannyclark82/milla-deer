@@ -14,7 +14,7 @@ const IGNORED_PATHS = [
   '**/build/**',
   '**/*.log',
   '**/memory/milla.db*',
-  '**/.env'
+  '**/.env',
 ];
 
 let changesPending = false;
@@ -50,7 +50,7 @@ async function commitChanges() {
 
   try {
     isCommitting = true;
-    
+
     const hasChanges = await hasGitChanges();
     if (!hasChanges) {
       console.log('[Auto-Commit] No changes to commit');
@@ -63,10 +63,10 @@ async function commitChanges() {
 
     const timestamp = new Date().toISOString();
     const commitMessage = `WIP: Auto-commit from local watcher (${timestamp})`;
-    
+
     console.log('[Auto-Commit] Committing changes...');
     await execCommand(`git commit -m "${commitMessage}"`);
-    
+
     console.log(`[Auto-Commit] ✓ Successfully committed at ${timestamp}`);
     changesPending = false;
   } catch (err) {
@@ -74,7 +74,10 @@ async function commitChanges() {
       console.log('[Auto-Commit] No changes to commit');
       changesPending = false;
     } else {
-      console.error('[Auto-Commit] ✗ Error during commit:', err.stderr || err.message);
+      console.error(
+        '[Auto-Commit] ✗ Error during commit:',
+        err.stderr || err.message
+      );
     }
   } finally {
     isCommitting = false;
@@ -84,25 +87,32 @@ async function commitChanges() {
 async function pushToOrigin() {
   try {
     console.log('[Auto-Push] Checking for changes to push...');
-    
+
     const hasChanges = await hasGitChanges();
     if (hasChanges) {
-      console.log('[Auto-Push] Uncommitted changes detected, committing first...');
+      console.log(
+        '[Auto-Push] Uncommitted changes detected, committing first...'
+      );
       await commitChanges();
     }
 
     const branch = await execCommand('git branch --show-current');
     console.log(`[Auto-Push] Pushing ${branch} to origin...`);
-    
+
     await execCommand(`git push origin ${branch}`);
     console.log(`[Auto-Push] ✓ Successfully pushed to origin/${branch}`);
   } catch (err) {
     if (err.stderr && err.stderr.includes('Everything up-to-date')) {
       console.log('[Auto-Push] Everything up-to-date');
     } else if (err.stderr && err.stderr.includes('no upstream branch')) {
-      console.error('[Auto-Push] ✗ No upstream branch configured. Set with: git push -u origin <branch>');
+      console.error(
+        '[Auto-Push] ✗ No upstream branch configured. Set with: git push -u origin <branch>'
+      );
     } else {
-      console.error('[Auto-Push] ✗ Error during push:', err.stderr || err.message);
+      console.error(
+        '[Auto-Push] ✗ Error during push:',
+        err.stderr || err.message
+      );
     }
   }
 }
@@ -136,24 +146,30 @@ async function main() {
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 2000,
-      pollInterval: 100
-    }
+      pollInterval: 100,
+    },
   });
 
   watcher
-    .on('add', filePath => {
-      console.log(`[Watcher] File added: ${path.relative(REPO_PATH, filePath)}`);
+    .on('add', (filePath) => {
+      console.log(
+        `[Watcher] File added: ${path.relative(REPO_PATH, filePath)}`
+      );
       changesPending = true;
     })
-    .on('change', filePath => {
-      console.log(`[Watcher] File changed: ${path.relative(REPO_PATH, filePath)}`);
+    .on('change', (filePath) => {
+      console.log(
+        `[Watcher] File changed: ${path.relative(REPO_PATH, filePath)}`
+      );
       changesPending = true;
     })
-    .on('unlink', filePath => {
-      console.log(`[Watcher] File removed: ${path.relative(REPO_PATH, filePath)}`);
+    .on('unlink', (filePath) => {
+      console.log(
+        `[Watcher] File removed: ${path.relative(REPO_PATH, filePath)}`
+      );
       changesPending = true;
     })
-    .on('error', error => {
+    .on('error', (error) => {
       console.error('[Watcher] ✗ Error:', error);
     })
     .on('ready', () => {
@@ -161,9 +177,11 @@ async function main() {
     });
 
   console.log('[Cron] Setting up scheduled tasks...');
-  
+
   cron.schedule('*/15 * * * *', async () => {
-    console.log(`\n[Cron] 15-minute check triggered at ${new Date().toISOString()}`);
+    console.log(
+      `\n[Cron] 15-minute check triggered at ${new Date().toISOString()}`
+    );
     if (changesPending) {
       await commitChanges();
     } else {
@@ -196,7 +214,7 @@ async function main() {
   });
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

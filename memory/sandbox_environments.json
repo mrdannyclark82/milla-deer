@@ -15,8 +15,8 @@
           "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
           "files": [],
           "status": "testing",
-          "testsPassed": 3,
-          "testsFailed": 3,
+          "testsPassed": 6,
+          "testsFailed": 5,
           "addedAt": 1769578714591
         },
         {
@@ -42,6 +42,66 @@
           "testsPassed": 0,
           "testsFailed": 0,
           "addedAt": 1770006439823
+        },
+        {
+          "id": "feat_1770137349157_i5t4rfm96",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770137349157
+        },
+        {
+          "id": "feat_1770137475677_fx5itnlth",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770137475677
+        },
+        {
+          "id": "feat_1770480408206_lq1c0ctj8",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770480408206
+        },
+        {
+          "id": "feat_1770480982865_6n70twmbw",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770480982865
+        },
+        {
+          "id": "feat_1770481236468_b2gk53aug",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1770481236468
         }
       ],
       "readyForProduction": false,
@@ -99,6 +159,51 @@
           "passed": false,
           "details": "Some tests failed - review needed",
           "duration": 908.6832047427827
+        },
+        {
+          "id": "test_1770137349158_c0xlxw5ek",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770137349158,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 2480.975710183223
+        },
+        {
+          "id": "test_1770137475678_d5ch87gpr",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770137475678,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1403.6738153965807
+        },
+        {
+          "id": "test_1770480408207_co6x2pvwc",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770480408207,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 719.273801031962
+        },
+        {
+          "id": "test_1770480982866_c0vqgw53g",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770480982866,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 2359.223823347186
+        },
+        {
+          "id": "test_1770481236469_lzctd8yq1",
+          "featureId": "feat_1769578714591_bfew6az5e",
+          "timestamp": 1770481236469,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 583.1641637259808
         }
       ]
     },
@@ -216,7 +321,62 @@
       "createdBy": "milla",
       "features": [],
       "readyForProduction": false
+    },
+    "sandbox_1770137349154_f8n9ouc4h": {
+      "id": "sandbox_1770137349154_f8n9ouc4h",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770137349154",
+      "status": "active",
+      "createdAt": 1770137349154,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770137475673_u1huz9zcd": {
+      "id": "sandbox_1770137475673_u1huz9zcd",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770137475673",
+      "status": "active",
+      "createdAt": 1770137475673,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770480408202_nyx5asa05": {
+      "id": "sandbox_1770480408202_nyx5asa05",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770480408202",
+      "status": "active",
+      "createdAt": 1770480408202,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770480982863_xrgrtncmd": {
+      "id": "sandbox_1770480982863_xrgrtncmd",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770480982863",
+      "status": "active",
+      "createdAt": 1770480982863,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1770481236466_g4itj4cso": {
+      "id": "sandbox_1770481236466_g4itj4cso",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1770481236466",
+      "status": "active",
+      "createdAt": 1770481236466,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
     }
   },
-  "lastUpdated": 1770006439824
+  "lastUpdated": 1770481236469
 }

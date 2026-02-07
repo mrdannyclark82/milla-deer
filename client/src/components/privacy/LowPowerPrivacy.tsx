@@ -12,16 +12,12 @@ const LowPowerPrivacy: React.FC<Props> = ({ mode }) => {
     const statuses = {
       offline: 'Private • Low-Power • Local',
       hybrid: 'Secure Hybrid • Edge-First',
-      cloud: 'Connected • Optimized'
+      cloud: 'Connected • Optimized',
     };
     setStatus(statuses[mode]);
   }, [mode]);
 
-  return (
-    <div className="privacy-badge">
-      Status: {status}
-    </div>
-  );
+  return <div className="privacy-badge">Status: {status}</div>;
 };
 
 export default LowPowerPrivacy;

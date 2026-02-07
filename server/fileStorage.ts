@@ -67,10 +67,7 @@ export class FileStorage implements IStorage {
 
       // Check if the file content looks like valid JSON
       const trimmedContent = fileContent.trim();
-      if (
-        !trimmedContent.startsWith('[') &&
-        !trimmedContent.startsWith('{')
-      ) {
+      if (!trimmedContent.startsWith('[') && !trimmedContent.startsWith('{')) {
         console.log(
           'Existing memories file is not in JSON format. Starting fresh with empty messages.'
         );
@@ -85,9 +82,7 @@ export class FileStorage implements IStorage {
       } catch (parseError) {
         console.error(
           'JSON parsing failed:',
-          parseError instanceof Error
-            ? parseError.message
-            : String(parseError)
+          parseError instanceof Error ? parseError.message : String(parseError)
         );
         await this.backupFile(MEMORY_FILE_PATH, 'json parsing error');
         return;
@@ -95,9 +90,7 @@ export class FileStorage implements IStorage {
 
       // Validate that we have an array of valid message objects
       if (!Array.isArray(messages)) {
-        console.log(
-          'Memories file does not contain an array. Starting fresh.'
-        );
+        console.log('Memories file does not contain an array. Starting fresh.');
         await this.backupFile(MEMORY_FILE_PATH, 'not an array');
         return;
       }
@@ -163,7 +156,10 @@ export class FileStorage implements IStorage {
         await fs.promises.writeFile(tempPath, jsonData, 'utf8');
 
         // Verify the file was written correctly by parsing it
-        const verificationContent = await fs.promises.readFile(tempPath, 'utf8');
+        const verificationContent = await fs.promises.readFile(
+          tempPath,
+          'utf8'
+        );
         const verification = JSON.parse(verificationContent);
         if (Array.isArray(verification)) {
           // Only replace the original file if the temp file is valid
@@ -180,7 +176,7 @@ export class FileStorage implements IStorage {
         } catch (cleanupError: any) {
           // Ignore ENOENT (file not found) if it was already gone/not created
           if (cleanupError.code !== 'ENOENT') {
-             console.error('Failed to clean up temporary file:', cleanupError);
+            console.error('Failed to clean up temporary file:', cleanupError);
           }
         }
         // Don't throw the error to prevent breaking the application flow
@@ -229,6 +225,7 @@ export class FileStorage implements IStorage {
       id,
       timestamp: new Date(),
       personalityMode: insertMessage.personalityMode || null,
+      displayRole: insertMessage.displayRole || null,
       userId: insertMessage.userId || null,
     };
     this.messages.set(id, message);

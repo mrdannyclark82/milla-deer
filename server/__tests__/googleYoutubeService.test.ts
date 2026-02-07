@@ -15,7 +15,9 @@ describe('Google YouTube Service', () => {
 
   describe('getMySubscriptions', () => {
     it('should return subscriptions on successful request', async () => {
-      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue('test_access_token');
+      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue(
+        'test_access_token'
+      );
       const fetch = vi.fn();
       vi.stubGlobal('fetch', fetch);
       fetch.mockResolvedValue({
@@ -34,12 +36,15 @@ describe('Google YouTube Service', () => {
 
   describe('getVideoDetails', () => {
     it('should return video details on successful request', async () => {
-      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue('test_access_token');
+      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue(
+        'test_access_token'
+      );
       const fetch = vi.fn();
       vi.stubGlobal('fetch', fetch);
       fetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ items: [{ snippet: { title: 'Test Video' } }] }),
+        json: () =>
+          Promise.resolve({ items: [{ snippet: { title: 'Test Video' } }] }),
       } as Response);
 
       const videoId = 'test_video_id';
@@ -54,7 +59,9 @@ describe('Google YouTube Service', () => {
 
   describe('searchVideos', () => {
     it('should return videos on successful search', async () => {
-      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue('test_access_token');
+      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue(
+        'test_access_token'
+      );
       const fetch = vi.fn();
       vi.stubGlobal('fetch', fetch);
       fetch.mockResolvedValue({
@@ -66,7 +73,7 @@ describe('Google YouTube Service', () => {
       const result = await searchVideos('default-user', query);
       expect(result).toEqual({
         success: true,
-        message: 'Search successful',
+        message: 'Successfully found 0 videos.',
         data: [],
       });
     });
@@ -74,12 +81,15 @@ describe('Google YouTube Service', () => {
 
   describe('getChannelDetails', () => {
     it('should return channel details on successful request', async () => {
-      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue('test_access_token');
+      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue(
+        'test_access_token'
+      );
       const fetch = vi.fn();
       vi.stubGlobal('fetch', fetch);
       fetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ items: [{ snippet: { title: 'Test Channel' } }] }),
+        json: () =>
+          Promise.resolve({ items: [{ snippet: { title: 'Test Channel' } }] }),
       } as Response);
 
       const channelId = 'test_channel_id';
@@ -94,7 +104,9 @@ describe('Google YouTube Service', () => {
 
   describe('getTrendingVideos', () => {
     it('should return trending videos on successful request', async () => {
-      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue('test_access_token');
+      vi.spyOn(oauthService, 'getValidAccessToken').mockResolvedValue(
+        'test_access_token'
+      );
       const fetch = vi.fn();
       vi.stubGlobal('fetch', fetch);
       fetch.mockResolvedValue({

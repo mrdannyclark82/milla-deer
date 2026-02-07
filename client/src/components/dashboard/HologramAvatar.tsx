@@ -82,7 +82,8 @@ export function HologramAvatar({
       <div
         className="absolute w-[350px] h-[350px] rounded-full opacity-20"
         style={{
-          background: 'radial-gradient(circle, rgba(255, 0, 170, 0.4) 0%, transparent 60%)',
+          background:
+            'radial-gradient(circle, rgba(255, 0, 170, 0.4) 0%, transparent 60%)',
           animation: 'pulse 4s ease-in-out infinite reverse',
         }}
       />
@@ -116,12 +117,13 @@ export function HologramAvatar({
       >
         {/* Avatar gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0c021a] via-[#1a0033] to-[#0c021a]" />
-        
+
         {/* Holographic scan lines */}
         <div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 242, 255, 0.1) 2px, rgba(0, 242, 255, 0.1) 4px)',
+            backgroundImage:
+              'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 242, 255, 0.1) 2px, rgba(0, 242, 255, 0.1) 4px)',
             animation: 'scanlines 8s linear infinite',
           }}
         />
@@ -177,18 +179,24 @@ export function HologramAvatar({
 
       {/* Status indicator */}
       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-        <div className={`px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-md border ${
-          avatarState === 'idle'
-            ? 'bg-white/5 border-white/20 text-white/60'
+        <div
+          className={`px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-md border ${
+            avatarState === 'idle'
+              ? 'bg-white/5 border-white/20 text-white/60'
+              : avatarState === 'listening'
+                ? 'bg-[#00f2ff]/10 border-[#00f2ff]/50 text-[#00f2ff]'
+                : avatarState === 'thinking'
+                  ? 'bg-[#ff00aa]/10 border-[#ff00aa]/50 text-[#ff00aa]'
+                  : 'bg-[#7c3aed]/10 border-[#7c3aed]/50 text-[#7c3aed]'
+          }`}
+        >
+          {avatarState === 'idle'
+            ? 'Awaiting Command'
             : avatarState === 'listening'
-            ? 'bg-[#00f2ff]/10 border-[#00f2ff]/50 text-[#00f2ff]'
-            : avatarState === 'thinking'
-            ? 'bg-[#ff00aa]/10 border-[#ff00aa]/50 text-[#ff00aa]'
-            : 'bg-[#7c3aed]/10 border-[#7c3aed]/50 text-[#7c3aed]'
-        }`}>
-          {avatarState === 'idle' ? 'Awaiting Command' :
-           avatarState === 'listening' ? 'Listening...' :
-           avatarState === 'thinking' ? 'Thinking...' : 'Speaking...'}
+              ? 'Listening...'
+              : avatarState === 'thinking'
+                ? 'Thinking...'
+                : 'Speaking...'}
         </div>
       </div>
     </div>
