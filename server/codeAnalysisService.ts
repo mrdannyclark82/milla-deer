@@ -553,19 +553,27 @@ export async function analyzeCodeForIssues(params: {
 
   // For now, we'll create a mock RepositoryData object
   // In a production system, this would analyze actual files in the repository
+  const name = repositoryPath.split('/').pop() || 'unknown';
   const mockRepoData: RepositoryData = {
-    name: repositoryPath.split('/').pop() || 'unknown',
+    info: {
+      owner: 'mock',
+      name: name,
+      url: `https://github.com/mock/${name}`,
+      fullName: `mock/${name}`,
+    },
     description: 'Repository for code analysis',
     language: 'typescript',
-    stars: 0,
-    forks: 0,
-    openIssues: 0,
     readme: '// Sample code for analysis',
-    hasLicense: false,
-    hasReadme: false,
-    hasDocs: false,
-    hasTests: false,
-    hasCI: false,
+    stats: {
+      stars: 0,
+      forks: 0,
+      openIssues: 0,
+      watchers: 0,
+      size: 0,
+      defaultBranch: 'main',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
     files: [],
   };
 
