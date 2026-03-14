@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Elara</string>
+    <string name="app_description">AI Virtual Assistant powered by Google Gemini</string>
+    
+    <!-- Tool Modes -->
+    <string name="tool_chat">Chat</string>
+    <string name="tool_search">Search</string>
+    <string name="tool_maps">Maps</string>
+    <string name="tool_imagine">Imagine</string>
+    <string name="tool_veo">Veo</string>
+    
+    <!-- Persona Modes -->
+    <string name="persona_professional">Professional</string>
+    <string name="persona_casual">Casual</string>
+    <string name="persona_empathetic">Empathetic</string>
+    <string name="persona_humorous">Humorous</string>
+    <string name="persona_motivational">Motivational</string>
+    <string name="persona_adaptive">Adaptive</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_sandbox">Sandbox</string>
+    <string name="nav_creative_studio">Creative Studio</string>
+    
+    <!-- Actions -->
+    <string name="action_send">Send</string>
+    <string name="action_generate">Generate</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_export">Export</string>
+    <string name="action_import">Import</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_remix">Remix</string>
+    <string name="action_run">Run</string>
+    
+    <!-- Messages -->
+    <string name="message_thinking">Thinking...</string>
+    <string name="message_generating">Generating...</string>
+    <string name="message_welcome">Systems Online. Neural Toolkit Active. How can I help?</string>
+    <string name="message_error">An error occurred. Please try again.</string>
+    
+    <!-- Placeholders -->
+    <string name="placeholder_message">Message Elara...</string>
+    <string name="placeholder_image_prompt">Describe the image to generate...</string>
+    <string name="placeholder_video_prompt">Describe the video...</string>
+    <string name="placeholder_search">Search for information...</string>
+    <string name="placeholder_code_prompt">Describe what you want to create...</string>
+</resources>

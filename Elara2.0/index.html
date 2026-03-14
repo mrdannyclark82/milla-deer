@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elara - AI Virtual Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              emerald: {
+                400: '#34d399',
+                500: '#10b981',
+                600: '#059669',
+                glow: '#50C878',
+              },
+              auburn: {
+                DEFAULT: '#C04000',
+                dark: '#8a2be2'
+              }
+            },
+            animation: {
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <style>
+      /* Custom scrollbar for cyberpunk feel */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #10b981;
+        border-radius: 3px;
+      }
+      body {
+        margin: 0;
+        background-color: #000;
+        color: #fff;
+        overflow: hidden;
+      }
+      
+      /* Tailwind extensions for new components */
+      .milla-400 { color: #a78bfa; }
+      .milla-500 { color: #8b5cf6; }
+      .milla-600 { color: #7c3aed; }
+      .milla-900 { color: #4c1d95; }
+      .bg-milla-600 { background-color: #7c3aed; }
+      .bg-milla-500 { background-color: #8b5cf6; }
+      .bg-milla-900\/20 { background-color: rgba(76, 29, 149, 0.2); }
+      .bg-milla-900\/30 { background-color: rgba(76, 29, 149, 0.3); }
+      .border-milla-500 { border-color: #8b5cf6; }
+      .hover\:bg-milla-500:hover { background-color: #8b5cf6; }
+      .hover\:bg-milla-900\/30:hover { background-color: rgba(76, 29, 149, 0.3); }
+      .text-milla-300 { color: #c4b5fd; }
+      .text-milla-400 { color: #a78bfa; }
+      
+      /* Code editor styles */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      
+      .code-line-numbers {
+        padding: 20px 8px;
+        text-align: right;
+        color: #64748b;
+        font-family: 'Fira Code', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        user-select: none;
+        border-right: 1px solid #1e293b;
+        background: #0f172a;
+      }
+      
+      /* Animations */
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes slide-in-from-bottom-10 {
+        from { 
+          opacity: 0;
+          transform: translateY(2.5rem);
+        }
+        to { 
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      @keyframes zoom-in {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      .animate-in {
+        animation-duration: 300ms;
+        animation-fill-mode: both;
+      }
+      
+      .fade-in {
+        animation-name: fade-in;
+      }
+      
+      .slide-in-from-bottom-10 {
+        animation-name: slide-in-from-bottom-10;
+      }
+      
+      .zoom-in {
+        animation-name: zoom-in;
+      }
+    </style>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="emerald_primary">#10B981</color>
+    <color name="emerald_light">#34D399</color>
+    <color name="emerald_dark">#059669</color>
+    
+    <color name="auburn_primary">#C04000</color>
+    <color name="auburn_light">#E05020</color>
+    <color name="auburn_dark">#8B2F00</color>
+    
+    <!-- Surface Colors -->
+    <color name="surface_dark">#0F172A</color>
+    <color name="surface_variant_dark">#1E293B</color>
+    <color name="background_dark">#020617</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#F1F5F9</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+    
+    <!-- Accent Colors -->
+    <color name="purple_accent">#8B5CF6</color>
+    <color name="blue_accent">#3B82F6</color>
+    <color name="pink_accent">#EC4899</color>
+    <color name="amber_accent">#F59E0B</color>
+    <color name="red_accent">#EF4444</color>
+    <color name="cyan_accent">#06B6D4</color>
+    
+    <!-- Tool Mode Colors -->
+    <color name="chat_color">#10B981</color>
+    <color name="search_color">#3B82F6</color>
+    <color name="maps_color">#22C55E</color>
+    <color name="image_gen_color">#EC4899</color>
+    <color name="video_gen_color">#8B5CF6</color>
+    
+    <!-- Status Colors -->
+    <color name="online_green">#22C55E</color>
+    <color name="offline_red">#EF4444</color>
+    <color name="warning_yellow">#FBBF24</color>
+</resources>

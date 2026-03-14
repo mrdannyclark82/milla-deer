@@ -1,0 +1,9 @@
+{
+  "name": "Elara - AI Virtual Assistant",
+  "description": "An advanced 3D AI assistant with self-evolution capabilities, coding expertise, and integrated workflow management.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ]
+}
