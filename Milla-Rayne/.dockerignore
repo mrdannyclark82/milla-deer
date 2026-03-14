@@ -1,0 +1,13 @@
+# build artifacts
+dist
+node_modules
+
+# misc
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env
+npm-debug.log
+.DS_Store
