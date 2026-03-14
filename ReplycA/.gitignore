@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Logs & Databases
+*.log
+*.db
+*.db-journal
+core_os/memory/*.db
+core_os/memory/*.jsonl
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project Specific
+core_os/screenshots/
+core_os/media/
+backups/
