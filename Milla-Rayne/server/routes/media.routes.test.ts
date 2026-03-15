@@ -4,11 +4,15 @@ import express from 'express';
 import { registerMediaRoutes } from './media.routes';
 import * as youtubeAnalysis from '../youtubeAnalysisService';
 import * as moodBackground from '../moodBackgroundService';
+import * as pollinationsImageService from '../pollinationsImageService';
+import * as imageService from '../imageService';
 
 vi.mock('../gemini');
 vi.mock('../youtubeAnalysisService');
 vi.mock('../moodBackgroundService');
 vi.mock('../aiDispatcherService');
+vi.mock('../pollinationsImageService');
+vi.mock('../imageService');
 
 describe('Media Routes', () => {
   let app: express.Express;
@@ -55,6 +59,62 @@ describe('Media Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.backgrounds).toContain('bg1.jpg');
+    });
+  });
+
+  describe('POST /api/image/generate', () => {
+    it('should use pollinations when a studio model is requested', async () => {
+      vi.spyOn(
+        pollinationsImageService,
+        'generateImageWithPollinations'
+      ).mockResolvedValue({
+        success: true,
+        imageUrl: 'https://image.pollinations.ai/test.png',
+      });
+
+      const response = await request(app).post('/api/image/generate').send({
+        prompt: 'cyberpunk milla portrait',
+        aspectRatio: '1:1',
+        model: 'flux-3d',
+      });
+
+      expect(response.status).toBe(200);
+      expect(
+        pollinationsImageService.generateImageWithPollinations
+      ).toHaveBeenCalledWith('cyberpunk milla portrait', {
+        width: 1024,
+        height: 1024,
+        model: 'flux-3d',
+      });
+      expect(response.body.imageUrl).toBe(
+        'https://image.pollinations.ai/test.png'
+      );
+    });
+
+    it('should fall back to the default image backend when pollinations fails', async () => {
+      vi.spyOn(
+        pollinationsImageService,
+        'generateImageWithPollinations'
+      ).mockResolvedValue({
+        success: false,
+        error: 'Pollinations failed',
+      });
+      vi.spyOn(imageService, 'generateImage').mockResolvedValue({
+        success: true,
+        imageUrl: 'data:image/png;base64,fallback',
+      });
+
+      const response = await request(app).post('/api/image/generate').send({
+        prompt: 'cyberpunk milla portrait',
+        aspectRatio: '1:1',
+        model: 'flux-realism',
+      });
+
+      expect(response.status).toBe(200);
+      expect(imageService.generateImage).toHaveBeenCalledWith(
+        'cyberpunk milla portrait'
+      );
+      expect(response.body.imageUrl).toBe('data:image/png;base64,fallback');
     });
   });
 });

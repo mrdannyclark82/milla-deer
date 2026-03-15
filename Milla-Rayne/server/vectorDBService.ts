@@ -5,14 +5,12 @@
  * for Vector-Augmented Retrieval Generation (V-RAG) system.
  *
  * Features:
- * - Generate embeddings using OpenAI's text-embedding-ada-002 model
+ * - Generate embeddings using a local Ollama embedding model
  * - Cosine similarity search for semantic retrieval
  * - In-memory vector store with persistence
  * - Support for multiple content types (memory, knowledge, conversations)
  */
 
-import OpenAI from 'openai';
-import { config } from './config';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -260,11 +258,23 @@ class VectorStore {
 
         // Only compute full similarity if summary passes threshold
         if (prelimSimilarity >= minSimilarity * 0.8) {
+          if (queryEmbedding.length !== entry.embedding.length) {
+            console.warn(
+              `Skipping vector ${entry.id} due to embedding dimension mismatch (${queryEmbedding.length} vs ${entry.embedding.length})`
+            );
+            continue;
+          }
           similarity = cosineSimilarity(queryEmbedding, entry.embedding);
         } else {
           continue; // Skip this entry
         }
       } else {
+        if (queryEmbedding.length !== entry.embedding.length) {
+          console.warn(
+            `Skipping vector ${entry.id} due to embedding dimension mismatch (${queryEmbedding.length} vs ${entry.embedding.length})`
+          );
+          continue;
+        }
         similarity = cosineSimilarity(queryEmbedding, entry.embedding);
       }
 
@@ -324,21 +334,66 @@ class VectorStore {
 // EMBEDDING GENERATION
 // ===========================================================================================
 
-let openaiClient: OpenAI | null = null;
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
+const OLLAMA_EMBEDDING_MODEL =
+  process.env.OLLAMA_EMBEDDING_MODEL ||
+  process.env.LOCAL_EMBEDDING_MODEL ||
+  'nomic-embed-text';
 
 /**
- * Initialize OpenAI client for embeddings
+ * Generate embeddings through a local Ollama embedding model.
  */
-function getOpenAIClient(): OpenAI | null {
-  if (!openaiClient) {
-    const apiKey = process.env.OPENAI_API_KEY || config.openai?.apiKey;
-    if (!apiKey) {
-      console.warn('⚠️ OpenAI API key not configured - embeddings disabled');
-      return null;
+async function generateOllamaEmbeddings(
+  texts: string[]
+): Promise<(number[] | null)[]> {
+  if (texts.length === 0) return [];
+
+  const cleanTexts = texts.map((text) =>
+    text.replace(/\s+/g, ' ').trim().slice(0, 32000)
+  );
+
+  try {
+    const response = await fetch(`${OLLAMA_HOST}/api/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: OLLAMA_EMBEDDING_MODEL,
+        input: cleanTexts.length === 1 ? cleanTexts[0] : cleanTexts,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(
+        `Ollama embedding request failed (${response.status}): ${errorText}`
+      );
+      return cleanTexts.map(() => null);
     }
-    openaiClient = new OpenAI({ apiKey });
+
+    const data = (await response.json()) as {
+      embeddings?: number[][];
+      embedding?: number[];
+    };
+
+    if (Array.isArray(data.embeddings)) {
+      return data.embeddings.map((embedding) =>
+        Array.isArray(embedding) ? embedding : null
+      );
+    }
+
+    if (Array.isArray(data.embedding)) {
+      return [data.embedding];
+    }
+
+    console.warn('Ollama embedding response did not include embeddings');
+    return cleanTexts.map(() => null);
+  } catch (error) {
+    console.warn(
+      `Ollama embedding model unavailable at ${OLLAMA_HOST} (${OLLAMA_EMBEDDING_MODEL})`
+    );
+    console.error('Error generating Ollama embeddings:', error);
+    return cleanTexts.map(() => null);
   }
-  return openaiClient;
 }
 
 /**
@@ -347,26 +402,8 @@ function getOpenAIClient(): OpenAI | null {
 export async function generateEmbedding(
   text: string
 ): Promise<number[] | null> {
-  const client = getOpenAIClient();
-  if (!client) {
-    console.warn('Cannot generate embedding - OpenAI client not initialized');
-    return null;
-  }
-
-  try {
-    // Clean and truncate text if needed (max ~8000 tokens for ada-002)
-    const cleanText = text.replace(/\s+/g, ' ').trim().slice(0, 32000);
-
-    const response = await client.embeddings.create({
-      model: 'text-embedding-ada-002',
-      input: cleanText,
-    });
-
-    return response.data[0].embedding;
-  } catch (error) {
-    console.error('Error generating embedding:', error);
-    return null;
-  }
+  const [embedding] = await generateOllamaEmbeddings([text]);
+  return embedding || null;
 }
 
 /**
@@ -375,29 +412,7 @@ export async function generateEmbedding(
 export async function generateEmbeddings(
   texts: string[]
 ): Promise<(number[] | null)[]> {
-  const client = getOpenAIClient();
-  if (!client) {
-    console.warn('Cannot generate embeddings - OpenAI client not initialized');
-    return texts.map(() => null);
-  }
-
-  try {
-    // Clean texts
-    const cleanTexts = texts.map((text) =>
-      text.replace(/\s+/g, ' ').trim().slice(0, 32000)
-    );
-
-    // OpenAI allows batch embedding requests
-    const response = await client.embeddings.create({
-      model: 'text-embedding-ada-002',
-      input: cleanTexts,
-    });
-
-    return response.data.map((item) => item.embedding);
-  } catch (error) {
-    console.error('Error generating embeddings:', error);
-    return texts.map(() => null);
-  }
+  return generateOllamaEmbeddings(texts);
 }
 
 // ===========================================================================================

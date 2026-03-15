@@ -182,7 +182,7 @@ export class SqliteStorage implements IStorage {
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
-        preferred_ai_model TEXT DEFAULT 'minimax',
+        preferred_ai_model TEXT DEFAULT 'gemini',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_login_at DATETIME
       )
@@ -553,7 +553,7 @@ export class SqliteStorage implements IStorage {
       user.username,
       user.email,
       user.password,
-      user.preferredAiModel || 'minimax'
+      user.preferredAiModel || 'gemini'
     );
 
     const newUser = {
@@ -561,7 +561,7 @@ export class SqliteStorage implements IStorage {
       username: user.username,
       email: user.email,
       password: user.password, // This will be omitted from the return value
-      preferredAiModel: user.preferredAiModel || 'minimax',
+      preferredAiModel: user.preferredAiModel || 'gemini',
       createdAt: new Date(),
       lastLoginAt: null,
     };

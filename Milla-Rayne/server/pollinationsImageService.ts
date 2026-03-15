@@ -10,6 +10,69 @@ export interface PollinationsImageResult {
   error?: string;
 }
 
+function sanitizePrompt(prompt: string): string {
+  return prompt.replace(/\s+/g, ' ').trim();
+}
+
+async function requestPollinationsImage(
+  prompt: string,
+  options: {
+    width: number;
+    height: number;
+    seed?: number;
+    model: 'flux' | 'flux-realism' | 'flux-anime' | 'flux-3d' | 'turbo';
+    nologo: boolean;
+    private: boolean;
+  }
+): Promise<PollinationsImageResult> {
+  const encodedPrompt = encodeURIComponent(prompt);
+  const params = new URLSearchParams();
+  params.set('width', options.width.toString());
+  params.set('height', options.height.toString());
+  params.set('model', options.model);
+  if (options.nologo) params.set('nologo', 'true');
+  if (options.private) params.set('private', 'true');
+  if (options.seed) params.set('seed', options.seed.toString());
+
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?${params.toString()}`;
+
+  console.log('[Pollinations.AI] Generating image:', imageUrl);
+
+  const response = await fetch(imageUrl, {
+    method: 'GET',
+    headers: {
+      Accept: 'image/*,application/json;q=0.9,text/plain;q=0.8',
+    },
+  });
+
+  const contentType = response.headers.get('content-type') || '';
+
+  if (response.ok && contentType.startsWith('image/')) {
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Image = buffer.toString('base64');
+    return {
+      success: true,
+      imageUrl: `data:${contentType};base64,${base64Image}`,
+    };
+  }
+
+  const errorText = await response.text();
+  let parsedError = errorText;
+
+  try {
+    const errorJson = JSON.parse(errorText);
+    parsedError = errorJson.message || errorJson.error || errorText;
+  } catch {
+    // Keep raw text when response is not JSON.
+  }
+
+  return {
+    success: false,
+    error: `Pollinations returned ${response.status} ${contentType || 'unknown content'}: ${parsedError}`.trim(),
+  };
+}
+
 /**
  * Generate an image using Pollinations.AI
  * This service is completely free and requires no API key
@@ -37,38 +100,40 @@ export async function generateImageWithPollinations(
       private: isPrivate = true,
       seed,
     } = options;
-
-    // Encode the prompt for URL
-    const encodedPrompt = encodeURIComponent(prompt);
-
-    // Build query parameters
-    const params = new URLSearchParams();
-    if (width) params.set('width', width.toString());
-    if (height) params.set('height', height.toString());
-    if (model) params.set('model', model);
-    if (nologo) params.set('nologo', 'true');
-    if (isPrivate) params.set('private', 'true');
-    if (seed) params.set('seed', seed.toString());
-
-    // Pollinations.AI direct image URL
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?${params.toString()}`;
-
-    console.log('[Pollinations.AI] Generating image:', imageUrl);
-
-    // Verify the image is accessible
-    const response = await fetch(imageUrl, { method: 'HEAD' });
-
-    if (!response.ok) {
+    const cleanedPrompt = sanitizePrompt(prompt);
+    if (!cleanedPrompt) {
       return {
         success: false,
-        error: `Failed to generate image: HTTP ${response.status}`,
+        error: 'Prompt is empty after sanitization.',
       };
     }
 
-    return {
-      success: true,
-      imageUrl: imageUrl,
-    };
+    const primaryAttempt = await requestPollinationsImage(cleanedPrompt, {
+      width,
+      height,
+      model,
+      nologo,
+      private: isPrivate,
+      seed,
+    });
+
+    if (primaryAttempt.success || model === 'flux') {
+      return primaryAttempt;
+    }
+
+    console.warn(
+      `[Pollinations.AI] ${model} failed, retrying with flux:`,
+      primaryAttempt.error
+    );
+
+    return await requestPollinationsImage(cleanedPrompt, {
+      width,
+      height,
+      model: 'flux',
+      nologo,
+      private: isPrivate,
+      seed,
+    });
   } catch (error) {
     console.error('[Pollinations.AI] Error:', error);
     return {

@@ -18,6 +18,7 @@ import {
 } from '../codeAnalysisService';
 import * as fs from 'fs/promises';
 import { applyPatch } from 'diff';
+import { config } from '../config';
 
 export interface IssueIdentification {
   issueType: 'bug' | 'enhancement' | 'security' | 'performance';
@@ -231,17 +232,43 @@ Please provide:
 Format your response as JSON with keys: description, changes, reasoning.
 IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
 
-      // Use Minimax service for coding tasks
-      const { generateMinimaxResponse } = await import('../minimaxService');
+      const hasApiKey = (value: string | null | undefined): value is string =>
+        Boolean(value?.trim());
 
-      const result = await generateMinimaxResponse(
-        prompt,
-        {
-          conversationHistory: [],
-          userName: 'CodingAgent',
-        },
-        4096 // Higher token limit for code generation
-      );
+      const codingContext = {
+        conversationHistory: [],
+        userName: 'CodingAgent',
+      };
+
+      let result:
+        | { success: boolean; content: string; error?: string }
+        | undefined;
+
+      if (hasApiKey(config.gemini?.apiKey)) {
+        const { generateGeminiResponse } = await import('../geminiService');
+        result = await generateGeminiResponse(prompt);
+      }
+
+      if (!result?.success && hasApiKey(config.xai.apiKey)) {
+        const { generateXAIResponse } = await import('../xaiService');
+        result = await generateXAIResponse(prompt, codingContext, 4096);
+      }
+
+      if (!result?.success && hasApiKey(config.openai.apiKey)) {
+        const { generateOpenAIResponse } = await import('../openaiChatService');
+        result = await generateOpenAIResponse(prompt, codingContext, 4096);
+      }
+
+      if (!result?.success && hasApiKey(config.minimax.apiKey)) {
+        const { generateMinimaxResponse } = await import('../minimaxService');
+        result = await generateMinimaxResponse(prompt, codingContext, 4096);
+      }
+
+      if (!result) {
+        throw new Error(
+          'No coding model configured. Set GEMINI_API_KEY, XAI_API_KEY, OPENAI_API_KEY, or MINIMAX_API_KEY.'
+        );
+      }
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to generate fix');

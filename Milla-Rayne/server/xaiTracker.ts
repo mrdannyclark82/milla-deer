@@ -6,10 +6,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import type {
-  ReasoningStep,
-  XAIData,
-} from '../client/src/components/XAIOverlay';
+import type { ReasoningStep, XAIData } from '../shared/xai';
 
 interface ReasoningSession {
   sessionId: string;
@@ -141,7 +138,7 @@ export function addReasoningStep(
   type: 'intent' | 'tools' | 'memory' | 'response',
   title: string,
   content: string | string[],
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): void {
   const session = reasoningSessions.get(sessionId);
   if (!session) return;

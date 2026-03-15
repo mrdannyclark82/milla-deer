@@ -4,23 +4,21 @@ import { AgentTask } from '../agents/taskStorage.js';
 import * as sandboxService from '../sandboxEnvironmentService.js';
 import * as automatedPRService from '../automatedPRService.js';
 import * as codeAnalysisService from '../codeAnalysisService.js';
-import * as openrouterService from '../openrouterService.js';
+import * as geminiService from '../geminiService.js';
 
 describe('CodingAgent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock OpenRouter service by default
-    vi.spyOn(openrouterService, 'generateOpenRouterResponse').mockResolvedValue(
-      {
-        content: JSON.stringify({
-          description: 'Mock AI-generated fix',
-          changes: 'Mock code changes',
-          reasoning: 'Mock reasoning',
-        }),
-        success: true,
-      }
-    );
+    process.env.GEMINI_API_KEY = 'test-gemini-key';
+    vi.spyOn(geminiService, 'generateGeminiResponse').mockResolvedValue({
+      content: JSON.stringify({
+        description: 'Mock AI-generated fix',
+        changes: 'Mock code changes',
+        reasoning: 'Mock reasoning',
+      }),
+      success: true,
+    });
   });
 
   describe('handleTask', () => {

@@ -5,6 +5,7 @@ import * as anthropicService from '../anthropicService';
 import * as xaiService from '../xaiService';
 import * as mistralService from '../mistralService';
 import * as openrouterService from '../openrouterService';
+import * as geminiService from '../geminiService';
 import { config } from '../config';
 
 // Mock all dependencies
@@ -20,6 +21,9 @@ vi.mock('../openrouterService', () => ({
   generateGrokResponse: vi.fn(),
 }));
 vi.mock('../geminiService', () => ({ generateGeminiResponse: vi.fn() }));
+vi.mock('../authService', () => ({
+  getUserAIModel: vi.fn().mockResolvedValue({ success: false }),
+}));
 vi.mock('../memoryService', () => ({
   searchMemoryCore: vi.fn().mockResolvedValue([]),
   getSemanticMemoryContext: vi.fn().mockResolvedValue(''),
@@ -31,24 +35,21 @@ vi.mock('../xaiTracker', () => ({
   trackResponseGeneration: vi.fn(),
   addReasoningStep: vi.fn(),
 }));
-vi.mock('../storage', () => ({
-  storage: {
-    getUserPreferredAIModel: vi
-      .fn()
-      .mockRejectedValue(new Error('No preference')),
-  },
-}));
-
 describe('AI Dispatcher Priority Chain', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     config.localModel = { enabled: false, preferLocal: false };
-    // Set ALL keys to ensure the chain tries everything
+    config.gemini = { apiKey: 'gemini-test' };
     config.openai = { apiKey: 'sk-test' };
     config.anthropic = { apiKey: 'sk-ant-test' };
     config.xai = { apiKey: 'xai-test' };
     config.mistral = { apiKey: 'mistral-test' };
     config.openrouter = { apiKey: 'or-test', grok1ApiKey: 'grok-test' };
+    vi.mocked(geminiService.generateGeminiResponse).mockResolvedValue({
+      success: false,
+      content: '',
+      error: 'Gemini failed',
+    });
   });
 
   afterEach(() => {
@@ -60,18 +61,49 @@ describe('AI Dispatcher Priority Chain', () => {
   const mockSuccess = (mockFn: any, name: string) =>
     mockFn.mockResolvedValue({ success: true, content: `${name} Response` });
 
-  it('1. OpenAI succeeds -> Stop', async () => {
+  it('1. Gemini succeeds -> Stop', async () => {
+    mockSuccess(geminiService.generateGeminiResponse as any, 'Gemini');
+    await dispatchAIResponse('Try Gemini', {
+      userId: 'u1',
+      conversationHistory: [],
+      userName: 'User',
+    });
+    expect(geminiService.generateGeminiResponse).toHaveBeenCalled();
+    expect(xaiService.generateXAIResponse).not.toHaveBeenCalled();
+  });
+
+  it('2. Gemini fails -> xAI succeeds -> Stop', async () => {
+    mockSuccess(xaiService.generateXAIResponse as any, 'xAI');
+
+    await dispatchAIResponse('Try xAI', {
+      userId: 'u1',
+      conversationHistory: [],
+      userName: 'User',
+    });
+
+    expect(geminiService.generateGeminiResponse).toHaveBeenCalled();
+    expect(xaiService.generateXAIResponse).toHaveBeenCalled();
+    expect(openaiChatService.generateOpenAIResponse).not.toHaveBeenCalled();
+  });
+
+  it('3. Gemini/xAI fail -> OpenAI succeeds -> Stop', async () => {
+    mockFail(xaiService.generateXAIResponse as any);
     mockSuccess(openaiChatService.generateOpenAIResponse as any, 'OpenAI');
+
     await dispatchAIResponse('Try OpenAI', {
       userId: 'u1',
       conversationHistory: [],
       userName: 'User',
     });
+
+    expect(geminiService.generateGeminiResponse).toHaveBeenCalled();
+    expect(xaiService.generateXAIResponse).toHaveBeenCalled();
     expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
     expect(anthropicService.generateAnthropicResponse).not.toHaveBeenCalled();
   });
 
-  it('2. OpenAI fails -> Anthropic succeeds -> Stop', async () => {
+  it('4. Gemini/xAI/OpenAI fail -> Anthropic succeeds -> Stop', async () => {
+    mockFail(xaiService.generateXAIResponse as any);
     mockFail(openaiChatService.generateOpenAIResponse as any);
     mockSuccess(anthropicService.generateAnthropicResponse as any, 'Anthropic');
 
@@ -81,32 +113,14 @@ describe('AI Dispatcher Priority Chain', () => {
       userName: 'User',
     });
 
-    expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
     expect(anthropicService.generateAnthropicResponse).toHaveBeenCalled();
-    expect(xaiService.generateXAIResponse).not.toHaveBeenCalled();
-  });
-
-  it('3. OpenAI/Anthropic fail -> xAI succeeds -> Stop', async () => {
-    mockFail(openaiChatService.generateOpenAIResponse as any);
-    mockFail(anthropicService.generateAnthropicResponse as any);
-    mockSuccess(xaiService.generateXAIResponse as any, 'xAI');
-
-    await dispatchAIResponse('Try xAI', {
-      userId: 'u1',
-      conversationHistory: [],
-      userName: 'User',
-    });
-
-    expect(openaiChatService.generateOpenAIResponse).toHaveBeenCalled();
-    expect(anthropicService.generateAnthropicResponse).toHaveBeenCalled();
-    expect(xaiService.generateXAIResponse).toHaveBeenCalled();
     expect(mistralService.generateMistralResponse).not.toHaveBeenCalled();
   });
 
-  it('4. OpenAI/Anthropic/xAI fail -> Mistral succeeds -> Stop', async () => {
+  it('5. Gemini/xAI/OpenAI/Anthropic fail -> Mistral succeeds', async () => {
+    mockFail(xaiService.generateXAIResponse as any);
     mockFail(openaiChatService.generateOpenAIResponse as any);
     mockFail(anthropicService.generateAnthropicResponse as any);
-    mockFail(xaiService.generateXAIResponse as any);
     mockSuccess(mistralService.generateMistralResponse as any, 'Mistral');
 
     await dispatchAIResponse('Try Mistral', {
@@ -119,11 +133,12 @@ describe('AI Dispatcher Priority Chain', () => {
     expect(openrouterService.generateOpenRouterResponse).not.toHaveBeenCalled();
   });
 
-  it('5. All primary fail -> OpenRouter succeeds', async () => {
-    mockFail(openaiChatService.generateOpenAIResponse as any);
-    mockFail(anthropicService.generateAnthropicResponse as any);
-    mockFail(xaiService.generateXAIResponse as any);
-    mockFail(mistralService.generateMistralResponse as any);
+  it('6. No direct providers -> OpenRouter succeeds', async () => {
+    config.gemini = { apiKey: '' };
+    config.openai = { apiKey: '' };
+    config.anthropic = { apiKey: '' };
+    config.xai = { apiKey: '' };
+    config.mistral = { apiKey: '' };
     mockSuccess(
       openrouterService.generateOpenRouterResponse as any,
       'OpenRouter'
@@ -136,5 +151,24 @@ describe('AI Dispatcher Priority Chain', () => {
     });
 
     expect(openrouterService.generateOpenRouterResponse).toHaveBeenCalled();
+  });
+
+  it('7. Direct providers configured -> do not auto-fallback to OpenRouter', async () => {
+    mockFail(xaiService.generateXAIResponse as any);
+    mockFail(mistralService.generateMistralResponse as any);
+    mockFail(openaiChatService.generateOpenAIResponse as any);
+    mockFail(anthropicService.generateAnthropicResponse as any);
+    mockSuccess(
+      openrouterService.generateOpenRouterResponse as any,
+      'OpenRouter'
+    );
+
+    await dispatchAIResponse('Do not use OpenRouter', {
+      userId: 'u1',
+      conversationHistory: [],
+      userName: 'User',
+    });
+
+    expect(openrouterService.generateOpenRouterResponse).not.toHaveBeenCalled();
   });
 });

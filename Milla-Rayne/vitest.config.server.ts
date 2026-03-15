@@ -1,8 +1,16 @@
-import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-export default defineConfig({
-  plugins: [tsconfigPaths()],
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default {
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'client', 'src'),
+      '@assets': path.resolve(__dirname, 'attached_assets'),
+      '@shared': path.resolve(__dirname, 'shared'),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
@@ -32,4 +40,4 @@ export default defineConfig({
       statements: 80,
     },
   },
-});
+};

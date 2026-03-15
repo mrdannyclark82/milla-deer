@@ -38,7 +38,7 @@ describe('Chat Routes', () => {
     it('should return default model if not authenticated', async () => {
       const response = await request(app).get('/api/ai-model/current');
       expect(response.status).toBe(200);
-      expect(response.body.model).toBe('minimax');
+      expect(response.body.model).toBe('gemini');
     });
 
     it('should return user model if authenticated', async () => {

@@ -1,0 +1,41 @@
+name: Scout Technology Radar
+on:
+  workflow_dispatch: # Allows manual triggering
+  schedule:
+    - cron: '0 8 * * 1' # Runs at 8:00 AM every Monday
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Run Scout Script and Generate Report
+        id: scout_report
+        run: |
+          report_content=$(node .github/scripts/scout.js)
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo "$report_content" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const report = `${{ steps.scout_report.outputs.report }}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Radar Tecnológico - ${new Date().toLocaleDateString()}`,
+              body: report
+            });

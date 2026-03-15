@@ -8,9 +8,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bot, Sparkles, Zap, Brain } from 'lucide-react';
+import { Bot, Sparkles, Zap, Brain, Cpu } from 'lucide-react';
 
-export type AIModel = 'minimax' | 'venice' | 'deepseek' | 'xai';
+export type AIModel = 'gemini' | 'minimax' | 'venice' | 'deepseek' | 'xai';
 
 interface AIModelOption {
   id: AIModel;
@@ -22,6 +22,14 @@ interface AIModelOption {
 }
 
 const AI_MODELS: AIModelOption[] = [
+  {
+    id: 'gemini',
+    name: 'Gemini Flash',
+    description: 'Google Gemini as the preferred chat provider for fast, balanced responses',
+    icon: <Cpu className="w-5 h-5" />,
+    provider: 'Google',
+    features: ['Default provider', 'Fast responses', 'Strong general chat'],
+  },
   {
     id: 'minimax',
     name: 'MiniMax M2',
@@ -65,7 +73,7 @@ export default function AIModelSelector({
   currentModel: externalModel,
   onModelChange,
 }: AIModelSelectorProps) {
-  const [selectedModel, setSelectedModel] = useState<AIModel>('minimax');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
 

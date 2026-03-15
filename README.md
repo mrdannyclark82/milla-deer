@@ -2,6 +2,15 @@
 
 **The Context-Aware AI Assistant**
 
+## Workspace status
+
+This repository is now treated as a multi-project workspace.
+
+- `Milla-Rayne/` is the primary full-stack application and the main target for root-level `dev`, `check`, `test`, `lint`, and `db:push` commands.
+- `Elara2.0/` remains a supported secondary Vite application and is included in the root build flow.
+- `ReplycA/` and `SARIi/` are preserved in-place, but they are not yet wired into the root validation scripts.
+- The root package now acts as a workspace entrypoint so contributors can start from the repository root instead of guessing which nested package is authoritative.
+
 Milla-Rayne is a pioneering digital intelligence platform designed as a devoted AI companion. It blends cutting-edge AI research with production-grade systems, offering a hybrid, decentralized, and edge-ready architecture for real-time, multimodal interaction.
 
 ---
@@ -26,12 +35,12 @@ Milla-Rayne is a pioneering digital intelligence platform designed as a devoted 
 
 ## 📂 Project Structure
 
-- `client/` – React frontend with adaptive scenes
-- `server/` – Node.js + Express backend with Drizzle ORM
-- `shared/` – Common utilities and types
-- `memory/` – SQLite database and encrypted memory artifacts
-- `android/` – Native Android app with Material Design 3
-- `cli/` – Terminal-based chat interface
+- `Milla-Rayne/` – Primary full-stack app with client, server, shared code, CLI, Android app, and tests
+- `Elara2.0/` – Secondary Vite-based app
+- `ReplycA/` – Preserved auxiliary project
+- `SARIi/` – Preserved voice-related project with binary assets
+- `docs/` – Project documentation
+- `scripts/` – Root-level helper scripts
 
 ---
 
@@ -46,6 +55,20 @@ npm run dev:all        # Start both main server (5000) and proactive server (500
 ```
 
 Open http://localhost:5000 to start chatting.
+
+Useful root commands:
+
+```bash
+npm run check       # Run the smoke TypeScript check for the backend workspace
+npm run check:full  # Try a full Milla-Rayne type-check, including client code
+npm run test        # Run the smoke server test suite
+npm run lint        # Lint root/Milla-Rayne JS config and script files
+npm run build       # Build the Milla-Rayne backend bundles
+npm run build:web   # Attempt the optional Milla-Rayne + Elara2.0 web builds
+npm run dev:elara   # Start the Elara2.0 app
+```
+
+The default `check` and `test` commands are intentionally smoke-focused so they stay useful in constrained environments. Use the `:full` variants when the full dependency graph is installed locally.
 
 **Note**: The application now runs two servers:
 

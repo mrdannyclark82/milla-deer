@@ -1,0 +1,13 @@
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+  readonly DEV: boolean;
+  readonly MODE: string;
+  readonly PROD: boolean;
+  readonly VITE_PROACTIVE_BASE_URL?: string;
+  readonly VITE_PROACTIVE_PORT?: string;
+  readonly [key: string]: string | boolean | undefined;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "server/agentCommsService.ts",
+    "server/avRagService.ts",
+    "server/externalFinanceAgent.ts",
+    "server/xaiTracker.ts",
+    "server/types/external-modules.d.ts",
+    "shared/schema.ts",
+    "shared/xai.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build"]
+}

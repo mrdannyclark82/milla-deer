@@ -12,7 +12,15 @@ export interface AIModel {
 
 const defaultModels: AIModel[] = [
   {
-    id: 'venice-uncensored',
+    id: 'gemini',
+    name: 'Gemini Flash',
+    provider: 'Google',
+    description: 'Default chat provider with fast balanced responses',
+    speed: 'fast',
+    icon: <Cpu className="w-4 h-4" />,
+  },
+  {
+    id: 'venice',
     name: 'Venice Uncensored',
     provider: 'Venice',
     description: 'Unfiltered general conversation',
@@ -20,7 +28,7 @@ const defaultModels: AIModel[] = [
     icon: <Star className="w-4 h-4" />,
   },
   {
-    id: 'deepseek-coder',
+    id: 'deepseek',
     name: 'DeepSeek Coder',
     provider: 'DeepSeek',
     description: 'Specialized for coding tasks',
@@ -28,20 +36,12 @@ const defaultModels: AIModel[] = [
     icon: <Brain className="w-4 h-4" />,
   },
   {
-    id: 'grok-2',
+    id: 'xai',
     name: 'Grok 2',
     provider: 'xAI',
     description: 'Creative & Visual capabilities',
     speed: 'fast',
     icon: <Zap className="w-4 h-4" />,
-  },
-  {
-    id: 'gemini-2-flash',
-    name: 'Gemini 2.0 Flash',
-    provider: 'Google',
-    description: 'Fastest response time',
-    speed: 'fast',
-    icon: <Cpu className="w-4 h-4" />,
   },
 ];
 

@@ -11,6 +11,7 @@ import {
 } from '../moodBackgroundService';
 import { generateImage, formatImageResponse } from '../imageService';
 import { generateImageWithVenice } from '../veniceImageService';
+import { generateImageWithPollinations } from '../pollinationsImageService';
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { upload } from '../middleware/upload.middleware';
 import { asyncHandler } from '../utils/routeHelpers';
@@ -20,6 +21,23 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerMediaRoutes(app: Express) {
   const router = Router();
+  const aspectRatioToSize = (
+    aspectRatio?: string
+  ): { width: number; height: number } => {
+    switch (aspectRatio) {
+      case '16:9':
+        return { width: 1280, height: 720 };
+      case '9:16':
+        return { width: 720, height: 1280 };
+      case '4:3':
+        return { width: 1024, height: 768 };
+      case '3:4':
+        return { width: 768, height: 1024 };
+      case '1:1':
+      default:
+        return { width: 1024, height: 1024 };
+    }
+  };
 
   // Video analysis from file upload
   router.post(
@@ -118,13 +136,30 @@ export function registerMediaRoutes(app: Express) {
   router.post(
     '/image/generate',
     asyncHandler(async (req, res) => {
-      const { prompt } = req.body;
+      const { prompt, aspectRatio, model } = req.body;
       if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
 
       let imageResult;
-      if (process.env.VENICE_API_KEY) {
+
+      if (model) {
+        const size = aspectRatioToSize(aspectRatio);
+        imageResult = await generateImageWithPollinations(prompt, {
+          width: size.width,
+          height: size.height,
+          model,
+        });
+        if (!imageResult.success) {
+          console.warn(
+            'Studio image generation via Pollinations failed, falling back:',
+            imageResult.error
+          );
+          imageResult = process.env.VENICE_API_KEY
+            ? await generateImageWithVenice(prompt)
+            : await generateImage(prompt);
+        }
+      } else if (process.env.VENICE_API_KEY) {
         imageResult = await generateImageWithVenice(prompt);
       } else {
         imageResult = await generateImage(prompt);
@@ -133,6 +168,7 @@ export function registerMediaRoutes(app: Express) {
       res.json({
         success: imageResult.success,
         imageUrl: imageResult.imageUrl,
+        error: imageResult.error,
         response: formatImageResponse(
           prompt,
           imageResult.success,

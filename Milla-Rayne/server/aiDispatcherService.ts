@@ -43,6 +43,7 @@ import {
   formatPersonaForPrompt,
   type ActiveUserPersona,
 } from './personaFusionService';
+import { DEFAULT_CHAT_MODEL, normalizeAIModel } from './aiModelPreferences';
 
 // Response cache for avoiding duplicate AI calls
 const responseCache = new Map<
@@ -55,6 +56,32 @@ const MEMORY_RELEVANCE_THRESHOLD = 8.0;
 const CONTENT_TRUNCATION_SHORT = 200;
 const CONTENT_TRUNCATION_MEDIUM = 250;
 const CONTENT_TRUNCATION_LONG = 300;
+const hasApiKey = (value: string | null | undefined): value is string =>
+  Boolean(value?.trim());
+const hasOpenRouterKeyConfigured = (): boolean =>
+  [
+    config.openrouter.apiKey,
+    config.openrouter.minimaxApiKey,
+    config.openrouter.grok1ApiKey,
+    config.openrouter.grok4ApiKey,
+    config.openrouter.katCoderApiKey,
+    config.openrouter.geminiApiKey,
+    config.openrouter.geminiFlashApiKey,
+  ].some(hasApiKey);
+const hasDirectProviderConfigured = (): boolean =>
+  [
+    config.gemini?.apiKey,
+    config.xai?.apiKey,
+    config.openai?.apiKey,
+    config.anthropic?.apiKey,
+    config.mistral?.apiKey,
+    config.minimax?.apiKey,
+    config.venice?.apiKey,
+  ].some(hasApiKey);
+const shouldInjectMemoryContext = (message: string): boolean =>
+  /remember|recall|memory|when we|before|previous|history|what did i|told you/i.test(
+    message
+  );
 
 export interface AIResponse {
   content: string;
@@ -81,7 +108,9 @@ async function enrichContextWithSemanticRetrieval(
 ): Promise<string> {
   const userId = context.userId || 'default-user';
   try {
-    const memoryContext = await getSemanticMemoryContext(userMessage, userId);
+    const memoryContext = shouldInjectMemoryContext(userMessage)
+      ? await getSemanticMemoryContext(userMessage, userId)
+      : '';
     const youtubeResults = await semanticSearchVideos(userMessage, {
       userId,
       topK: 2,
@@ -361,7 +390,7 @@ export async function dispatchAIResponse(
     augmentedMessage += buildAmbientContextString(ambientContext);
 
   // === DYNAMIC MODEL SELECTION & FALLBACK CHAIN ===
-  // Priority: User Preference -> OpenAI -> Anthropic -> xAI -> Mistral -> OpenRouter
+  // Priority: User Preference -> Local Preference -> Gemini -> xAI -> OpenAI -> Anthropic -> Mistral -> OpenRouter
 
   let response: AIResponse = { content: '', success: false };
   let modelUsed = 'none';
@@ -371,17 +400,21 @@ export async function dispatchAIResponse(
   if (userId && userId !== 'default-user') {
     try {
       const result = await getUserAIModel(userId);
-      if (result.success) preferredModel = result.model;
+      if (result.success) preferredModel = normalizeAIModel(result.model);
     } catch (error) {
       console.error('Error fetching user AI model:', error);
     }
   }
+  preferredModel ||= DEFAULT_CHAT_MODEL;
 
   // 0. User Preferred Model (Direct Routing)
   if (preferredModel) {
     console.log(`🤖 User preferred model: ${preferredModel}`);
 
-    if (preferredModel === 'minimax') {
+    if (preferredModel === 'gemini') {
+      response = await generateGeminiResponse(augmentedMessage);
+      if (response.success) modelUsed = 'gemini';
+    } else if (preferredModel === 'minimax') {
       response = await generateMinimaxResponse(
         augmentedMessage,
         {
@@ -408,7 +441,7 @@ export async function dispatchAIResponse(
         maxTokens
       );
       if (response.success) modelUsed = 'venice';
-    } else if (preferredModel === 'xai' || preferredModel === 'grok-2') {
+    } else if (preferredModel === 'xai' || preferredModel === 'grok') {
       // Pass model preference if needed, or rely on config
       response = await generateXAIResponse(
         augmentedMessage,
@@ -442,36 +475,15 @@ export async function dispatchAIResponse(
     }
   }
 
-  // 1. OpenAI
-  if (!response.success && config.openai.apiKey) {
-    console.log('Trying OpenAI...');
-    response = await generateOpenAIResponse(
-      augmentedMessage,
-      {
-        conversationHistory: context.conversationHistory,
-        userName: context.userName,
-        userEmotionalState: context.userEmotionalState,
-        urgency: context.urgency,
-      } as any,
-      maxTokens || 1024
-    );
-    if (response.success) modelUsed = 'openai';
+  // 0.75 Gemini
+  if (!response.success && hasApiKey(config.gemini?.apiKey)) {
+    console.log('Trying Gemini...');
+    response = await generateGeminiResponse(augmentedMessage);
+    if (response.success) modelUsed = 'gemini';
   }
 
-  // 2. Anthropic
-  if (!response.success && config.anthropic?.apiKey) {
-    console.log('Trying Anthropic...');
-    response = await generateAnthropicResponse(augmentedMessage, {
-      conversationHistory: context.conversationHistory,
-      userEmotionalState: context.userEmotionalState,
-      urgency: context.urgency,
-      userName: context.userName,
-    });
-    if (response.success) modelUsed = 'anthropic';
-  }
-
-  // 3. xAI (Grok)
-  if (!response.success && config.xai.apiKey) {
+  // 1. xAI (primary fallback after Gemini)
+  if (!response.success && hasApiKey(config.xai.apiKey)) {
     console.log('Trying xAI...');
     response = await generateXAIResponse(
       augmentedMessage,
@@ -486,8 +498,36 @@ export async function dispatchAIResponse(
     if (response.success) modelUsed = 'xai';
   }
 
+  // 2. OpenAI
+  if (!response.success && hasApiKey(config.openai.apiKey)) {
+    console.log('Trying OpenAI...');
+    response = await generateOpenAIResponse(
+      augmentedMessage,
+      {
+        conversationHistory: context.conversationHistory,
+        userName: context.userName,
+        userEmotionalState: context.userEmotionalState,
+        urgency: context.urgency,
+      } as any,
+      maxTokens || 1024
+    );
+    if (response.success) modelUsed = 'openai';
+  }
+
+  // 3. Anthropic
+  if (!response.success && hasApiKey(config.anthropic?.apiKey)) {
+    console.log('Trying Anthropic...');
+    response = await generateAnthropicResponse(augmentedMessage, {
+      conversationHistory: context.conversationHistory,
+      userEmotionalState: context.userEmotionalState,
+      urgency: context.urgency,
+      userName: context.userName,
+    });
+    if (response.success) modelUsed = 'anthropic';
+  }
+
   // 4. Mistral
-  if (!response.success && config.mistral?.apiKey) {
+  if (!response.success && hasApiKey(config.mistral?.apiKey)) {
     console.log('Trying Mistral...');
     response = await generateMistralResponse(augmentedMessage, {
       conversationHistory: context.conversationHistory,
@@ -498,8 +538,12 @@ export async function dispatchAIResponse(
     if (response.success) modelUsed = 'mistral';
   }
 
-  // 5. OpenRouter (Fallback for everything else)
-  if (!response.success) {
+  // 5. OpenRouter (only when direct providers are not configured)
+  if (
+    !response.success &&
+    hasOpenRouterKeyConfigured() &&
+    !hasDirectProviderConfigured()
+  ) {
     console.log('Falling back to OpenRouter...');
     response = await generateOpenRouterResponse(
       augmentedMessage,
@@ -512,6 +556,14 @@ export async function dispatchAIResponse(
       maxTokens
     );
     if (response.success) modelUsed = 'openrouter';
+  } else if (
+    !response.success &&
+    hasOpenRouterKeyConfigured() &&
+    hasDirectProviderConfigured()
+  ) {
+    console.log(
+      'Skipping OpenRouter fallback because direct provider keys are configured.'
+    );
   }
 
   // Track response and detect UI commands

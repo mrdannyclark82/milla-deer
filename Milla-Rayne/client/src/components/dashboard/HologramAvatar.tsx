@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
+import { UserRound } from 'lucide-react';
 
 interface HologramAvatarProps {
   avatarState?: 'idle' | 'listening' | 'thinking' | 'speaking';
   onInteraction?: (type: string) => void;
+  mediaUrl?: string | null;
+  mediaType?: 'image' | 'video' | null;
 }
 
 export function HologramAvatar({
   avatarState = 'idle',
   onInteraction,
+  mediaUrl,
+  mediaType,
 }: HologramAvatarProps) {
   const [breathScale, setBreathScale] = useState(1);
   const [glowIntensity, setGlowIntensity] = useState(1);
@@ -128,28 +133,33 @@ export function HologramAvatar({
           }}
         />
 
-        {/* Avatar silhouette/placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <svg
-            className="w-48 h-48 text-[#00f2ff]/30"
-            viewBox="0 0 100 100"
-            fill="currentColor"
-          >
-            {/* Upper body silhouette */}
-            <ellipse cx="50" cy="35" rx="18" ry="20" />
-            <ellipse cx="50" cy="85" rx="30" ry="25" />
-            {/* Glow effect on face area */}
-            <ellipse
-              cx="50"
-              cy="35"
-              rx="16"
-              ry="18"
-              fill="none"
-              stroke="rgba(255, 0, 170, 0.3)"
-              strokeWidth="2"
+        {mediaUrl ? (
+          mediaType === 'video' ? (
+            <video
+              src={mediaUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
             />
-          </svg>
-        </div>
+          ) : (
+            <img
+              src={mediaUrl}
+              alt="Milla avatar media"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative flex h-40 w-40 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-[0_0_35px_rgba(0,242,255,0.18)]">
+              <UserRound
+                className="h-24 w-24 text-[#00f2ff]/50"
+                strokeWidth={1.5}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Interactive highlight */}
         <div
@@ -177,28 +187,6 @@ export function HologramAvatar({
         ))}
       </div>
 
-      {/* Status indicator */}
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-        <div
-          className={`px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-md border ${
-            avatarState === 'idle'
-              ? 'bg-white/5 border-white/20 text-white/60'
-              : avatarState === 'listening'
-                ? 'bg-[#00f2ff]/10 border-[#00f2ff]/50 text-[#00f2ff]'
-                : avatarState === 'thinking'
-                  ? 'bg-[#ff00aa]/10 border-[#ff00aa]/50 text-[#ff00aa]'
-                  : 'bg-[#7c3aed]/10 border-[#7c3aed]/50 text-[#7c3aed]'
-          }`}
-        >
-          {avatarState === 'idle'
-            ? 'Awaiting Command'
-            : avatarState === 'listening'
-              ? 'Listening...'
-              : avatarState === 'thinking'
-                ? 'Thinking...'
-                : 'Speaking...'}
-        </div>
-      </div>
     </div>
   );
 }

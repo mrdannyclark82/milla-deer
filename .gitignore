@@ -11,7 +11,12 @@ node_modules/
 # Build outputs
 dist/
 build/
+coverage/
+client/coverage/
+Milla-Rayne/client/coverage/
 *.log
+*.backup
+*.zip
 
 # IDE files
 .vscode/
@@ -30,6 +35,11 @@ __pycache__/
 .Python
 venv/
 .venv/
+
+# Workspace artifacts
+home/
+.deer-flow/
+.local/state/replit/agent/
 
 # Database
 memory/*.db

@@ -14,7 +14,7 @@
  * - Knowledge base integration
  */
 
-import { YoutubeTranscript } from 'youtube-transcript';
+import { fetchYoutubeTranscript } from './lib/youtubeTranscript';
 import { getVideoInfo, type YouTubeVideoInfo } from './youtubeAnalysisService';
 
 // ===========================================================================================
@@ -469,7 +469,7 @@ export async function analyzeVideoWithMillAlyzer(
     let transcriptAvailable = false;
 
     try {
-      transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      transcriptData = await fetchYoutubeTranscript(videoId);
       transcriptText = transcriptData.map((t) => t.text).join(' ');
       transcriptAvailable = true;
       console.log(

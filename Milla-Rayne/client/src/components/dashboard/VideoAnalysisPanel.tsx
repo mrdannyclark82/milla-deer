@@ -1,11 +1,20 @@
 import { useRef, useState, type DragEvent } from 'react';
-import { X, Play, Link, Youtube, Upload, Loader2 } from 'lucide-react';
+import { X, Play, Link, Youtube, Upload, Loader2, Search } from 'lucide-react';
+
+interface SearchResultVideo {
+  id: string;
+  title: string;
+  channel: string;
+  thumbnail?: string;
+}
 
 interface VideoAnalysisPanelProps {
   onClose: () => void;
   recentItems?: string[];
   onAnalyzeComplete?: (label: string) => void;
   activeVideoId?: string | null;
+  onPlayVideo?: (videoId: string) => void;
+  onSearchResults?: (videos: SearchResultVideo[]) => void;
 }
 
 export function VideoAnalysisPanel({
@@ -13,9 +22,15 @@ export function VideoAnalysisPanel({
   recentItems = [],
   onAnalyzeComplete,
   activeVideoId,
+  onPlayVideo,
+  onSearchResults,
 }: VideoAnalysisPanelProps) {
   const [videoUrl, setVideoUrl] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResultVideo[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'url' | 'upload'>('url');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +86,50 @@ export function VideoAnalysisPanel({
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     handleFileSelect(e.dataTransfer.files?.[0]);
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    setSearchError(null);
+
+    try {
+      const response = await fetch(
+        `/api/youtube/search?query=${encodeURIComponent(searchQuery.trim())}&maxResults=8`
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setSearchResults([]);
+        setSearchError(data.message || data.error || 'Search failed');
+        return;
+      }
+
+      const videos: SearchResultVideo[] = (data.data || [])
+        .map((item: any) => ({
+          id: item.id?.videoId || item.id,
+          title: item.snippet?.title || 'Untitled video',
+          channel: item.snippet?.channelTitle || 'Unknown channel',
+          thumbnail:
+            item.snippet?.thumbnails?.medium?.url ||
+            item.snippet?.thumbnails?.default?.url,
+        }))
+        .filter((item: SearchResultVideo) => item.id);
+
+      setSearchResults(videos);
+      onSearchResults?.(videos);
+      if (videos[0]) {
+        onPlayVideo?.(videos[0].id);
+      }
+    } catch (error) {
+      setSearchResults([]);
+      setSearchError(
+        error instanceof Error ? error.message : 'Search request failed'
+      );
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -165,6 +224,85 @@ export function VideoAnalysisPanel({
                 </>
               )}
             </button>
+
+            <div className="h-px bg-white/10" />
+
+            <div className="space-y-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  placeholder="Search YouTube videos..."
+                  className="w-full px-4 py-2.5 pl-10 bg-white/5 border border-white/10 rounded-xl text-sm placeholder:text-white/30 focus:outline-none focus:border-[#ff00aa]/50 focus:bg-white/10 transition-all"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              </div>
+
+              <button
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || isSearching}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  searchQuery.trim() && !isSearching
+                    ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                }`}
+              >
+                {isSearching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    Search YouTube
+                  </>
+                )}
+              </button>
+
+              {searchError && (
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                  {searchError}
+                </div>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-2">
+                  {searchResults.map((video) => (
+                    <button
+                      key={video.id}
+                      onClick={() => onPlayVideo?.(video.id)}
+                      className="w-full rounded-lg border border-white/5 bg-white/5 p-2 text-left hover:bg-white/10 transition-all"
+                    >
+                      <div className="flex gap-3">
+                        {video.thumbnail && (
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="h-16 w-24 rounded object-cover"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm text-white line-clamp-2">
+                            {video.title}
+                          </div>
+                          <div className="mt-1 text-xs text-white/50 truncate">
+                            {video.channel}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div

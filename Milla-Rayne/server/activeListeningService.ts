@@ -7,7 +7,10 @@
 
 import { generateOpenRouterResponse } from './openrouterService';
 import { updateMemories } from './memoryService';
-import { YoutubeTranscript } from 'youtube-transcript';
+import {
+  fetchYoutubeTranscript,
+  type TranscriptEntry,
+} from './lib/youtubeTranscript';
 
 export interface ListeningInsight {
   timestamp: number;
@@ -40,9 +43,9 @@ let activeListeningState: ActiveListeningState = {
  */
 async function getTranscriptWithTimestamps(
   videoId: string
-): Promise<Array<{ text: string; offset: number; duration: number }> | null> {
+): Promise<TranscriptEntry[] | null> {
   try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    const transcript = await fetchYoutubeTranscript(videoId);
     return transcript;
   } catch (error) {
     console.error('Failed to fetch transcript:', error);
@@ -54,7 +57,7 @@ async function getTranscriptWithTimestamps(
  * Pre-processes entire transcript to identify all relevant moments
  */
 async function analyzeFullTranscript(
-  transcript: Array<{ text: string; offset: number; duration: number }>,
+  transcript: TranscriptEntry[],
   videoContext: { title: string; channel: string }
 ): Promise<ListeningInsight[]> {
   // Combine transcript into segments of ~30 seconds each for context

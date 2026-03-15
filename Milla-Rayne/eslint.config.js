@@ -1,8 +1,3 @@
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
-import pluginReact from 'eslint-plugin-react';
-import eslintConfigPrettier from 'eslint-config-prettier';
-
 export default [
   {
     ignores: [
@@ -14,19 +9,29 @@ export default [
       '.github',
       '.local',
       '.venv',
+      'coverage',
       'client/dist',
+      'client/coverage',
       'server/dist',
     ],
   },
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
-    plugins: {
-      react: pluginReact,
-    },
+    files: ['**/*.{js,mjs,cjs}'],
     languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
-        ...globals.browser,
-        ...globals.node,
+        console: 'readonly',
+        process: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: {
@@ -34,19 +39,8 @@ export default [
         },
       },
     },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-  },
-  ...tseslint.configs.recommended,
-  {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
     },
   },
-  eslintConfigPrettier,
 ];

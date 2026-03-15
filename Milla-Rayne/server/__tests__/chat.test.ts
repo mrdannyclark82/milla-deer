@@ -34,7 +34,7 @@ vi.mock('../authService', () => ({
   validateSession: vi.fn().mockResolvedValue({ valid: false }),
   getUserAIModel: vi
     .fn()
-    .mockResolvedValue({ success: true, model: 'minimax' }),
+    .mockResolvedValue({ success: true, model: 'gemini' }),
   updateUserAIModel: vi.fn().mockResolvedValue({ success: true }),
 }));
 

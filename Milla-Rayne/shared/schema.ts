@@ -20,7 +20,7 @@ export const users = pgTable('users', {
   password: text('password').notNull(),
   preferredAiModel: varchar('preferred_ai_model', {
     enum: ['minimax', 'venice', 'deepseek', 'xai', 'gemini', 'grok'],
-  }).default('minimax'),
+  }).default('gemini'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastLoginAt: timestamp('last_login_at'),
 });

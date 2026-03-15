@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+for (const envPath of [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+]) {
+  dotenv.config({ path: envPath, override: false });
+}
 import express, { type Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';

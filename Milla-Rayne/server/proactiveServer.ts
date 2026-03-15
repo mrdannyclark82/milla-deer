@@ -5,7 +5,14 @@
  */
 
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+for (const envPath of [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+]) {
+  dotenv.config({ path: envPath, override: false });
+}
 import express, { type Request, Response } from 'express';
 import { registerProactiveRoutes } from './proactiveRoutes';
 import { createServer } from 'http';
@@ -106,6 +113,17 @@ const isMainModule = process.argv[1] === __filename;
 
 if (process.env.NODE_ENV !== 'test' && isMainModule) {
   initProactiveServer().then((httpServer) => {
+    httpServer.once('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        console.warn(
+          `⚠️ Proactive Features Server port ${PROACTIVE_PORT} is already in use; assuming another proactive server is already running.`
+        );
+        process.exit(0);
+      }
+
+      throw error;
+    });
+
     httpServer.listen(
       {
         port: PROACTIVE_PORT,

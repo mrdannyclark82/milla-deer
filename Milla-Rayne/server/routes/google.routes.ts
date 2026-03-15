@@ -1,6 +1,12 @@
 import { Router, type Express } from 'express';
 import { loginOrRegisterWithGoogle } from '../authService';
 import { config } from '../config';
+import { validateSession } from '../authService';
+import {
+  getMySubscriptions,
+  getVideoDetails,
+  searchVideos,
+} from '../googleYoutubeService';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -8,6 +14,15 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerGoogleRoutes(app: Express) {
   const router = Router();
+
+  const resolveUserId = async (sessionToken?: string) => {
+    if (!sessionToken) return 'default-user';
+    const sessionResult = await validateSession(sessionToken);
+    if (sessionResult.valid && sessionResult.user?.id) {
+      return sessionResult.user.id;
+    }
+    return 'default-user';
+  };
 
   router.get('/auth/google/url', (req, res) => {
     const scope = ['profile', 'email', 'https://www.googleapis.com/auth/tasks'];
@@ -76,8 +91,53 @@ export function registerGoogleRoutes(app: Express) {
   );
 
   router.get('/oauth/authenticated', (req, res) => {
-    res.json({ authenticated: !!req.cookies.session_token });
+    const authenticated = !!req.cookies.session_token;
+    res.json({ success: true, authenticated, isAuthenticated: authenticated });
   });
+
+  router.get(
+    '/youtube/subscriptions',
+    asyncHandler(async (req, res) => {
+      const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
+      const userId = await resolveUserId(req.cookies.session_token);
+      const result = await getMySubscriptions(userId, Number.isNaN(maxResults) ? 10 : maxResults);
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
+
+  router.get(
+    '/youtube/search',
+    asyncHandler(async (req, res) => {
+      const query = String(req.query.query || '').trim();
+      const maxResults = Number.parseInt(String(req.query.maxResults || '8'), 10);
+      const order = String(req.query.order || 'relevance');
+
+      if (!query) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Query is required', error: 'INVALID_INPUT' });
+      }
+
+      const userId = await resolveUserId(req.cookies.session_token);
+      const result = await searchVideos(
+        userId,
+        query,
+        Number.isNaN(maxResults) ? 8 : maxResults,
+        order
+      );
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
+
+  router.get(
+    '/youtube/videos/:videoId',
+    asyncHandler(async (req, res) => {
+      const { videoId } = req.params;
+      const userId = await resolveUserId(req.cookies.session_token);
+      const result = await getVideoDetails(videoId, userId);
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
 
   // Mount routes
   app.use('/api', router);

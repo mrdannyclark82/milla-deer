@@ -1,5 +1,14 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+const envPaths = [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+];
+
+for (const envPath of envPaths) {
+  dotenv.config({ path: envPath, override: false });
+}
 
 console.log('Loading config.ts');
 
@@ -78,7 +87,9 @@ export const config = {
     grok1ApiKey: process.env.OPENROUTER_GROK1_API_KEY,
     grok4ApiKey: process.env.OPENROUTER_GROK4_API_KEY,
     katCoderApiKey: process.env.OPENROUTER_KAT_CODER_API_KEY,
-    geminiFlashApiKey: process.env.OPENROUTER_GEMINI_FLASH_API_KEY,
+    geminiFlashApiKey:
+      process.env.OPENROUTER_GEMINI_FLASH_API_KEY ||
+      process.env.OPENROUTER_GEMINI_API_KEY,
     minimaxModel:
       process.env.OPENROUTER_MINIMAX_MODEL || 'openai/gpt-3.5-turbo',
     grok1Model: process.env.OPENROUTER_GROK1_MODEL || 'x-ai/grok-code-fast-1',
@@ -88,7 +99,9 @@ export const config = {
     geminiFlashModel:
       process.env.OPENROUTER_GEMINI_FLASH_MODEL ||
       'google/gemini-2.0-flash-001',
-    geminiApiKey: process.env.OPENROUTER_GEMINI_API_KEY,
+    geminiApiKey:
+      process.env.OPENROUTER_GEMINI_API_KEY ||
+      process.env.OPENROUTER_GEMINI_FLASH_API_KEY,
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY,

@@ -94,9 +94,12 @@ export function ChatThreadPanel({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_25px_120px_rgba(0,0,0,0.45)] flex flex-col h-[500px] overflow-hidden">
+    <section className="relative flex h-[500px] flex-col overflow-hidden rounded-2xl border border-[#00f2ff]/20 bg-white/5 backdrop-blur-2xl shadow-[0_0_35px_rgba(0,242,255,0.12),0_25px_120px_rgba(0,0,0,0.45)]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#00f2ff]/8 via-transparent to-[#7c3aed]/10" />
+      <div className="absolute -left-12 top-10 h-28 w-28 rounded-full bg-[#00f2ff]/10 blur-3xl" />
+      <div className="absolute -right-10 bottom-10 h-32 w-32 rounded-full bg-[#ff00aa]/10 blur-3xl" />
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
+      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#00f2ff] to-[#7c3aed] flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
             <MessageSquare className="w-4 h-4 text-white" />
@@ -114,7 +117,7 @@ export function ChatThreadPanel({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="relative z-10 flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -180,7 +183,7 @@ export function ChatThreadPanel({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-white/5 bg-white/[0.02]">
+      <div className="relative z-10 p-4 border-t border-white/5 bg-white/[0.02]">
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 focus-within:border-[#00f2ff]/50 focus-within:bg-white/10 transition-all">
           <input
             type="text"

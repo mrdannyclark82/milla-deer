@@ -57,6 +57,20 @@ export interface TriggerResult {
 }
 
 const KEYWORD_TRIGGERS_ENABLED = true;
+const hasConfiguredProvider = (): boolean =>
+  Boolean(
+    config.gemini.apiKey ||
+      config.xai.apiKey ||
+      config.openai.apiKey ||
+      config.anthropic.apiKey ||
+      config.mistral.apiKey ||
+      config.openrouter.apiKey ||
+      config.openrouter.geminiApiKey ||
+      config.openrouter.geminiFlashApiKey ||
+      config.openrouter.grok4ApiKey ||
+      config.openrouter.katCoderApiKey ||
+      config.openrouter.minimaxApiKey
+  );
 
 /**
  * Input validation and sanitization for user inputs
@@ -608,6 +622,47 @@ export async function generateAIResponse(
     return {
       content: aiResponse.content,
       reasoning: userMessage.length > 20 ? reasoning : undefined,
+    };
+  }
+
+  if (hasConfiguredProvider()) {
+    console.warn(
+      'Primary AI dispatch failed despite configured provider(s):',
+      aiResponse.error || 'unknown error'
+    );
+
+    if (enhancedMessage !== userMessage) {
+      const strippedRetry = await dispatchAIResponse(
+        userMessage,
+        {
+          userId,
+          conversationHistory,
+          userName,
+          userEmotionalState:
+            (userEmotionalState === 'unknown'
+              ? 'neutral'
+              : userEmotionalState) || analysis.sentiment,
+          urgency: analysis.urgency,
+        },
+        config.maxOutputTokens
+      );
+
+      if (strippedRetry.success && strippedRetry.content) {
+        return {
+          content: strippedRetry.content,
+          reasoning: userMessage.length > 20 ? reasoning : undefined,
+        };
+      }
+
+      console.warn(
+        'Stripped AI retry also failed:',
+        strippedRetry.error || 'unknown error'
+      );
+    }
+
+    return {
+      content:
+        "I'm having trouble reaching my live AI provider right now. Please try again in a moment.",
     };
   }
 

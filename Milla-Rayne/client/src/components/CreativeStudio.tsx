@@ -25,6 +25,13 @@ interface CreativeStudioProps {
   isOpen: boolean;
   onClose: () => void;
   onSendToChat?: (imageUrl: string, prompt: string) => void;
+  embedded?: boolean;
+  onApplyToAvatar?: (media: {
+    url: string;
+    type: 'image' | 'video';
+    prompt: string;
+    model: string;
+  }) => void;
 }
 
 interface GeneratedImage {
@@ -100,7 +107,8 @@ const STYLE_PRESETS = [
 export const CreativeStudio: React.FC<CreativeStudioProps> = ({
   isOpen,
   onClose,
-  onSendToChat,
+  embedded = false,
+  onApplyToAvatar,
 }) => {
   // State
   const [prompt, setPrompt] = useState('');
@@ -217,13 +225,22 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-4 z-50 flex flex-col bg-[#0f0f1a]/98 backdrop-blur-lg rounded-xl border border-cyan-500/20 shadow-2xl overflow-hidden">
+    <div
+      className={`${
+        embedded
+          ? 'relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_120px_rgba(0,0,0,0.45)] backdrop-blur-2xl'
+          : 'fixed inset-4 z-50 overflow-hidden rounded-3xl border border-white/10 bg-[#0c021a]/95 shadow-2xl backdrop-blur-2xl'
+      }`}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#00f2ff]/10 via-transparent to-[#ff00aa]/10" />
+      <div className="absolute -left-20 top-10 h-40 w-40 rounded-full bg-[#00f2ff]/15 blur-3xl" />
+      <div className="absolute -right-16 bottom-6 h-48 w-48 rounded-full bg-[#ff00aa]/12 blur-3xl" />
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a0a12]/60">
+      <div className="relative z-10 flex items-center justify-between border-b border-white/10 bg-[#0c021a]/40 px-4 py-3">
         <div className="flex items-center gap-3">
-          <Palette className="w-5 h-5 text-purple-400" />
+          <Palette className="w-5 h-5 text-[#ff66cc]" />
           <h2 className="text-lg font-semibold text-white">Creative Studio</h2>
-          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+          <Badge className="border-[#ff00aa]/25 bg-[#ff00aa]/15 text-[#ffd6f5]">
             AI Image Generation
           </Badge>
         </div>
@@ -238,9 +255,9 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
         </Button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative z-10 grid overflow-hidden xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_minmax(220px,260px)]">
         {/* Left Panel - Controls */}
-        <div className="w-80 border-r border-white/10 bg-transparent flex flex-col p-4 gap-4">
+        <div className="border-b border-white/10 bg-white/[0.03] p-4 xl:border-b-0 xl:border-r">
           {/* Prompt Input */}
           <div>
             <label className="text-sm text-white/70 mb-2 block">Prompt</label>
@@ -261,8 +278,8 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
                   key={style}
                   className={`cursor-pointer transition-colors ${
                     selectedStyle === style
-                      ? 'bg-cyan-500/40 text-cyan-200 border-cyan-500/50'
-                      : 'bg-transparent text-white/60 border-white/20 hover:border-white/30'
+                      ? 'border-[#00f2ff]/30 bg-[#00f2ff]/20 text-[#bdfcff]'
+                      : 'border-white/10 bg-white/[0.03] text-white/60 hover:border-white/20'
                   }`}
                   onClick={() =>
                     setSelectedStyle(selectedStyle === style ? null : style)
@@ -279,17 +296,17 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
             <label className="text-sm text-white/70 mb-2 block">
               Aspect Ratio
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {ASPECT_RATIOS.map((ratio) => (
                 <Button
                   key={ratio.value}
                   variant="ghost"
                   size="sm"
                   onClick={() => setAspectRatio(ratio.value)}
-                  className={`flex-1 flex flex-col items-center gap-1 py-3 ${
+                  className={`flex flex-col items-center gap-1 py-3 ${
                     aspectRatio === ratio.value
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                      : 'bg-black/40 text-white/60 border border-white/10'
+                      ? 'border border-[#ff00aa]/25 bg-[#ff00aa]/15 text-[#ffd6f5]'
+                      : 'border border-white/10 bg-white/[0.03] text-white/60'
                   }`}
                 >
                   {ratio.icon}
@@ -311,8 +328,8 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
                   onClick={() => setModel(m.value)}
                   className={`flex flex-col items-start p-3 h-auto ${
                     model === m.value
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                      : 'bg-black/40 text-white/60 border border-white/10'
+                      ? 'border border-[#7c3aed]/30 bg-[#7c3aed]/20 text-[#e2d4ff]'
+                      : 'border border-white/10 bg-white/[0.03] text-white/60'
                   }`}
                 >
                   <span className="font-medium">{m.label}</span>
@@ -326,7 +343,7 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
           <Button
             onClick={generateImage}
             disabled={isGenerating || !prompt.trim()}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-6"
+            className="w-full bg-gradient-to-r from-[#7c3aed] via-[#00f2ff] to-[#ff00aa] py-6 font-medium text-white shadow-[0_0_24px_rgba(0,242,255,0.2)] hover:brightness-110"
           >
             {isGenerating ? (
               <>
@@ -349,20 +366,20 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
         </div>
 
         {/* Center Panel - Preview */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex items-center justify-center p-8 bg-transparent">
+        <div className="flex min-h-[380px] flex-col overflow-hidden">
+          <div className="flex flex-1 items-center justify-center p-6 md:p-8">
             {selectedImage ? (
               <div className="relative max-w-full max-h-full">
                 <img
                   src={selectedImage.url}
                   alt={selectedImage.prompt}
-                  className="max-w-full max-h-[60vh] rounded-lg shadow-2xl"
+                  className="max-w-full max-h-[52vh] rounded-2xl border border-white/10 shadow-2xl"
                 />
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-wrap justify-center gap-2">
                   <Button
                     size="sm"
                     onClick={() => downloadImage(selectedImage)}
-                    className="bg-black/60 hover:bg-black/80 text-white"
+                    className="border border-white/10 bg-[#0c021a]/75 text-white hover:bg-[#0c021a]"
                   >
                     <Download className="w-4 h-4 mr-1" />
                     Download
@@ -370,7 +387,7 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
                   <Button
                     size="sm"
                     onClick={() => copyImageUrl(selectedImage)}
-                    className="bg-black/60 hover:bg-black/80 text-white"
+                    className="border border-white/10 bg-[#0c021a]/75 text-white hover:bg-[#0c021a]"
                   >
                     {copied ? (
                       <Check className="w-4 h-4 mr-1 text-green-400" />
@@ -379,10 +396,27 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
                     )}
                     {copied ? 'Copied!' : 'Copy URL'}
                   </Button>
+                  {onApplyToAvatar && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        onApplyToAvatar({
+                          url: selectedImage.url,
+                          type: 'image',
+                          prompt: selectedImage.prompt,
+                          model: selectedImage.model,
+                        })
+                      }
+                      className="bg-gradient-to-r from-[#7c3aed] to-[#ff00aa] text-white hover:brightness-110"
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Set on Avatar
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center text-white/40">
+              <div className="flex flex-col items-center text-center text-white/40">
                 <ImageIcon className="w-16 h-16 mb-4 opacity-50" />
                 <p className="text-lg">No image selected</p>
                 <p className="text-sm">
@@ -394,17 +428,17 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
 
           {/* Prompt info */}
           {selectedImage && (
-            <div className="p-4 border-t border-white/10 bg-black/40">
+            <div className="border-t border-white/10 bg-white/[0.03] p-4">
               <p className="text-sm text-white/70 mb-1">Prompt:</p>
               <p className="text-white">{selectedImage.prompt}</p>
               <div className="flex gap-2 mt-2">
-                <Badge className="bg-black/40 text-white/60 border-white/10">
+                <Badge className="border-white/10 bg-white/[0.03] text-white/60">
                   {selectedImage.aspectRatio}
                 </Badge>
-                <Badge className="bg-black/40 text-white/60 border-white/10">
+                <Badge className="border-white/10 bg-white/[0.03] text-white/60">
                   {selectedImage.model}
                 </Badge>
-                <Badge className="bg-black/40 text-white/60 border-white/10">
+                <Badge className="border-white/10 bg-white/[0.03] text-white/60">
                   {selectedImage.timestamp.toLocaleTimeString()}
                 </Badge>
               </div>
@@ -413,7 +447,7 @@ export const CreativeStudio: React.FC<CreativeStudioProps> = ({
         </div>
 
         {/* Right Panel - History */}
-        <div className="w-64 border-l border-white/10 bg-black/20 flex flex-col">
+        <div className="flex min-h-[220px] flex-col border-t border-white/10 bg-white/[0.03] xl:border-l xl:border-t-0">
           <div className="p-3 border-b border-white/10 flex items-center justify-between">
             <span className="text-sm text-white/70">History</span>
             {generatedImages.length > 0 && (

@@ -11,26 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-export interface ReasoningStep {
-  type: 'intent' | 'tools' | 'memory' | 'response';
-  title: string;
-  content: string | string[];
-  timestamp: Date;
-  metadata?: Record<string, any>;
-}
-
-export interface XAIData {
-  commandIntent?: string;
-  toolsSelected?: string[];
-  memoryFragments?: Array<{ content: string; relevance: number }>;
-  responseGeneration?: {
-    model: string;
-    tokensUsed?: number;
-    processingTime?: number;
-  };
-  reasoning: ReasoningStep[];
-}
+import type { ReasoningStep, XAIData } from '@shared/xai';
 
 interface XAIOverlayProps {
   data: XAIData | null;

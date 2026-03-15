@@ -40,6 +40,27 @@ describe.sequential('Vector Database Service', () => {
     });
   });
 
+  describe('Embedding Generation', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should generate embeddings with Ollama', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          embeddings: [[0.1, 0.2, 0.3]],
+        }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const embedding = await generateEmbedding('hello world');
+
+      expect(fetchMock).toHaveBeenCalled();
+      expect(embedding).toEqual([0.1, 0.2, 0.3]);
+    });
+  });
+
   describe('Vector Storage', () => {
     beforeEach(async () => {
       // Clear the vector store and write the empty state to disk

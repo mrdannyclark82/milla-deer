@@ -9,6 +9,12 @@ import {
   updateUserAIModel,
 } from '../authService';
 import {
+  CANONICAL_AI_MODELS,
+  DEFAULT_CHAT_MODEL,
+  isSupportedAIModel,
+  normalizeAIModel,
+} from '../aiModelPreferences';
+import {
   generateAIResponse,
   validateAndSanitizePrompt,
 } from '../services/chatOrchestrator.service';
@@ -32,12 +38,12 @@ export function registerChatRoutes(app: Express) {
       const sessionToken = req.cookies.session_token;
 
       if (!sessionToken) {
-        return res.json({ success: true, model: 'minimax' });
+        return res.json({ success: true, model: DEFAULT_CHAT_MODEL });
       }
 
       const sessionResult = await validateSession(sessionToken);
       if (!sessionResult.valid || !sessionResult.user) {
-        return res.json({ success: true, model: 'minimax' });
+        return res.json({ success: true, model: DEFAULT_CHAT_MODEL });
       }
 
       const result = await getUserAIModel(sessionResult.user.id as string);
@@ -58,35 +64,29 @@ export function registerChatRoutes(app: Express) {
           .json({ success: false, error: 'Model is required' });
       }
 
-      const validModels = [
-        'minimax',
-        'xai',
-        'venice-uncensored',
-        'deepseek-coder',
-        'grok-2',
-        'gemini-2-flash',
-      ];
-      if (!validModels.includes(model)) {
+      if (!isSupportedAIModel(model)) {
         return res.status(400).json({
           success: false,
-          error: `Invalid model. Must be one of: ${validModels.join(', ')}`,
+          error: `Invalid model. Must be one of: ${CANONICAL_AI_MODELS.join(', ')}`,
         });
       }
 
+      const normalizedModel = normalizeAIModel(model) || DEFAULT_CHAT_MODEL;
+
       if (!sessionToken) {
-        return res.json({ success: true, model });
+        return res.json({ success: true, model: normalizedModel });
       }
 
       const sessionResult = await validateSession(sessionToken);
       if (!sessionResult.valid || !sessionResult.user) {
-        return res.json({ success: true, model });
+        return res.json({ success: true, model: normalizedModel });
       }
 
       const result = await updateUserAIModel(
         sessionResult.user.id as string,
-        model
+        normalizedModel
       );
-      res.json({ ...result, model });
+      res.json({ ...result, model: normalizedModel });
     })
   );
 

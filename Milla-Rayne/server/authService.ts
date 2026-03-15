@@ -9,6 +9,11 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { storage } from './storage';
 import type { InsertUser, User, UserSession } from '@shared/schema';
+import {
+  DEFAULT_CHAT_MODEL,
+  normalizeAIModel,
+  type CanonicalAIModel,
+} from './aiModelPreferences';
 
 const SESSION_EXPIRY_HOURS = 24 * 7; // 7 days
 
@@ -41,7 +46,7 @@ export async function registerUser(
       username,
       email,
       password: hashedPassword,
-      preferredAiModel: 'minimax', // Default AI model
+      preferredAiModel: DEFAULT_CHAT_MODEL,
     });
 
     return {
@@ -176,10 +181,15 @@ export async function logoutUser(
  */
 export async function updateUserAIModel(
   userId: string,
-  aiModel: 'minimax' | 'venice' | 'deepseek' | 'xai'
+  aiModel: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await storage.updateUserAIModel(userId, aiModel);
+    const normalizedModel = normalizeAIModel(aiModel);
+    if (!normalizedModel) {
+      return { success: false, error: 'Unsupported AI model preference' };
+    }
+
+    await storage.updateUserAIModel(userId, normalizedModel as CanonicalAIModel);
     return { success: true };
   } catch (error) {
     console.error('Update AI model error:', error);
@@ -198,7 +208,10 @@ export async function getUserAIModel(
     if (!user) {
       return { success: false, error: 'User not found' };
     }
-    return { success: true, model: user.preferredAiModel || 'minimax' };
+    return {
+      success: true,
+      model: normalizeAIModel(user.preferredAiModel) || DEFAULT_CHAT_MODEL,
+    };
   } catch (error) {
     console.error('Get AI model error:', error);
     return { success: false, error: 'Failed to get AI model preference' };
@@ -257,7 +270,7 @@ export async function loginOrRegisterWithGoogle(
         username,
         email,
         password: hashedPassword,
-        preferredAiModel: 'minimax',
+        preferredAiModel: DEFAULT_CHAT_MODEL,
       });
 
       isNewUser = true;
