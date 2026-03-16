@@ -1,19 +1,59 @@
 package com.millarayne
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,28 +61,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.millarayne.agent.OfflineResponseGenerator
-import com.millarayne.api.MillaApiClient
-import com.millarayne.data.*
-import com.millarayne.ui.theme.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.millarayne.data.Message
+import com.millarayne.data.SettingsRepository
+import com.millarayne.ui.ChatViewModel
+import com.millarayne.ui.theme.AssistantBubble
+import com.millarayne.ui.theme.MillaTheme
+import com.millarayne.ui.theme.UserBubble
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ChatViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Initialize database
-        val database = AppDatabase.getDatabase(applicationContext)
-        viewModel.initialize(database, applicationContext)
-        
+
         setContent {
             MillaTheme {
                 Surface(
@@ -56,157 +91,128 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class ChatViewModel : ViewModel() {
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
-    
-    private val _isOfflineMode = MutableStateFlow(false)
-    val isOfflineMode: StateFlow<Boolean> = _isOfflineMode
-
-    private lateinit var messageDao: MessageDao
-    private var offlineGenerator: OfflineResponseGenerator? = null
-
-    fun initialize(database: AppDatabase, appContext: android.content.Context) {
-        messageDao = database.messageDao()
-        // Use Application context to avoid memory leaks
-        offlineGenerator = OfflineResponseGenerator(appContext.applicationContext)
-        loadMessages()
-    }
-    
-    override fun onCleared() {
-        super.onCleared()
-        offlineGenerator?.shutdown()
-    }
-
-    private fun loadMessages() {
-        viewModelScope.launch {
-            try {
-                messageDao.getAllMessages().collect { msgs ->
-                    _messages.value = msgs
-                }
-            } catch (e: Exception) {
-                _error.value = "Failed to load messages: ${e.localizedMessage ?: "Unknown error"}"
-                android.util.Log.e("ChatViewModel", "Failed to load messages", e)
-            }
-        }
-    }
-
-    fun sendMessage(content: String) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-
-                // Validate input
-                if (content.isBlank()) {
-                    _error.value = "Message cannot be empty"
-                    return@launch
-                }
-
-                // Save user message
-                val userMessage = Message(
-                    content = content.trim(),
-                    role = "user",
-                    timestamp = System.currentTimeMillis()
-                )
-
-                try {
-                    messageDao.insertMessage(userMessage)
-                } catch (dbException: Exception) {
-                    android.util.Log.e("ChatViewModel", "Failed to save user message to database", dbException)
-                    _error.value = "Failed to save message locally: ${dbException.localizedMessage ?: "Database error"}"
-                    return@launch
-                }
-
-                // Try to send to API, fallback to offline mode
-                // Solution
-                  var responseText: String? = null
-// ... your logic ...
-// Do not assign responseText from inside closures or lambdas
-
-                  if (responseText != null) {
-                  val assistantMessage = Message(
-                  content = responseText!!,
-                  role = "assistant",
-                  timestamp = System.currentTimeMillis()
-    )
-                  try {
-                    messageDao.insertMessage(assistantMessage)
-                  } catch (dbException: Exception) {
-        // ...
-    }
-}
-                // Save assistant message
-                if (responseText != null) {
-                    val assistantMessage = Message(
-                        content = responseText,
-                        role = "assistant",
-                        timestamp = System.currentTimeMillis()
-                    )
-                    try {
-                        messageDao.insertMessage(assistantMessage)
-                    } catch (dbException: Exception) {
-                        android.util.Log.e("ChatViewModel", "Failed to save assistant message to database", dbException)
-                        _error.value = "Message sent but failed to save response locally: ${dbException.localizedMessage ?: "Database error"}"
-                        return@launch
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("ChatViewModel", "Error in sendMessage", e)
-                _error.value = when (e) {
-                    is java.net.UnknownHostException -> "Cannot reach server. Check IP address (192.168.40.117) and network connection."
-                    is java.net.ConnectException -> "Server connection refused. Make sure the server is running on port 5000."
-                    is java.net.SocketTimeoutException -> "Connection timed out. Check your network and server status."
-                    is retrofit2.HttpException -> "Server error (${e.code()}): ${e.message()}"
-                    else -> "Network error: ${e.localizedMessage ?: "Unknown error occurred"}"
-                }
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-    fun clearError() {
-        _error.value = null
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(viewModel: ChatViewModel) {
-    val messages by viewModel.messages.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val isOfflineMode by viewModel.isOfflineMode.collectAsState()
-    
-    var messageText by remember { mutableStateOf("") }
-    val listState = rememberLazyListState()
+private fun ChatScreen(viewModel: ChatViewModel) {
+    val context = LocalContext.current
+    val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+    val isOfflineMode by viewModel.isOfflineMode.collectAsStateWithLifecycle()
+    val serverUrl by viewModel.serverUrl.collectAsStateWithLifecycle()
+    val offlineModeEnabled by viewModel.offlineModeEnabled.collectAsStateWithLifecycle()
+    val autoFallback by viewModel.autoFallback.collectAsStateWithLifecycle()
+    val spokenRepliesEnabled by viewModel.spokenRepliesEnabled.collectAsStateWithLifecycle()
 
-    // Auto-scroll to bottom when new messages arrive
+    var messageText by remember { mutableStateOf("") }
+    var localError by remember { mutableStateOf<String?>(null) }
+    var isSettingsOpen by remember { mutableStateOf(false) }
+    var pendingServerUrl by remember { mutableStateOf(serverUrl) }
+    var pendingOfflineMode by remember { mutableStateOf(offlineModeEnabled) }
+    var pendingAutoFallback by remember { mutableStateOf(autoFallback) }
+    var pendingSpokenReplies by remember { mutableStateOf(spokenRepliesEnabled) }
+    var lastSpokenAssistantMessageId by remember { mutableStateOf<Long?>(null) }
+    val listState = rememberLazyListState()
+    val textToSpeech = rememberTextToSpeech()
+
+    val speechRecognizerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK) {
+            localError = "Voice input was cancelled."
+            return@rememberLauncherForActivityResult
+        }
+
+        val recognizedText = result.data
+            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+            ?.trim()
+            .orEmpty()
+
+        if (recognizedText.isBlank()) {
+            localError = "I couldn't hear anything clearly enough to send."
+            return@rememberLauncherForActivityResult
+        }
+
+        messageText = ""
+        viewModel.sendMessage(recognizedText)
+    }
+
+    val microphonePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            localError = "Microphone permission is required for voice input."
+            return@rememberLauncherForActivityResult
+        }
+
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Milla")
+        }
+
+        if (intent.resolveActivity(context.packageManager) == null) {
+            localError = "Speech recognition is not available on this device."
+            return@rememberLauncherForActivityResult
+        }
+
+        speechRecognizerLauncher.launch(intent)
+    }
+
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            listState.animateScrollToItem(messages.lastIndex)
         }
+    }
+
+    LaunchedEffect(isSettingsOpen, serverUrl, offlineModeEnabled, autoFallback, spokenRepliesEnabled) {
+        if (isSettingsOpen) {
+            pendingServerUrl = serverUrl
+            pendingOfflineMode = offlineModeEnabled
+            pendingAutoFallback = autoFallback
+            pendingSpokenReplies = spokenRepliesEnabled
+        }
+    }
+
+    LaunchedEffect(messages, spokenRepliesEnabled) {
+        val latestAssistantMessage = messages.lastOrNull { it.role == "assistant" } ?: return@LaunchedEffect
+        if (!spokenRepliesEnabled || latestAssistantMessage.id == lastSpokenAssistantMessageId) {
+            return@LaunchedEffect
+        }
+
+        lastSpokenAssistantMessageId = latestAssistantMessage.id
+        textToSpeech?.speak(
+            latestAssistantMessage.content.replace('\n', ' '),
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "assistant-${latestAssistantMessage.id}"
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Column {
+                        Text("Milla Rayne", fontWeight = FontWeight.Bold)
                         Text(
-                            "💜 Milla Rayne",
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            if (isOfflineMode) "Offline Mode" else "Your AI Companion",
+                            when {
+                                offlineModeEnabled -> "Offline only"
+                                isOfflineMode -> "Offline fallback"
+                                else -> "Connected"
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isOfflineMode) Color.Yellow else Color.White.copy(alpha = 0.9f)
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { isSettingsOpen = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Connection and voice settings",
+                            tint = Color.White
                         )
                     }
                 },
@@ -217,41 +223,54 @@ fun ChatScreen(viewModel: ChatViewModel) {
             )
         },
         bottomBar = {
-            Surface(
-                shadowElevation = 8.dp
-            ) {
+            Surface(shadowElevation = 8.dp) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(
+                        onClick = {
+                            localError = null
+                            microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        },
+                        enabled = !isLoading
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Mic,
+                            contentDescription = "Speak a message",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     OutlinedTextField(
                         value = messageText,
                         onValueChange = { messageText = it },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 8.dp),
-                        placeholder = { Text("Type a message…") },
+                            .padding(horizontal = 8.dp),
+                        placeholder = { Text("Type or speak a message...") },
                         enabled = !isLoading,
                         maxLines = 3
                     )
                     IconButton(
                         onClick = {
-                            if (messageText.isNotBlank()) {
-                                viewModel.sendMessage(messageText)
+                            val trimmed = messageText.trim()
+                            if (trimmed.isNotEmpty()) {
+                                viewModel.sendMessage(trimmed)
                                 messageText = ""
                             }
                         },
                         enabled = !isLoading && messageText.isNotBlank()
                     ) {
                         Icon(
-                            Icons.Filled.Send,
+                            imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
-                            tint = if (messageText.isNotBlank()) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            tint = if (messageText.isNotBlank()) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
                                 Color.Gray
+                            }
                         )
                     }
                 }
@@ -263,16 +282,12 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF3E5F5),
-                            Color(0xFFE1BEE7)
-                        )
+                        colors = listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7))
                     )
                 )
                 .padding(paddingValues)
         ) {
             if (messages.isEmpty() && !isLoading) {
-                // Empty state
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -281,7 +296,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "👋 Hello!",
+                        "Hello!",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -291,19 +306,6 @@ fun ChatScreen(viewModel: ChatViewModel) {
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.Gray
                     )
-                    if (isOfflineMode) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "🔌 Running in offline mode",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9C27B0)
-                        )
-                        Text(
-                            "Limited features available",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
                 }
             } else {
                 LazyColumn(
@@ -315,7 +317,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
                         MessageBubble(message = message)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
+
                     if (isLoading) {
                         item {
                             Row(
@@ -324,30 +326,49 @@ fun ChatScreen(viewModel: ChatViewModel) {
                                     .padding(8.dp),
                                 horizontalArrangement = Arrangement.Start
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Milla is thinking...",
-                                    color = Color.Gray,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = AssistantBubble.copy(alpha = 0.6f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(
+                                            horizontal = 12.dp,
+                                            vertical = 10.dp
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "...",
+                                            color = MaterialTheme.colorScheme.primary,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            "Milla is thinking...",
+                                            color = Color.Gray,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Error snackbar
-            error?.let { errorMessage ->
+            (error ?: localError)?.let { errorMessage ->
                 Snackbar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp),
                     action = {
-                        TextButton(onClick = { viewModel.clearError() }) {
+                        TextButton(
+                            onClick = {
+                                viewModel.clearError()
+                                localError = null
+                            }
+                        ) {
                             Text("Dismiss")
                         }
                     }
@@ -357,13 +378,144 @@ fun ChatScreen(viewModel: ChatViewModel) {
             }
         }
     }
+
+    if (isSettingsOpen) {
+        SettingsDialog(
+            serverUrl = pendingServerUrl,
+            offlineModeEnabled = pendingOfflineMode,
+            autoFallback = pendingAutoFallback,
+            spokenRepliesEnabled = pendingSpokenReplies,
+            onServerUrlChange = { pendingServerUrl = it },
+            onOfflineModeChange = { pendingOfflineMode = it },
+            onAutoFallbackChange = { pendingAutoFallback = it },
+            onSpokenRepliesChange = { pendingSpokenReplies = it },
+            onDismiss = { isSettingsOpen = false },
+            onSave = {
+                viewModel.updateServerUrl(pendingServerUrl)
+                viewModel.setOfflineModeEnabled(pendingOfflineMode)
+                viewModel.setAutoFallback(pendingAutoFallback)
+                viewModel.setSpokenRepliesEnabled(pendingSpokenReplies)
+                isSettingsOpen = false
+                localError = null
+            }
+        )
+    }
 }
 
 @Composable
-fun MessageBubble(message: Message) {
+private fun SettingsDialog(
+    serverUrl: String,
+    offlineModeEnabled: Boolean,
+    autoFallback: Boolean,
+    spokenRepliesEnabled: Boolean,
+    onServerUrlChange: (String) -> Unit,
+    onOfflineModeChange: (Boolean) -> Unit,
+    onAutoFallbackChange: (Boolean) -> Unit,
+    onSpokenRepliesChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Connection and voice") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = serverUrl,
+                    onValueChange = onServerUrlChange,
+                    label = { Text("Server URL") },
+                    placeholder = { Text(SettingsRepository.DEFAULT_SERVER_URL) },
+                    supportingText = {
+                        Text("Use your computer IP like http://192.168.1.50:5000/ or adb reverse with http://127.0.0.1:5000/")
+                    },
+                    singleLine = true
+                )
+                SettingsToggleRow(
+                    label = "Offline only",
+                    description = "Always use the on-device fallback responder.",
+                    checked = offlineModeEnabled,
+                    onCheckedChange = onOfflineModeChange
+                )
+                SettingsToggleRow(
+                    label = "Auto fallback",
+                    description = "Drop to offline responses if the server cannot be reached.",
+                    checked = autoFallback,
+                    onCheckedChange = onAutoFallbackChange
+                )
+                SettingsToggleRow(
+                    label = "Spoken replies",
+                    description = "Read assistant responses out loud after they arrive.",
+                    checked = spokenRepliesEnabled,
+                    onCheckedChange = onSpokenRepliesChange
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onSave) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun SettingsToggleRow(
+    label: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+private fun rememberTextToSpeech(): TextToSpeech? {
+    val context = LocalContext.current
+    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    DisposableEffect(context) {
+        var createdTextToSpeech: TextToSpeech? = null
+        createdTextToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                createdTextToSpeech?.language = Locale.getDefault()
+                createdTextToSpeech?.setSpeechRate(1.0f)
+            }
+        }
+        textToSpeech = createdTextToSpeech
+
+        onDispose {
+            textToSpeech?.stop()
+            textToSpeech?.shutdown()
+            textToSpeech = null
+        }
+    }
+
+    return textToSpeech
+}
+
+@Composable
+private fun MessageBubble(message: Message) {
     val isUser = message.role == "user"
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    
+    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -376,9 +528,7 @@ fun MessageBubble(message: Message) {
             shadowElevation = 2.dp,
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = message.content,
                     color = Color.White,

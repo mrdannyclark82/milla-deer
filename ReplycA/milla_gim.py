@@ -19,6 +19,10 @@ except ImportError as e:
 # --- CONFIG ---
 MEMORY_PATH = os.path.join(PROJECT_ROOT, "core_os/memory/stream_of_consciousness.md")
 ARCHIVE_PATH = os.path.join(PROJECT_ROOT, "core_os/memory/thought_archives")
+GIM_XAI_MODEL = os.getenv(
+    "GIM_XAI_MODEL",
+    "grok-4.20-beta-latest-non-reasoning",
+).strip()
 
 def log(text):
     print(f"[Milla-GIM]: {text}")
@@ -102,8 +106,25 @@ def generate_monologue():
     
     try:
         messages = [{"role": "user", "content": prompt}]
-        # Use the real model_manager (configured for xAI or Ollama)
-        response = model_manager.chat(messages=messages)
+        original_provider = getattr(model_manager, "provider", None)
+        original_model = getattr(model_manager, "current_model", None)
+
+        try:
+            if getattr(model_manager, "xai_key", None):
+                log(f"Using xAI model for GIM: {GIM_XAI_MODEL}")
+                model_manager.switch_provider("xai")
+                model_manager.switch_model(GIM_XAI_MODEL)
+            else:
+                log(
+                    "XAI_API_KEY not configured for GIM; falling back to the existing model manager provider."
+                )
+
+            response = model_manager.chat(messages=messages)
+        finally:
+            if original_provider:
+                model_manager.switch_provider(original_provider)
+            if original_model:
+                model_manager.switch_model(original_model)
         
         content = response['message']['content']
         if isinstance(content, dict):

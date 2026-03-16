@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -56,6 +58,15 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.isFork = true
+
+    val javacExecutable = file("${System.getProperty("java.home")}/bin/javac")
+    if (javacExecutable.exists()) {
+        options.forkOptions.executable = javacExecutable.absolutePath
     }
 }
 

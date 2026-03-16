@@ -1,6 +1,7 @@
 package com.millarayne.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.millarayne.agent.OfflineResponseGenerator
@@ -9,143 +10,219 @@ import com.millarayne.data.AppDatabase
 import com.millarayne.data.ChatRequest
 import com.millarayne.data.Message
 import com.millarayne.data.MessageDao
+import com.millarayne.data.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
+    private val messageDao: MessageDao =
+        AppDatabase.getDatabase(application).messageDao()
+    private val offlineGenerator = OfflineResponseGenerator(application)
+    private val settingsRepository = SettingsRepository(application)
+
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages
+    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     private val _isOfflineMode = MutableStateFlow(false)
-    val isOfflineMode: StateFlow<Boolean> = _isOfflineMode
+    val isOfflineMode: StateFlow<Boolean> = _isOfflineMode.asStateFlow()
 
-    private val messageDao: MessageDao
-    private val offlineGenerator: OfflineResponseGenerator
+    private val _serverUrl = MutableStateFlow(SettingsRepository.DEFAULT_SERVER_URL)
+    val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
+
+    private val _offlineModeEnabled =
+        MutableStateFlow(SettingsRepository.DEFAULT_OFFLINE_MODE_ENABLED)
+    val offlineModeEnabled: StateFlow<Boolean> = _offlineModeEnabled.asStateFlow()
+
+    private val _autoFallback = MutableStateFlow(SettingsRepository.DEFAULT_AUTO_FALLBACK)
+    val autoFallback: StateFlow<Boolean> = _autoFallback.asStateFlow()
+
+    private val _spokenRepliesEnabled =
+        MutableStateFlow(SettingsRepository.DEFAULT_SPOKEN_REPLIES_ENABLED)
+    val spokenRepliesEnabled: StateFlow<Boolean> = _spokenRepliesEnabled.asStateFlow()
 
     init {
-        val database = AppDatabase.getDatabase(application)
-        messageDao = database.messageDao()
-        offlineGenerator = OfflineResponseGenerator(application)
-        loadMessages()
-        syncPendingMessages() // Try to sync any offline messages on startup
+        observeMessages()
+        observeSettings()
     }
 
     override fun onCleared() {
-        super.onCleared()
         offlineGenerator.shutdown()
+        super.onCleared()
     }
 
-    private fun loadMessages() {
+    private fun observeMessages() {
         viewModelScope.launch {
             try {
-                messageDao.getAllMessages().collect { msgs ->
-                    _messages.value = msgs
+                messageDao.getAllMessages().collectLatest { storedMessages ->
+                    _messages.value = storedMessages
                 }
-            } catch (e: Exception) {
-                _error.value = "Failed to load messages: ${e.localizedMessage}"
+            } catch (error: Exception) {
+                Log.e("ChatViewModel", "Failed to load messages", error)
+                _error.value =
+                    "Failed to load messages: ${error.localizedMessage ?: "Unknown error"}"
             }
         }
     }
 
-    // Basic sync function to retry sending unsynced messages
-    fun syncPendingMessages() {
+    private fun observeSettings() {
         viewModelScope.launch {
-            val unsynced = messageDao.getUnsyncedMessages()
-            if (unsynced.isEmpty()) return@launch
-
-            unsynced.forEach { msg ->
-                try {
-                    val response = MillaApiClient.apiService.sendMessage(ChatRequest(message = msg.content))
-                    if (response.isSuccessful) {
-                        messageDao.markAsSynced(msg.id)
-                        // Note: We might get a duplicate response if we don't handle it carefully,
-                        // but for now, we just ensure the user message reaches the server.
-                        // Ideally, the server would handle deduping or we'd handle the delayed response.
-                    }
-                } catch (e: Exception) {
-                    // Still offline, skip
+            settingsRepository.serverUrl.collectLatest { _serverUrl.value = it }
+        }
+        viewModelScope.launch {
+            settingsRepository.offlineModeEnabled.collectLatest {
+                _offlineModeEnabled.value = it
+                if (it) {
+                    _isOfflineMode.value = true
                 }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.autoFallback.collectLatest { _autoFallback.value = it }
+        }
+        viewModelScope.launch {
+            settingsRepository.spokenRepliesEnabled.collectLatest {
+                _spokenRepliesEnabled.value = it
             }
         }
     }
 
     fun sendMessage(content: String) {
+        val trimmed = content.trim()
+        if (trimmed.isEmpty()) {
+            _error.value = "Message cannot be empty"
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
 
-            // 1. Save User Message Locally (marked as unsynced initially)
-            val userMessage = Message(
-                content = content.trim(),
-                role = "user",
-                timestamp = System.currentTimeMillis(),
-                isSynced = false
-            )
-
-            var messageId: Long = 0
             try {
-                messageId = messageDao.insertMessage(userMessage)
-            } catch (e: Exception) {
-                _error.value = "Failed to save message: ${e.message}"
-                _isLoading.value = false
-                return@launch
-            }
-
-            // 2. Attempt to Send to API
-            var assistantResponseText: String? = null
-
-            try {
-                // Check if offline mode is explicitly enabled or try to connect
-                val response = MillaApiClient.apiService.sendMessage(ChatRequest(message = content))
-
-                if (response.isSuccessful && response.body() != null) {
-                    assistantResponseText = response.body()?.response
-                    _isOfflineMode.value = false // Successful connection
-
-                    // Mark as synced since it reached the server
-                    messageDao.markAsSynced(messageId)
-                } else {
-                    throw Exception("Server returned ${response.code()}")
-                }
-            } catch (e: Exception) {
-                // 3. Fallback to Offline Mode
-                android.util.Log.w("ChatViewModel", "Online failed, switching to offline: ${e.message}")
-                _isOfflineMode.value = true
-
-                try {
-                    assistantResponseText = offlineGenerator.generateResponse(content)
-                } catch (offlineErr: Exception) {
-                    _error.value = "Both online and offline assistants failed."
-                }
-            }
-
-            // 4. Save Assistant Response
-            if (assistantResponseText != null) {
-                val assistantMessage = Message(
-                    content = assistantResponseText,
-                    role = "assistant",
-                    timestamp = System.currentTimeMillis(),
-                    isSynced = true // Local responses considered synced/local-only
+                messageDao.insertMessage(
+                    Message(
+                        content = trimmed,
+                        role = "user",
+                        timestamp = System.currentTimeMillis()
+                    )
                 )
-                try {
-                    messageDao.insertMessage(assistantMessage)
-                } catch (e: Exception) {
-                    _error.value = "Failed to save response: ${e.message}"
-                }
-            }
 
-            _isLoading.value = false
+                val assistantResponse = tryOnlineThenOffline(trimmed)
+                messageDao.insertMessage(
+                    Message(
+                        content = assistantResponse,
+                        role = "assistant",
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            } catch (error: Exception) {
+                Log.e("ChatViewModel", "Failed to send message", error)
+                _error.value = "Failed to send message: ${describeNetworkError(error)}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateServerUrl(url: String) {
+        viewModelScope.launch {
+            settingsRepository.setServerUrl(url)
+        }
+    }
+
+    fun setOfflineModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setOfflineModeEnabled(enabled)
+        }
+    }
+
+    fun setAutoFallback(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAutoFallback(enabled)
+        }
+    }
+
+    fun setSpokenRepliesEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setSpokenRepliesEnabled(enabled)
         }
     }
 
     fun clearError() {
         _error.value = null
+    }
+
+    private suspend fun tryOnlineThenOffline(content: String): String {
+        if (_offlineModeEnabled.value) {
+            _isOfflineMode.value = true
+            return generateOfflineResponse(content)
+        }
+
+        var lastError: Exception? = null
+
+        for (baseUrl in candidateServerUrls()) {
+            try {
+                val response = MillaApiClient.createApiService(baseUrl)
+                    .sendMessage(ChatRequest(message = content))
+                if (!response.isSuccessful || response.body() == null) {
+                    throw HttpException(response)
+                }
+
+                _isOfflineMode.value = false
+                return response.body()!!.response
+            } catch (error: Exception) {
+                lastError = error
+                Log.w("ChatViewModel", "Online request failed for $baseUrl", error)
+            }
+        }
+
+        if (!_autoFallback.value && lastError != null) {
+            throw lastError
+        }
+
+        _isOfflineMode.value = true
+        return generateOfflineResponse(content)
+    }
+
+    private suspend fun generateOfflineResponse(content: String): String {
+        val (offlineResponse, _) = offlineGenerator.generateResponse(content)
+        return offlineResponse
+    }
+
+    private fun candidateServerUrls(): List<String> {
+        val configuredUrl = SettingsRepository.normalizeServerUrl(_serverUrl.value)
+        val candidates = linkedSetOf(configuredUrl)
+
+        if (configuredUrl == SettingsRepository.DEFAULT_SERVER_URL) {
+            candidates += "http://127.0.0.1:5000/"
+        }
+
+        return candidates.toList()
+    }
+
+    private fun describeNetworkError(error: Exception): String {
+        return when (error) {
+            is UnknownHostException ->
+                "Cannot reach the server. Use your computer IP, or adb reverse with http://127.0.0.1:5000/."
+            is ConnectException ->
+                "Connection refused. Make sure the Milla server is running and the URL is correct."
+            is SocketTimeoutException ->
+                "The server took too long to respond."
+            is HttpException ->
+                "Server error ${error.code()}: ${error.message()}"
+            else -> error.localizedMessage ?: "Unknown network error"
+        }
     }
 }
