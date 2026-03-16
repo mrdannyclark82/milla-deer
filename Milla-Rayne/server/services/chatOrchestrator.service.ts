@@ -69,6 +69,7 @@ import {
   invokeMcpTool,
   listMcpTools,
 } from '../mcpRuntimeService';
+import { analyzeScreenShareImage } from '../screenVisionService';
 
 const MAX_INPUT_LENGTH = 10000;
 const MAX_PROMPT_LENGTH = 5000;
@@ -161,12 +162,6 @@ export function canDiscussDev(userUtterance?: string): boolean {
 export function analyzeMessage(userMessage: string): MessageAnalysis {
   const message = userMessage.toLowerCase();
 
-  if (imageData) {
-    return {
-      content: generateScreenShareFallback(userMessage),
-    };
-  }
-
   const positiveWords = [
     'good',
     'great',
@@ -246,12 +241,6 @@ export function analyzeKeywordTriggers(userMessage: string): TriggerResult {
   }
 
   const message = userMessage.toLowerCase();
-
-  if (imageData) {
-    return {
-      content: generateScreenShareFallback(userMessage),
-    };
-  }
 
   const emotionalTriggers = {
     affection: {
@@ -336,12 +325,6 @@ export function generateIntelligentFallback(
   userName: string
 ): string {
   const message = userMessage.toLowerCase();
-
-  if (imageData) {
-    return {
-      content: generateScreenShareFallback(userMessage),
-    };
-  }
   let relevantMemories = '';
   if (memoryCoreContext) {
     const memoryLines = memoryCoreContext
@@ -417,8 +400,15 @@ export function generateImageAnalysisFallback(userMessage: string): string {
   return "I can see you're sharing a photo with me! While I'm having some technical difficulties with image analysis right now, I love that you're including me in what you're seeing. Tell me what's in the photo - I'd love to hear about it from your perspective.";
 }
 
-export function generateScreenShareFallback(userMessage: string): string {
-  return `I received your current screen capture. The in-app screen-sharing path is live now, but full visual reasoning is still in its first pass. Tell me which part of the screen you want help with and I'll guide you through it based on what you're showing me.`;
+export function generateScreenShareFallback(
+  userMessage: string,
+  reason?: string
+): string {
+  const detail = reason
+    ? `I couldn't complete full visual reasoning this time (${reason}).`
+    : `I couldn't complete full visual reasoning this time.`;
+
+  return `${detail} I still received your current screen capture, so tell me which button, error, form, or area you want help with and I'll guide you through it from the shared screen context.`;
 }
 
 function formatMcpToolResult(toolName: string, result: unknown): string {
@@ -492,8 +482,26 @@ export async function generateAIResponse(
   const message = userMessage.toLowerCase();
 
   if (imageData) {
+    const screenResult = await analyzeScreenShareImage(
+      userMessage,
+      imageData,
+      userName
+    );
+
+    if (screenResult.success && screenResult.content) {
+      return {
+        content: screenResult.content,
+        reasoning: `Analyzed shared screen with ${screenResult.provider}.`,
+      };
+    }
+
+    console.warn(
+      'Screen vision analysis failed:',
+      screenResult.error || 'unknown reason'
+    );
+
     return {
-      content: generateScreenShareFallback(userMessage),
+      content: generateScreenShareFallback(userMessage, screenResult.error),
     };
   }
 
