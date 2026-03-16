@@ -14,6 +14,7 @@ import {
   isSupportedAIModel,
   normalizeAIModel,
 } from '../aiModelPreferences';
+import { isAdminRequestAuthorized } from '../middleware/admin.middleware';
 import {
   generateAIResponse,
   validateAndSanitizePrompt,
@@ -24,6 +25,61 @@ import { detectSceneContext } from '../sceneDetectionService';
 import { sceneService } from '../services/scene.service';
 import { upload } from '../middleware/upload.middleware';
 import { asyncHandler } from '../utils/routeHelpers';
+import { storage } from '../storage';
+import {
+  CONTEXT_WINDOW_SETTINGS,
+  boundConversationHistory,
+} from '../contextWindowService';
+
+async function resolveChatUserId(sessionToken?: string): Promise<string> {
+  if (!sessionToken) {
+    return 'default-user';
+  }
+
+  const sessionResult = await validateSession(sessionToken);
+  if (sessionResult.valid && sessionResult.user?.id) {
+    return sessionResult.user.id;
+  }
+
+  return 'default-user';
+}
+
+async function getRecentConversationHistory(userId: string) {
+  const messages = await storage.getMessages(userId);
+
+  return boundConversationHistory(
+    messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
+    {
+      maxMessages: CONTEXT_WINDOW_SETTINGS.routeHistoryMaxMessages,
+      maxChars: CONTEXT_WINDOW_SETTINGS.routeHistoryMaxChars,
+      stage: 'route-history',
+    }
+  );
+}
+
+async function persistConversationTurn(
+  userId: string,
+  userMessage: string,
+  assistantMessage: string
+) {
+  await Promise.all([
+    storage.createMessage({
+      userId,
+      role: 'user',
+      content: userMessage,
+      displayRole: 'Danny Ray',
+    }),
+    storage.createMessage({
+      userId,
+      role: 'assistant',
+      content: assistantMessage,
+      displayRole: 'Milla Rayne',
+    }),
+  ]);
+}
 
 /**
  * Chat and AI Routes
@@ -133,14 +189,20 @@ export function registerChatRoutes(app: Express) {
       }
 
       const data: any = await response.json();
+      const userId = await resolveChatUserId(req.cookies.session_token);
+      const conversationHistory = await getRecentConversationHistory(userId);
       const aiResponse = await generateAIResponse(
         data.text,
-        [],
+        conversationHistory,
         'Danny Ray',
+        imageData,
+        userId,
         undefined,
-        'default-user',
-        undefined
+        false,
+        { canRunShellCommands: isAdminRequestAuthorized(req) }
       );
+
+      await persistConversationTurn(userId, data.text, aiResponse.content);
 
       res.json({
         response: aiResponse.content,
@@ -154,7 +216,7 @@ export function registerChatRoutes(app: Express) {
     '/chat',
     asyncHandler(async (req, res) => {
       let { message } = req.body;
-      const { audioData, audioMimeType } = req.body;
+      const { audioData, audioMimeType, imageData } = req.body;
       let userEmotionalState: any;
 
       if (audioData && audioMimeType) {
@@ -182,19 +244,13 @@ export function registerChatRoutes(app: Express) {
 
       message = validateAndSanitizePrompt(message);
 
-      const sessionToken = req.cookies.session_token;
-      let userId: string = 'default-user';
-      if (sessionToken) {
-        const sessionResult = await validateSession(sessionToken);
-        if (sessionResult.valid && sessionResult.user) {
-          userId = sessionResult.user.id || 'default-user';
-        }
-      }
+      const userId = await resolveChatUserId(req.cookies.session_token);
 
       const bypassFunctionCalls = message.trim().startsWith('##');
       const processedMessage = bypassFunctionCalls
         ? message.trim().substring(2).trim()
         : message;
+      const conversationHistory = await getRecentConversationHistory(userId);
 
       // Handle Scene Context
       const sensorData = await getSmartHomeSensorData();
@@ -214,13 +270,16 @@ export function registerChatRoutes(app: Express) {
       // Generate AI Response
       const aiResponse = await generateAIResponse(
         processedMessage,
-        [], // History could be fetched here
+        conversationHistory,
         'Danny Ray',
-        undefined,
+        imageData,
         userId,
         userEmotionalState,
-        bypassFunctionCalls
+        bypassFunctionCalls,
+        { canRunShellCommands: isAdminRequestAuthorized(req) }
       );
+
+      await persistConversationTurn(userId, processedMessage, aiResponse.content);
 
       res.json({
         response: aiResponse.content,

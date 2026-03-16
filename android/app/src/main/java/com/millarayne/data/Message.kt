@@ -11,7 +11,7 @@ data class Message(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val content: String,
-    val role: String, // "user" or "assistant"
+    val role: String,
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -28,7 +28,8 @@ data class SceneContext(
  * API request for sending a message
  */
 data class ChatRequest(
-    val message: String
+    val message: String,
+    val imageData: String? = null
 )
 
 /**

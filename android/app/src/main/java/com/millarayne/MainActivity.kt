@@ -3,6 +3,7 @@ package com.millarayne
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,10 +60,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import coil.compose.AsyncImage
 import com.millarayne.data.Message
 import com.millarayne.data.SettingsRepository
 import com.millarayne.ui.ChatViewModel
@@ -71,12 +76,37 @@ import com.millarayne.ui.theme.UserBubble
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ChatViewModel by viewModels()
+    private lateinit var screenCaptureManager: ScreenCaptureManager
+
+    private val screenShareLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val data = result.data
+            if (result.resultCode != Activity.RESULT_OK || data == null) {
+                viewModel.setScreenShareActive(false)
+                viewModel.setScreenShareStatus("Screen share permission was cancelled.")
+                return@registerForActivityResult
+            }
+
+            if (screenCaptureManager.start(result.resultCode, data)) {
+                viewModel.setScreenShareActive(true)
+                viewModel.setScreenShareStatus(
+                    "Screen share is ready. Tap capture so Milla can inspect your current screen."
+                )
+            } else {
+                viewModel.setScreenShareActive(false)
+                viewModel.setScreenShareStatus(
+                    "Screen capture could not start on this device."
+                )
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        screenCaptureManager = ScreenCaptureManager(this)
 
         setContent {
             MillaTheme {
@@ -84,16 +114,70 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ChatScreen(viewModel = viewModel)
+                    ChatScreen(
+                        viewModel = viewModel,
+                        onRequestScreenShare = { requestScreenSharePermission() },
+                        onCaptureCurrentScreen = { captureCurrentScreen() },
+                        onStopScreenShare = { stopScreenShare() }
+                    )
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        screenCaptureManager.stop()
+        super.onDestroy()
+    }
+
+    private fun requestScreenSharePermission() {
+        val projectionManager = getSystemService(MediaProjectionManager::class.java)
+        if (projectionManager == null) {
+            viewModel.setScreenShareStatus("Screen sharing is not available on this device.")
+            return
+        }
+
+        screenShareLauncher.launch(projectionManager.createScreenCaptureIntent())
+    }
+
+    private fun captureCurrentScreen() {
+        if (!screenCaptureManager.isActive()) {
+            viewModel.setScreenShareStatus("Enable screen share first.")
+            return
+        }
+
+        lifecycleScope.launch {
+            viewModel.setScreenShareStatus("Capturing your current screen...")
+            val imageData = screenCaptureManager.captureFrameDataUrl()
+            if (imageData == null) {
+                viewModel.setScreenShareStatus("I couldn't capture the screen yet. Try again in a moment.")
+                return@launch
+            }
+
+            viewModel.setScreenSharePreview(imageData)
+            viewModel.sendScreenObservation(
+                prompt = "I'm sharing my current screen. Tell me what you can infer from it and help me with anything relevant on display.",
+                imageData = imageData
+            )
+        }
+    }
+
+    private fun stopScreenShare() {
+        screenCaptureManager.stop()
+        viewModel.setScreenShareActive(false)
+        viewModel.setScreenSharePreview(null)
+        viewModel.setScreenShareStatus("Screen sharing stopped.")
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChatScreen(viewModel: ChatViewModel) {
+private fun ChatScreen(
+    viewModel: ChatViewModel,
+    onRequestScreenShare: () -> Unit,
+    onCaptureCurrentScreen: () -> Unit,
+    onStopScreenShare: () -> Unit
+) {
     val context = LocalContext.current
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -103,6 +187,9 @@ private fun ChatScreen(viewModel: ChatViewModel) {
     val offlineModeEnabled by viewModel.offlineModeEnabled.collectAsStateWithLifecycle()
     val autoFallback by viewModel.autoFallback.collectAsStateWithLifecycle()
     val spokenRepliesEnabled by viewModel.spokenRepliesEnabled.collectAsStateWithLifecycle()
+    val screenShareActive by viewModel.screenShareActive.collectAsStateWithLifecycle()
+    val screenShareStatus by viewModel.screenShareStatus.collectAsStateWithLifecycle()
+    val screenSharePreview by viewModel.screenSharePreview.collectAsStateWithLifecycle()
 
     var messageText by remember { mutableStateOf("") }
     var localError by remember { mutableStateOf<String?>(null) }
@@ -208,6 +295,25 @@ private fun ChatScreen(viewModel: ChatViewModel) {
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            if (screenShareActive) {
+                                onStopScreenShare()
+                            } else {
+                                onRequestScreenShare()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Visibility,
+                            contentDescription = if (screenShareActive) {
+                                "Stop screen sharing"
+                            } else {
+                                "Enable screen sharing"
+                            },
+                            tint = if (screenShareActive) Color(0xFFB2FF59) else Color.White
+                        )
+                    }
                     IconButton(onClick = { isSettingsOpen = true }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -287,68 +393,89 @@ private fun ChatScreen(viewModel: ChatViewModel) {
                 )
                 .padding(paddingValues)
         ) {
-            if (messages.isEmpty() && !isLoading) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Hello!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Start chatting with Milla",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (screenShareActive || screenShareStatus != null || screenSharePreview != null) {
+                    ScreenShareCard(
+                        isActive = screenShareActive,
+                        status = screenShareStatus,
+                        previewImageData = screenSharePreview,
+                        onCaptureCurrentScreen = onCaptureCurrentScreen,
+                        onStartScreenShare = onRequestScreenShare,
+                        onStopScreenShare = onStopScreenShare
                     )
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp)
-                ) {
-                    items(messages) { message ->
-                        MessageBubble(message = message)
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
 
-                    if (isLoading) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = AssistantBubble.copy(alpha = 0.6f)
+                if (messages.isEmpty() && !isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                "Hello!",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Start chatting with Milla",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
+                        items(messages) { message ->
+                            MessageBubble(message = message)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        if (isLoading) {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    horizontalArrangement = Arrangement.Start
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(
-                                            horizontal = 12.dp,
-                                            vertical = 10.dp
-                                        ),
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = AssistantBubble.copy(alpha = 0.6f)
                                     ) {
-                                        Text(
-                                            "...",
-                                            color = MaterialTheme.colorScheme.primary,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            "Milla is thinking...",
-                                            color = Color.Gray,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 10.dp
+                                            ),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                "...",
+                                                color = MaterialTheme.colorScheme.primary,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                "Milla is thinking...",
+                                                color = Color.Gray,
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -399,6 +526,65 @@ private fun ChatScreen(viewModel: ChatViewModel) {
                 localError = null
             }
         )
+    }
+}
+
+@Composable
+private fun ScreenShareCard(
+    isActive: Boolean,
+    status: String?,
+    previewImageData: String?,
+    onCaptureCurrentScreen: () -> Unit,
+    onStartScreenShare: () -> Unit,
+    onStopScreenShare: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White.copy(alpha = 0.88f),
+        shadowElevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text("Screen sharing", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = status ?: if (isActive) {
+                    "Screen share is active. Capture the current screen when you want Milla to inspect it."
+                } else {
+                    "Enable screen sharing so Milla can inspect your current screen."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.DarkGray
+            )
+            if (previewImageData != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                AsyncImage(
+                    model = previewImageData,
+                    contentDescription = "Latest shared screen preview",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (isActive) {
+                    TextButton(onClick = onCaptureCurrentScreen) {
+                        Text("Capture current screen")
+                    }
+                    TextButton(onClick = onStopScreenShare) {
+                        Text("Stop")
+                    }
+                } else {
+                    TextButton(onClick = onStartScreenShare) {
+                        Text("Enable")
+                    }
+                }
+            }
+        }
     }
 }
 

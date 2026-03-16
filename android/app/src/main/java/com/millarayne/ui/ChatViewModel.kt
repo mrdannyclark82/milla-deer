@@ -53,6 +53,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         MutableStateFlow(SettingsRepository.DEFAULT_SPOKEN_REPLIES_ENABLED)
     val spokenRepliesEnabled: StateFlow<Boolean> = _spokenRepliesEnabled.asStateFlow()
 
+    private val _screenShareActive = MutableStateFlow(false)
+    val screenShareActive: StateFlow<Boolean> = _screenShareActive.asStateFlow()
+
+    private val _screenShareStatus = MutableStateFlow<String?>(null)
+    val screenShareStatus: StateFlow<String?> = _screenShareStatus.asStateFlow()
+
+    private val _screenSharePreview = MutableStateFlow<String?>(null)
+    val screenSharePreview: StateFlow<String?> = _screenSharePreview.asStateFlow()
+
     init {
         observeMessages()
         observeSettings()
@@ -100,6 +109,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun sendMessage(content: String) {
+        submitMessage(content = content, imageData = null)
+    }
+
+    fun sendScreenObservation(prompt: String, imageData: String) {
+        submitMessage(content = prompt, imageData = imageData)
+    }
+
+    private fun submitMessage(content: String, imageData: String?) {
         val trimmed = content.trim()
         if (trimmed.isEmpty()) {
             _error.value = "Message cannot be empty"
@@ -109,6 +126,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+            if (imageData != null) {
+                _screenShareStatus.value = "Sending the latest screen capture to Milla..."
+            }
 
             try {
                 messageDao.insertMessage(
@@ -119,7 +139,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
 
-                val assistantResponse = tryOnlineThenOffline(trimmed)
+                val assistantResponse = tryOnlineThenOffline(trimmed, imageData)
                 messageDao.insertMessage(
                     Message(
                         content = assistantResponse,
@@ -127,6 +147,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         timestamp = System.currentTimeMillis()
                     )
                 )
+
+                if (imageData != null) {
+                    _screenShareStatus.value = "Milla received your latest screen capture."
+                }
             } catch (error: Exception) {
                 Log.e("ChatViewModel", "Failed to send message", error)
                 _error.value = "Failed to send message: ${describeNetworkError(error)}"
@@ -160,14 +184,30 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setScreenShareActive(active: Boolean) {
+        _screenShareActive.value = active
+    }
+
+    fun setScreenShareStatus(status: String?) {
+        _screenShareStatus.value = status
+    }
+
+    fun clearScreenShareStatus() {
+        _screenShareStatus.value = null
+    }
+
+    fun setScreenSharePreview(imageData: String?) {
+        _screenSharePreview.value = imageData
+    }
+
     fun clearError() {
         _error.value = null
     }
 
-    private suspend fun tryOnlineThenOffline(content: String): String {
+    private suspend fun tryOnlineThenOffline(content: String, imageData: String?): String {
         if (_offlineModeEnabled.value) {
             _isOfflineMode.value = true
-            return generateOfflineResponse(content)
+            return offlineFallbackResponse(content, imageData)
         }
 
         var lastError: Exception? = null
@@ -175,7 +215,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         for (baseUrl in candidateServerUrls()) {
             try {
                 val response = MillaApiClient.createApiService(baseUrl)
-                    .sendMessage(ChatRequest(message = content))
+                    .sendMessage(ChatRequest(message = content, imageData = imageData))
                 if (!response.isSuccessful || response.body() == null) {
                     throw HttpException(response)
                 }
@@ -193,10 +233,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         _isOfflineMode.value = true
-        return generateOfflineResponse(content)
+        return offlineFallbackResponse(content, imageData)
     }
 
-    private suspend fun generateOfflineResponse(content: String): String {
+    private suspend fun offlineFallbackResponse(content: String, imageData: String?): String {
+        if (imageData != null) {
+            return "I captured your screen, but I'm offline right now and can't inspect the image without the server connection. Reconnect me and share the screen again so I can help with what's visible."
+        }
+
         val (offlineResponse, _) = offlineGenerator.generateResponse(content)
         return offlineResponse
     }

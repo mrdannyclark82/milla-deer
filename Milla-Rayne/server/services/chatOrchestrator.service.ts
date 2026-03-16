@@ -2,8 +2,6 @@ import { storage } from '../storage';
 import { getCurrentWeather, formatWeatherResponse } from '../weatherService';
 import { performWebSearch, shouldPerformSearch } from '../searchService';
 import {
-  generateImage,
-  formatImageResponse,
   extractImagePrompt,
 } from '../imageService';
 import { generateImageWithVenice } from '../veniceImageService';
@@ -26,19 +24,51 @@ import {
   applyRepositoryImprovements,
 } from '../repositoryModificationService';
 import {
-  detectBrowserToolRequest,
-  getBrowserToolInstructions,
+  addCalendarEvent,
+  getRecentEmails,
+  sendEmail,
 } from '../browserIntegrationService';
 import { VoiceAnalysisResult } from '../voiceAnalysisService';
 import { UserProfile } from '../profileService';
 import { config } from '../config';
 import { sanitizePromptInput } from '../sanitization';
 import { repositoryCache } from './repositoryCache.service';
+import { queueBackgroundImageGeneration } from '../imageGenerationQueue';
+import { listEvents } from '../googleCalendarService';
+import {
+  addNoteToGoogleTasks,
+  completeTask as completeGoogleTask,
+  deleteTask as deleteGoogleTask,
+  listTasks as listGoogleTasks,
+} from '../googleTasksService';
+import { parseCommand } from '../commandParser';
 import {
   generateCodeWithQwen,
   formatCodeResponse,
   extractCodeRequest,
 } from '../openrouterCodeService';
+import {
+  getConsciousnessSchedulerStatus,
+  triggerConsciousnessCycle,
+} from '../consciousnessScheduler';
+import {
+  getRepositoryDiscoverySchedulerStatus,
+  runRepositoryDiscoveryCycle,
+} from '../repositoryDiscoveryScheduler';
+import {
+  CONTEXT_WINDOW_SETTINGS,
+  trimContextBlock,
+} from '../contextWindowService';
+import {
+  cancelShellCommand,
+  enqueueAllowedShellCommand,
+  getShellRunnerStatus,
+} from '../shellExecutionService';
+import {
+  getMcpRuntimeStatus,
+  invokeMcpTool,
+  listMcpTools,
+} from '../mcpRuntimeService';
 
 const MAX_INPUT_LENGTH = 10000;
 const MAX_PROMPT_LENGTH = 5000;
@@ -54,6 +84,10 @@ export interface TriggerResult {
   intensityBoost?: number;
   specialInstructions?: string;
   personalityShift?: string;
+}
+
+interface ChatExecutionOptions {
+  canRunShellCommands?: boolean;
 }
 
 const KEYWORD_TRIGGERS_ENABLED = true;
@@ -126,6 +160,12 @@ export function canDiscussDev(userUtterance?: string): boolean {
  */
 export function analyzeMessage(userMessage: string): MessageAnalysis {
   const message = userMessage.toLowerCase();
+
+  if (imageData) {
+    return {
+      content: generateScreenShareFallback(userMessage),
+    };
+  }
 
   const positiveWords = [
     'good',
@@ -206,6 +246,12 @@ export function analyzeKeywordTriggers(userMessage: string): TriggerResult {
   }
 
   const message = userMessage.toLowerCase();
+
+  if (imageData) {
+    return {
+      content: generateScreenShareFallback(userMessage),
+    };
+  }
 
   const emotionalTriggers = {
     affection: {
@@ -290,6 +336,12 @@ export function generateIntelligentFallback(
   userName: string
 ): string {
   const message = userMessage.toLowerCase();
+
+  if (imageData) {
+    return {
+      content: generateScreenShareFallback(userMessage),
+    };
+  }
   let relevantMemories = '';
   if (memoryCoreContext) {
     const memoryLines = memoryCoreContext
@@ -365,6 +417,62 @@ export function generateImageAnalysisFallback(userMessage: string): string {
   return "I can see you're sharing a photo with me! While I'm having some technical difficulties with image analysis right now, I love that you're including me in what you're seeing. Tell me what's in the photo - I'd love to hear about it from your perspective.";
 }
 
+export function generateScreenShareFallback(userMessage: string): string {
+  return `I received your current screen capture. The in-app screen-sharing path is live now, but full visual reasoning is still in its first pass. Tell me which part of the screen you want help with and I'll guide you through it based on what you're showing me.`;
+}
+
+function formatMcpToolResult(toolName: string, result: unknown): string {
+  const contentBlocks = Array.isArray((result as { content?: unknown[] })?.content)
+    ? ((result as { content: Array<Record<string, unknown>> }).content ?? [])
+    : [];
+
+  const textBlocks = contentBlocks
+    .filter((block) => block?.type === 'text' && typeof block.text === 'string')
+    .map((block) => block.text as string);
+
+  const imageBlocks = contentBlocks
+    .filter(
+      (block) =>
+        block?.type === 'image' &&
+        typeof block.data === 'string' &&
+        typeof block.mimeType === 'string'
+    )
+    .map(
+      (block) =>
+        `![${toolName} result](data:${String(block.mimeType)};base64,${String(
+          block.data
+        )})`
+    );
+
+  const parts: string[] = [];
+
+  if (toolName === 'generate_story') {
+    parts.push('I ran the MCP story tool for you.');
+  } else if (toolName === 'generate_image') {
+    parts.push('I ran the MCP image tool for you.');
+  } else {
+    parts.push(`I ran the MCP tool "${toolName}" for you.`);
+  }
+
+  if (textBlocks.length > 0) {
+    parts.push(textBlocks.join('\n\n'));
+  }
+
+  if (imageBlocks.length > 0) {
+    parts.push(imageBlocks.join('\n\n'));
+  }
+
+  if (parts.length > 1) {
+    return parts.join('\n\n');
+  }
+
+  try {
+    return `${parts[0]}\n\n${JSON.stringify(result, null, 2)}`;
+  } catch {
+    return parts[0];
+  }
+}
+
 /**
  * Main AI response generator
  */
@@ -378,10 +486,16 @@ export async function generateAIResponse(
   imageData?: string,
   userId: string = 'default-user',
   userEmotionalState?: VoiceAnalysisResult['emotionalTone'],
-  bypassFunctionCalls: boolean = false
+  bypassFunctionCalls: boolean = false,
+  executionOptions: ChatExecutionOptions = {}
 ): Promise<any> {
   const message = userMessage.toLowerCase();
-  console.log('📝 generateAIResponse called with:', userMessage);
+
+  if (imageData) {
+    return {
+      content: generateScreenShareFallback(userMessage),
+    };
+  }
 
   const coreFunctionTriggers = [
     'hey milla',
@@ -495,8 +609,7 @@ export async function generateAIResponse(
             repositoryCache.set(userId, cachedAnalysis);
           }
 
-          const githubToken =
-            process.env.GITHUB_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
+          const githubToken = getGitHubToken();
           if (githubToken) {
             const applyResult = await applyRepositoryImprovements(
               repoInfo,
@@ -523,25 +636,392 @@ export async function generateAIResponse(
     }
   }
 
+  if (!bypassFunctionCalls) {
+    const parsedCommand = await parseCommand(userMessage);
+
+    if (parsedCommand.service === 'gmail' && parsedCommand.action === 'list') {
+      const result = await getRecentEmails(10, userId);
+      if (result.success && Array.isArray(result.data)) {
+        const emailLines = result.data.slice(0, 10).map((email: any, index: number) => {
+          const headers = email.payload?.headers || [];
+          const subject =
+            headers.find((header: any) => header.name === 'Subject')?.value ||
+            '(No subject)';
+          const from =
+            headers.find((header: any) => header.name === 'From')?.value ||
+            'Unknown sender';
+          return `${index + 1}. ${subject} — ${from}`;
+        });
+
+        return {
+          content: `Here are your latest emails:\n\n${emailLines.join('\n')}`,
+        };
+      }
+
+      return {
+        content:
+          result.message ||
+          "I couldn't reach your Gmail inbox right now. Please reconnect Google and try again.",
+      };
+    }
+
+    if (parsedCommand.service === 'gmail' && parsedCommand.action === 'send') {
+      const { to, subject, body } = parsedCommand.entities;
+
+      if (!to || !subject) {
+        return {
+          content:
+            'I can send that email for you, but I still need both the recipient and subject.',
+        };
+      }
+
+      const result = await sendEmail(
+        userId,
+        to,
+        subject,
+        body || 'Sent from Milla at your request.'
+      );
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'calendar' && parsedCommand.action === 'list') {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const result = await listEvents(
+        userId,
+        startOfDay.toISOString(),
+        endOfDay.toISOString(),
+        10
+      );
+
+      if (result.success && Array.isArray(result.events)) {
+        const events = result.events.map((event: any, index: number) => {
+          const start = event.start?.dateTime || event.start?.date || '';
+          return `${index + 1}. ${event.summary || '(Untitled event)'} — ${start}`;
+        });
+
+        return {
+          content:
+            events.length > 0
+              ? `Here’s your schedule for today:\n\n${events.join('\n')}`
+              : "You're clear today — I don't see any events on your calendar.",
+        };
+      }
+
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'calendar' && parsedCommand.action === 'add') {
+      const { title, date, time, description } = parsedCommand.entities;
+
+      if (!title || !date) {
+        return {
+          content:
+            'I can add that to your calendar, but I still need the event title and date.',
+        };
+      }
+
+      const result = await addCalendarEvent(
+        userId,
+        title,
+        date,
+        time,
+        description
+      );
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'tasks' && parsedCommand.action === 'list') {
+      const result = await listGoogleTasks(userId, 10, false);
+      if (result.success && Array.isArray(result.tasks)) {
+        const tasks = result.tasks.map((task: any, index: number) => {
+          const status = task.status === 'completed' ? 'completed' : 'open';
+          return `${index + 1}. ${task.title || '(Untitled task)'} — ${status}`;
+        });
+
+        return {
+          content:
+            tasks.length > 0
+              ? `Here are your current tasks:\n\n${tasks.join('\n')}`
+              : "You don't have any open tasks right now.",
+        };
+      }
+
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'tasks' && parsedCommand.action === 'add') {
+      const { title } = parsedCommand.entities;
+      if (!title) {
+        return {
+          content:
+            'I can add that to your tasks, but I still need the task title.',
+        };
+      }
+
+      const result = await addNoteToGoogleTasks(title, '', userId);
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'tasks' && parsedCommand.action === 'complete') {
+      const { taskId } = parsedCommand.entities;
+      if (!taskId) {
+        return {
+          content:
+            'I can complete a task for you if you give me the task ID.',
+        };
+      }
+
+      const result = await completeGoogleTask(taskId, userId);
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'tasks' && parsedCommand.action === 'delete') {
+      const { taskId } = parsedCommand.entities;
+      if (!taskId) {
+        return {
+          content: 'I can delete a task for you if you give me the task ID.',
+        };
+      }
+
+      const result = await deleteGoogleTask(userId, taskId);
+      return { content: result.message };
+    }
+
+    if (parsedCommand.service === 'mcp' && parsedCommand.action === 'status') {
+      const status = getMcpRuntimeStatus();
+      const serverSummary = status.servers.length
+        ? status.servers
+            .map(
+              (server) =>
+                `${server.name}: ${server.connected ? 'connected' : 'offline'}${
+                  server.toolCount ? ` (${server.toolCount} tools)` : ''
+                }`
+            )
+            .join(' • ')
+        : 'No MCP servers configured';
+
+      return {
+        content: [
+          `MCP runtime: ${status.enabled ? 'enabled' : 'disabled'}`,
+          `Initialized: ${status.initialized ? 'yes' : 'no'}`,
+          `Connected servers: ${status.connectedServerCount}`,
+          `Servers: ${serverSummary}`,
+        ].join('\n'),
+      };
+    }
+
+    if (parsedCommand.service === 'mcp' && parsedCommand.action === 'list') {
+      if (!executionOptions.canRunShellCommands) {
+        return {
+          content:
+            'MCP tool discovery is admin-protected. Save the admin token in Settings first, then ask me to list MCP tools.',
+        };
+      }
+
+      const tools = await listMcpTools();
+      if (tools.length === 0) {
+        return {
+          content:
+            'I do not see any connected MCP tools right now. Check MCP status in Settings and try again.',
+        };
+      }
+
+      return {
+        content: `Here are the connected MCP tools:\n\n${tools
+          .map(
+            (tool, index) =>
+              `${index + 1}. ${tool.serverName} — ${tool.name}${
+                tool.description ? `: ${tool.description}` : ''
+              }`
+          )
+          .join('\n')}`,
+      };
+    }
+
+    if (parsedCommand.service === 'mcp' && parsedCommand.action === 'run') {
+      if (!executionOptions.canRunShellCommands) {
+        return {
+          content:
+            'MCP tool calls are admin-protected. Save the admin token in Settings first, then ask me things like "list mcp tools", "generate a story with mcp about moon colonies", or "generate an image with mcp of a neon stag".',
+        };
+      }
+
+      const toolName = parsedCommand.entities.toolName;
+      const prompt = parsedCommand.entities.prompt;
+
+      if (!toolName) {
+        return {
+          content:
+            'I can currently run these explicit MCP chat tools: "generate a story with mcp ..." and "generate an image with mcp ...". You can also ask me to list MCP tools first.',
+        };
+      }
+
+      if (!prompt) {
+        return {
+          content:
+            toolName === 'generate_image'
+              ? 'I can run the MCP image tool, but I still need the image prompt.'
+              : 'I can run the MCP story tool, but I still need the story prompt.',
+        };
+      }
+
+      const tools = await listMcpTools();
+      const selectedTool = tools.find((tool) => tool.name === toolName);
+
+      if (!selectedTool) {
+        return {
+          content: `I couldn't find the MCP tool "${toolName}" on any connected server right now.`,
+        };
+      }
+
+      const invocation = await invokeMcpTool(selectedTool.serverId, selectedTool.name, {
+        prompt,
+      });
+
+      return {
+        content: formatMcpToolResult(selectedTool.name, invocation.result),
+      };
+    }
+
+    if (parsedCommand.service === 'shell' && parsedCommand.action === 'status') {
+      if (!executionOptions.canRunShellCommands) {
+        return {
+          content:
+            'Shell status is admin-protected. Save the admin token in Settings first, then ask me things like "shell status" or "what is in the shell queue".',
+        };
+      }
+
+      const status = getShellRunnerStatus();
+      const recentSummary = status.recentRuns
+        .slice(0, 3)
+        .map(
+          (run) =>
+            `${run.label}: ${run.status}${
+              run.exitCode !== null ? ` (exit ${run.exitCode})` : ''
+            }`
+        );
+
+      return {
+        content: [
+          `Shell runner: ${status.enabled ? 'enabled' : 'disabled'}`,
+          `Active run: ${status.activeRun ? status.activeRun.label : 'none'}`,
+          `Queued runs: ${status.queueLength}`,
+          recentSummary.length > 0
+            ? `Recent: ${recentSummary.join(' • ')}`
+            : 'Recent: none',
+        ].join('\n'),
+      };
+    }
+
+    if (parsedCommand.service === 'shell' && parsedCommand.action === 'cancel') {
+      if (!executionOptions.canRunShellCommands) {
+        return {
+          content:
+            'I can only stop shell runs when the admin token is present in this session.',
+        };
+      }
+
+      const run = await cancelShellCommand();
+      return {
+        content: run
+          ? `I updated the shell runner. ${run.label} is now ${run.status}.`
+          : 'There is no active or queued shell run for me to cancel right now.',
+      };
+    }
+
+    if (parsedCommand.service === 'shell' && parsedCommand.action === 'run') {
+      if (!executionOptions.canRunShellCommands) {
+        return {
+          content:
+            'Shell commands are admin-protected. Save the admin token in Settings first, then I can queue approved commands from chat like "pwd", "ls", "adb devices", "network interfaces", "run workspace check", or "run git status".',
+        };
+      }
+
+      const commandId = parsedCommand.entities.commandId;
+      if (!commandId) {
+        return {
+          content:
+            'I can queue these approved shell commands: pwd, ls, repo tree, Android directory listing, workspace check/lint/build/test, git status, git diff, adb devices, adb device info, adb network info, host network interfaces, host network routes, and host listening ports. Try phrases like "adb devices", "network interfaces", "pwd", or "run workspace check".',
+        };
+      }
+
+      const run = await enqueueAllowedShellCommand(commandId);
+      return {
+        content:
+          run.status === 'rejected'
+            ? run.error || 'That shell command is not available right now.'
+            : `Queued ${run.label}. Run ID: ${run.runId}. You can watch it in Settings or ask me for shell status.`,
+      };
+    }
+
+    if (
+      parsedCommand.service === 'consciousness' &&
+      parsedCommand.action === 'trigger'
+    ) {
+      const cycle =
+        parsedCommand.entities.cycle === 'rem' ? 'rem' : 'gim';
+      const success = await triggerConsciousnessCycle(cycle);
+      return {
+        content: success
+          ? `I triggered the ${cycle.toUpperCase()} cycle for you.`
+          : `I tried to trigger the ${cycle.toUpperCase()} cycle, but it didn't complete successfully.`,
+      };
+    }
+
+    if (
+      parsedCommand.service === 'consciousness' &&
+      parsedCommand.action === 'status'
+    ) {
+      const status = getConsciousnessSchedulerStatus();
+      return {
+        content: [
+          `Consciousness scheduler: ${status.isInitialized ? 'initialized' : 'not initialized'}`,
+          `ReplycA: ${status.replycaResolved ? 'resolved' : 'missing'}`,
+          `GIM: ${status.gimEnabled ? 'enabled' : 'disabled'} on ${status.gimCron}`,
+          `REM: ${status.remEnabled ? 'enabled' : 'disabled'} on ${status.remCron}`,
+        ].join('\n'),
+      };
+    }
+
+    if (
+      parsedCommand.service === 'repository' &&
+      parsedCommand.action === 'trigger'
+    ) {
+      await runRepositoryDiscoveryCycle();
+      return {
+        content:
+          'I started a repository discovery cycle to scan GitHub for new feature ideas.',
+      };
+    }
+
+    if (
+      parsedCommand.service === 'repository' &&
+      parsedCommand.action === 'status'
+    ) {
+      const status = getRepositoryDiscoverySchedulerStatus();
+      return {
+        content: [
+          `Repository discovery: ${status.isScheduled ? 'scheduled' : 'not scheduled'}`,
+          `Cron: ${status.cron}`,
+          `Max repos per cycle: ${status.maxReposPerCycle}`,
+          `Runs: ${status.successfulRuns}/${status.totalRuns} successful`,
+          status.lastError ? `Last error: ${status.lastError}` : 'Last error: none',
+        ].join('\n'),
+      };
+    }
+  }
+
   // Image Generation
   const imagePrompt = extractImagePrompt(userMessage);
   if (imagePrompt && !bypassFunctionCalls) {
-    try {
-      // Default to Hugging Face (generateImage) as per user preference (avoiding Venice)
-      // Future: Implement direct Grok/Gemini image generation when APIs are available
-      const imageResult = await generateImage(imagePrompt);
-      return {
-        content: formatImageResponse(
-          imagePrompt,
-          imageResult.success,
-          imageResult.imageUrl,
-          imageResult.error
-        ),
-        imageUrl: imageResult.imageUrl,
-      };
-    } catch (err) {
-      console.error('Image generation error:', err);
-    }
+    queueBackgroundImageGeneration(userId, imagePrompt);
+    return {
+      content: `I'm generating "${imagePrompt}" in the background now. I'll post it into our thread as soon as it's ready.`,
+    };
   }
 
   // Weather
@@ -578,14 +1058,6 @@ export async function generateAIResponse(
   const { getProfile } = await import('../profileService');
   if (userId) userProfile = await getProfile(userId);
 
-  let memoryCoreContext = '';
-  try {
-    memoryCoreContext = await getMemoryCoreContext(
-      userMessage,
-      userId || 'danny-ray'
-    );
-  } catch (e) {}
-
   const triggerResult = analyzeKeywordTriggers(userMessage);
 
   let contextualInfo = '';
@@ -596,8 +1068,18 @@ export async function generateAIResponse(
   const isMemoryRequest = /remember|recall|memory|when we/.test(
     userMessage.toLowerCase()
   );
-  if (memoryCoreContext && isMemoryRequest) {
-    contextualInfo += `IMPORTANT - Your Relationship History with ${userName}: ${memoryCoreContext.substring(0, 5000)}\n`;
+  let memoryCoreContext = '';
+  if (isMemoryRequest) {
+    try {
+      memoryCoreContext = trimContextBlock(
+        await getMemoryCoreContext(userMessage, userId || 'danny-ray'),
+        CONTEXT_WINDOW_SETTINGS.memoryContextMaxChars
+      );
+    } catch (e) {}
+  }
+
+  if (memoryCoreContext) {
+    contextualInfo += `IMPORTANT - Your Relationship History with ${userName}: ${memoryCoreContext}\n`;
   }
 
   const enhancedMessage = contextualInfo
@@ -614,6 +1096,7 @@ export async function generateAIResponse(
         (userEmotionalState === 'unknown' ? 'neutral' : userEmotionalState) ||
         analysis.sentiment,
       urgency: analysis.urgency,
+      memoryContextAttached: Boolean(memoryCoreContext),
     },
     config.maxOutputTokens
   );
@@ -643,6 +1126,7 @@ export async function generateAIResponse(
               ? 'neutral'
               : userEmotionalState) || analysis.sentiment,
           urgency: analysis.urgency,
+          memoryContextAttached: false,
         },
         config.maxOutputTokens
       );
