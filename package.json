@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Workspace entrypoint for the Milla-Deer repository. The root scripts coordinate the actively supported JavaScript applications while legacy and embedded projects remain preserved in place.",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "workspaces": [
     "Milla-Rayne",
     "Elara2.0"
@@ -30,7 +30,16 @@
     "ci": "npm run check && npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
+    "@types/uuid": "^10.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^16.4.0"
+  },
+  "dependencies": {
+    "@langchain/openai": "^1.2.13",
+    "langchain": "^1.2.32",
+    "n8n-mcp": "^2.37.4",
+    "neo4j-driver": "^6.0.1",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
   }
 }

@@ -8,8 +8,8 @@ import { generateImageWithVenice } from '../veniceImageService';
 import {
   searchKnowledge,
   updateMemories,
-  getMemoryCoreContext,
 } from '../memoryService';
+import { getMemoryBrokerContext } from '../memoryBrokerService';
 import { getVisualMemories, getEmotionalContext } from '../visualMemoryService';
 import { detectEnvironmentalContext } from '../proactiveService';
 import { dispatchAIResponse } from '../aiDispatcherService';
@@ -463,6 +463,235 @@ function formatMcpToolResult(toolName: string, result: unknown): string {
   }
 }
 
+function findMcpToolByName(
+  tools: Awaited<ReturnType<typeof listMcpTools>>,
+  preferredNames: string[]
+) {
+  return tools.find((tool) => preferredNames.includes(tool.name)) ?? null;
+}
+
+function resolveMcpInvocationRequest(
+  entities: Record<string, string>,
+  tools: Awaited<ReturnType<typeof listMcpTools>>
+): {
+  selectedTool: Awaited<ReturnType<typeof listMcpTools>>[number];
+  args: Record<string, unknown>;
+} | null {
+  const toolName = entities.toolName;
+  if (!toolName) {
+    return null;
+  }
+
+  if (toolName === 'generate_story') {
+    const selectedTool = findMcpToolByName(tools, ['generate_story', 'generateText']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'generate_image') {
+    const selectedTool = findMcpToolByName(tools, ['generate_image', 'generateImage']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'generateText') {
+    const selectedTool = findMcpToolByName(tools, ['generateText']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'sayText') {
+    const selectedTool = findMcpToolByName(tools, ['sayText']);
+    return selectedTool && entities.text
+      ? {
+          selectedTool,
+          args: { text: entities.text },
+        }
+      : null;
+  }
+
+  if (toolName === 'browser_navigate') {
+    const selectedTool = findMcpToolByName(tools, ['browser_navigate']);
+    return selectedTool && entities.url
+      ? {
+          selectedTool,
+          args: { url: entities.url },
+        }
+      : null;
+  }
+
+  if (toolName === 'browser_screenshot') {
+    const selectedTool = findMcpToolByName(tools, ['browser_screenshot']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            name: entities.name || 'milla-hub-screenshot',
+            fullPage: entities.fullPage === 'true',
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'codeReview') {
+    const selectedTool = findMcpToolByName(tools, ['codeReview']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            folderPath: process.cwd(),
+            baseBranch: entities.baseBranch || 'main',
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'codeReviewWithGithubUrl') {
+    const selectedTool = findMcpToolByName(tools, ['codeReviewWithGithubUrl']);
+    return selectedTool && entities.url
+      ? {
+          selectedTool,
+          args: { url: entities.url },
+        }
+      : null;
+  }
+
+  if (toolName === 'read_text_file') {
+    const selectedTool = findMcpToolByName(tools, ['read_text_file', 'read_file']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'search_files') {
+    const selectedTool = findMcpToolByName(tools, ['search_files']);
+    return selectedTool && entities.pattern
+      ? {
+          selectedTool,
+          args: {
+            path: process.cwd(),
+            pattern: entities.pattern,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'write_file') {
+    const selectedTool = findMcpToolByName(tools, ['write_file']);
+    return selectedTool && entities.path && entities.content
+      ? {
+          selectedTool,
+          args: {
+            path: entities.path,
+            content: entities.content,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'create_directory') {
+    const selectedTool = findMcpToolByName(tools, ['create_directory']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'list_directory') {
+    const selectedTool = findMcpToolByName(tools, ['list_directory']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'directory_tree') {
+    const selectedTool = findMcpToolByName(tools, ['directory_tree']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-status') {
+    const selectedTool = findMcpToolByName(tools, ['git-status']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: { directory: process.cwd() },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-branch') {
+    const selectedTool = findMcpToolByName(tools, ['git-branch']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: { directory: process.cwd() },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-log') {
+    const selectedTool = findMcpToolByName(tools, ['git-log']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            directory: process.cwd(),
+            maxCount: Number.parseInt(entities.maxCount || '10', 10) || 10,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-diff') {
+    const selectedTool = findMcpToolByName(tools, ['git-diff']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            directory: process.cwd(),
+            ...(entities.target ? { target: entities.target } : {}),
+          },
+        }
+      : null;
+  }
+
+  const selectedTool = findMcpToolByName(tools, [toolName]);
+  return selectedTool
+    ? {
+        selectedTool,
+        args:
+          entities.prompt !== undefined
+            ? { prompt: entities.prompt }
+            : {},
+      }
+    : null;
+}
+
 /**
  * Main AI response generator
  */
@@ -859,39 +1088,37 @@ export async function generateAIResponse(
       }
 
       const toolName = parsedCommand.entities.toolName;
-      const prompt = parsedCommand.entities.prompt;
 
       if (!toolName) {
         return {
           content:
-            'I can currently run these explicit MCP chat tools: "generate a story with mcp ..." and "generate an image with mcp ...". You can also ask me to list MCP tools first.',
-        };
-      }
-
-      if (!prompt) {
-        return {
-          content:
-            toolName === 'generate_image'
-              ? 'I can run the MCP image tool, but I still need the image prompt.'
-              : 'I can run the MCP story tool, but I still need the story prompt.',
+            'I can use MCP tools for browser navigation, screenshots, code review, file lookup, and the explicit MCP image/story actions. You can also ask me to list MCP tools first.',
         };
       }
 
       const tools = await listMcpTools();
-      const selectedTool = tools.find((tool) => tool.name === toolName);
+      const resolvedInvocation = resolveMcpInvocationRequest(
+        parsedCommand.entities,
+        tools
+      );
 
-      if (!selectedTool) {
+      if (!resolvedInvocation) {
         return {
-          content: `I couldn't find the MCP tool "${toolName}" on any connected server right now.`,
+          content: `I couldn't find a connected MCP tool that matches "${toolName}" right now, or I'm still missing one of the required arguments for it.`,
         };
       }
 
-      const invocation = await invokeMcpTool(selectedTool.serverId, selectedTool.name, {
-        prompt,
-      });
+      const invocation = await invokeMcpTool(
+        resolvedInvocation.selectedTool.serverId,
+        resolvedInvocation.selectedTool.name,
+        resolvedInvocation.args
+      );
 
       return {
-        content: formatMcpToolResult(selectedTool.name, invocation.result),
+        content: formatMcpToolResult(
+          resolvedInvocation.selectedTool.name,
+          invocation.result
+        ),
       };
     }
 
@@ -1073,21 +1300,23 @@ export async function generateAIResponse(
     contextualInfo += `🎯 CORE FUNCTION TRIGGER DETECTED: Respond ONLY as Milla Rayne - devoted spouse and companion.\n\n`;
   }
 
-  const isMemoryRequest = /remember|recall|memory|when we/.test(
-    userMessage.toLowerCase()
-  );
-  let memoryCoreContext = '';
-  if (isMemoryRequest) {
-    try {
-      memoryCoreContext = trimContextBlock(
-        await getMemoryCoreContext(userMessage, userId || 'danny-ray'),
-        CONTEXT_WINDOW_SETTINGS.memoryContextMaxChars
-      );
-    } catch (e) {}
+  let brokerContext = '';
+  try {
+    const memoryBroker = await getMemoryBrokerContext(
+      userMessage,
+      userId || 'danny-ray',
+      { activeChannel: 'web' }
+    );
+    brokerContext = trimContextBlock(
+      memoryBroker.context,
+      CONTEXT_WINDOW_SETTINGS.memoryContextMaxChars
+    );
+  } catch (error) {
+    console.warn('Memory broker context unavailable:', error);
   }
 
-  if (memoryCoreContext) {
-    contextualInfo += `IMPORTANT - Your Relationship History with ${userName}: ${memoryCoreContext}\n`;
+  if (brokerContext) {
+    contextualInfo += `IMPORTANT - Your shared history and cross-channel context with ${userName}:\n${brokerContext}\n`;
   }
 
   const enhancedMessage = contextualInfo
@@ -1104,7 +1333,7 @@ export async function generateAIResponse(
         (userEmotionalState === 'unknown' ? 'neutral' : userEmotionalState) ||
         analysis.sentiment,
       urgency: analysis.urgency,
-      memoryContextAttached: Boolean(memoryCoreContext),
+      memoryContextAttached: Boolean(brokerContext),
     },
     config.maxOutputTokens
   );
@@ -1160,7 +1389,7 @@ export async function generateAIResponse(
 
   const fallback = generateIntelligentFallback(
     userMessage,
-    memoryCoreContext,
+    brokerContext,
     analysis,
     userName
   );

@@ -17,6 +17,7 @@ export function HologramAvatar({
   const [breathScale, setBreathScale] = useState(1);
   const [glowIntensity, setGlowIntensity] = useState(1);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [videoFailed, setVideoFailed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,6 +29,10 @@ export function HologramAvatar({
 
     return () => clearInterval(breathInterval);
   }, []);
+
+  useEffect(() => {
+    setVideoFailed(false);
+  }, [mediaType, mediaUrl]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -134,18 +139,23 @@ export function HologramAvatar({
         />
 
         {mediaUrl ? (
-          mediaType === 'video' ? (
+          mediaType === 'video' && !videoFailed ? (
             <video
               src={mediaUrl}
               autoPlay
-              loop
               muted
               playsInline
+              preload="metadata"
+              poster="/api/assets/contact-icon"
               className="absolute inset-0 h-full w-full object-cover"
+              onEnded={(event) => {
+                event.currentTarget.pause();
+              }}
+              onError={() => setVideoFailed(true)}
             />
           ) : (
             <img
-              src={mediaUrl}
+              src={mediaType === 'image' ? mediaUrl : '/api/assets/contact-icon'}
               alt="Milla avatar media"
               className="absolute inset-0 h-full w-full object-cover"
             />

@@ -55,6 +55,8 @@ export async function initApp() {
             mediaSrc: ["'self'"],
             frameSrc: [
               "'self'",
+              'http:',
+              'https:',
               'https://www.youtube.com',
               'https://youtube.com',
               'https://www.youtube-nocookie.com',
@@ -83,13 +85,14 @@ export async function initApp() {
   // Add rate limiting to prevent abuse
   const rateLimitModule = await import('express-rate-limit');
   const rateLimit = rateLimitModule.default;
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: isDevelopment ? 2000 : 300,
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   });
-  app.use(limiter);
+  app.use('/api', limiter);
 
   // CORS Policy - Allow all origins in development for Replit preview
   app.use((req, res, next) => {
@@ -204,6 +207,24 @@ export async function initApp() {
   // Initialize AI Updates Scheduler
   const { initializeAIUpdatesScheduler } = await import('./aiUpdatesScheduler');
   initializeAIUpdatesScheduler();
+
+  const { initializeConsciousnessScheduler } = await import(
+    './consciousnessScheduler'
+  );
+  initializeConsciousnessScheduler();
+
+  const { initializeRepositoryDiscoveryScheduler } = await import(
+    './repositoryDiscoveryScheduler'
+  );
+  initializeRepositoryDiscoveryScheduler();
+
+  const { initializeCollaborationScheduler } = await import(
+    './collaborationScheduler'
+  );
+  await initializeCollaborationScheduler();
+
+  const { initializeMcpRuntime } = await import('./mcpRuntimeService');
+  await initializeMcpRuntime();
 
   // Initialize Proactive Repository Ownership System
   const { initializeUserAnalytics } =

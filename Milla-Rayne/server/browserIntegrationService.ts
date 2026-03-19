@@ -119,13 +119,14 @@ async function getAccessToken(): Promise<string | null> {
  * Get recent emails from Gmail
  */
 export async function getRecentEmails(
-  maxResults: number = 5
+  maxResults: number = 5,
+  userId: string = 'default-user'
 ): Promise<BrowserToolResult> {
   try {
     console.log(`[Browser Integration] Getting recent emails`);
 
     const { getRecentEmails: getEmails } = await import('./googleGmailService');
-    const result = await getEmails('default-user', maxResults);
+    const result = await getEmails(userId, maxResults);
 
     return {
       success: result.success,
@@ -145,7 +146,8 @@ export async function getRecentEmails(
  * Get the content of a specific email from Gmail
  */
 export async function getEmailContent(
-  messageId: string
+  messageId: string,
+  userId: string = 'default-user'
 ): Promise<BrowserToolResult> {
   try {
     console.log(
@@ -154,7 +156,7 @@ export async function getEmailContent(
 
     const { getEmailContent: getContent } =
       await import('./googleGmailService');
-    const result = await getContent('default-user', messageId);
+    const result = await getContent(userId, messageId);
 
     return {
       success: result.success,
@@ -174,6 +176,7 @@ export async function getEmailContent(
  * Send an email from Gmail
  */
 export async function sendEmail(
+  userId: string,
   to: string,
   subject: string,
   body: string
@@ -182,7 +185,7 @@ export async function sendEmail(
     console.log(`[Browser Integration] Sending email to: ${to}`);
 
     const { sendEmail: doSend } = await import('./googleGmailService');
-    const result = await doSend('default-user', to, subject, body);
+    const result = await doSend(userId, to, subject, body);
 
     return {
       success: result.success,
@@ -269,6 +272,7 @@ export async function addNoteToKeep(
  * This integrates with Google Calendar API using OAuth
  */
 export async function addCalendarEvent(
+  userId: string,
   title: string,
   date: string,
   time?: string,
@@ -286,7 +290,8 @@ export async function addCalendarEvent(
       title,
       date,
       time,
-      description
+      description,
+      userId
     );
 
     return {

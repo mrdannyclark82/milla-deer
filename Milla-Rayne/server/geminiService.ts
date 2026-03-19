@@ -49,7 +49,7 @@ export async function generateGeminiResponse(
     const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
     // Cast tools to any to bypass strict type checking if SchemaType mismatch persists with string literals
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
       tools: [searchTool] as any,
     });
 
@@ -63,9 +63,11 @@ export async function generateGeminiResponse(
     // Check for tool calls
     // In newer SDK versions, functionCall is a method returning FunctionCall | undefined
     const functionCall =
-      typeof response.functionCall === 'function'
-        ? response.functionCall()
-        : (response as any).functionCall;
+      typeof (response as any).functionCalls === 'function'
+        ? (response as any).functionCalls()?.[0]
+        : typeof (response as any).functionCall === 'function'
+          ? (response as any).functionCall()
+          : (response as any).functionCall;
 
     if (functionCall) {
       let toolResult: SearchResult[] | null = null;

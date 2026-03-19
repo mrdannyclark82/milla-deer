@@ -1,9 +1,6 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import { Ollama } from 'ollama';
+import { config } from './config';
 
-// Configuration for local model
-const MODEL_PATH = path.join(process.cwd(), 'locallm', 'gemma.tflite');
 const DEFAULT_MODEL = 'gemma3:1b'; // Smallest Gemma model (815MB)
 
 interface LocalModelResponse {
@@ -33,14 +30,18 @@ interface LocalModelResponse {
  *
  * 4. Enable in Milla-Rayne:
  *    Edit .env: ENABLE_LOCAL_MODEL=true
- *               PREFER_LOCAL_MODEL=true
+ *               OLLAMA_CHAT_MODEL=gemma3:1b
+ *               PREFER_LOCAL_MODEL=true  (optional local-first mode)
  *
- * That's it! Your chats will now use local inference for privacy.
+ * That's it! Ollama can run either as your local-first model or as the final fallback.
  */
 export class OfflineModelService {
   private isModelAvailable: boolean = false;
   private ollama: Ollama | null = null;
   private availableModel: string | null = null;
+  private readonly ollamaHost = config.localModel?.host || 'http://localhost:11434';
+  private readonly preferredModel =
+    config.localModel?.model || DEFAULT_MODEL;
 
   constructor() {
     this.initialize();
@@ -51,23 +52,30 @@ export class OfflineModelService {
       console.log('[OfflineModel] 🔍 Checking for Ollama...');
 
       // Initialize Ollama client
-      this.ollama = new Ollama({ host: 'http://localhost:11434' });
+      this.ollama = new Ollama({ host: this.ollamaHost });
 
       // Check if Ollama is running and get available models
       try {
         const models = await this.ollama.list();
 
         if (models.models && models.models.length > 0) {
-          // Look for Gemma models first, then any other model
+          const configuredModel = models.models.find(
+            (model) => model.name === this.preferredModel
+          );
           const gemmaModel = models.models.find((m) =>
             m.name.includes('gemma')
           );
           const anyModel = models.models[0];
 
-          this.availableModel = gemmaModel ? gemmaModel.name : anyModel.name;
+          this.availableModel = (
+            configuredModel ||
+            gemmaModel ||
+            anyModel
+          ).name;
           this.isModelAvailable = true;
 
           console.log(`[OfflineModel] ✅ Ollama is running!`);
+          console.log(`[OfflineModel] 🌐 Host: ${this.ollamaHost}`);
           console.log(
             `[OfflineModel] 📦 Available models: ${models.models.length}`
           );
@@ -105,7 +113,9 @@ export class OfflineModelService {
         );
         console.log('[OfflineModel]');
         console.log('[OfflineModel] 2. Download a model:');
-        console.log('[OfflineModel]    ollama pull gemma3:1b');
+        console.log(
+          `[OfflineModel]    ollama pull ${this.preferredModel || DEFAULT_MODEL}`
+        );
         console.log('[OfflineModel]');
         console.log('[OfflineModel] 3. Restart Milla-Rayne');
         console.log('[OfflineModel]');

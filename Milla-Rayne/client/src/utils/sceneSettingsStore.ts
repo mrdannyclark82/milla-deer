@@ -25,6 +25,7 @@ export function getDefaultSettings(): SceneSettings {
     mood: 'calm',
     enableParticles: true,
     enableParallax: true,
+    dashboardAmbientLight: 65,
     parallaxIntensity: 50,
     particleDensity: 'medium',
     animationSpeed: 1.0,
@@ -74,13 +75,14 @@ export function loadSceneSettings(): SceneSettings {
         typeof settings.enableParticles === 'boolean'
           ? settings.enableParticles
           : true,
-      enableParallax:
-        typeof settings.enableParallax === 'boolean'
-          ? settings.enableParallax
-          : true,
-      parallaxIntensity: clamp(settings.parallaxIntensity ?? 50, 0, 75),
-      particleDensity: ['off', 'low', 'medium', 'high'].includes(
-        settings.particleDensity
+       enableParallax:
+         typeof settings.enableParallax === 'boolean'
+           ? settings.enableParallax
+           : true,
+       dashboardAmbientLight: clamp(settings.dashboardAmbientLight ?? 65, 0, 100),
+       parallaxIntensity: clamp(settings.parallaxIntensity ?? 50, 0, 75),
+       particleDensity: ['off', 'low', 'medium', 'high'].includes(
+         settings.particleDensity
       )
         ? settings.particleDensity
         : 'medium',

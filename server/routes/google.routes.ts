@@ -1,6 +1,7 @@
 import { Router, type Express } from 'express';
-import { loginOrRegisterWithGoogle } from '../authService';
-import { config } from '../config';
+import { loginOrRegisterWithGoogle, validateSession } from '../authService';
+import { addNoteToGoogleTasks, listTasks } from '../googleTasksService';
+import { getAuthorizationUrl, isGoogleAuthenticated } from '../oauthService';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -9,9 +10,19 @@ import { asyncHandler } from '../utils/routeHelpers';
 export function registerGoogleRoutes(app: Express) {
   const router = Router();
 
+  const resolveUserId = async (sessionToken?: string) => {
+    if (!sessionToken) return 'default-user';
+
+    const sessionResult = await validateSession(sessionToken);
+    if (sessionResult.valid && sessionResult.user?.id) {
+      return sessionResult.user.id;
+    }
+
+    return 'default-user';
+  };
+
   router.get('/auth/google/url', (req, res) => {
-    const scope = ['profile', 'email', 'https://www.googleapis.com/auth/tasks'];
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config.google.clientId}&redirect_uri=${encodeURIComponent(config.google.redirectUri || '')}&response_type=code&scope=${encodeURIComponent(scope.join(' '))}&access_type=offline&prompt=consent`;
+    const url = getAuthorizationUrl();
     res.json({ url });
   });
 
@@ -75,9 +86,54 @@ export function registerGoogleRoutes(app: Express) {
     })
   );
 
-  router.get('/oauth/authenticated', (req, res) => {
-    res.json({ authenticated: !!req.cookies.session_token });
-  });
+  router.get(
+    '/oauth/authenticated',
+    asyncHandler(async (req, res) => {
+      const userId = await resolveUserId(req.cookies.session_token);
+      const authenticated =
+        userId !== 'default-user' && (await isGoogleAuthenticated(userId));
+
+      res.json({ authenticated });
+    })
+  );
+
+  router.get(
+    '/tasks/list',
+    asyncHandler(async (req, res) => {
+      const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
+      const showCompleted = String(req.query.showCompleted || 'false') === 'true';
+      const userId = await resolveUserId(req.cookies.session_token);
+      const result = await listTasks(
+        userId,
+        Number.isNaN(maxResults) ? 10 : Math.min(maxResults, 20),
+        showCompleted
+      );
+
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
+
+  router.post(
+    '/tasks/add',
+    asyncHandler(async (req, res) => {
+      const { title, notes } = req.body || {};
+      if (!title || !String(title).trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Task title is required.',
+        });
+      }
+
+      const userId = await resolveUserId(req.cookies.session_token);
+      const result = await addNoteToGoogleTasks(
+        String(title).trim(),
+        notes ? String(notes) : '',
+        userId
+      );
+
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
 
   // Mount routes
   app.use('/api', router);

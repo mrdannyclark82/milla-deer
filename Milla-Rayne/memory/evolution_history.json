@@ -16030,5 +16030,2405 @@
       "throughput": 100,
       "errorRate": 0.02
     }
+  },
+  {
+    "id": "evolution_1773525982502_48lnx4hez",
+    "timestamp": "2026-03-14T22:06:22.502Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9295115730453725,
+      "cpuUsage": 0.3851832621494911,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9310080051033046,
+      "cpuUsage": 0.38106938066338775,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773535729484_y4cgijwux",
+    "timestamp": "2026-03-15T00:48:49.484Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9466991203269659,
+      "cpuUsage": 0.20806842555119925,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.948071606648453,
+      "cpuUsage": 0.620217879500222,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773539329484_gd0626q9k",
+    "timestamp": "2026-03-15T01:48:49.484Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.948989629436978,
+      "cpuUsage": 0.4368890638388469,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.9500529234612104,
+      "cpuUsage": 0.47975443056016265,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773554224778_1iayvoovu",
+    "timestamp": "2026-03-15T05:57:04.778Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9852039546244622,
+      "cpuUsage": 0.6749992724919267,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9867043911150777,
+      "cpuUsage": 0.5269134384829885,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773557824775_6ranhh6dr",
+    "timestamp": "2026-03-15T06:57:04.775Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9680064934699814,
+      "cpuUsage": 0.6024869017026502,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9693436220798597,
+      "cpuUsage": 0.36515694059783055,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773561424783_vvgu4f3z3",
+    "timestamp": "2026-03-15T07:57:04.783Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9687004265190062,
+      "cpuUsage": 0.498414527504514,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9691638589838382,
+      "cpuUsage": 0.38629539874644114,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773565024780_46ac2cyqb",
+    "timestamp": "2026-03-15T08:57:04.780Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9734969211178826,
+      "cpuUsage": 0.6613299949052485,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.974580142890751,
+      "cpuUsage": 0.2335940645741429,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773568624785_69tpkv1gb",
+    "timestamp": "2026-03-15T09:57:04.785Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9740261266275068,
+      "cpuUsage": 0.3688469860087767,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9744987480955368,
+      "cpuUsage": 0.2001125621842132,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773572224781_5mcxpwoce",
+    "timestamp": "2026-03-15T10:57:04.781Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.974788318897785,
+      "cpuUsage": 0.6667063891007259,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9758742587361569,
+      "cpuUsage": 0.28217191023759003,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773575824788_317fh7ul2",
+    "timestamp": "2026-03-15T11:57:04.788Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9782575539037761,
+      "cpuUsage": 0.6230900987536515,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9778121227995862,
+      "cpuUsage": 0.49239138046353376,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773579424785_m8mnvpxkj",
+    "timestamp": "2026-03-15T12:57:04.785Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9794212179175397,
+      "cpuUsage": 0.6678340218103618,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9786310947489096,
+      "cpuUsage": 0.5368215481334018,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773583024789_dizak2end",
+    "timestamp": "2026-03-15T13:57:04.789Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9783640362238356,
+      "cpuUsage": 0.36301580544967355,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9793458759109038,
+      "cpuUsage": 0.6448200950793715,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773586624787_2fcsntifu",
+    "timestamp": "2026-03-15T14:57:04.787Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9836232172007905,
+      "cpuUsage": 0.42004473332931885,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9827498432184615,
+      "cpuUsage": 0.6101449065114131,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773590224795_tdw74ajc3",
+    "timestamp": "2026-03-15T15:57:04.795Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 4,
+      "memoryUsage": 0.9836719355220498,
+      "cpuUsage": 0.6104611320876352,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9839432283164361,
+      "cpuUsage": 0.5216852933141167,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773593824790_e8fs464uz",
+    "timestamp": "2026-03-15T16:57:04.790Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9835530769410094,
+      "cpuUsage": 0.4973862839932381,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9844809696260006,
+      "cpuUsage": 0.5490450568038856,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773614841838_mo5qu0eoh",
+    "timestamp": "2026-03-15T22:47:21.838Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9883410195032676,
+      "cpuUsage": 0.32828897519902817,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9878509035377211,
+      "cpuUsage": 0.2845278726802581,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773619950879_fk8x26bvp",
+    "timestamp": "2026-03-16T00:12:30.879Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9829475065265346,
+      "cpuUsage": 0.46024647306928534,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9844463529764171,
+      "cpuUsage": 0.24767495114097615,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773625833607_hj3pczq01",
+    "timestamp": "2026-03-16T01:50:33.607Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9809009803132094,
+      "cpuUsage": 0.6449693266346077,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.9836783523283938,
+      "cpuUsage": 0.5125992287784213,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773632440434_w4xwja8gs",
+    "timestamp": "2026-03-16T03:40:40.434Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9148436741210179,
+      "cpuUsage": 0.6116763853994849,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9161114493145743,
+      "cpuUsage": 0.6434001942376111,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773635927050_eq933jvtk",
+    "timestamp": "2026-03-16T04:38:47.050Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.8931907645396913,
+      "cpuUsage": 0.44236837084124075,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.8929647839911677,
+      "cpuUsage": 0.4298605072084913,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773639527060_wbhkaz9js",
+    "timestamp": "2026-03-16T05:38:47.061Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 9,
+      "memoryUsage": 0.9356107205623901,
+      "cpuUsage": 0.5096489217073642,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9366645155975395,
+      "cpuUsage": 0.43203444797074775,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773643127060_9dsvpj9y7",
+    "timestamp": "2026-03-16T06:38:47.060Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9074463659168416,
+      "cpuUsage": 0.24820919457920404,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9078984992137215,
+      "cpuUsage": 0.5104070287614244,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773646727054_2gn7q7yfx",
+    "timestamp": "2026-03-16T07:38:47.054Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.8943871623418737,
+      "cpuUsage": 0.6728292360771946,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.8940590496988828,
+      "cpuUsage": 0.31783950770153785,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773650327058_qrczfzvkj",
+    "timestamp": "2026-03-16T08:38:47.058Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.8903868958776248,
+      "cpuUsage": 0.6673686323134752,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.8912446449594489,
+      "cpuUsage": 0.5370897168269844,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773653927055_3ekbz97oa",
+    "timestamp": "2026-03-16T09:38:47.055Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.887927233697229,
+      "cpuUsage": 0.39873198703956586,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.8892220255150153,
+      "cpuUsage": 0.5763937794751488,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773657527063_888eqmciq",
+    "timestamp": "2026-03-16T10:38:47.063Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.8846183671408373,
+      "cpuUsage": 0.35036544181908025,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.887446617039025,
+      "cpuUsage": 0.6329554838652423,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773664778804_hw6riaav5",
+    "timestamp": "2026-03-16T12:39:38.804Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9880148407449498,
+      "cpuUsage": 0.3094425477219239,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9874948288680486,
+      "cpuUsage": 0.251683388011943,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773668378806_rx1joyp0s",
+    "timestamp": "2026-03-16T13:39:38.806Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9652717986210952,
+      "cpuUsage": 0.4815179140968778,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.9648527717157285,
+      "cpuUsage": 0.5269039359822048,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773671978813_vfwddmtuk",
+    "timestamp": "2026-03-16T14:39:38.813Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9351769361545308,
+      "cpuUsage": 0.686270325160796,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9358964723367483,
+      "cpuUsage": 0.6807035814624101,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773675578808_fkyflrhou",
+    "timestamp": "2026-03-16T15:39:38.808Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9263044812501738,
+      "cpuUsage": 0.4529321290071074,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9275801222981055,
+      "cpuUsage": 0.3919185251585104,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773679178812_6c4vq5qc8",
+    "timestamp": "2026-03-16T16:39:38.812Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9274708429883581,
+      "cpuUsage": 0.221084727318201,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9279853534403478,
+      "cpuUsage": 0.5239901369032139,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773682778810_ndo62j5d9",
+    "timestamp": "2026-03-16T17:39:38.810Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9297413444619858,
+      "cpuUsage": 0.6299729301259576,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9290964805024854,
+      "cpuUsage": 0.3872718421570947,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773686378814_hc63l4jbz",
+    "timestamp": "2026-03-16T18:39:38.814Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9329649919560847,
+      "cpuUsage": 0.5490206788234189,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9334565310348911,
+      "cpuUsage": 0.6816261677624071,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773689978812_s9agtfptu",
+    "timestamp": "2026-03-16T19:39:38.812Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9636778156509387,
+      "cpuUsage": 0.4867043579173975,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9630706452795696,
+      "cpuUsage": 0.6949179085355398,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773693578817_uhweaoxkb",
+    "timestamp": "2026-03-16T20:39:38.817Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9071432358655793,
+      "cpuUsage": 0.39025201039621665,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9070634719042985,
+      "cpuUsage": 0.4096671357138923,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773697178813_9mzfcacci",
+    "timestamp": "2026-03-16T21:39:38.813Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9627243469574328,
+      "cpuUsage": 0.45695252471135767,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9621209321422712,
+      "cpuUsage": 0.22745239647205528,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773700778819_ir86mnemy",
+    "timestamp": "2026-03-16T22:39:38.819Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9819930325718437,
+      "cpuUsage": 0.5066739145918796,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9825614452403973,
+      "cpuUsage": 0.5100168422952347,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773704378815_mzddq4508",
+    "timestamp": "2026-03-16T23:39:38.815Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9749138223124155,
+      "cpuUsage": 0.619842924924029,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9741588134239989,
+      "cpuUsage": 0.26811293011229925,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773707142953_0cm7pjmpi",
+    "timestamp": "2026-03-17T00:25:42.953Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9738119228731457,
+      "cpuUsage": 0.3691648135317115,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9753434377838329,
+      "cpuUsage": 0.2549506714456436,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773708945207_2hspo1nxb",
+    "timestamp": "2026-03-17T00:55:45.207Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9783325596722985,
+      "cpuUsage": 0.6899749758482018,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9779832360051178,
+      "cpuUsage": 0.6796092582235389,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773712887624_7lcjufnk1",
+    "timestamp": "2026-03-17T02:01:27.624Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9290019003157095,
+      "cpuUsage": 0.5436080677158273,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.930292759969084,
+      "cpuUsage": 0.2501562663681318,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773716109911_i3jmy9tfg",
+    "timestamp": "2026-03-17T02:55:09.911Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9357222491012148,
+      "cpuUsage": 0.3498103644401759,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.935461922116915,
+      "cpuUsage": 0.5939874781575704,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773719714858_hnv4nkg2g",
+    "timestamp": "2026-03-17T03:55:14.858Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9649316467410755,
+      "cpuUsage": 0.57823780765571,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9645105647231731,
+      "cpuUsage": 0.4344519356779481,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773723331775_52rjl3o7m",
+    "timestamp": "2026-03-17T04:55:31.775Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9645365447921868,
+      "cpuUsage": 0.4966620192687058,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9610310387176062,
+      "cpuUsage": 0.28150211102770045,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773726918683_h8ycxe0xr",
+    "timestamp": "2026-03-17T05:55:18.683Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9625133981085934,
+      "cpuUsage": 0.36659244676383496,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9636709076275384,
+      "cpuUsage": 0.3889338082039523,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773730539060_hz0wgp83a",
+    "timestamp": "2026-03-17T06:55:39.060Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9636130254054202,
+      "cpuUsage": 0.6746417559918118,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9625061044070395,
+      "cpuUsage": 0.36152818494636824,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773734123640_asaozyfoe",
+    "timestamp": "2026-03-17T07:55:23.640Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9666637931638055,
+      "cpuUsage": 0.31348047998258316,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9679829060128267,
+      "cpuUsage": 0.591670211714452,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773737723666_1viehm35g",
+    "timestamp": "2026-03-17T08:55:23.666Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9210189877895579,
+      "cpuUsage": 0.5951608335992169,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9201541736594492,
+      "cpuUsage": 0.25866652113549615,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773741323661_diyzcvatk",
+    "timestamp": "2026-03-17T09:55:23.661Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9501422652628584,
+      "cpuUsage": 0.21641636575075052,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9494648185316283,
+      "cpuUsage": 0.2454910693481035,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773744923661_0clbnez8n",
+    "timestamp": "2026-03-17T10:55:23.661Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9550035583446876,
+      "cpuUsage": 0.5029093081482654,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9542486689670248,
+      "cpuUsage": 0.29327147683792126,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773748523662_lqn6rjmao",
+    "timestamp": "2026-03-17T11:55:23.662Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9593733138335655,
+      "cpuUsage": 0.6922514084206933,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9600226468111653,
+      "cpuUsage": 0.5599446934770869,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773752123780_rt0kct9gi",
+    "timestamp": "2026-03-17T12:55:23.780Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9159404202198511,
+      "cpuUsage": 0.6860323795070951,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9155060722241262,
+      "cpuUsage": 0.47420429536767045,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773755723780_y0hxfuj91",
+    "timestamp": "2026-03-17T13:55:23.780Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9814579522176474,
+      "cpuUsage": 0.47679093227783026,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9818751192748092,
+      "cpuUsage": 0.3223212718168331,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773759323781_dlehji6vi",
+    "timestamp": "2026-03-17T14:55:23.781Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9283796953505767,
+      "cpuUsage": 0.4359251747900208,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9291481036299656,
+      "cpuUsage": 0.6883530071076958,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773762923788_cz5g67ike",
+    "timestamp": "2026-03-17T15:55:23.788Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9184047944774114,
+      "cpuUsage": 0.6725536615127723,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9188203126461346,
+      "cpuUsage": 0.42996573709869473,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773766523781_ibl7y0tjy",
+    "timestamp": "2026-03-17T16:55:23.781Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9163874615409947,
+      "cpuUsage": 0.5841229022162997,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.91716123585132,
+      "cpuUsage": 0.4054583541614462,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773770123784_b9jdpjbzz",
+    "timestamp": "2026-03-17T17:55:23.784Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9272052064926182,
+      "cpuUsage": 0.3586449652690677,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9237357932979713,
+      "cpuUsage": 0.3245821264855438,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773773723783_p0zpo5od6",
+    "timestamp": "2026-03-17T18:55:23.783Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9365217468848093,
+      "cpuUsage": 0.6921462638782234,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9361671514872979,
+      "cpuUsage": 0.5437504158391325,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773777323787_ulipo53bx",
+    "timestamp": "2026-03-17T19:55:23.787Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9850840193581906,
+      "cpuUsage": 0.4910654551243765,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9839930783952864,
+      "cpuUsage": 0.37972380309211334,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773780923783_mql87e0gm",
+    "timestamp": "2026-03-17T20:55:23.783Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9871383459791497,
+      "cpuUsage": 0.2542067419911073,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9878880724258249,
+      "cpuUsage": 0.24291818652894454,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773784523785_t7azd7tk0",
+    "timestamp": "2026-03-17T21:55:23.785Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9709914724013569,
+      "cpuUsage": 0.41355265560066173,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9713506155523391,
+      "cpuUsage": 0.5577982834081407,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773788123786_1c0bicpk2",
+    "timestamp": "2026-03-17T22:55:23.786Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9689196695859132,
+      "cpuUsage": 0.5445210049591531,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9696568171147804,
+      "cpuUsage": 0.43037283423540657,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773808124262_09ksnq5bh",
+    "timestamp": "2026-03-18T04:28:44.262Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9348962980680255,
+      "cpuUsage": 0.6811904016912805,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.936137501156673,
+      "cpuUsage": 0.37006234094955126,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773811724261_4pulgzuh8",
+    "timestamp": "2026-03-18T05:28:44.261Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9570863626392229,
+      "cpuUsage": 0.2605617243795623,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9566716297210803,
+      "cpuUsage": 0.40787312576728696,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773815324299_iqp3xikes",
+    "timestamp": "2026-03-18T06:28:44.300Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 3,
+      "memoryUsage": 0.956741382348064,
+      "cpuUsage": 0.4020585044726633,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9571924163551466,
+      "cpuUsage": 0.569934402255484,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773818924264_yulhn5pag",
+    "timestamp": "2026-03-18T07:28:44.264Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9617537852270532,
+      "cpuUsage": 0.48752473593610285,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9610566959736719,
+      "cpuUsage": 0.6185090480921465,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773822524264_160nwb7aa",
+    "timestamp": "2026-03-18T08:28:44.264Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9595501006979889,
+      "cpuUsage": 0.5707925445160675,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9588659320694831,
+      "cpuUsage": 0.4418459538086376,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773826124286_hzltmo5aw",
+    "timestamp": "2026-03-18T09:28:44.286Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9475673534402449,
+      "cpuUsage": 0.23353571479679686,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9481947009353244,
+      "cpuUsage": 0.31324926261701763,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773830118882_ztoy92aa3",
+    "timestamp": "2026-03-18T10:35:18.882Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9691555975018643,
+      "cpuUsage": 0.5421786126921282,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.970530038217748,
+      "cpuUsage": 0.3794492625812886,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773833209510_8alfj3465",
+    "timestamp": "2026-03-18T11:26:49.511Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9729110177049092,
+      "cpuUsage": 0.6298512752273799,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9726107777417379,
+      "cpuUsage": 0.5634532906515844,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773836809510_arh7dcpkf",
+    "timestamp": "2026-03-18T12:26:49.510Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9823112409801563,
+      "cpuUsage": 0.3022041747589611,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.9837005083057727,
+      "cpuUsage": 0.4944211322788259,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773840409515_ezbjskg2o",
+    "timestamp": "2026-03-18T13:26:49.515Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9848351483727944,
+      "cpuUsage": 0.4300807088360581,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9847280757659055,
+      "cpuUsage": 0.41368106876879496,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773844009512_4b8uz0zlc",
+    "timestamp": "2026-03-18T14:26:49.512Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9635649922487296,
+      "cpuUsage": 0.4529872606091332,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9648809812175236,
+      "cpuUsage": 0.5034377704475952,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773847609517_34ej5hmx2",
+    "timestamp": "2026-03-18T15:26:49.517Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9673474981090621,
+      "cpuUsage": 0.40864933336462417,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9678062152168598,
+      "cpuUsage": 0.6948602117780872,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773851295278_j2mfoifvf",
+    "timestamp": "2026-03-18T16:28:15.278Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9808107343006295,
+      "cpuUsage": 0.5988997643600847,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9803161106684238,
+      "cpuUsage": 0.6304107780948527,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773856185251_hgcjfss73",
+    "timestamp": "2026-03-18T17:49:45.251Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9639098363552662,
+      "cpuUsage": 0.20208273968698431,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9637079887041218,
+      "cpuUsage": 0.4835532380589774,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773862791051_1kyk4gjej",
+    "timestamp": "2026-03-18T19:39:51.051Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9580727974072639,
+      "cpuUsage": 0.3101257335883281,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.95984503800155,
+      "cpuUsage": 0.41517559071921956,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773866391056_yk8r8pz10",
+    "timestamp": "2026-03-18T20:39:51.056Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.961189788748005,
+      "cpuUsage": 0.6380871963584374,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9602972172582186,
+      "cpuUsage": 0.47483967534311733,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773869991064_59ju3flxt",
+    "timestamp": "2026-03-18T21:39:51.064Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.960052411755381,
+      "cpuUsage": 0.48490023037403207,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9600268387947203,
+      "cpuUsage": 0.3944067979114288,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773872840293_ezn88bz4g",
+    "timestamp": "2026-03-18T22:27:20.293Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9730407650904888,
+      "cpuUsage": 0.28656464345481264,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9748649893436405,
+      "cpuUsage": 0.3072838567554398,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773876440295_2mt7oi0yi",
+    "timestamp": "2026-03-18T23:27:20.295Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9763724281919683,
+      "cpuUsage": 0.6748228846093084,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.975427358825326,
+      "cpuUsage": 0.6411492944925188,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773880040298_b0ehhi612",
+    "timestamp": "2026-03-19T00:27:20.298Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9752495780671318,
+      "cpuUsage": 0.6593510088346282,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9766243064104421,
+      "cpuUsage": 0.5378460429442214,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773883640301_6e6cn2hrt",
+    "timestamp": "2026-03-19T01:27:20.301Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.977124527011162,
+      "cpuUsage": 0.20980485656927073,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9761750003378744,
+      "cpuUsage": 0.47064303375937294,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773887240311_mfbjpleo5",
+    "timestamp": "2026-03-19T02:27:20.311Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.977688536711176,
+      "cpuUsage": 0.3074467638728735,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9759764573991031,
+      "cpuUsage": 0.6202374516342484,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773890840310_0cbb29lw1",
+    "timestamp": "2026-03-19T03:27:20.310Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9263290389695942,
+      "cpuUsage": 0.22255852503972834,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.927480177206633,
+      "cpuUsage": 0.4294400624481015,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773892644118_mopwwqgr6",
+    "timestamp": "2026-03-19T03:57:24.118Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9448941407742807,
+      "cpuUsage": 0.5977534647112264,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9443482849031283,
+      "cpuUsage": 0.28866103169688195,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773895040954_vv5c0a3yh",
+    "timestamp": "2026-03-19T04:37:20.954Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.953195323565864,
+      "cpuUsage": 0.6805912717645937,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9546534171388102,
+      "cpuUsage": 0.222868282916301,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773900964299_eo4uscwf7",
+    "timestamp": "2026-03-19T06:16:04.299Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9248144876018125,
+      "cpuUsage": 0.5024730015320418,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9262962847135352,
+      "cpuUsage": 0.34912287863874275,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773904564298_fcf87onu0",
+    "timestamp": "2026-03-19T07:16:04.298Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9311035335793455,
+      "cpuUsage": 0.6477843345269041,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9308034616884734,
+      "cpuUsage": 0.6118953558487018,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773908164309_8dr679hth",
+    "timestamp": "2026-03-19T08:16:04.309Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9321099002928508,
+      "cpuUsage": 0.4680609370075316,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9329013119297026,
+      "cpuUsage": 0.24423449281778337,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773911764302_4p8gefpqt",
+    "timestamp": "2026-03-19T09:16:04.302Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9299397569171771,
+      "cpuUsage": 0.4405052590891907,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 2,
+      "memoryUsage": 0.9296149711068573,
+      "cpuUsage": 0.5999888055306084,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773915364306_y4v2xfzat",
+    "timestamp": "2026-03-19T10:16:04.306Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9319036500668625,
+      "cpuUsage": 0.6294229267449022,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9326983759848961,
+      "cpuUsage": 0.2632599017152073,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773918964304_0cdhawwok",
+    "timestamp": "2026-03-19T11:16:04.304Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.930667948094995,
+      "cpuUsage": 0.578085662389788,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9303472526198192,
+      "cpuUsage": 0.38439910503763913,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773922564314_e89nzyhzm",
+    "timestamp": "2026-03-19T12:16:04.314Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9307228065611748,
+      "cpuUsage": 0.5225669659322033,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.929899780687451,
+      "cpuUsage": 0.36502842782380046,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773926164308_hpeu1zgag",
+    "timestamp": "2026-03-19T13:16:04.308Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9309317084184074,
+      "cpuUsage": 0.6465235107722027,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9305448313287252,
+      "cpuUsage": 0.33873558456382025,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773929764314_3b8hlmgv4",
+    "timestamp": "2026-03-19T14:16:04.314Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.9311617765431129,
+      "cpuUsage": 0.3795204588775548,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9319678471913709,
+      "cpuUsage": 0.6182494641895258,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773933364311_yumsc03m0",
+    "timestamp": "2026-03-19T15:16:04.311Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 0,
+      "memoryUsage": 0.9314472143964976,
+      "cpuUsage": 0.5327190526976995,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 0,
+      "memoryUsage": 0.9310608532215282,
+      "cpuUsage": 0.6837259450330773,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773936964316_nznxy2x9d",
+    "timestamp": "2026-03-19T16:16:04.316Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.930088986469712,
+      "cpuUsage": 0.42134186365099935,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9307916551167493,
+      "cpuUsage": 0.20114755969482867,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773940564315_f19smqbgm",
+    "timestamp": "2026-03-19T17:16:04.315Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 1,
+      "memoryUsage": 0.9306474273088212,
+      "cpuUsage": 0.35254229923738023,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": false,
+    "rollbackAvailable": false,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.9302167885968814,
+      "cpuUsage": 0.5550871352754864,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
+  },
+  {
+    "id": "evolution_1773944164320_wobov66rh",
+    "timestamp": "2026-03-19T18:16:04.320Z",
+    "evolutionType": "memory",
+    "description": "Optimize memory usage through better caching and garbage collection",
+    "performanceBefore": {
+      "responseTime": 2,
+      "memoryUsage": 0.8671537262975286,
+      "cpuUsage": 0.25623486773411,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    },
+    "success": true,
+    "rollbackAvailable": true,
+    "performanceAfter": {
+      "responseTime": 1,
+      "memoryUsage": 0.8692368244872969,
+      "cpuUsage": 0.3865458290740272,
+      "successRate": 0.95,
+      "throughput": 100,
+      "errorRate": 0.02
+    }
   }
 ]

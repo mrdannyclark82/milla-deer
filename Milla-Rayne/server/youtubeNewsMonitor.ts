@@ -16,6 +16,10 @@ import { searchVideos } from './googleYoutubeService';
 import { saveToKnowledgeBase } from './youtubeKnowledgeBase';
 import { analyzeVideoWithMillAlyzer } from './youtubeMillAlyzer';
 import { storage } from './storage';
+import {
+  getRecentWatchQueries,
+  predictYouTubeQuery,
+} from './youtubePredictionService';
 
 // ===========================================================================================
 // TYPES
@@ -52,7 +56,7 @@ export interface DailyNewsDigest {
 
 export const NEWS_CATEGORIES: NewsCategory[] = [
   {
-    name: 'AI & Machine Learning',
+    name: 'AI',
     keywords: [
       'artificial intelligence',
       'machine learning',
@@ -72,95 +76,57 @@ export const NEWS_CATEGORIES: NewsCategory[] = [
     priority: 10,
   },
   {
-    name: 'Web Development',
+    name: 'Tech',
     keywords: [
-      'react',
-      'nextjs',
-      'vue',
-      'angular',
-      'javascript',
-      'typescript',
-      'web development',
-      'frontend',
-      'backend',
-      'full stack',
-      'node.js',
-      'deno',
-      'bun',
+      'tech news',
+      'gadgets',
+      'consumer tech',
+      'developer tools',
+      'cybersecurity',
+      'cloud computing',
+      'future tech',
+      'product launch',
     ],
     priority: 8,
   },
   {
-    name: 'DevOps & Cloud',
+    name: 'GitHub',
     keywords: [
-      'kubernetes',
-      'docker',
-      'AWS',
-      'Azure',
-      'GCP',
-      'cloud computing',
-      'devops',
-      'CI/CD',
-      'terraform',
-      'deployment',
-      'serverless',
+      'github',
+      'open source',
+      'pull request',
+      'git workflow',
+      'github actions',
+      'copilot',
+      'repository',
+      'developer workflow',
     ],
     priority: 7,
   },
   {
-    name: 'Programming Languages',
+    name: 'Music',
     keywords: [
-      'python',
-      'rust',
-      'go',
-      'golang',
-      'java',
-      'c++',
-      'programming',
-      'coding',
-      'new language',
-      'language update',
+      'music video',
+      'new music',
+      'artist release',
+      'music production',
+      'live performance',
+      'playlist',
+      'album review',
+      'music tech',
     ],
     priority: 6,
   },
   {
-    name: 'Data Science',
+    name: 'Other',
     keywords: [
-      'data science',
-      'data analysis',
-      'pandas',
-      'numpy',
-      'jupyter',
-      'data visualization',
-      'analytics',
-      'big data',
-    ],
-    priority: 7,
-  },
-  {
-    name: 'Security & Privacy',
-    keywords: [
-      'cybersecurity',
-      'security breach',
-      'vulnerability',
-      'encryption',
-      'privacy',
-      'hacking',
-      'infosec',
-      'zero-day',
-    ],
-    priority: 9,
-  },
-  {
-    name: 'Tech Industry',
-    keywords: [
-      'tech news',
-      'startup',
-      'silicon valley',
-      'tech layoffs',
-      'tech earnings',
-      'product launch',
-      'tech conference',
+      'science news',
+      'future trends',
+      'creative tools',
+      'digital culture',
+      'maker projects',
+      'internet culture',
+      'streaming news',
     ],
     priority: 5,
   },
@@ -209,15 +175,77 @@ export async function runDailyNewsSearch(
     }
   }
 
+  const personalizedNews = await searchPersonalizedNews(userId);
+  if (personalizedNews.length > 0) {
+    const existingOther = digest.categories.Other ?? [];
+    digest.categories.Other = dedupeNewsItems([
+      ...existingOther,
+      ...personalizedNews,
+    ]);
+    digest.totalVideos += personalizedNews.length;
+    digest.topStories.push(...personalizedNews.slice(0, 2));
+  }
+
   // Sort top stories by relevance
-  digest.topStories.sort((a, b) => b.relevanceScore - a.relevanceScore);
-  digest.topStories = digest.topStories.slice(0, 5);
+  digest.topStories = dedupeNewsItems(digest.topStories)
+    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .slice(0, 5);
 
   console.log(
     `✅ Daily news search complete: ${digest.totalVideos} videos found`
   );
 
   return digest;
+}
+
+async function searchPersonalizedNews(userId: string): Promise<NewsItem[]> {
+  const recentQueries = await getRecentWatchQueries(4);
+  if (recentQueries.length === 0) {
+    return [];
+  }
+
+  const predictedQueries = await predictYouTubeQuery();
+  const candidateQueries = [...recentQueries, ...predictedQueries]
+    .map((query) => query.trim())
+    .filter(Boolean)
+    .filter((query, index, allQueries) => allQueries.indexOf(query) === index)
+    .slice(0, 5);
+
+  if (candidateQueries.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.all(
+    candidateQueries.map(async (query) => {
+      const searchResult = await searchVideos(userId, query, 2, 'relevance');
+      if (!searchResult.success || !Array.isArray(searchResult.data)) {
+        return [];
+      }
+
+        return searchResult.data.map((video: any) => ({
+          videoId: video.id.videoId,
+          title: video.snippet.title,
+          channel: video.snippet.channelTitle,
+          publishedAt: video.snippet.publishedAt,
+          thumbnail: video.snippet.thumbnails?.medium?.url,
+          category: 'Other',
+          relevanceScore: 40,
+        })) as NewsItem[];
+    })
+  );
+
+  return dedupeNewsItems(results.flat()).slice(0, 6);
+}
+
+function dedupeNewsItems(items: NewsItem[]): NewsItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.videoId)) {
+      return false;
+    }
+    seen.add(item.videoId);
+    return true;
+  });
 }
 
 /**
@@ -231,14 +259,15 @@ async function searchCategoryNews(
 
   // Build search query from top keywords
   const searchQuery = category.keywords.slice(0, 3).join(' OR ');
-  const timeFilter = getTimeFilterQuery(); // Last 24 hours
+  const publishedAfter = getPublishedAfterIso(); // Last 48 hours
 
   try {
     const searchResult = await searchVideos(
       userId,
-      `${searchQuery} ${timeFilter}`,
+      searchQuery,
       10,
-      'date' // Sort by most recent
+      'date',
+      { publishedAfter }
     );
 
     if (searchResult.success && searchResult.data) {
@@ -296,12 +325,11 @@ function calculateRelevance(snippet: any, category: NewsCategory): number {
 }
 
 /**
- * Get time filter for YouTube search (last 24-48 hours)
+ * Get publishedAfter value for YouTube search (last 48 hours)
  */
-function getTimeFilterQuery(): string {
-  // YouTube search supports time-based filters
-  // Using publishedAfter parameter in actual API calls
-  return 'today OR yesterday';
+function getPublishedAfterIso(): string {
+  const publishedAfter = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  return publishedAfter.toISOString();
 }
 
 // ===========================================================================================
@@ -352,7 +380,7 @@ export async function analyzeTopNews(
  * Format news digest as daily suggestion
  */
 export function formatNewsDigestAsSuggestion(digest: DailyNewsDigest): string {
-  let suggestion = `📰 **Your Daily Tech News Digest** (${digest.date})\n\n`;
+  let suggestion = `📰 **Your Daily Video Digest** (${digest.date})\n\n`;
   suggestion += `Found ${digest.totalVideos} new videos across ${Object.keys(digest.categories).length} categories, love!\n\n`;
 
   // Top Stories

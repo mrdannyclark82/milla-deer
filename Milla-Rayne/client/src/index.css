@@ -92,6 +92,30 @@
   .glass-button {
     @apply bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 transition-all duration-300;
   }
+
+  .dashboard-card {
+    @apply rounded-2xl border border-white/10 backdrop-blur-xl;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(19, 7, 37, 0.58) 100%
+      );
+    box-shadow:
+      0 0 36px rgba(0, 242, 255, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .dashboard-card-pink {
+    box-shadow:
+      0 0 36px rgba(255, 0, 170, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .dashboard-card-inner {
+    @apply rounded-xl border border-white/10 backdrop-blur-md;
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 
 /* Scene animations */

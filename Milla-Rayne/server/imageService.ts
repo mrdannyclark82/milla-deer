@@ -1,11 +1,67 @@
 import nodeFetch from 'node-fetch';
+import { InferenceClient } from '@huggingface/inference';
 import { getHuggingFaceMCPService } from './huggingfaceMcpService.ts';
+import { config } from './config';
+import { generateImageWithGoogle } from './googleImageService';
+import { generateImageWithVenice } from './veniceImageService';
+import { generateImageWithPollinations } from './pollinationsImageService';
 globalThis.fetch = nodeFetch as unknown as typeof fetch;
 
 export interface ImageGenerationResult {
   success: boolean;
   imageUrl?: string;
   error?: string;
+}
+
+export function isLikelyUnsupportedHuggingFaceImageModel(model: string): boolean {
+  return /(lora|adapter)\b/i.test(model);
+}
+
+function isHuggingFaceAuthError(error?: string): boolean {
+  if (!error) return false;
+
+  return /invalid username or password|unauthorized|authentication|invalid token|401|403/i.test(
+    error
+  );
+}
+
+async function generateFallbackImage(
+  prompt: string,
+  reason?: string,
+  attemptedGoogleResult?: ImageGenerationResult
+): Promise<ImageGenerationResult> {
+  const googleResult =
+    attemptedGoogleResult ?? (await generateImageWithGoogle(prompt));
+  if (googleResult.success) {
+    return googleResult;
+  }
+  console.warn('Google image fallback failed:', googleResult.error);
+
+  if (config.venice.apiKey) {
+    const veniceResult = await generateImageWithVenice(prompt);
+    if (veniceResult.success) {
+      return veniceResult;
+    }
+    console.warn('Venice image fallback failed:', veniceResult.error);
+  }
+
+  const pollinationsResult = await generateImageWithPollinations(prompt, {
+    width: 1024,
+    height: 1024,
+    model: 'flux',
+  });
+
+  if (pollinationsResult.success) {
+    return pollinationsResult;
+  }
+
+  return {
+    success: false,
+    error:
+      pollinationsResult.error ||
+      reason ||
+      'All configured image backends failed.',
+  };
 }
 
 /**
@@ -17,12 +73,19 @@ export interface ImageGenerationResult {
 export async function generateImage(
   prompt: string
 ): Promise<ImageGenerationResult> {
-  if (!process.env.HUGGINGFACE_API_KEY) {
-    return {
-      success: false,
-      error:
-        'Hugging Face API key is not configured. Please set HUGGINGFACE_API_KEY in your environment.',
-    };
+  const googleResult = await generateImageWithGoogle(prompt);
+  if (googleResult.success) {
+    return googleResult;
+  }
+
+  const huggingFaceApiKey = config.huggingface.apiKey;
+  if (!huggingFaceApiKey) {
+    return generateFallbackImage(
+      prompt,
+      googleResult.error ||
+        'Hugging Face API key is not configured and no alternate backend succeeded.',
+      googleResult
+    );
   }
 
   // Try using MCP service first
@@ -40,12 +103,28 @@ export async function generateImage(
           imageUrl: mcpResult.imageUrl,
         };
       }
+      if (isHuggingFaceAuthError(mcpResult.error)) {
+        return generateFallbackImage(
+          prompt,
+          'Hugging Face authentication failed and fallback backends were unavailable.',
+          googleResult
+        );
+      }
       // If MCP fails, fall back to direct API
       console.warn(
         'MCP generation failed, falling back to direct API:',
         mcpResult.error
       );
     } catch (mcpError) {
+      const errorMessage =
+        mcpError instanceof Error ? mcpError.message : String(mcpError);
+      if (isHuggingFaceAuthError(errorMessage)) {
+        return generateFallbackImage(
+          prompt,
+          'Hugging Face authentication failed and fallback backends were unavailable.',
+          googleResult
+        );
+      }
       console.warn('MCP service error, falling back to direct API:', mcpError);
     }
   }
@@ -53,75 +132,67 @@ export async function generateImage(
   // Fallback to direct API implementation
   try {
     const model =
-      process.env.HUGGINGFACE_MODEL || 'philipp-zettl/UnfilteredAI-NSFW-gen-v2';
-    const endpoint = `https://api-inference.huggingface.co/models/${model}`;
+      config.huggingface.model || 'stabilityai/stable-diffusion-2-1';
+
+    if (isLikelyUnsupportedHuggingFaceImageModel(model)) {
+      return generateFallbackImage(
+        prompt,
+        `Hugging Face model "${model}" looks like a LoRA or adapter, not a standalone text-to-image inference model.`,
+        googleResult
+      );
+    }
+
     const maxAttempts = 3;
     let lastError: string | undefined;
+    const client = new InferenceClient(huggingFaceApiKey);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-            'Content-Type': 'application/json',
+        const response = await client.textToImage({
+          model,
+          inputs: prompt,
+          parameters: {
+            num_inference_steps: 30,
+            guidance_scale: 7.5,
           },
-          body: JSON.stringify({
-            inputs: prompt,
-            parameters: {
-              num_inference_steps: 30,
-              guidance_scale: 7.5,
-            },
-          }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const imageUrl = `data:image/png;base64,${buffer.toString('base64')}`;
 
-          // Handle model loading case
-          if (response.status === 503 && errorText.includes('loading')) {
-            lastError =
-              'Model is currently loading. Please try again in a moment.';
-            if (attempt < maxAttempts) {
-              await new Promise((r) => setTimeout(r, 2000 * attempt));
-              continue;
-            }
-          } else {
-            lastError = `Hugging Face API error (${response.status}): ${errorText}`;
-            if (attempt < maxAttempts) {
-              await new Promise((r) => setTimeout(r, 1000 * attempt));
-              continue;
-            }
-          }
-        } else {
-          // Hugging Face returns the image as a blob
-          const arrayBuffer = await response.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          const base64Image = buffer.toString('base64');
-          const imageUrl = `data:image/png;base64,${base64Image}`;
-
-          return { success: true, imageUrl };
-        }
+        return { success: true, imageUrl };
       } catch (err) {
         lastError = err instanceof Error ? err.message : String(err);
+        if (isHuggingFaceAuthError(lastError)) {
+          return generateFallbackImage(
+            prompt,
+            'Hugging Face authentication failed and fallback backends were unavailable.',
+            googleResult
+          );
+        }
+        if (/loading/i.test(lastError)) {
+          lastError = 'Model is currently loading. Please try again in a moment.';
+        }
         if (attempt < maxAttempts) {
           await new Promise((r) => setTimeout(r, 1000 * attempt));
         }
       }
     }
 
-    return {
-      success: false,
-      error: lastError || 'Failed to generate image with Hugging Face.',
-    };
+    return generateFallbackImage(
+      prompt,
+      lastError || 'Failed to generate image with Hugging Face.',
+      googleResult
+    );
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Unknown error during image generation.',
-    };
+    return generateFallbackImage(
+      prompt,
+      error instanceof Error
+        ? error.message
+        : 'Unknown error during image generation.',
+      googleResult
+    );
   }
 }
 

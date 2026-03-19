@@ -46,6 +46,8 @@ describe('Chat API', () => {
     app.use(express.json());
     app.use(cookieParser());
     registerModularRoutes(app);
+    vi.spyOn(storage, 'getMessages').mockResolvedValue([]);
+    vi.spyOn(storage, 'createMessage').mockResolvedValue({} as any);
   });
 
   it('should return a successful response with a message from the AI', async () => {
@@ -55,6 +57,8 @@ describe('Chat API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('response');
+    expect(storage.getMessages).toHaveBeenCalledWith('default-user');
+    expect(storage.createMessage).toHaveBeenCalledTimes(2);
   });
 
   it('should return the graceful fallback for "what\'s new" when no updates are available', async () => {

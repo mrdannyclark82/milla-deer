@@ -7,6 +7,7 @@
 
 import { RepositoryInfo, RepositoryData } from './repositoryAnalysisService';
 import { RepositoryImprovement } from './repositoryModificationService';
+import { getGitHubToken } from './config';
 
 // SSRF mitigation: Only allow safe relative file paths removing traversal, null bytes, etc.
 function isSafeGitHubFilePath(filePath: string): boolean {
@@ -402,6 +403,10 @@ export interface GitHubRepository {
   topics?: string[];
 }
 
+export function resolveGitHubToken(): string | undefined {
+  return getGitHubToken();
+}
+
 /**
  * Search GitHub repositories by keyword
  */
@@ -410,7 +415,7 @@ export async function searchRepositories(
   limit: number = 10
 ): Promise<GitHubRepository[]> {
   try {
-    const githubToken = process.env.GITHUB_TOKEN;
+    const githubToken = resolveGitHubToken();
     const headers: Record<string, string> = {
       Accept: 'application/vnd.github.v3+json',
       'User-Agent': 'Milla-Rayne-Bot',

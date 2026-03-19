@@ -25,7 +25,7 @@ async function main() {
       username: `testuser_${Date.now()}`,
       email: `test_${Date.now()}@example.com`,
       password: 'password123',
-      preferredAiModel: 'minimax',
+      preferredAiModel: 'gemini',
     });
 
     // Override the generated ID with what we got (or just use the returned user.id)

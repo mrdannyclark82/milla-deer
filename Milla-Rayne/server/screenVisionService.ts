@@ -1,14 +1,16 @@
 import { config } from './config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface ScreenVisionResult {
   success: boolean;
   content?: string;
-  provider?: 'openrouter' | 'xai';
+  provider?: 'openrouter' | 'xai' | 'gemini';
   error?: string;
 }
 
 const DEFAULT_OPENROUTER_VISION_MODEL = 'google/gemini-2.0-flash-001';
 const DEFAULT_XAI_VISION_MODEL = 'grok-2-vision-1212';
+const DEFAULT_GEMINI_VISION_MODEL = 'gemini-2.5-flash';
 
 function buildSystemPrompt(userName: string): string {
   return [
@@ -59,6 +61,79 @@ function normalizeVisionTextContent(content: unknown): string | undefined {
   }
 
   return undefined;
+}
+
+function parseImageDataUrl(imageData: string): { mimeType: string; data: string } | null {
+  const match = imageData.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    mimeType: match[1],
+    data: match[2],
+  };
+}
+
+async function analyzeWithGemini(
+  userMessage: string,
+  imageData: string,
+  userName: string
+): Promise<ScreenVisionResult> {
+  if (!config.gemini.apiKey) {
+    return {
+      success: false,
+      error: 'Gemini vision is not configured.',
+    };
+  }
+
+  const parsedImage = parseImageDataUrl(imageData);
+  if (!parsedImage) {
+    return {
+      success: false,
+      error: 'Shared image data URL could not be parsed.',
+    };
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_VISION_MODEL || DEFAULT_GEMINI_VISION_MODEL,
+    });
+    const result = await model.generateContent([
+      {
+        text: `${buildSystemPrompt(userName)}\n\n${buildUserPrompt(userMessage)}`,
+      },
+      {
+        inlineData: {
+          mimeType: parsedImage.mimeType,
+          data: parsedImage.data,
+        },
+      },
+    ]);
+
+    const content = result.response.text()?.trim();
+    if (!content) {
+      return {
+        success: false,
+        error: 'Gemini vision returned no usable content.',
+      };
+    }
+
+    return {
+      success: true,
+      content,
+      provider: 'gemini',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? `Gemini vision request failed: ${error.message}`
+          : 'Gemini vision request failed.',
+    };
+  }
 }
 
 async function analyzeWithOpenRouter(
@@ -222,6 +297,15 @@ export async function analyzeScreenShareImage(
       success: false,
       error: 'Shared screen image must be a data URL.',
     };
+  }
+
+  const geminiResult = await analyzeWithGemini(
+    userMessage,
+    normalizedImageData,
+    userName
+  );
+  if (geminiResult.success) {
+    return geminiResult;
   }
 
   const openRouterResult = await analyzeWithOpenRouter(

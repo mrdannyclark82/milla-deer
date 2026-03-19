@@ -1,4 +1,7 @@
 import { Router, type Express } from 'express';
+import fs from 'fs';
+import path from 'path';
+import { config } from '../config';
 import { analyzeVideo, generateVideoInsights } from '../gemini';
 import {
   analyzeYouTubeVideo,
@@ -10,7 +13,6 @@ import {
   pregenerateAllMoodBackgrounds,
 } from '../moodBackgroundService';
 import { generateImage, formatImageResponse } from '../imageService';
-import { generateImageWithVenice } from '../veniceImageService';
 import { generateImageWithPollinations } from '../pollinationsImageService';
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { upload } from '../middleware/upload.middleware';
@@ -36,8 +38,116 @@ export function registerMediaRoutes(app: Express) {
       case '1:1':
       default:
         return { width: 1024, height: 1024 };
-    }
+      }
   };
+  const contactIconPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_deer.jpg'
+  );
+  const welcomeVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'Welcome_Milla.mp4'
+  );
+  const workingVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'Milla_working.mp4'
+  );
+  const loopVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_loop.mp4'
+  );
+  const mediaVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_media.mp4'
+  );
+  const studioVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_studio.mp4'
+  );
+
+  router.get(
+    '/assets/contact-icon',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(contactIconPath)) {
+        return res.status(404).json({ error: 'Contact image not found' });
+      }
+
+      res.sendFile(contactIconPath);
+    })
+  );
+
+  router.get(
+    '/assets/welcome-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(welcomeVideoPath)) {
+        return res.status(404).json({ error: 'Welcome video not found' });
+      }
+
+      res.sendFile(welcomeVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/working-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(workingVideoPath)) {
+        return res.status(404).json({ error: 'Working video not found' });
+      }
+
+      res.sendFile(workingVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/loop-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(loopVideoPath)) {
+        return res.status(404).json({ error: 'Loop video not found' });
+      }
+
+      res.sendFile(loopVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/media-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(mediaVideoPath)) {
+        return res.status(404).json({ error: 'Media video not found' });
+      }
+
+      res.sendFile(mediaVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/studio-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(studioVideoPath)) {
+        return res.status(404).json({ error: 'Studio video not found' });
+      }
+
+      res.sendFile(studioVideoPath);
+    })
+  );
 
   // Video analysis from file upload
   router.post(
@@ -155,14 +265,21 @@ export function registerMediaRoutes(app: Express) {
             'Studio image generation via Pollinations failed, falling back:',
             imageResult.error
           );
-          imageResult = process.env.VENICE_API_KEY
-            ? await generateImageWithVenice(prompt)
-            : await generateImage(prompt);
+          imageResult = await generateImage(prompt);
         }
-      } else if (process.env.VENICE_API_KEY) {
-        imageResult = await generateImageWithVenice(prompt);
       } else {
         imageResult = await generateImage(prompt);
+        if (!imageResult.success) {
+          console.warn(
+            'Default image backend failed, falling back to Pollinations:',
+            imageResult.error
+          );
+          imageResult = await generateImageWithPollinations(prompt, {
+            width: 1024,
+            height: 1024,
+            model: 'flux',
+          });
+        }
       }
 
       res.json({

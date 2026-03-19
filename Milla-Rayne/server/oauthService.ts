@@ -21,6 +21,23 @@ interface GoogleOAuthConfig {
 
 import { config } from './config.ts';
 
+export const GOOGLE_OAUTH_SCOPES = [
+  'openid',
+  'email',
+  'profile',
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/tasks',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.compose',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/photoslibrary.readonly',
+  'https://www.googleapis.com/auth/photoslibrary.sharing',
+  'https://www.googleapis.com/auth/sdm.service',
+] as const;
+
 /**
  * Get Google OAuth configuration from environment
  */
@@ -29,18 +46,7 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
     clientId: config.google.clientId || '',
     clientSecret: config.google.clientSecret || '',
     redirectUri: config.google.redirectUri || '',
-    scope: [
-      'https://www.googleapis.com/auth/calendar',
-      'https://www.googleapis.com/auth/tasks',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/drive.readonly',
-      'https://www.googleapis.com/auth/photoslibrary.readonly',
-      'https://www.googleapis.com/auth/photoslibrary.sharing',
-      'profile',
-      'email',
-    ],
+    scope: [...GOOGLE_OAUTH_SCOPES],
   };
 }
 

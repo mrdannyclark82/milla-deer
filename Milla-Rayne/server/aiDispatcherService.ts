@@ -44,6 +44,11 @@ import {
   type ActiveUserPersona,
 } from './personaFusionService';
 import { DEFAULT_CHAT_MODEL, normalizeAIModel } from './aiModelPreferences';
+import {
+  CONTEXT_WINDOW_SETTINGS,
+  boundConversationHistory,
+  trimContextBlock,
+} from './contextWindowService';
 
 // Response cache for avoiding duplicate AI calls
 const responseCache = new Map<
@@ -56,6 +61,8 @@ const MEMORY_RELEVANCE_THRESHOLD = 8.0;
 const CONTENT_TRUNCATION_SHORT = 200;
 const CONTENT_TRUNCATION_MEDIUM = 250;
 const CONTENT_TRUNCATION_LONG = 300;
+const GEMINI_QUOTA_COOLDOWN_MS = 10 * 60 * 1000;
+let geminiCooldownUntil = 0;
 const hasApiKey = (value: string | null | undefined): value is string =>
   Boolean(value?.trim());
 const hasOpenRouterKeyConfigured = (): boolean =>
@@ -100,7 +107,25 @@ export interface DispatchContext {
   sceneContext?: any;
   voiceContext?: VoiceAnalysisResult;
   ambientContext?: AmbientContext;
+  memoryContextAttached?: boolean;
 }
+
+const isGeminiQuotaError = (response: AIResponse): boolean => {
+  const error = response.error?.toLowerCase() || '';
+  const content = response.content?.toLowerCase() || '';
+  return (
+    error.includes('429') ||
+    error.includes('quota') ||
+    error.includes('rate limit') ||
+    content.includes('gemini service')
+  );
+};
+
+const isGeminiAvailable = (): boolean => Date.now() >= geminiCooldownUntil;
+
+const markGeminiQuotaCooldown = () => {
+  geminiCooldownUntil = Date.now() + GEMINI_QUOTA_COOLDOWN_MS;
+};
 
 async function enrichContextWithSemanticRetrieval(
   userMessage: string,
@@ -108,9 +133,10 @@ async function enrichContextWithSemanticRetrieval(
 ): Promise<string> {
   const userId = context.userId || 'default-user';
   try {
-    const memoryContext = shouldInjectMemoryContext(userMessage)
-      ? await getSemanticMemoryContext(userMessage, userId)
-      : '';
+    const memoryContext =
+      shouldInjectMemoryContext(userMessage) && !context.memoryContextAttached
+        ? await getSemanticMemoryContext(userMessage, userId)
+        : '';
     const youtubeResults = await semanticSearchVideos(userMessage, {
       userId,
       topK: 2,
@@ -126,7 +152,10 @@ async function enrichContextWithSemanticRetrieval(
       );
       enrichedContext += `\n\nRelevant YouTube knowledge:\n${youtubeParts.join('\n\n')}`;
     }
-    return enrichedContext;
+    return trimContextBlock(
+      enrichedContext,
+      CONTEXT_WINDOW_SETTINGS.semanticContextMaxChars
+    );
   } catch (error) {
     console.error('Error enriching context with semantic retrieval:', error);
     return '';
@@ -327,6 +356,14 @@ export async function dispatchAIResponse(
   console.log(`🔍 [TRACE:${requestTraceId}] dispatchAIResponse - Starting`);
   const startTime = Date.now();
   const userId = context.userId || 'default-user';
+  const boundedConversationHistory = boundConversationHistory(
+    context.conversationHistory || [],
+    {
+      maxMessages: CONTEXT_WINDOW_SETTINGS.dispatcherHistoryMaxMessages,
+      maxChars: CONTEXT_WINDOW_SETTINGS.dispatcherHistoryMaxChars,
+      stage: 'dispatcher-history',
+    }
+  );
 
   // Memory-First Check
   try {
@@ -394,6 +431,7 @@ export async function dispatchAIResponse(
 
   let response: AIResponse = { content: '', success: false };
   let modelUsed = 'none';
+  let attemptedGemini = false;
 
   // Check user preference
   let preferredModel = null;
@@ -412,13 +450,25 @@ export async function dispatchAIResponse(
     console.log(`🤖 User preferred model: ${preferredModel}`);
 
     if (preferredModel === 'gemini') {
-      response = await generateGeminiResponse(augmentedMessage);
+      attemptedGemini = true;
+      if (isGeminiAvailable()) {
+        response = await generateGeminiResponse(augmentedMessage);
+        if (!response.success && isGeminiQuotaError(response)) {
+          markGeminiQuotaCooldown();
+        }
+      } else {
+        response = {
+          content: 'Gemini is temporarily cooling down after a quota limit.',
+          success: false,
+          error: 'Gemini cooldown active after quota limit',
+        };
+      }
       if (response.success) modelUsed = 'gemini';
     } else if (preferredModel === 'minimax') {
       response = await generateMinimaxResponse(
         augmentedMessage,
         {
-          conversationHistory: context.conversationHistory,
+          conversationHistory: boundedConversationHistory,
           userName: context.userName,
           userEmotionalState: context.userEmotionalState,
           urgency: context.urgency,
@@ -433,7 +483,7 @@ export async function dispatchAIResponse(
       response = await generateVeniceResponse(
         augmentedMessage,
         {
-          conversationHistory: context.conversationHistory,
+          conversationHistory: boundedConversationHistory,
           userName: context.userName,
           userEmotionalState: context.userEmotionalState,
           urgency: context.urgency,
@@ -446,7 +496,7 @@ export async function dispatchAIResponse(
       response = await generateXAIResponse(
         augmentedMessage,
         {
-          conversationHistory: context.conversationHistory,
+          conversationHistory: boundedConversationHistory,
           userEmotionalState: context.userEmotionalState,
           urgency: context.urgency,
           userName: context.userName,
@@ -457,13 +507,13 @@ export async function dispatchAIResponse(
     }
   }
 
-  // 0.5 Local Model Preference (Highest Priority if enabled and no direct match above)
+  // 0.5 Optional Ollama local-first mode
   if (
     !response.success &&
     config.localModel?.enabled &&
     config.localModel?.preferLocal
   ) {
-    console.log('🤖 Local model preference enabled');
+    console.log('🤖 Ollama local-first mode enabled');
     const { offlineService } = await import('./offlineModelService');
     const localResponse = await offlineService.generateResponse(
       augmentedMessage,
@@ -471,14 +521,23 @@ export async function dispatchAIResponse(
     );
     if (localResponse.success) {
       response = { content: localResponse.content, success: true };
-      modelUsed = 'local';
+      modelUsed = 'ollama';
     }
   }
 
   // 0.75 Gemini
-  if (!response.success && hasApiKey(config.gemini?.apiKey)) {
+  if (
+    !response.success &&
+    !attemptedGemini &&
+    isGeminiAvailable() &&
+    hasApiKey(config.gemini?.apiKey)
+  ) {
     console.log('Trying Gemini...');
+    attemptedGemini = true;
     response = await generateGeminiResponse(augmentedMessage);
+    if (!response.success && isGeminiQuotaError(response)) {
+      markGeminiQuotaCooldown();
+    }
     if (response.success) modelUsed = 'gemini';
   }
 
@@ -487,9 +546,9 @@ export async function dispatchAIResponse(
     console.log('Trying xAI...');
     response = await generateXAIResponse(
       augmentedMessage,
-      {
-        conversationHistory: context.conversationHistory,
-        userEmotionalState: context.userEmotionalState,
+        {
+          conversationHistory: boundedConversationHistory,
+          userEmotionalState: context.userEmotionalState,
         urgency: context.urgency,
         userName: context.userName,
       } as XAIPersonalityContext,
@@ -503,9 +562,9 @@ export async function dispatchAIResponse(
     console.log('Trying OpenAI...');
     response = await generateOpenAIResponse(
       augmentedMessage,
-      {
-        conversationHistory: context.conversationHistory,
-        userName: context.userName,
+        {
+          conversationHistory: boundedConversationHistory,
+          userName: context.userName,
         userEmotionalState: context.userEmotionalState,
         urgency: context.urgency,
       } as any,
@@ -517,11 +576,11 @@ export async function dispatchAIResponse(
   // 3. Anthropic
   if (!response.success && hasApiKey(config.anthropic?.apiKey)) {
     console.log('Trying Anthropic...');
-    response = await generateAnthropicResponse(augmentedMessage, {
-      conversationHistory: context.conversationHistory,
-      userEmotionalState: context.userEmotionalState,
-      urgency: context.urgency,
-      userName: context.userName,
+      response = await generateAnthropicResponse(augmentedMessage, {
+        conversationHistory: boundedConversationHistory,
+        userEmotionalState: context.userEmotionalState,
+        urgency: context.urgency,
+        userName: context.userName,
     });
     if (response.success) modelUsed = 'anthropic';
   }
@@ -529,11 +588,11 @@ export async function dispatchAIResponse(
   // 4. Mistral
   if (!response.success && hasApiKey(config.mistral?.apiKey)) {
     console.log('Trying Mistral...');
-    response = await generateMistralResponse(augmentedMessage, {
-      conversationHistory: context.conversationHistory,
-      userEmotionalState: context.userEmotionalState,
-      urgency: context.urgency,
-      userName: context.userName,
+      response = await generateMistralResponse(augmentedMessage, {
+        conversationHistory: boundedConversationHistory,
+        userEmotionalState: context.userEmotionalState,
+        urgency: context.urgency,
+        userName: context.userName,
     });
     if (response.success) modelUsed = 'mistral';
   }
@@ -547,11 +606,11 @@ export async function dispatchAIResponse(
     console.log('Falling back to OpenRouter...');
     response = await generateOpenRouterResponse(
       augmentedMessage,
-      {
-        conversationHistory: context.conversationHistory,
-        userEmotionalState: context.userEmotionalState,
-        urgency: context.urgency,
-        userName: context.userName,
+        {
+          conversationHistory: boundedConversationHistory,
+          userEmotionalState: context.userEmotionalState,
+          urgency: context.urgency,
+          userName: context.userName,
       } as OpenRouterContext,
       maxTokens
     );
@@ -564,6 +623,20 @@ export async function dispatchAIResponse(
     console.log(
       'Skipping OpenRouter fallback because direct provider keys are configured.'
     );
+  }
+
+  // 6. Ollama final fallback
+  if (!response.success && config.localModel?.enabled) {
+    console.log('Trying Ollama final fallback...');
+    const { offlineService } = await import('./offlineModelService');
+    const localResponse = await offlineService.generateResponse(
+      augmentedMessage,
+      ''
+    );
+    if (localResponse.success) {
+      response = { content: localResponse.content, success: true };
+      modelUsed = 'ollama';
+    }
   }
 
   // Track response and detect UI commands

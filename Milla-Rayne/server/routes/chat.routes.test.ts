@@ -7,6 +7,7 @@ import * as authService from '../authService';
 import * as chatOrchestrator from '../services/chatOrchestrator.service';
 import * as smartHomeService from '../smartHomeService';
 import * as sceneDetectionService from '../sceneDetectionService';
+import { storage } from '../storage';
 
 vi.mock('../authService');
 vi.mock('../services/chatOrchestrator.service');
@@ -32,6 +33,9 @@ describe('Chat Routes', () => {
       mood: 'calm',
       timeOfDay: 'evening',
     } as any);
+    vi.spyOn(storage, 'getMessages').mockResolvedValue([]);
+    vi.spyOn(storage, 'createMessage').mockResolvedValue({} as any);
+    delete process.env.ADMIN_TOKEN;
   });
 
   describe('GET /api/ai-model/current', () => {
@@ -76,6 +80,46 @@ describe('Chat Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.response).toBe('Hello Danny!');
+      expect(storage.getMessages).toHaveBeenCalledWith('default-user');
+      expect(chatOrchestrator.generateAIResponse).toHaveBeenCalledWith(
+        'Hi Milla',
+        [],
+        'Danny Ray',
+        undefined,
+        'default-user',
+        undefined,
+        false,
+        { canRunShellCommands: true }
+      );
+      expect(storage.createMessage).toHaveBeenCalledTimes(2);
+    });
+
+    it('passes shell admin capability when the admin token header is valid', async () => {
+      process.env.ADMIN_TOKEN = 'test-admin-token';
+      vi.spyOn(
+        chatOrchestrator,
+        'validateAndSanitizePrompt'
+      ).mockImplementation((p) => p);
+      vi.spyOn(chatOrchestrator, 'generateAIResponse').mockResolvedValue({
+        content: 'Queued shell command',
+      });
+
+      const response = await request(app)
+        .post('/api/chat')
+        .set('x-admin-token', 'test-admin-token')
+        .send({ message: 'run workspace check' });
+
+      expect(response.status).toBe(200);
+      expect(chatOrchestrator.generateAIResponse).toHaveBeenCalledWith(
+        'run workspace check',
+        [],
+        'Danny Ray',
+        undefined,
+        'default-user',
+        undefined,
+        false,
+        { canRunShellCommands: true }
+      );
     });
 
     it('should return 400 for empty message', async () => {
@@ -84,6 +128,37 @@ describe('Chat Routes', () => {
         .send({ message: '' });
 
       expect(response.status).toBe(400);
+    });
+
+    it('should bound stored conversation history before orchestrating', async () => {
+      vi.spyOn(
+        chatOrchestrator,
+        'validateAndSanitizePrompt'
+      ).mockImplementation((p) => p);
+      vi.spyOn(chatOrchestrator, 'generateAIResponse').mockResolvedValue({
+        content: 'Trimmed history response',
+      });
+      vi.spyOn(storage, 'getMessages').mockResolvedValue(
+        Array.from({ length: 12 }, (_, index) => ({
+          id: `m-${index}`,
+          userId: 'default-user',
+          role: index % 2 === 0 ? 'user' : 'assistant',
+          content: `Message ${index} ${'x'.repeat(180)}`,
+        })) as any
+      );
+
+      const response = await request(app)
+        .post('/api/chat')
+        .send({ message: 'Use recent context' });
+
+      expect(response.status).toBe(200);
+      const boundedHistory = vi.mocked(
+        chatOrchestrator.generateAIResponse
+      ).mock.calls[0][1];
+      expect(boundedHistory.length).toBeLessThanOrEqual(8);
+      expect(
+        boundedHistory.every((message) => message.content.length <= 453)
+      ).toBe(true);
     });
   });
 });

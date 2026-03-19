@@ -1,0 +1,46 @@
+{
+  "settings": {
+    "enabled": true,
+    "cron": "0 8 * * *",
+    "timezone": "America/Chicago"
+  },
+  "latestReport": {
+    "generatedAt": 1773870932725,
+    "repoPath": "/home/nexus/ogdray/Milla-Deer",
+    "proactive": {
+      "discoveredCount": 4,
+      "recommendedCount": 1,
+      "topRecommendations": [
+        "Daily collaboration report"
+      ],
+      "scheduler": {
+        "isScheduled": true,
+        "isRunning": false,
+        "cron": "0 */6 * * *",
+        "enabled": true,
+        "maxReposPerCycle": 10,
+        "lastRunAt": 1773870931024,
+        "lastSuccessAt": 1773870932524,
+        "lastError": null,
+        "totalRuns": 2,
+        "successfulRuns": 2
+      }
+    },
+    "sarii": {
+      "success": true,
+      "suggestion": {
+        "feature_name": "Daily collaboration report",
+        "reasoning": "Gemini is unavailable in this environment, so Milla-Deer should continue with a safe fallback recommendation: keep proactive discovery running daily and review the top recommended feature for sandbox implementation.",
+        "code_snippet": "# Fallback planner output only. No code generated without Gemini.",
+        "pr_title": "chore: review daily collaboration report"
+      },
+      "syncedFeatureId": "feat_1773860526330_u2orpnqcf",
+      "error": null
+    }
+  },
+  "lastRunAt": 1773870931024,
+  "lastSuccessAt": 1773870932725,
+  "lastError": null,
+  "totalRuns": 6,
+  "successfulRuns": 6
+}

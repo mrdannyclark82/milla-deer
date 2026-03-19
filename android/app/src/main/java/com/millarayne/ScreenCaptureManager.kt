@@ -10,8 +10,11 @@ import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Base64
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.WindowManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -19,21 +22,60 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 
 class ScreenCaptureManager(private val context: Context) {
+    companion object {
+        private const val TAG = "ScreenCaptureManager"
+        @Volatile
+        private var sharedInstance: ScreenCaptureManager? = null
+
+        fun getShared(context: Context): ScreenCaptureManager {
+            return sharedInstance ?: synchronized(this) {
+                sharedInstance ?: ScreenCaptureManager(context.applicationContext).also {
+                    sharedInstance = it
+                }
+            }
+        }
+    }
+
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
     private var captureWidth: Int = 0
     private var captureHeight: Int = 0
     private var densityDpi: Int = 0
+    private var isStoppingInternally = false
+    private var onSessionEnded: (() -> Unit)? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val projectionCallback = object : MediaProjection.Callback() {
+        override fun onStop() {
+            Log.w(TAG, "MediaProjection stopped by the system")
+            if (isStoppingInternally) {
+                return
+            }
+
+            releaseResources(stopProjection = false)
+            ScreenShareForegroundService.stop(context)
+            onSessionEnded?.invoke()
+        }
+    }
 
     fun isActive(): Boolean = mediaProjection != null && imageReader != null
+
+    fun setOnSessionEndedListener(listener: (() -> Unit)?) {
+        onSessionEnded = listener
+    }
 
     fun start(resultCode: Int, data: Intent): Boolean {
         stop()
 
         val projectionManager = context.getSystemService(MediaProjectionManager::class.java)
             ?: return false
-        val projection = projectionManager.getMediaProjection(resultCode, data) ?: return false
+        val projection = try {
+            projectionManager.getMediaProjection(resultCode, data)
+        } catch (error: SecurityException) {
+            Log.e(TAG, "MediaProjection start rejected by Android", error)
+            return false
+        } ?: return false
+        projection.registerCallback(projectionCallback, mainHandler)
         val metrics = readDisplayMetrics()
 
         captureWidth = metrics.widthPixels.coerceAtLeast(1)
@@ -61,6 +103,7 @@ class ScreenCaptureManager(private val context: Context) {
         mediaProjection = projection
         imageReader = reader
         virtualDisplay = display
+        Log.d(TAG, "MediaProjection started at ${captureWidth}x${captureHeight} (${densityDpi}dpi)")
         return true
     }
 
@@ -71,6 +114,7 @@ class ScreenCaptureManager(private val context: Context) {
             val image = reader.acquireLatestImage()
             if (image != null) {
                 try {
+                    Log.d(TAG, "Captured frame on attempt ${it + 1}")
                     return@withContext convertImageToDataUrl(image)
                 } finally {
                     image.close()
@@ -79,16 +123,33 @@ class ScreenCaptureManager(private val context: Context) {
             delay(100)
         }
 
+        Log.w(TAG, "No screen frame became available during capture window")
         null
     }
 
     fun stop() {
+        Log.d(TAG, "Stopping MediaProjection session")
+        isStoppingInternally = true
+        releaseResources(stopProjection = true)
+        isStoppingInternally = false
+        ScreenShareForegroundService.stop(context)
+    }
+
+    private fun releaseResources(stopProjection: Boolean) {
         virtualDisplay?.release()
         virtualDisplay = null
         imageReader?.close()
         imageReader = null
-        mediaProjection?.stop()
+
+        val projection = mediaProjection
         mediaProjection = null
+        if (projection != null) {
+            projection.unregisterCallback(projectionCallback)
+            if (stopProjection) {
+                projection.stop()
+            }
+        }
+
         captureWidth = 0
         captureHeight = 0
         densityDpi = 0

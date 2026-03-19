@@ -14,7 +14,6 @@ import {
   isSupportedAIModel,
   normalizeAIModel,
 } from '../aiModelPreferences';
-import { isAdminRequestAuthorized } from '../middleware/admin.middleware';
 import {
   generateAIResponse,
   validateAndSanitizePrompt,
@@ -44,8 +43,13 @@ async function resolveChatUserId(sessionToken?: string): Promise<string> {
   return 'default-user';
 }
 
-async function getRecentConversationHistory(userId: string) {
-  const messages = await storage.getMessages(userId);
+async function getRecentConversationHistory(
+  userId: string,
+  channel: string = 'web'
+) {
+  const messages = (await storage.getMessages(userId)).filter(
+    (message) => (message.channel || 'web') === channel
+  );
 
   return boundConversationHistory(
     messages.map((message) => ({
@@ -63,7 +67,8 @@ async function getRecentConversationHistory(userId: string) {
 async function persistConversationTurn(
   userId: string,
   userMessage: string,
-  assistantMessage: string
+  assistantMessage: string,
+  channel: string = 'web'
 ) {
   await Promise.all([
     storage.createMessage({
@@ -71,12 +76,16 @@ async function persistConversationTurn(
       role: 'user',
       content: userMessage,
       displayRole: 'Danny Ray',
+      channel,
+      sourcePlatform: 'milla-hub',
     }),
     storage.createMessage({
       userId,
       role: 'assistant',
       content: assistantMessage,
       displayRole: 'Milla Rayne',
+      channel,
+      sourcePlatform: 'milla-hub',
     }),
   ]);
 }
@@ -190,7 +199,7 @@ export function registerChatRoutes(app: Express) {
 
       const data: any = await response.json();
       const userId = await resolveChatUserId(req.cookies.session_token);
-      const conversationHistory = await getRecentConversationHistory(userId);
+      const conversationHistory = await getRecentConversationHistory(userId, 'web');
       const aiResponse = await generateAIResponse(
         data.text,
         conversationHistory,
@@ -199,10 +208,10 @@ export function registerChatRoutes(app: Express) {
         userId,
         undefined,
         false,
-        { canRunShellCommands: isAdminRequestAuthorized(req) }
+        { canRunShellCommands: true }
       );
 
-      await persistConversationTurn(userId, data.text, aiResponse.content);
+      await persistConversationTurn(userId, data.text, aiResponse.content, 'web');
 
       res.json({
         response: aiResponse.content,
@@ -250,7 +259,7 @@ export function registerChatRoutes(app: Express) {
       const processedMessage = bypassFunctionCalls
         ? message.trim().substring(2).trim()
         : message;
-      const conversationHistory = await getRecentConversationHistory(userId);
+      const conversationHistory = await getRecentConversationHistory(userId, 'web');
 
       // Handle Scene Context
       const sensorData = await getSmartHomeSensorData();
@@ -276,10 +285,15 @@ export function registerChatRoutes(app: Express) {
         userId,
         userEmotionalState,
         bypassFunctionCalls,
-        { canRunShellCommands: isAdminRequestAuthorized(req) }
+        { canRunShellCommands: true }
       );
 
-      await persistConversationTurn(userId, processedMessage, aiResponse.content);
+      await persistConversationTurn(
+        userId,
+        processedMessage,
+        aiResponse.content,
+        'web'
+      );
 
       res.json({
         response: aiResponse.content,

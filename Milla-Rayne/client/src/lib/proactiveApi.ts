@@ -3,10 +3,12 @@
  * Handles API calls to the proactive features server (port 5001)
  */
 
-const PROACTIVE_PORT = import.meta.env.VITE_PROACTIVE_PORT || '5001';
 const PROACTIVE_BASE_URL =
-  import.meta.env.VITE_PROACTIVE_BASE_URL ||
-  `http://localhost:${PROACTIVE_PORT}`;
+  (typeof import.meta !== 'undefined' &&
+  typeof import.meta.env !== 'undefined' &&
+  import.meta.env.VITE_PROACTIVE_BASE_URL
+    ? import.meta.env.VITE_PROACTIVE_BASE_URL
+    : '/api/proactive');
 
 /**
  * Make a request to the proactive features server

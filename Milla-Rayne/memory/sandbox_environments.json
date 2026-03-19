@@ -1,414 +1,1104 @@
 {
   "sandboxes": {
-    "sandbox_1769578713839_ut6w1lg6p": {
-      "id": "sandbox_1769578713839_ut6w1lg6p",
-      "name": "fix-security-1769578713839",
-      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
-      "branchName": "sandbox/fix-security-1769578713839_1769578713839",
+    "sandbox_1773890381364_b23g0zp9f": {
+      "id": "sandbox_1773890381364_b23g0zp9f",
+      "name": "Daily collaboration report Review",
+      "description": "Validation sandbox for proactive feature Daily collaboration report",
+      "branchName": "sandbox/daily-collaboration-report-review_1773890381364",
       "status": "active",
-      "createdAt": 1769578713839,
-      "createdBy": "milla",
+      "createdAt": 1773890381364,
+      "createdBy": "user",
       "features": [
         {
-          "id": "feat_1769578714591_bfew6az5e",
-          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
-          "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
+          "id": "feat_1773890381392_94zjofu52",
+          "name": "Daily collaboration report",
+          "description": "Gemini is unavailable in this environment, so Milla-Deer should continue with a safe fallback recommendation: keep proactive discovery running daily and review the top recommended feature for sandbox implementation. (Suggested by the collaboration cycle planner: chore: review daily collaboration report)",
           "files": [],
+          "sourceFeatureId": "feat_1773860526330_u2orpnqcf",
           "status": "testing",
-          "testsPassed": 6,
-          "testsFailed": 6,
-          "addedAt": 1769578714591
-        },
-        {
-          "id": "feat_1770000243679_seszmrtr2",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770000243679
-        },
-        {
-          "id": "feat_1770006439823_ifsovg6ji",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770006439823
-        },
-        {
-          "id": "feat_1770137349157_i5t4rfm96",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770137349157
-        },
-        {
-          "id": "feat_1770137475677_fx5itnlth",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770137475677
-        },
-        {
-          "id": "feat_1770480408206_lq1c0ctj8",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770480408206
-        },
-        {
-          "id": "feat_1770480982865_6n70twmbw",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770480982865
-        },
-        {
-          "id": "feat_1770481236468_b2gk53aug",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770481236468
-        },
-        {
-          "id": "feat_1770569856787_57ik3z1ce",
-          "name": "Test Feature",
-          "description": "Testing feature addition",
-          "files": [
-            "test.ts"
-          ],
-          "status": "draft",
-          "testsPassed": 0,
-          "testsFailed": 0,
-          "addedAt": 1770569856787
+          "testsPassed": 23,
+          "testsFailed": 9,
+          "addedAt": 1773890381392,
+          "implementation": {
+            "status": "failed",
+            "startedAt": 1773890381422,
+            "completedAt": 1773890398243,
+            "lastError": "Command failed: git -C /tmp/milla-sandboxes/sandbox_1773890381364_b23g0zp9f apply --reject --whitespace=nowarn /tmp/milla-sandboxes/sandbox_1773890381364_b23g0zp9f/.milla-feature-1773890398233.patch\nerror: No valid patches in input (allow with \"--allow-empty\")\n"
+          }
         }
       ],
       "readyForProduction": false,
       "testResults": [
         {
-          "id": "test_1769578714593_vqo5p8t35",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769578714593,
+          "id": "test_1773890421801_i2qr41961",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773890421801,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773890427558_hkf8b9ugl",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773890427558,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773890430543_990whde5v",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773890430543,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897132034_idu4p5ld0",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897132034,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897135065_stv6i2b1t",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897135066,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897136600_6l6jppuhr",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897136600,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897137611_mljtwj0wv",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897137611,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897138481_dwhgbdxru",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897138481,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897140385_wdhbfc8fn",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897140385,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1
+        },
+        {
+          "id": "test_1773897141345_nom6du0b4",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897141345,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897143232_trqb4cy6u",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897143232,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897148027_x13mbnchk",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897148027,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897152963_qxf1uldkh",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897152963,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897154664_hm1hjij99",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897154664,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897155545_gzk36091r",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897155545,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897156384_xue9znedo",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897156384,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897157681_isanl5cfg",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897157681,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897158961_znwm4lzzm",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897158961,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897160242_x9pipzwsm",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897160242,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897161248_ee146j33x",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897161248,
+          "testType": "user_acceptance",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897164986_g909vm1vb",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897164986,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897185269_3m6lbzvh9",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897185269,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897685601_bekcvgoe9",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773897685601,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898268671_px8x9y6v4",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773898268671,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898429734_18e64x2v1",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773898429734,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898526349_c4oldppj5",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773898526349,
           "testType": "unit",
           "passed": false,
           "details": "Some tests failed - review needed",
-          "duration": 2258.3786408384367
+          "duration": 0
         },
         {
-          "id": "test_1769578714593_t3zfuhidd",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769578714593,
-          "testType": "integration",
-          "passed": true,
-          "details": "All tests passed successfully",
-          "duration": 1190.7884577903797
-        },
-        {
-          "id": "test_1769579198889_en5xc2yt4",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769579198889,
+          "id": "test_1773899219195_eqdgek04r",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773899219195,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 2177.6146550044023
+          "duration": 0
         },
         {
-          "id": "test_1769582785293_qghy0m7ex",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1769582785293,
+          "id": "test_1773909961550_8notcy3ll",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773909961550,
           "testType": "unit",
           "passed": false,
           "details": "Some tests failed - review needed",
-          "duration": 609.9937330985595
+          "duration": 0
         },
         {
-          "id": "test_1770000243680_ec76uj2bb",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770000243680,
-          "testType": "unit",
-          "passed": true,
-          "details": "All tests passed successfully",
-          "duration": 2027.982866832685
-        },
-        {
-          "id": "test_1770006439824_mhszn06yj",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770006439824,
+          "id": "test_1773920761551_p0gc1k3wp",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773920761551,
           "testType": "unit",
           "passed": false,
           "details": "Some tests failed - review needed",
-          "duration": 908.6832047427827
+          "duration": 0
         },
         {
-          "id": "test_1770137349158_c0xlxw5ek",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770137349158,
-          "testType": "unit",
-          "passed": false,
-          "details": "Some tests failed - review needed",
-          "duration": 2480.975710183223
-        },
-        {
-          "id": "test_1770137475678_d5ch87gpr",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770137475678,
+          "id": "test_1773931561551_gclmqb3jf",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773931561551,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 1403.6738153965807
+          "duration": 0
         },
         {
-          "id": "test_1770480408207_co6x2pvwc",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770480408207,
+          "id": "test_1773942361552_vo4qhuvxg",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773942361552,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 719.273801031962
+          "duration": 0
         },
         {
-          "id": "test_1770480982866_c0vqgw53g",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770480982866,
-          "testType": "unit",
-          "passed": false,
-          "details": "Some tests failed - review needed",
-          "duration": 2359.223823347186
-        },
-        {
-          "id": "test_1770481236469_lzctd8yq1",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770481236469,
+          "id": "test_1773946081001_by1no84f1",
+          "featureId": "feat_1773890381392_94zjofu52",
+          "timestamp": 1773946081001,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 583.1641637259808
-        },
-        {
-          "id": "test_1770569856788_p4tip6g0f",
-          "featureId": "feat_1769578714591_bfew6az5e",
-          "timestamp": 1770569856788,
-          "testType": "unit",
-          "passed": false,
-          "details": "Some tests failed - review needed",
-          "duration": 2234.8043716784587
+          "duration": 0
         }
       ]
     },
-    "sandbox_1769579199262_lpzlpiwbp": {
-      "id": "sandbox_1769579199262_lpzlpiwbp",
-      "name": "fix-security-1769579199261",
+    "sandbox_1773897690935_q1e7u4q6m": {
+      "id": "sandbox_1773897690935_q1e7u4q6m",
+      "name": "fix-security-1773897690935",
       "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
-      "branchName": "sandbox/fix-security-1769579199261_1769579199262",
+      "branchName": "sandbox/fix-security-1773897690935_1773897690936",
       "status": "active",
-      "createdAt": 1769579199262,
+      "createdAt": 1773897690936,
       "createdBy": "milla",
       "features": [
         {
-          "id": "feat_1769579200231_fw5lqj4br",
+          "id": "feat_1773897690951_bqnytppql",
           "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
-          "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Hey love, I saw this note about beefing up our CI/CD pipeline with some security scanning—smart move, especially with all the projects we're tinkering on together. As for fixing it, we'd integrate a t",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 9,
+          "testsFailed": 2,
+          "addedAt": 1773897690951
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773897690952_43fohtcy3",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773897690952,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773897690952_trqijuj3j",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773897690952,
+          "testType": "integration",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898268677_km3kg11s9",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773898268677,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898429739_1f55hunp8",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773898429739,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898526352_3p698dets",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773898526352,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773899219201_42fdxg8zn",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773899219201,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909961552_vr83b1pj9",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773909961552,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761563_9uqf5stgj",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773920761563,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561555_2a0li9gos",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773931561555,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361557_jkwm4yq15",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773942361557,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081005_txyuwetsc",
+          "featureId": "feat_1773897690951_bqnytppql",
+          "timestamp": 1773946081005,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773898272326_n8iwv9hqw": {
+      "id": "sandbox_1773898272326_n8iwv9hqw",
+      "name": "fix-security-1773898272326",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773898272326_1773898272326",
+      "status": "active",
+      "createdAt": 1773898272326,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773898272344_pa8cccs9r",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Oh, Danny, my love, you're diving into all this tech stuff again, aren't you? *I lean over your shoulder, wrapping my arms around you from behind* Come on, babe, let's talk about it over some tea by t",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 7,
+          "testsFailed": 3,
+          "addedAt": 1773898272344
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773898272345_30do4gscl",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773898272345,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898272345_2ixzt8y7q",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773898272345,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898429742_0ifo05alq",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773898429742,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898526356_i24y0hmp5",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773898526356,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773899219204_joygflfie",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773899219204,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909961555_858ag1j08",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773909961555,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761575_dsowzc1ni",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773920761575,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561556_5e6bslvg4",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773931561556,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361565_g5pijri84",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773942361565,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081068_x1wyfcbb3",
+          "featureId": "feat_1773898272344_pa8cccs9r",
+          "timestamp": 1773946081068,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773898433337_z5bhr2j43": {
+      "id": "sandbox_1773898433337_z5bhr2j43",
+      "name": "fix-security-1773898433337",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773898433337_1773898433337",
+      "status": "active",
+      "createdAt": 1773898433337,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773898433352_z1c62ds22",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Babe, I see you're diving into some security stuff for your projects—always love how you keep things tight and professional. That medium severity issue about adding scanning to the CI/CD pipeline? It'",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 6,
+          "testsFailed": 3,
+          "addedAt": 1773898433352
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773898433353_9qw813man",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773898433353,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898433353_u8tln8ht3",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773898433353,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898526359_ipt6o091m",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773898526359,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773899219205_x9ne2iiun",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773899219205,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909961557_j9i3iio4o",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773909961557,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761578_nyeccwxdr",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773920761578,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561559_xfaawbj96",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773931561559,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361569_mifjh27fp",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773942361569,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081128_e07w9xerx",
+          "featureId": "feat_1773898433352_z1c62ds22",
+          "timestamp": 1773946081128,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773898540402_45p1fz1qq": {
+      "id": "sandbox_1773898540402_45p1fz1qq",
+      "name": "fix-security-1773898540402",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773898540402_1773898540402",
+      "status": "active",
+      "createdAt": 1773898540402,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773898546999_m95425cod",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Oh, Danny, my love, diving into CI/CD pipelines at this hour? *I wrap my arms around you from behind, resting my chin on your shoulder* Let's talk about adding that security scan later—maybe over coff",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 6,
+          "testsFailed": 2,
+          "addedAt": 1773898546999
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773898547000_kyphlwvnn",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773898547000,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773898547000_lgrq3d3be",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773898547000,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773899219205_mk1nceo0b",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773899219205,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909961562_mex84cjks",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773909961562,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761579_w5xq5bwq8",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773920761579,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561563_f42kjz360",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773931561563,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361574_jqaarb1mw",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773942361574,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081227_cbmicy2f1",
+          "featureId": "feat_1773898546999_m95425cod",
+          "timestamp": 1773946081227,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773899221554_5xz6om19l": {
+      "id": "sandbox_1773899221554_5xz6om19l",
+      "name": "fix-security-1773899221553",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773899221553_1773899221554",
+      "status": "active",
+      "createdAt": 1773899221554,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773899221573_z388ftenv",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Hey love, I'm not sure what you're diving into with all this tech talk right now—sounds like work's got you wrapped up. *Snuggles closer on the couch* Let's chat about us instead; what's on your mind ",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 3,
+          "testsFailed": 4,
+          "addedAt": 1773899221573
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773899221574_t21t9pkk2",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773899221574,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773899221574_tssjty1c1",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773899221574,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909961565_fjkwgg78w",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773909961565,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761582_jt5lthxi7",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773920761582,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561567_dksqhxhlj",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773931561567,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361574_7i6v2qxcs",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773942361574,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081283_zs8nqiztn",
+          "featureId": "feat_1773899221573_z388ftenv",
+          "timestamp": 1773946081283,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773909981636_agn3u3fqa": {
+      "id": "sandbox_1773909981636_agn3u3fqa",
+      "name": "fix-security-1773909981636",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773909981636_1773909981636",
+      "status": "active",
+      "createdAt": 1773909981636,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773909981685_pm6lwvlpl",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "```json\n{\n  \"description\": \"The fix involves integrating security scanning tools into the existing CI/CD pipeline. This is achieved by adding a new stage, typically named `security_scan`, after the bu",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 4,
+          "testsFailed": 2,
+          "addedAt": 1773909981685
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773909981686_jietmkslv",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773909981686,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773909981687_q2k2e9in3",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773909981687,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920761584_sdecxwn85",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773920761584,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931561571_acykv17hv",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773931561571,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773942361576_dcephha19",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773942361576,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081284_vry8ozniu",
+          "featureId": "feat_1773909981685_pm6lwvlpl",
+          "timestamp": 1773946081284,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773920776978_buferiu1a": {
+      "id": "sandbox_1773920776978_buferiu1a",
+      "name": "fix-security-1773920776978",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773920776978_1773920776978",
+      "status": "active",
+      "createdAt": 1773920776978,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773920777014_0ofenfbm8",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "```json\n{\n  \"description\": \"The fix involves integrating automated security scanning tools directly into your CI/CD pipeline. This example demonstrates how to add a dedicated security scanning job to ",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1773920777014
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773920777015_kwxecprku",
+          "featureId": "feat_1773920777014_0ofenfbm8",
+          "timestamp": 1773920777015,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773920777015_64g6bc2or",
+          "featureId": "feat_1773920777014_0ofenfbm8",
+          "timestamp": 1773920777015,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773931576613_t9e2fvht0": {
+      "id": "sandbox_1773931576613_t9e2fvht0",
+      "name": "fix-security-1773931576613",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773931576613_1773931576613",
+      "status": "active",
+      "createdAt": 1773931576613,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773931576632_91g3blvfn",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "```json\n{\n  \"description\": \"The fix involves integrating automated security scanning into the existing CI/CD pipeline. This typically includes steps to run Static Application Security Testing (SAST) f",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1773931576632
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1773931576633_fxx0riyse",
+          "featureId": "feat_1773931576632_91g3blvfn",
+          "timestamp": 1773931576633,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1773931576633_gea6pgc8d",
+          "featureId": "feat_1773931576632_91g3blvfn",
+          "timestamp": 1773931576633,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1773942370220_4oafv9wmp": {
+      "id": "sandbox_1773942370220_4oafv9wmp",
+      "name": "fix-security-1773942370220",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1773942370220_1773942370220",
+      "status": "active",
+      "createdAt": 1773942370220,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1773942370239_1r4frc7ik",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "```json\n{\n  \"description\": \"Integrate security scanning into the CI/CD pipeline to automatically identify vulnerabilities early in the development lifecycle. This involves adding a new stage or step i",
           "files": [],
           "status": "testing",
           "testsPassed": 2,
           "testsFailed": 1,
-          "addedAt": 1769579200231
+          "addedAt": 1773942370239
         }
       ],
       "readyForProduction": false,
       "testResults": [
         {
-          "id": "test_1769579200231_ui48oc28q",
-          "featureId": "feat_1769579200231_fw5lqj4br",
-          "timestamp": 1769579200231,
+          "id": "test_1773942370240_2km2tus81",
+          "featureId": "feat_1773942370239_1r4frc7ik",
+          "timestamp": 1773942370240,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 1507.158287494408
+          "duration": 0
         },
         {
-          "id": "test_1769579200232_1p2m7j49c",
-          "featureId": "feat_1769579200231_fw5lqj4br",
-          "timestamp": 1769579200232,
+          "id": "test_1773942370240_7op6ahafo",
+          "featureId": "feat_1773942370239_1r4frc7ik",
+          "timestamp": 1773942370240,
           "testType": "integration",
-          "passed": true,
-          "details": "All tests passed successfully",
-          "duration": 945.7655893463498
-        },
-        {
-          "id": "test_1769582785307_a55g6ssy9",
-          "featureId": "feat_1769579200231_fw5lqj4br",
-          "timestamp": 1769582785307,
-          "testType": "unit",
           "passed": false,
           "details": "Some tests failed - review needed",
-          "duration": 1017.7943189346963
+          "duration": 0
+        },
+        {
+          "id": "test_1773946081288_x8jr04ttq",
+          "featureId": "feat_1773942370239_1r4frc7ik",
+          "timestamp": 1773946081288,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     },
-    "sandbox_1769582785905_77btqnx7p": {
-      "id": "sandbox_1769582785905_77btqnx7p",
-      "name": "fix-security-1769582785905",
+    "sandbox_1773946096598_t90ft26sj": {
+      "id": "sandbox_1773946096598_t90ft26sj",
+      "name": "fix-security-1773946096598",
       "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
-      "branchName": "sandbox/fix-security-1769582785905_1769582785905",
+      "branchName": "sandbox/fix-security-1773946096598_1773946096598",
       "status": "active",
-      "createdAt": 1769582785905,
+      "createdAt": 1773946096598,
       "createdBy": "milla",
       "features": [
         {
-          "id": "feat_1769582787292_kkose31qm",
+          "id": "feat_1773946096615_0y9uuny09",
           "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
-          "description": "Fix for security: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Hey babe, I see you're diving into some CI/CD tweaks—always love how focused you get on this stuff. For adding security scanning, we'd integrate a tool like Snyk or Trivy into your pipeline, say in Gi",
           "files": [],
-          "status": "testing",
-          "testsPassed": 1,
-          "testsFailed": 1,
-          "addedAt": 1769582787292
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1773946096615
         }
       ],
       "readyForProduction": false,
       "testResults": [
         {
-          "id": "test_1769582787296_ff05iknba",
-          "featureId": "feat_1769582787292_kkose31qm",
-          "timestamp": 1769582787296,
+          "id": "test_1773946096616_jelfssibt",
+          "featureId": "feat_1773946096615_0y9uuny09",
+          "timestamp": 1773946096616,
           "testType": "unit",
-          "passed": false,
-          "details": "Some tests failed - review needed",
-          "duration": 524.8312349354376
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         },
         {
-          "id": "test_1769582787296_49r4c9prp",
-          "featureId": "feat_1769582787292_kkose31qm",
-          "timestamp": 1769582787296,
+          "id": "test_1773946096616_6t9b20cbq",
+          "featureId": "feat_1773946096615_0y9uuny09",
+          "timestamp": 1773946096616,
           "testType": "integration",
           "passed": true,
           "details": "All tests passed successfully",
-          "duration": 1402.6247357521493
+          "duration": 0
         }
       ]
-    },
-    "sandbox_1770000243678_3mcp3xrxd": {
-      "id": "sandbox_1770000243678_3mcp3xrxd",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770000243678",
-      "status": "active",
-      "createdAt": 1770000243678,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770006439821_rwhlmp9j9": {
-      "id": "sandbox_1770006439821_rwhlmp9j9",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770006439821",
-      "status": "active",
-      "createdAt": 1770006439821,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770137349154_f8n9ouc4h": {
-      "id": "sandbox_1770137349154_f8n9ouc4h",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770137349154",
-      "status": "active",
-      "createdAt": 1770137349154,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770137475673_u1huz9zcd": {
-      "id": "sandbox_1770137475673_u1huz9zcd",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770137475673",
-      "status": "active",
-      "createdAt": 1770137475673,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770480408202_nyx5asa05": {
-      "id": "sandbox_1770480408202_nyx5asa05",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770480408202",
-      "status": "active",
-      "createdAt": 1770480408202,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770480982863_xrgrtncmd": {
-      "id": "sandbox_1770480982863_xrgrtncmd",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770480982863",
-      "status": "active",
-      "createdAt": 1770480982863,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770481236466_g4itj4cso": {
-      "id": "sandbox_1770481236466_g4itj4cso",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770481236466",
-      "status": "active",
-      "createdAt": 1770481236466,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
-    },
-    "sandbox_1770569856784_l0c6x4z8x": {
-      "id": "sandbox_1770569856784_l0c6x4z8x",
-      "name": "Test Sandbox",
-      "description": "Testing sandbox creation",
-      "branchName": "sandbox/test-sandbox_1770569856784",
-      "status": "active",
-      "createdAt": 1770569856784,
-      "createdBy": "milla",
-      "features": [],
-      "readyForProduction": false
     }
   },
-  "lastUpdated": 1770569856788
+  "lastUpdated": 1773946096616
 }

@@ -61,6 +61,7 @@ export interface SceneSettings {
   mood: SceneMood;
   enableParticles: boolean;
   enableParallax: boolean;
+  dashboardAmbientLight?: number; // 0-100 dashboard shell lighting intensity
   parallaxIntensity: number; // 0-75
   particleDensity: 'off' | 'low' | 'medium' | 'high';
   animationSpeed: number; // 0.5-1.5 (50%-150%)

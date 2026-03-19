@@ -2,6 +2,7 @@ import { Router, type Express } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
 import { insertMessageSchema } from '@shared/schema';
+import { validateSession } from '../authService';
 import {
   searchKnowledge,
   updateMemories,
@@ -31,6 +32,7 @@ import {
 import { shouldSurfaceDailySuggestion } from '../dailySuggestionsService';
 import { config } from '../config';
 import { asyncHandler } from '../utils/routeHelpers';
+import { syncReplycaSharedHistory } from '../replycaSocialBridgeService';
 
 /**
  * Memory and Messaging Routes
@@ -38,15 +40,35 @@ import { asyncHandler } from '../utils/routeHelpers';
 export function registerMemoryRoutes(app: Express) {
   const router = Router();
 
+  const resolveUserId = async (sessionToken?: string) => {
+    if (!sessionToken) return 'default-user';
+    const sessionResult = await validateSession(sessionToken);
+    if (sessionResult.valid && sessionResult.user?.id) {
+      return sessionResult.user.id as string;
+    }
+    return 'default-user';
+  };
+
   // Get all messages
   router.get(
     '/messages',
     asyncHandler(async (req, res) => {
       const limit = parseInt(req.query.limit as string) || 50;
-      const allMessages = await storage.getMessages();
+      const channel =
+        typeof req.query.channel === 'string' ? req.query.channel.trim() : '';
+      try {
+        await syncReplycaSharedHistory();
+      } catch (error) {
+        console.warn('ReplycA social sync skipped during message fetch:', error);
+      }
+      const userId = await resolveUserId(req.cookies?.session_token);
+      const allMessages = await storage.getMessages(userId);
+      const filteredMessages = channel
+        ? allMessages.filter((message) => (message.channel || 'web') === channel)
+        : allMessages;
 
-      if (allMessages && allMessages.length > 0) {
-        return res.json(allMessages.slice(-limit));
+      if (filteredMessages && filteredMessages.length > 0) {
+        return res.json(filteredMessages.slice(-limit));
       }
 
       try {
@@ -82,7 +104,14 @@ export function registerMemoryRoutes(app: Express) {
           : 'Danny Ray';
 
       const validatedData = insertMessageSchema.parse(messageData);
-      const message = await storage.createMessage(validatedData);
+      const resolvedUserId =
+        validatedData.userId || (await resolveUserId(req.cookies?.session_token));
+      const message = await storage.createMessage({
+        ...validatedData,
+        channel: validatedData.channel || 'web',
+        sourcePlatform: validatedData.sourcePlatform || 'milla-hub',
+        userId: resolvedUserId,
+      });
 
       if (message.role === 'user') {
         await trackUserActivity();
@@ -104,6 +133,8 @@ export function registerMemoryRoutes(app: Express) {
 ${suggestion.suggestionText}`,
               role: 'assistant',
               userId: message.userId,
+              channel: message.channel || 'web',
+              sourcePlatform: 'milla-hub',
             });
             await markSuggestionDelivered(suggestion.date);
           }
@@ -118,6 +149,8 @@ ${suggestion.suggestionText}`,
               content: repoMessage,
               role: 'assistant',
               userId: message.userId,
+              channel: message.channel || 'web',
+              sourcePlatform: 'milla-hub',
             });
           }
         }
@@ -140,6 +173,8 @@ ${suggestion.suggestionText}`,
             content: aiResponse.content,
             role: 'assistant',
             userId: message.userId,
+            channel: message.channel || 'web',
+            sourcePlatform: 'milla-hub',
           });
 
           const followUp = await generateFollowUpMessages(
@@ -155,6 +190,8 @@ ${suggestion.suggestionText}`,
                 content,
                 role: 'assistant',
                 userId: message.userId,
+                channel: message.channel || 'web',
+                sourcePlatform: 'milla-hub',
               })
             );
           }

@@ -112,8 +112,7 @@ export class HuggingFaceMCPService {
     options: ImageGenerationOptions = {}
   ): Promise<MCPImageResponse> {
     try {
-      const model =
-        this.config.model || 'philipp-zettl/UnfilteredAI-NSFW-gen-v2';
+      const model = this.config.model || 'stabilityai/stable-diffusion-2-1';
 
       const blob = (await this.client.textToImage({
         model,
@@ -164,7 +163,6 @@ export class HuggingFaceMCPService {
           'bigscience/bloom-7b1',
         ],
         'text-to-image': [
-          'philipp-zettl/UnfilteredAI-NSFW-gen-v2',
           'stabilityai/stable-diffusion-2-1',
           'runwayml/stable-diffusion-v1-5',
         ],
@@ -184,22 +182,19 @@ export class HuggingFaceMCPService {
    */
   async checkModelStatus(modelId: string): Promise<boolean> {
     try {
-      // Simple check by attempting a minimal inference
-      const response = await fetch(
-        `https://api-inference.huggingface.co/models/${modelId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ inputs: 'test' }),
-        }
-      );
-
-      return response.ok || response.status === 503; // 503 means loading
+      await this.client.textToImage({
+        model: modelId,
+        inputs: 'test',
+        parameters: {
+          width: 64,
+          height: 64,
+          num_inference_steps: 1,
+        },
+      });
+      return true;
     } catch (error) {
-      return false;
+      const message = error instanceof Error ? error.message : String(error);
+      return /loading/i.test(message);
     }
   }
 }
@@ -228,14 +223,17 @@ export function createHuggingFaceMCPService(): HuggingFaceMCPService | null {
 
 // Singleton instance
 let mcpServiceInstance: HuggingFaceMCPService | null = null;
+let lastMcpConfigKey = '';
 
 /**
  * Get the global Hugging Face MCP service instance
  * @returns HuggingFaceMCPService instance or null
  */
 export function getHuggingFaceMCPService(): HuggingFaceMCPService | null {
-  if (!mcpServiceInstance) {
+  const configKey = `${config.huggingface.apiKey || ''}:${config.huggingface.model || ''}`;
+  if (!mcpServiceInstance || configKey !== lastMcpConfigKey) {
     mcpServiceInstance = createHuggingFaceMCPService();
+    lastMcpConfigKey = configKey;
   }
   return mcpServiceInstance;
 }

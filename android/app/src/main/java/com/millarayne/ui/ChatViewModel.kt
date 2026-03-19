@@ -112,8 +112,38 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         submitMessage(content = content, imageData = null)
     }
 
+    fun sendVisualMessage(prompt: String, imageData: String) {
+        submitMessage(content = prompt, imageData = imageData)
+    }
+
+    fun sendDocumentMessage(fileName: String, extractedText: String, userPrompt: String? = null) {
+        val prompt = buildString {
+            append((userPrompt?.trim().takeUnless { it.isNullOrEmpty() }
+                ?: "Analyze the attached document and help me with the important details."))
+            append("\n\nDocument name: ")
+            append(fileName)
+            append("\nDocument contents:\n")
+            append(extractedText)
+        }
+        submitMessage(content = prompt, imageData = null)
+    }
+
     fun sendScreenObservation(prompt: String, imageData: String) {
         submitMessage(content = prompt, imageData = imageData)
+    }
+
+    fun sendLocationAwareMessage(content: String, locationSummary: String) {
+        val trimmed = content.trim()
+        val prompt = buildString {
+            append(
+                trimmed.ifEmpty {
+                    "Use my current location to give me relevant advice, context, and any nearby considerations."
+                }
+            )
+            append("\n\n")
+            append(locationSummary)
+        }
+        submitMessage(content = prompt, imageData = null)
     }
 
     private fun submitMessage(content: String, imageData: String?) {
