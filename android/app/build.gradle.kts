@@ -94,6 +94,7 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -113,8 +114,9 @@ dependencies {
     // MediaPipe Tasks GenAI — on-device LLM inference (Gemma-3 1B 4-bit)
     implementation("com.google.mediapipe:tasks-genai:0.10.32")
 
-    // MLC LLM — OpenCL GPU dispatch for secondary SLM path
-    implementation("ai.mlc:mlc-llm-android:0.1.0")
+    // MLC LLM — loaded via reflection at runtime (not available in standard Maven repos;
+    // install the AAR manually or build from source: https://github.com/mlc-ai/mlc-llm)
+    // implementation("ai.mlc:mlc-llm-android:0.1.0")
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
