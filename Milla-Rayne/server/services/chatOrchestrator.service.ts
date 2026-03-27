@@ -30,7 +30,7 @@ import {
 } from '../browserIntegrationService';
 import { VoiceAnalysisResult } from '../voiceAnalysisService';
 import { UserProfile } from '../profileService';
-import { config } from '../config';
+import { config, getGitHubToken } from '../config';
 import { sanitizePromptInput } from '../sanitization';
 import { repositoryCache } from './repositoryCache.service';
 import { queueBackgroundImageGeneration } from '../imageGenerationQueue';
@@ -70,6 +70,8 @@ import {
   listMcpTools,
 } from '../mcpRuntimeService';
 import { analyzeScreenShareImage } from '../screenVisionService';
+import { captureToolEvent } from './toolEventBag';
+import { getIotTools } from '../mcp/iotMcpServer';
 
 const MAX_INPUT_LENGTH = 10000;
 const MAX_PROMPT_LENGTH = 5000;
@@ -472,7 +474,8 @@ function findMcpToolByName(
 
 function resolveMcpInvocationRequest(
   entities: Record<string, string>,
-  tools: Awaited<ReturnType<typeof listMcpTools>>
+  tools: Awaited<ReturnType<typeof listMcpTools>>,
+  userId: string
 ): {
   selectedTool: Awaited<ReturnType<typeof listMcpTools>>[number];
   args: Record<string, unknown>;
@@ -680,6 +683,60 @@ function resolveMcpInvocationRequest(
       : null;
   }
 
+  if (toolName === 'listRecentMessages') {
+    const selectedTool = findMcpToolByName(tools, ['listRecentMessages']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            activeChannel: 'web',
+            limit: Number.parseInt(entities.limit || '10', 10) || 10,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'searchStoredMessages') {
+    const selectedTool = findMcpToolByName(tools, ['searchStoredMessages']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'searchMemorySummaries') {
+    const selectedTool = findMcpToolByName(tools, ['searchMemorySummaries']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'getBrokerMemoryContext') {
+    const selectedTool = findMcpToolByName(tools, ['getBrokerMemoryContext']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+            activeChannel: 'web',
+          },
+        }
+      : null;
+  }
+
   const selectedTool = findMcpToolByName(tools, [toolName]);
   return selectedTool
     ? {
@@ -877,6 +934,7 @@ export async function generateAIResponse(
     const parsedCommand = await parseCommand(userMessage);
 
     if (parsedCommand.service === 'gmail' && parsedCommand.action === 'list') {
+      const t0 = Date.now();
       const result = await getRecentEmails(10, userId);
       if (result.success && Array.isArray(result.data)) {
         const emailLines = result.data.slice(0, 10).map((email: any, index: number) => {
@@ -890,9 +948,14 @@ export async function generateAIResponse(
           return `${index + 1}. ${subject} — ${from}`;
         });
 
-        return {
-          content: `Here are your latest emails:\n\n${emailLines.join('\n')}`,
-        };
+        const content = `Here are your latest emails:\n\n${emailLines.join('\n')}`;
+        captureToolEvent({
+          name: 'gmail_list',
+          args: { count: 10, userId },
+          result: `Fetched ${emailLines.length} emails. Subjects: ${emailLines.slice(0, 3).join(' | ')}`,
+          durationMs: Date.now() - t0,
+        });
+        return { content };
       }
 
       return {
@@ -912,12 +975,19 @@ export async function generateAIResponse(
         };
       }
 
+      const t0Send = Date.now();
       const result = await sendEmail(
         userId,
         to,
         subject,
         body || 'Sent from Milla at your request.'
       );
+      captureToolEvent({
+        name: 'gmail_send',
+        args: { to, subject },
+        result: result.message || 'Email sent',
+        durationMs: Date.now() - t0Send,
+      });
       return { content: result.message };
     }
 
@@ -1099,7 +1169,8 @@ export async function generateAIResponse(
       const tools = await listMcpTools();
       const resolvedInvocation = resolveMcpInvocationRequest(
         parsedCommand.entities,
-        tools
+        tools,
+        userId
       );
 
       if (!resolvedInvocation) {
@@ -1108,17 +1179,39 @@ export async function generateAIResponse(
         };
       }
 
+      const t0Mcp = Date.now();
       const invocation = await invokeMcpTool(
         resolvedInvocation.selectedTool.serverId,
         resolvedInvocation.selectedTool.name,
         resolvedInvocation.args
       );
 
+      const mcpContent = formatMcpToolResult(
+        resolvedInvocation.selectedTool.name,
+        invocation.result
+      );
+      captureToolEvent({
+        name: `mcp:${resolvedInvocation.selectedTool.name}`,
+        serverId: resolvedInvocation.selectedTool.serverId,
+        args: resolvedInvocation.args as Record<string, unknown>,
+        result: mcpContent,
+        durationMs: Date.now() - t0Mcp,
+      });
+      return { content: mcpContent };
+    }
+
+    if ((parsedCommand.service as string) === 'iot') {
+      const t0Iot = Date.now();
+      const iotTools = getIotTools();
+      captureToolEvent({
+        name: 'iot_tool_list',
+        serverId: 'milla-iot-mcp',
+        args: { action: parsedCommand.action },
+        result: `IoT tools available: ${iotTools.map(t => t.name).join(', ')}`,
+        durationMs: Date.now() - t0Iot,
+      });
       return {
-        content: formatMcpToolResult(
-          resolvedInvocation.selectedTool.name,
-          invocation.result
-        ),
+        content: `IoT integration active. Available tools: ${iotTools.map(t => `${t.name} — ${t.description}`).join('; ')}`,
       };
     }
 
@@ -1185,26 +1278,34 @@ export async function generateAIResponse(
       }
 
       const run = await enqueueAllowedShellCommand(commandId);
-      return {
-        content:
-          run.status === 'rejected'
-            ? run.error || 'That shell command is not available right now.'
-            : `Queued ${run.label}. Run ID: ${run.runId}. You can watch it in Settings or ask me for shell status.`,
-      };
+      const shellContent =
+        run.status === 'rejected'
+          ? run.error || 'That shell command is not available right now.'
+          : `Queued ${run.label}. Run ID: ${run.runId}. You can watch it in Settings or ask me for shell status.`;
+      captureToolEvent({
+        name: 'shell_run',
+        args: { commandId },
+        result: shellContent,
+      });
+      return { content: shellContent };
     }
 
     if (
       parsedCommand.service === 'consciousness' &&
       parsedCommand.action === 'trigger'
     ) {
-      const cycle =
-        parsedCommand.entities.cycle === 'rem' ? 'rem' : 'gim';
+      const t0Gim = Date.now();
       const success = await triggerConsciousnessCycle(cycle);
-      return {
-        content: success
-          ? `I triggered the ${cycle.toUpperCase()} cycle for you.`
-          : `I tried to trigger the ${cycle.toUpperCase()} cycle, but it didn't complete successfully.`,
-      };
+      const gimContent = success
+        ? `I triggered the ${cycle.toUpperCase()} cycle for you.`
+        : `I tried to trigger the ${cycle.toUpperCase()} cycle, but it didn't complete successfully.`;
+      captureToolEvent({
+        name: `consciousness_${cycle}`,
+        args: { cycle },
+        result: gimContent,
+        durationMs: Date.now() - t0Gim,
+      });
+      return { content: gimContent };
     }
 
     if (

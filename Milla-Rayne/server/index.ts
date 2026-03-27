@@ -298,6 +298,22 @@ export async function initApp() {
     await import('./agents/emailDeliveryWorker');
   startEmailDeliveryLoop();
 
+  // Initialize IoT services (graceful failure — won't crash server)
+  try {
+    const { haService } = await import('./services/homeAssistantService');
+    const { mqttService } = await import('./services/mqttBrokerService');
+    const { thermalMonitor } = await import('./services/thermalMonitorService');
+    const { reactLoop } = await import('./services/reactLoopService');
+
+    await haService.connect();
+    await mqttService.connect();
+    thermalMonitor.initialize();
+    reactLoop.startMonitoring(30000);
+    console.log('✅ IoT services initialized');
+  } catch (err) {
+    console.warn('⚠️ IoT services failed to initialize (non-fatal):', err);
+  }
+
   // Admin endpoints for email delivery (manual trigger)
   // We'll register a small route here rather than a separate file to keep changes minimal.
   app.post('/api/admin/email/deliver', async (req, res) => {

@@ -211,7 +211,7 @@ export const config = {
     sendgridApiKey: process.env.SENDGRID_API_KEY,
     fromAddress: process.env.EMAIL_FROM || 'noreply@example.com',
     deliveryIntervalMs: parseInt(
-      process.env.EMAIL_DELIVERY_INTERVAL_MS || '60000',
+      process.env.EMAIL_DELIVERY_INTERVAL_MS || '600000',
       10
     ),
     maxAttempts: parseInt(process.env.EMAIL_MAX_ATTEMPTS || '3', 10),
