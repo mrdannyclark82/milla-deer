@@ -2,14 +2,19 @@ package com.millarayne.agent
 
 import android.content.Context
 import android.util.Log
+import com.millarayne.ai.GpuSlmDispatcher
+import com.millarayne.ai.MediaPipeInferenceEngine
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Offline Response Generator
- * 
+ *
  * Provides intelligent responses when server is unavailable.
- * Uses pattern matching and local knowledge to respond to common queries.
+ * Priority chain:
+ *   1. LocalEdgeAgent — instant device command handling (< 10 ms)
+ *   2. GpuSlmDispatcher (MediaPipe → MLC-LLM fallback) — on-device LLM (< 150 ms)
+ *   3. Pattern-based response matching — regex/keyword fallback
  */
 class OfflineResponseGenerator(private val context: Context) {
     
@@ -18,6 +23,26 @@ class OfflineResponseGenerator(private val context: Context) {
     }
     
     private val localEdgeAgent = LocalEdgeAgent(context)
+
+    /** GPU SLM dispatcher — initialised lazily on first non-command query */
+    private val slmDispatcher = GpuSlmDispatcher(context)
+    private var slmReady = false
+
+    /**
+     * Pre-warm the GPU SLM engine in the background.
+     * Call from ViewModel.init or Application.onCreate for lowest first-response latency.
+     */
+    suspend fun warmUp() {
+        try {
+            slmDispatcher.initialize(
+                mpConfig = MediaPipeInferenceEngine.Config(preferGpu = true),
+            )
+            slmReady = true
+            Log.i(TAG, "GPU SLM dispatcher warmed up")
+        } catch (e: Exception) {
+            Log.w(TAG, "GPU SLM warm-up failed (model may not be downloaded yet): ${e.message}")
+        }
+    }
     
     /**
      * Generate a response for the given user message
@@ -26,13 +51,34 @@ class OfflineResponseGenerator(private val context: Context) {
     suspend fun generateResponse(userMessage: String): Pair<String, Boolean> {
         val lowercaseMessage = userMessage.lowercase().trim()
         
-        // First, try to handle as an edge command
+        // 1. Try instant edge command (< 10 ms)
         val edgeResult = localEdgeAgent.processNaturalLanguage(userMessage)
         if (edgeResult.success && !edgeResult.requiresServer) {
             return Pair(edgeResult.message, true)
         }
-        
-        // Pattern-based response matching
+
+        // 2. Try on-device LLM via GPU SLM dispatcher (< 150 ms on GPU)
+        if (slmReady) {
+            return try {
+                val result = slmDispatcher.dispatch(userMessage)
+                if (result.text.isNotBlank()) {
+                    Log.d(TAG, "SLM response in ${result.latencyMs}ms via ${result.backend}")
+                    Pair(result.text.trim(), true)
+                } else {
+                    patternResponse(lowercaseMessage)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "SLM dispatch failed: ${e.message}")
+                patternResponse(lowercaseMessage)
+            }
+        }
+
+        // 3. Pattern-based fallback
+        return patternResponse(lowercaseMessage)
+    }
+
+    /** Pattern-matching fallback used when SLM is unavailable */
+    private fun patternResponse(lowercaseMessage: String): Pair<String, Boolean> {
         val response = when {
             // Greetings
             isGreeting(lowercaseMessage) -> generateGreeting()
@@ -141,10 +187,6 @@ class OfflineResponseGenerator(private val context: Context) {
         
         return Pair(response, true)
     }
-    
-    /**
-     * Check if message is a greeting
-     */
     private fun isGreeting(message: String): Boolean {
         val greetings = listOf("hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening")
         return greetings.any { it in message }
@@ -285,10 +327,8 @@ class OfflineResponseGenerator(private val context: Context) {
         }
     }
     
-    /**
-     * Cleanup resources
-     */
     fun shutdown() {
         localEdgeAgent.shutdown()
+        slmDispatcher.release()
     }
 }

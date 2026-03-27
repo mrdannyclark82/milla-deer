@@ -110,6 +110,12 @@ dependencies {
     // Preferences DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
+    // MediaPipe Tasks GenAI — on-device LLM inference (Gemma-3 1B 4-bit)
+    implementation("com.google.mediapipe:tasks-genai:0.10.32")
+
+    // MLC LLM — OpenCL GPU dispatch for secondary SLM path
+    implementation("ai.mlc:mlc-llm-android:0.1.0")
+
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
