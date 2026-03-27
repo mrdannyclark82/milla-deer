@@ -174,6 +174,16 @@ export async function initApp() {
   // Initialize Memory Core system at startup
   await initializeMemoryCore();
 
+  // Load hot session context for zero-reload continuity (mem0-style)
+  const { loadHotContext } =
+    await import('./services/sessionPersistenceService');
+  await loadHotContext();
+  console.log('✅ Session hot context loaded');
+
+  // Bootstrap RAG vector index from existing memory files
+  const { bootstrapRagIndex } = await import('./services/ragAutoIndexer');
+  bootstrapRagIndex().catch((e) => console.warn('[RAG] Bootstrap error:', e));
+
   // Initialize Mood Background Service
   const { initializeMoodBackgroundService } =
     await import('./moodBackgroundService');
@@ -208,19 +218,16 @@ export async function initApp() {
   const { initializeAIUpdatesScheduler } = await import('./aiUpdatesScheduler');
   initializeAIUpdatesScheduler();
 
-  const { initializeConsciousnessScheduler } = await import(
-    './consciousnessScheduler'
-  );
+  const { initializeConsciousnessScheduler } =
+    await import('./consciousnessScheduler');
   initializeConsciousnessScheduler();
 
-  const { initializeRepositoryDiscoveryScheduler } = await import(
-    './repositoryDiscoveryScheduler'
-  );
+  const { initializeRepositoryDiscoveryScheduler } =
+    await import('./repositoryDiscoveryScheduler');
   initializeRepositoryDiscoveryScheduler();
 
-  const { initializeCollaborationScheduler } = await import(
-    './collaborationScheduler'
-  );
+  const { initializeCollaborationScheduler } =
+    await import('./collaborationScheduler');
   await initializeCollaborationScheduler();
 
   const { initializeMcpRuntime } = await import('./mcpRuntimeService');

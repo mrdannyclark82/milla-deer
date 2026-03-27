@@ -22,7 +22,7 @@ import {
 /**
  * Main router that aggregates all modular routes
  */
-export function registerModularRoutes(app: Express) {
+export async function registerModularRoutes(app: Express) {
   // Authentication routes
   registerAuthRoutes(app);
 
@@ -57,6 +57,10 @@ export function registerModularRoutes(app: Express) {
 
   // Vision analysis + pixel grounding routes
   registerVisionRoutes(app);
+
+  // RAG search + manual indexing routes
+  const { registerRagRoutes } = await import('./rag.routes');
+  registerRagRoutes(app);
 
   // Start Telegram long-polling if token is configured
   if (isTelegramConfigured()) {

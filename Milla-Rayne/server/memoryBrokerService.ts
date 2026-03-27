@@ -11,6 +11,10 @@ import {
 } from './contextWindowService';
 import { syncReplycaSharedHistory } from './replycaSocialBridgeService';
 import { getLatestMonologue } from './consciousnessScheduler';
+import {
+  loadHotContext,
+  getHotContextString,
+} from './services/sessionPersistenceService';
 
 export interface MemoryBrokerOptions {
   activeChannel?: string;
@@ -211,6 +215,12 @@ export async function getMemoryBrokerContext(
   const monologue = getLatestMonologue(400);
   if (monologue) {
     contextParts.push(`Milla's recent internal monologue:\n${monologue}`);
+  }
+
+  // Inject hot session context (zero-latency — from in-memory snapshot)
+  const hotCtx = getHotContextString();
+  if (hotCtx) {
+    contextParts.push(`Session continuity (hot context):\n${hotCtx}`);
   }
 
   return {

@@ -19,6 +19,8 @@ import {
   validateAndSanitizePrompt,
 } from '../services/chatOrchestrator.service';
 import { appendToSharedChat } from '../replycaSocialBridgeService';
+import { recordTurn } from '../services/sessionPersistenceService';
+import { queueForIndexing } from '../services/ragAutoIndexer';
 import { analyzeVoiceInput } from '../voiceAnalysisService';
 import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
@@ -105,6 +107,12 @@ async function persistConversationTurn(
   // Outbound sync to ReplycA shared_chat.jsonl (fire-and-forget)
   appendToSharedChat('user', userMessage, channel).catch(() => {});
   appendToSharedChat('assistant', assistantMessage, channel).catch(() => {});
+
+  // Hot context snapshot for zero-reload session persistence
+  recordTurn(userMessage, assistantMessage, channel, userId).catch(() => {});
+
+  // Queue turn for async RAG vector indexing
+  queueForIndexing(userMessage, assistantMessage, userId);
 }
 
 /**
