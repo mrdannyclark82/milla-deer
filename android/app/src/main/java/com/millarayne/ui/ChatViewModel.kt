@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.millarayne.agent.OfflineResponseGenerator
+import com.millarayne.MillaApplication
 import com.millarayne.api.MillaApiClient
 import com.millarayne.data.AppDatabase
 import com.millarayne.data.ChatRequest
@@ -22,9 +22,15 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
+    private data class ChatDispatchResult(
+        val content: String,
+        val syncedWithServer: Boolean
+    )
+
     private val messageDao: MessageDao =
         AppDatabase.getDatabase(application).messageDao()
-    private val offlineGenerator = OfflineResponseGenerator(application)
+    // Reuse the app-level instance so the model isn't loaded twice
+    private val offlineGenerator = (application as MillaApplication).offlineGenerator
     private val settingsRepository = SettingsRepository(application)
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -41,6 +47,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _serverUrl = MutableStateFlow(SettingsRepository.DEFAULT_SERVER_URL)
     val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
+
+    private val _sessionToken = MutableStateFlow("")
+    val sessionToken: StateFlow<String> = _sessionToken.asStateFlow()
 
     private val _offlineModeEnabled =
         MutableStateFlow(SettingsRepository.DEFAULT_OFFLINE_MODE_ENABLED)
@@ -63,12 +72,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val screenSharePreview: StateFlow<String?> = _screenSharePreview.asStateFlow()
 
     init {
+        MillaApiClient.setSessionTokenProvider { _sessionToken.value }
         observeMessages()
         observeSettings()
+        refreshMessagesFromServer()
     }
 
     override fun onCleared() {
-        offlineGenerator.shutdown()
+        // offlineGenerator is app-scoped — do not shut it down here
         super.onCleared()
     }
 
@@ -88,13 +99,24 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun observeSettings() {
         viewModelScope.launch {
-            settingsRepository.serverUrl.collectLatest { _serverUrl.value = it }
+            settingsRepository.serverUrl.collectLatest {
+                _serverUrl.value = it
+                refreshMessagesFromServer()
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.sessionToken.collectLatest {
+                _sessionToken.value = it
+                refreshMessagesFromServer()
+            }
         }
         viewModelScope.launch {
             settingsRepository.offlineModeEnabled.collectLatest {
                 _offlineModeEnabled.value = it
                 if (it) {
                     _isOfflineMode.value = true
+                } else {
+                    refreshMessagesFromServer()
                 }
             }
         }
@@ -170,13 +192,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
                 val assistantResponse = tryOnlineThenOffline(trimmed, imageData)
-                messageDao.insertMessage(
-                    Message(
-                        content = assistantResponse,
-                        role = "assistant",
-                        timestamp = System.currentTimeMillis()
+                if (!assistantResponse.syncedWithServer) {
+                    messageDao.insertMessage(
+                        Message(
+                            content = assistantResponse.content,
+                            role = "assistant",
+                            timestamp = System.currentTimeMillis()
+                        )
                     )
-                )
+                }
 
                 if (imageData != null) {
                     _screenShareStatus.value = "Milla received your latest screen capture."
@@ -193,6 +217,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun updateServerUrl(url: String) {
         viewModelScope.launch {
             settingsRepository.setServerUrl(url)
+        }
+    }
+
+    fun updateSessionToken(sessionToken: String) {
+        viewModelScope.launch {
+            settingsRepository.setSessionToken(sessionToken)
         }
     }
 
@@ -234,10 +264,58 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _error.value = null
     }
 
-    private suspend fun tryOnlineThenOffline(content: String, imageData: String?): String {
+    private fun refreshMessagesFromServer() {
+        if (_offlineModeEnabled.value) {
+            return
+        }
+
+        viewModelScope.launch {
+            syncMessagesFromServer()
+        }
+    }
+
+    private suspend fun syncMessagesFromServer(): Boolean {
+        if (_offlineModeEnabled.value) {
+            return false
+        }
+
+        for (baseUrl in candidateServerUrls()) {
+            try {
+                val response = MillaApiClient.createApiService(baseUrl).getMessages(limit = 80)
+                if (!response.isSuccessful || response.body() == null) {
+                    throw HttpException(response)
+                }
+
+                val remoteMessages = response.body()!!.map { it.toLocalMessage() }
+                val localMessageCount = messageDao.getMessageCount()
+
+                if (remoteMessages.isNotEmpty() || localMessageCount == 0) {
+                    messageDao.deleteAllMessages()
+                    if (remoteMessages.isNotEmpty()) {
+                        messageDao.insertMessages(remoteMessages)
+                    }
+                }
+
+                _isOfflineMode.value = false
+                return true
+            } catch (error: Exception) {
+                Log.w("ChatViewModel", "Message sync failed for $baseUrl", error)
+            }
+        }
+
+        return false
+    }
+
+    private suspend fun tryOnlineThenOffline(
+        content: String,
+        imageData: String?
+    ): ChatDispatchResult {
         if (_offlineModeEnabled.value) {
             _isOfflineMode.value = true
-            return offlineFallbackResponse(content, imageData)
+            return ChatDispatchResult(
+                content = offlineFallbackResponse(content, imageData),
+                syncedWithServer = false
+            )
         }
 
         var lastError: Exception? = null
@@ -251,7 +329,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 _isOfflineMode.value = false
-                return response.body()!!.response
+                val synced = syncMessagesFromServer()
+                return ChatDispatchResult(
+                    content = response.body()!!.response,
+                    syncedWithServer = synced
+                )
             } catch (error: Exception) {
                 lastError = error
                 Log.w("ChatViewModel", "Online request failed for $baseUrl", error)
@@ -263,12 +345,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         _isOfflineMode.value = true
-        return offlineFallbackResponse(content, imageData)
+        return ChatDispatchResult(
+            content = offlineFallbackResponse(content, imageData),
+            syncedWithServer = false
+        )
     }
 
     private suspend fun offlineFallbackResponse(content: String, imageData: String?): String {
         if (imageData != null) {
-            return "I captured your screen, but I'm offline right now and can't inspect the image without the server connection. Reconnect me and share the screen again so I can help with what's visible."
+            // SLM can't process raw pixels, but can reason about the prompt itself offline
+            val prompt = if (content.isNotBlank()) content else
+                "I captured your screen but am offline — describe what you need help with."
+            val (response, _) = offlineGenerator.generateResponse(prompt)
+            return response
         }
 
         val (offlineResponse, _) = offlineGenerator.generateResponse(content)
