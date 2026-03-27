@@ -22,12 +22,11 @@ ENV_FILE = ROOT / ".env"
 
 try:
     from google_auth_oauthlib.flow import InstalledAppFlow
-    from google.oauth2.credentials import Credentials
 except ImportError:
     print("Installing google-auth-oauthlib...")
-    os.system(f"{sys.executable} -m pip install google-auth-oauthlib google-auth --quiet")
+    os.system(f"{sys.executable} -m pip install google-auth-oauthlib --quiet")
     from google_auth_oauthlib.flow import InstalledAppFlow
-    from google.oauth2.credentials import Credentials
+
 
 SCOPES = [
     "https://mail.google.com/",
@@ -66,13 +65,28 @@ client_config = {
 
 print("\n📬 Gmail OAuth2 — Console Flow")
 print("=" * 50)
-print("This will open a Google authorization URL.")
-print("Sign in as milla.mail.main@gmail.com and grant access.")
-print("Then paste the authorization code here.\n")
+print("This will print a Google authorization URL.")
+print("Open it in your browser, sign in as milla.mail.main@gmail.com,")
+print("grant all permissions, then paste the authorization code here.\n")
 
 flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
-# run_console() prints a URL and reads a pasted code — no localhost redirect
-creds = flow.run_console()
+
+# Manually generate the auth URL using OOB redirect URI
+flow.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
+auth_url, _ = flow.authorization_url(
+    access_type="offline",
+    prompt="consent",
+    include_granted_scopes="true",
+)
+
+print("Open this URL in your browser:")
+print(f"\n  {auth_url}\n")
+
+auth_code = input("Paste the authorization code here: ").strip()
+
+# Exchange code for credentials
+flow.fetch_token(code=auth_code)
+creds = flow.credentials
 
 refresh_token = creds.refresh_token
 if not refresh_token:
