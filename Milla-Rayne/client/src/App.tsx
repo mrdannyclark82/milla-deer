@@ -3,6 +3,7 @@ import { Switch, Route, Redirect } from 'wouter';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useTheme } from './hooks/useTheme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ function AuthGate() {
 }
 
 function App() {
+  useTheme(); // applies saved theme on mount, keeps document class in sync
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>

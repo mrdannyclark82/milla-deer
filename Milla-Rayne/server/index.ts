@@ -298,6 +298,14 @@ export async function initApp() {
     await import('./agents/emailDeliveryWorker');
   startEmailDeliveryLoop();
 
+  // Gmail inbox poller — Milla reads + replies to incoming emails
+  try {
+    const { startGmailInboxPoller } = await import('./services/gmailInboxPollerService');
+    startGmailInboxPoller();
+  } catch (err) {
+    console.warn('⚠️ Gmail inbox poller failed to start (non-fatal):', err);
+  }
+
   // Initialize IoT services (graceful failure — won't crash server)
   try {
     const { haService } = await import('./services/homeAssistantService');

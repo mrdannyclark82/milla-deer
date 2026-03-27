@@ -25,7 +25,8 @@ class SettingsRepository(private val context: Context) {
         private val SPOKEN_REPLIES_ENABLED_KEY = booleanPreferencesKey("spoken_replies_enabled")
 
         const val DEFAULT_SERVER_URL = "http://10.0.2.2:5000/"
-        const val REMOTE_SERVER_URL = "https://processors-event-utilities-tops.trycloudflare.com"
+        // Set this to your Cloudflare tunnel URL or public domain. Leave empty to disable remote fallback.
+        const val REMOTE_SERVER_URL = ""
         const val DEFAULT_OFFLINE_MODE_ENABLED = false
         const val DEFAULT_AUTO_FALLBACK = true
         const val DEFAULT_SPOKEN_REPLIES_ENABLED = true

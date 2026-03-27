@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Apply saved theme immediately before render to avoid flash
+(function () {
+  const saved = localStorage.getItem('milla-theme');
+  const theme = saved && ['dark', 'light', 'cyberpunk'].includes(saved) ? saved : 'cyberpunk';
+  document.documentElement.classList.add(theme);
+})();
+
 // Environment guard - ensure critical environment is loaded before rendering
 // In Vite, import.meta.env is always defined, but we check for proper initialization
 const envLoaded =
