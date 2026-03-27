@@ -372,6 +372,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             candidates += "http://127.0.0.1:5000/"
         }
 
+        // Always try Cloudflare tunnel as remote fallback
+        candidates += SettingsRepository.REMOTE_SERVER_URL
+
         return candidates.toList()
     }
 
