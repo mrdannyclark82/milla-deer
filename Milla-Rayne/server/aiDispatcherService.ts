@@ -50,18 +50,15 @@ import {
   trimContextBlock,
 } from './contextWindowService';
 
-// Response cache for avoiding duplicate AI calls
-const responseCache = new Map<
-  string,
-  { response: AIResponse; timestamp: number }
->();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Response cache removed — caching conversation responses causes stale/looping replies
+// because the cache key was built from enhancedMessage (which starts with identical
+// memory-context boilerplate), making every message in a session share the same key.
 
 const MEMORY_RELEVANCE_THRESHOLD = 8.0;
 const CONTENT_TRUNCATION_SHORT = 200;
 const CONTENT_TRUNCATION_MEDIUM = 250;
 const CONTENT_TRUNCATION_LONG = 300;
-const GEMINI_QUOTA_COOLDOWN_MS = 10 * 60 * 1000;
+const GEMINI_QUOTA_COOLDOWN_MS = 30 * 1000;
 let geminiCooldownUntil = 0;
 const hasApiKey = (value: string | null | undefined): value is string =>
   Boolean(value?.trim());
@@ -345,14 +342,6 @@ export async function dispatchAIResponse(
 ): Promise<AIResponse> {
   const requestTraceId =
     traceId || `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  const cacheKey = `${userMessage.substring(0, 100)}-${context.userId || 'anon'}`;
-  const cached = responseCache.get(cacheKey);
-
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`🔍 [TRACE:${requestTraceId}] Cache hit for key: ${cacheKey}`);
-    return cached.response;
-  }
-
   console.log(`🔍 [TRACE:${requestTraceId}] dispatchAIResponse - Starting`);
   const startTime = Date.now();
   const userId = context.userId || 'default-user';
@@ -376,7 +365,6 @@ export async function dispatchAIResponse(
       console.log(`🧠 [TRACE:${requestTraceId}] Using memory-based response (score ${topScore.toFixed(2)})`);
       const memoryBasedResponse = generateMemoryBasedResponse(userMessage, memoryResults, context.userName);
       const response: AIResponse = { content: memoryBasedResponse, success: true, xaiSessionId: requestTraceId };
-      responseCache.set(cacheKey, { response, timestamp: Date.now() });
       return response;
     }
     */
@@ -388,27 +376,23 @@ export async function dispatchAIResponse(
   const intent = detectIntent(userMessage);
   trackCommandIntent(xaiSessionId, intent);
 
-  // Context Enrichment
-  let ambientContext: AmbientContext | null = null;
-  if (context.userId) ambientContext = getAmbientContext(context.userId);
-  let activePersona: ActiveUserPersona | null = null;
-  if (context.userId) {
-    try {
-      activePersona = await generateActivePersona(context.userId, userMessage);
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  // Context Enrichment — run all in parallel
+  const [ambientContext, activePersona, semanticContext] = await Promise.all([
+    context.userId ? Promise.resolve(getAmbientContext(context.userId)) : Promise.resolve(null),
+    context.userId
+      ? generateActivePersona(context.userId, userMessage).catch((e) => {
+          console.error(e);
+          return null;
+        })
+      : Promise.resolve(null),
+    enrichContextWithSemanticRetrieval(userMessage, context),
+  ]);
+
   let adaptivePersona = null;
   try {
     const { getActivePersonaConfig } = await import('./selfEvolutionService');
     adaptivePersona = getActivePersonaConfig();
   } catch (e) {}
-
-  const semanticContext = await enrichContextWithSemanticRetrieval(
-    userMessage,
-    context
-  );
   const avContext = buildAVRagContext(context);
 
   let augmentedMessage = userMessage;
@@ -476,10 +460,7 @@ export async function dispatchAIResponse(
         maxTokens
       );
       if (response.success) modelUsed = 'minimax';
-    } else if (
-      preferredModel === 'venice' ||
-      preferredModel === 'venice-uncensored'
-    ) {
+    } else if (preferredModel === 'venice') {
       response = await generateVeniceResponse(
         augmentedMessage,
         {
@@ -662,7 +643,6 @@ export async function dispatchAIResponse(
   }
 
   response.xaiSessionId = xaiSessionId;
-  responseCache.set(cacheKey, { response, timestamp: Date.now() });
 
   const duration = Date.now() - startTime;
   console.log(
