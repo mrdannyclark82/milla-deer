@@ -1,4 +1,4 @@
-import { Router, type Express } from 'express';
+import { Router, type Express, type Request } from 'express';
 import fs from 'fs';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
@@ -43,12 +43,24 @@ async function resolveChatUserId(sessionToken?: string): Promise<string> {
   return 'default-user';
 }
 
+function getSessionToken(req: Request): string | undefined {
+  const authHeader = req.get('authorization');
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    return token || undefined;
+  }
+
+  return req.cookies.session_token;
+}
+
 async function getRecentConversationHistory(
   userId: string,
   channel: string = 'web'
 ) {
-  const messages = (await storage.getMessages(userId)).filter(
-    (message) => (message.channel || 'web') === channel
+  const messages = await storage.getRecentMessages(
+    userId,
+    CONTEXT_WINDOW_SETTINGS.routeHistoryMaxMessages * 2,
+    channel
   );
 
   return boundConversationHistory(
@@ -68,7 +80,7 @@ async function persistConversationTurn(
   userId: string,
   userMessage: string,
   assistantMessage: string,
-  channel: string = 'web'
+  channel: 'web' | 'gmail' | 'telegram' | 'api' | 'system' | 'mobile' = 'web'
 ) {
   await Promise.all([
     storage.createMessage({
@@ -100,7 +112,7 @@ export function registerChatRoutes(app: Express) {
   router.get(
     '/ai-model/current',
     asyncHandler(async (req, res) => {
-      const sessionToken = req.cookies.session_token;
+      const sessionToken = getSessionToken(req);
 
       if (!sessionToken) {
         return res.json({ success: true, model: DEFAULT_CHAT_MODEL });
@@ -121,7 +133,7 @@ export function registerChatRoutes(app: Express) {
     '/ai-model/set',
     asyncHandler(async (req, res) => {
       const { model } = req.body;
-      const sessionToken = req.cookies.session_token;
+      const sessionToken = getSessionToken(req);
 
       if (!model) {
         return res
@@ -198,7 +210,9 @@ export function registerChatRoutes(app: Express) {
       }
 
       const data: any = await response.json();
-      const userId = await resolveChatUserId(req.cookies.session_token);
+      const imageData =
+        typeof req.body?.imageData === 'string' ? req.body.imageData : undefined;
+      const userId = await resolveChatUserId(getSessionToken(req));
       const conversationHistory = await getRecentConversationHistory(userId, 'web');
       const aiResponse = await generateAIResponse(
         data.text,
@@ -253,16 +267,18 @@ export function registerChatRoutes(app: Express) {
 
       message = validateAndSanitizePrompt(message);
 
-      const userId = await resolveChatUserId(req.cookies.session_token);
+      const userId = await resolveChatUserId(getSessionToken(req));
 
       const bypassFunctionCalls = message.trim().startsWith('##');
       const processedMessage = bypassFunctionCalls
         ? message.trim().substring(2).trim()
         : message;
-      const conversationHistory = await getRecentConversationHistory(userId, 'web');
+      const [conversationHistory, sensorData] = await Promise.all([
+        getRecentConversationHistory(userId, 'web'),
+        getSmartHomeSensorData(),
+      ]);
 
       // Handle Scene Context
-      const sensorData = await getSmartHomeSensorData();
       const sceneContext = detectSceneContext(
         processedMessage,
         sceneService.getLocation() as any,

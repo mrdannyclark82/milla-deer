@@ -1,4 +1,4 @@
-import { Router, type Express } from 'express';
+import { Router, type Express, type Request } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
 import { insertMessageSchema } from '@shared/schema';
@@ -40,6 +40,16 @@ import { syncReplycaSharedHistory } from '../replycaSocialBridgeService';
 export function registerMemoryRoutes(app: Express) {
   const router = Router();
 
+  const getSessionToken = (req: Request) => {
+    const authHeader = req.get('authorization');
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      return token || undefined;
+    }
+
+    return req.cookies?.session_token;
+  };
+
   const resolveUserId = async (sessionToken?: string) => {
     if (!sessionToken) return 'default-user';
     const sessionResult = await validateSession(sessionToken);
@@ -61,14 +71,12 @@ export function registerMemoryRoutes(app: Express) {
       } catch (error) {
         console.warn('ReplycA social sync skipped during message fetch:', error);
       }
-      const userId = await resolveUserId(req.cookies?.session_token);
-      const allMessages = await storage.getMessages(userId);
-      const filteredMessages = channel
-        ? allMessages.filter((message) => (message.channel || 'web') === channel)
-        : allMessages;
+      const userId = await resolveUserId(getSessionToken(req));
+      // Use getRecentMessages to avoid full-table decryption — only fetch what we need
+      const messages = await storage.getRecentMessages(userId, limit, channel || undefined);
 
-      if (filteredMessages && filteredMessages.length > 0) {
-        return res.json(filteredMessages.slice(-limit));
+      if (messages && messages.length > 0) {
+        return res.json(messages);
       }
 
       try {
@@ -105,7 +113,7 @@ export function registerMemoryRoutes(app: Express) {
 
       const validatedData = insertMessageSchema.parse(messageData);
       const resolvedUserId =
-        validatedData.userId || (await resolveUserId(req.cookies?.session_token));
+        validatedData.userId || (await resolveUserId(getSessionToken(req)));
       const message = await storage.createMessage({
         ...validatedData,
         channel: validatedData.channel || 'web',

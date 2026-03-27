@@ -120,29 +120,27 @@ export async function getMemoryBrokerContext(
   }
 
   const { activeChannel, recentLimit, crossChannelLimit } = options;
-  const allMessages = await storage.getMessages(userId);
+  const effectiveRecentLimit = Math.max(1, recentLimit || DEFAULT_RECENT_LIMIT);
+  const effectiveCrossLimit = Math.max(1, crossChannelLimit || DEFAULT_CROSS_CHANNEL_LIMIT);
   const queryTerms = extractQueryTerms(query);
 
-  const activeChannelMessages = activeChannel
-    ? allMessages.filter((message) => (message.channel || 'web') === activeChannel)
-    : allMessages;
+  // Fetch only what we need — no more full-table scans with per-row decryption
+  const [recentConversationMessages, crossChannelPool] = await Promise.all([
+    storage.getRecentMessages(userId, effectiveRecentLimit, activeChannel),
+    activeChannel
+      ? storage.getRecentMessages(userId, effectiveCrossLimit * 10)
+      : Promise.resolve([] as Message[]),
+  ]);
 
-  const recentConversationMessages = activeChannelMessages.slice(
-    -Math.max(1, recentLimit || DEFAULT_RECENT_LIMIT)
-  );
-
-  const crossChannelCandidates = allMessages
-    .filter((message) => {
-      const messageChannel = message.channel || 'web';
-      return activeChannel ? messageChannel !== activeChannel : true;
-    })
+  const crossChannelCandidates = crossChannelPool
+    .filter((message) => (message.channel || 'web') !== activeChannel)
     .map((message) => ({
       message,
       score: scoreMessageRelevance(message, queryTerms),
     }))
     .filter((entry) => entry.score > 0)
     .sort((left, right) => right.score - left.score)
-    .slice(0, Math.max(1, crossChannelLimit || DEFAULT_CROSS_CHANNEL_LIMIT))
+    .slice(0, effectiveCrossLimit)
     .map((entry) => entry.message);
 
   const [profile, summaries, relationshipMemory, semanticMemory] =

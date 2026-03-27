@@ -187,16 +187,24 @@ export async function getReplycaSocialStatus(): Promise<ReplycaSocialStatus> {
   };
 }
 
+let lastSyncAt = 0;
+let lastSyncResult: ReplycaSocialSyncResult | null = null;
+const SYNC_COOLDOWN_MS = 30_000;
+
 export async function syncReplycaSharedHistory(): Promise<ReplycaSocialSyncResult> {
+  const now = Date.now();
+  if (lastSyncResult && now - lastSyncAt < SYNC_COOLDOWN_MS) {
+    return lastSyncResult;
+  }
+
   const snapshot = await getSharedHistorySnapshot();
   const state = await readState();
 
   if (!snapshot.sharedChatExists) {
-    return {
-      ...(await getReplycaSocialStatus()),
-      synced: false,
-      importedThisRun: 0,
-    };
+    const result = { ...(await getReplycaSocialStatus()), synced: false, importedThisRun: 0 };
+    lastSyncResult = result;
+    lastSyncAt = now;
+    return result;
   }
 
   let startIndex = state.importedLineCount;
@@ -247,7 +255,7 @@ export async function syncReplycaSharedHistory(): Promise<ReplycaSocialSyncResul
   };
   await writeState(nextState);
 
-  return {
+  const result: ReplycaSocialSyncResult = {
     replycaRoot: snapshot.replycaRoot,
     sharedChatPath: snapshot.sharedChatPath,
     statePath: resolveStatePath(),
@@ -260,4 +268,7 @@ export async function syncReplycaSharedHistory(): Promise<ReplycaSocialSyncResul
     synced: importedThisRun > 0,
     importedThisRun,
   };
+  lastSyncResult = result;
+  lastSyncAt = Date.now();
+  return result;
 }

@@ -49,6 +49,7 @@ export interface IStorage {
 
   createMessage(message: InsertMessage): Promise<Message>;
   getMessages(userId?: string): Promise<Message[]>;
+  getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]>;
   getMessageById(id: string): Promise<Message | undefined>;
   getMessageByExternalId(externalMessageId: string): Promise<Message | undefined>;
 
@@ -836,6 +837,20 @@ export class SqliteStorage implements IStorage {
     }
 
     return messages.map((msg) => this.mapMessageRow(msg));
+  }
+
+  async getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]> {
+    let rows: any[];
+    if (channel) {
+      rows = this.db.prepare(
+        'SELECT * FROM messages WHERE user_id = ? AND (channel = ? OR channel IS NULL AND ? = \'web\') ORDER BY timestamp DESC LIMIT ?'
+      ).all(userId, channel, channel, limit) as any[];
+    } else {
+      rows = this.db.prepare(
+        'SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      ).all(userId, limit) as any[];
+    }
+    return rows.reverse().map((msg) => this.mapMessageRow(msg));
   }
 
   async getMessageById(id: string): Promise<Message | undefined> {

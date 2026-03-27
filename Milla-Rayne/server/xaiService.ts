@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
 import { config } from './config';
-import axios from 'axios'; // Import the axios library for API calls
 import { getMillaPersonaCondensed } from '../shared/millaPersona';
 import { getAllSceneSettings } from '../shared/sceneSettings';
+import { searchMemoryCore } from './memoryService';
 
 /**
  * Cleans the conversation history of specific looping phrases and internal monologues.
@@ -36,19 +36,14 @@ function cleanConversationHistory(
   return cleanedHistory.filter((message) => message.content.length > 0);
 }
 
-// Function to fetch relevant memories from the Python memory service
+// Fetch relevant memories directly from the memory service (no HTTP self-call)
 async function fetchRelevantMemories(query: string): Promise<string[]> {
   try {
-    const response = await axios.post('http://localhost:5000/search', {
-      query,
-    });
-    if (response.data.success) {
-      return response.data.memories;
-    }
+    const results = await searchMemoryCore(query, 5, 'danny-ray');
+    return results.map((r) => r.entry.content).filter(Boolean);
   } catch (error) {
-    console.error('Error fetching memories from Python service:', error);
+    return [];
   }
-  return [];
 }
 
 export interface AIResponse {
@@ -203,7 +198,7 @@ export async function generateXAIResponse(
     const response = await client.chat.completions.create({
       model: (config?.xai?.model ||
         process.env.XAI_MODEL ||
-        'grok-4-fast-reasoning') as string,
+        'grok-3-fast') as string,
       messages: messages as any,
       max_tokens: maxTokens || 800,
       temperature: 0.8,
