@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import { execFile } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cron, { type ScheduledTask } from 'node-cron';
@@ -98,13 +98,15 @@ async function runCycle(cycle: ConsciousnessCycle): Promise<boolean> {
     const rawOutput = stdout.trim();
     let payload: { success?: boolean; message?: string } | null = null;
     if (rawOutput) {
-      const lastLine = rawOutput.split('\n').at(-1) || rawOutput;
+      const outputLines = rawOutput.split('\n');
+      const lastLine = outputLines[outputLines.length - 1] || rawOutput;
       payload = JSON.parse(lastLine);
     }
 
     if (!payload?.success) {
       status.lastError =
-        payload?.message || `${cycle.toUpperCase()} cycle failed without output`;
+        payload?.message ||
+        `${cycle.toUpperCase()} cycle failed without output`;
       console.error(
         `[Consciousness Scheduler] ${cycle.toUpperCase()} cycle failed: ${status.lastError}`
       );
@@ -202,4 +204,26 @@ export function getConsciousnessSchedulerStatus() {
     remEnabled: config.consciousness.enableRemCycle,
     cycles: cycleStatus,
   };
+}
+
+/**
+ * Returns the last ~600 chars of Milla's stream of consciousness.
+ * Injected as ambient context in memoryBrokerService after each GIM cycle.
+ */
+export function getLatestMonologue(charLimit = 600): string | null {
+  const replycaRoot = resolveReplycaRoot();
+  if (!replycaRoot) return null;
+
+  const soc = path.join(
+    replycaRoot,
+    'core_os/memory/stream_of_consciousness.md'
+  );
+  if (!existsSync(soc)) return null;
+
+  try {
+    const text = readFileSync(soc, 'utf8');
+    return text.slice(-charLimit).trim() || null;
+  } catch {
+    return null;
+  }
 }

@@ -18,6 +18,7 @@ import {
   generateAIResponse,
   validateAndSanitizePrompt,
 } from '../services/chatOrchestrator.service';
+import { appendToSharedChat } from '../replycaSocialBridgeService';
 import { analyzeVoiceInput } from '../voiceAnalysisService';
 import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
@@ -100,6 +101,10 @@ async function persistConversationTurn(
       sourcePlatform: 'milla-hub',
     }),
   ]);
+
+  // Outbound sync to ReplycA shared_chat.jsonl (fire-and-forget)
+  appendToSharedChat('user', userMessage, channel).catch(() => {});
+  appendToSharedChat('assistant', assistantMessage, channel).catch(() => {});
 }
 
 /**
@@ -211,9 +216,14 @@ export function registerChatRoutes(app: Express) {
 
       const data: any = await response.json();
       const imageData =
-        typeof req.body?.imageData === 'string' ? req.body.imageData : undefined;
+        typeof req.body?.imageData === 'string'
+          ? req.body.imageData
+          : undefined;
       const userId = await resolveChatUserId(getSessionToken(req));
-      const conversationHistory = await getRecentConversationHistory(userId, 'web');
+      const conversationHistory = await getRecentConversationHistory(
+        userId,
+        'web'
+      );
       const aiResponse = await generateAIResponse(
         data.text,
         conversationHistory,
@@ -225,7 +235,12 @@ export function registerChatRoutes(app: Express) {
         { canRunShellCommands: true }
       );
 
-      await persistConversationTurn(userId, data.text, aiResponse.content, 'web');
+      await persistConversationTurn(
+        userId,
+        data.text,
+        aiResponse.content,
+        'web'
+      );
 
       res.json({
         response: aiResponse.content,

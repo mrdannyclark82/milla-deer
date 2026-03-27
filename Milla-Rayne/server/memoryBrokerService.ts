@@ -1,12 +1,16 @@
 import type { Message } from '../shared/schema';
 import { storage } from './storage';
-import { getMemoryCoreContext, getSemanticMemoryContext } from './memoryService';
+import {
+  getMemoryCoreContext,
+  getSemanticMemoryContext,
+} from './memoryService';
 import { getProfile } from './profileService';
 import {
   CONTEXT_WINDOW_SETTINGS,
   trimContextBlock,
 } from './contextWindowService';
 import { syncReplycaSharedHistory } from './replycaSocialBridgeService';
+import { getLatestMonologue } from './consciousnessScheduler';
 
 export interface MemoryBrokerOptions {
   activeChannel?: string;
@@ -37,7 +41,8 @@ function labelForMessage(message: Message): string {
   const sourceBits = [message.channel || 'web', message.sourcePlatform]
     .filter(Boolean)
     .join('/');
-  const speaker = message.displayRole || (message.role === 'assistant' ? 'Milla' : 'User');
+  const speaker =
+    message.displayRole || (message.role === 'assistant' ? 'Milla' : 'User');
   return sourceBits ? `${speaker} via ${sourceBits}` : speaker;
 }
 
@@ -82,7 +87,9 @@ function scoreMessageRelevance(message: Message, terms: string[]): number {
   }, 0);
 }
 
-function buildProfileContext(profile: Awaited<ReturnType<typeof getProfile>>): string {
+function buildProfileContext(
+  profile: Awaited<ReturnType<typeof getProfile>>
+): string {
   if (!profile) {
     return '';
   }
@@ -96,7 +103,10 @@ function buildProfileContext(profile: Awaited<ReturnType<typeof getProfile>>): s
     parts.push(`Interests: ${profile.interests.join(', ')}`);
   }
 
-  const preferenceEntries = Object.entries(profile.preferences || {}).slice(0, 6);
+  const preferenceEntries = Object.entries(profile.preferences || {}).slice(
+    0,
+    6
+  );
   if (preferenceEntries.length > 0) {
     parts.push(
       `Preferences: ${preferenceEntries
@@ -121,7 +131,10 @@ export async function getMemoryBrokerContext(
 
   const { activeChannel, recentLimit, crossChannelLimit } = options;
   const effectiveRecentLimit = Math.max(1, recentLimit || DEFAULT_RECENT_LIMIT);
-  const effectiveCrossLimit = Math.max(1, crossChannelLimit || DEFAULT_CROSS_CHANNEL_LIMIT);
+  const effectiveCrossLimit = Math.max(
+    1,
+    crossChannelLimit || DEFAULT_CROSS_CHANNEL_LIMIT
+  );
   const queryTerms = extractQueryTerms(query);
 
   // Fetch only what we need — no more full-table scans with per-row decryption
@@ -192,7 +205,13 @@ export async function getMemoryBrokerContext(
       ? `Relationship memory:\n${sections.relationshipMemory}`
       : '',
     sections.semanticMemory ? sections.semanticMemory : '',
-  ].filter(Boolean);
+  ].filter(Boolean) as string[];
+
+  // Inject GIM monologue as ambient self-context (capped at 400 chars)
+  const monologue = getLatestMonologue(400);
+  if (monologue) {
+    contextParts.push(`Milla's recent internal monologue:\n${monologue}`);
+  }
 
   return {
     context: trimContextBlock(

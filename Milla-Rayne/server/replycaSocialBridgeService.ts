@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat, writeFile } from 'fs/promises';
+import { mkdir, readFile, appendFile, stat, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { storage } from './storage';
@@ -6,7 +6,12 @@ import { getConsciousnessSchedulerStatus } from './consciousnessScheduler';
 import type { InsertMessage } from '../shared/schema';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_STATE_PATH = path.resolve(MODULE_DIR, '..', 'memory', 'replyca_social_bridge.json');
+const DEFAULT_STATE_PATH = path.resolve(
+  MODULE_DIR,
+  '..',
+  'memory',
+  'replyca_social_bridge.json'
+);
 
 interface ReplycaBridgeState {
   importedLineCount: number;
@@ -201,7 +206,11 @@ export async function syncReplycaSharedHistory(): Promise<ReplycaSocialSyncResul
   const state = await readState();
 
   if (!snapshot.sharedChatExists) {
-    const result = { ...(await getReplycaSocialStatus()), synced: false, importedThisRun: 0 };
+    const result = {
+      ...(await getReplycaSocialStatus()),
+      synced: false,
+      importedThisRun: 0,
+    };
     lastSyncResult = result;
     lastSyncAt = now;
     return result;
@@ -271,4 +280,30 @@ export async function syncReplycaSharedHistory(): Promise<ReplycaSocialSyncResul
   lastSyncResult = result;
   lastSyncAt = Date.now();
   return result;
+}
+
+// ── Outbound: Milla-Rayne → shared_chat.jsonl ────────────────────────────────
+
+/**
+ * Appends a message from Milla-Rayne's side to ReplycA's shared_chat.jsonl
+ * so the GIM/REM cycles can read full conversation context.
+ */
+export async function appendToSharedChat(
+  role: 'user' | 'assistant',
+  content: string,
+  source: string = 'web'
+): Promise<void> {
+  const replycaRoot = resolveReplycaRoot();
+  if (!replycaRoot) return;
+
+  const sharedChatPath = resolveSharedChatPath(replycaRoot);
+  if (!sharedChatPath) return;
+
+  try {
+    await mkdir(path.dirname(sharedChatPath), { recursive: true });
+    const entry = JSON.stringify({ role, content, source, ts: Date.now() });
+    await appendFile(sharedChatPath, entry + '\n', 'utf8');
+  } catch (err) {
+    console.error('[ReplycA Bridge] appendToSharedChat error:', err);
+  }
 }

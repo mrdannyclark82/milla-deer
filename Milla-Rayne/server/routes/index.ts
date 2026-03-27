@@ -12,6 +12,11 @@ import { registerGoogleTtsRoutes } from './google-tts.routes';
 import { registerTTSRoutes } from './tts.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
 import { registerMerchRoutes } from './merch.routes';
+import { registerCyclesRoutes } from './cycles.routes';
+import {
+  startTelegramPolling,
+  isTelegramConfigured,
+} from '../services/telegramBotService';
 
 /**
  * Main router that aggregates all modular routes
@@ -45,6 +50,14 @@ export function registerModularRoutes(app: Express) {
 
   // Merch routes
   registerMerchRoutes(app);
+
+  // GIM/REM cycles + Gmail + Telegram REST routes
+  registerCyclesRoutes(app);
+
+  // Start Telegram long-polling if token is configured
+  if (isTelegramConfigured()) {
+    startTelegramPolling();
+  }
 
   return app;
 }
