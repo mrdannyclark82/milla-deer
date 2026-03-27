@@ -15,6 +15,7 @@ import {
   loadHotContext,
   getHotContextString,
 } from './services/sessionPersistenceService';
+import { formatToolEvents } from './services/toolEventBag';
 
 export interface MemoryBrokerOptions {
   activeChannel?: string;
@@ -221,6 +222,18 @@ export async function getMemoryBrokerContext(
   const hotCtx = getHotContextString();
   if (hotCtx) {
     contextParts.push(`Session continuity (hot context):\n${hotCtx}`);
+  }
+
+  // Inject recent tool call history so Milla can discuss them naturally
+  const hotSnapshot = await loadHotContext();
+  const recentToolTurns = hotSnapshot.recentTurns
+    .filter((t) => t.role === 'assistant' && t.toolEvents && t.toolEvents.length > 0)
+    .slice(-5);
+  if (recentToolTurns.length > 0) {
+    const toolSummary = recentToolTurns
+      .map((t) => formatToolEvents(t.toolEvents!))
+      .join('\n');
+    contextParts.push(`Recent tool actions Milla performed:\n${toolSummary}`);
   }
 
   return {

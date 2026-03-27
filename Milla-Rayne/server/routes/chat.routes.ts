@@ -18,6 +18,7 @@ import {
   generateAIResponse,
   validateAndSanitizePrompt,
 } from '../services/chatOrchestrator.service';
+import { withToolBag } from '../services/toolEventBag';
 import { appendToSharedChat } from '../replycaSocialBridgeService';
 import { recordTurn } from '../services/sessionPersistenceService';
 import { queueForIndexing } from '../services/ragAutoIndexer';
@@ -83,7 +84,8 @@ async function persistConversationTurn(
   userId: string,
   userMessage: string,
   assistantMessage: string,
-  channel: 'web' | 'gmail' | 'telegram' | 'api' | 'system' | 'mobile' = 'web'
+  channel: 'web' | 'gmail' | 'telegram' | 'api' | 'system' | 'mobile' = 'web',
+  toolEvents?: import('../services/toolEventBag').ToolEvent[]
 ) {
   await Promise.all([
     storage.createMessage({
@@ -101,6 +103,7 @@ async function persistConversationTurn(
       displayRole: 'Milla Rayne',
       channel,
       sourcePlatform: 'milla-hub',
+      metadata: toolEvents && toolEvents.length > 0 ? { toolEvents } : undefined,
     }),
   ]);
 
@@ -109,7 +112,7 @@ async function persistConversationTurn(
   appendToSharedChat('assistant', assistantMessage, channel).catch(() => {});
 
   // Hot context snapshot for zero-reload session persistence
-  recordTurn(userMessage, assistantMessage, channel, userId).catch(() => {});
+  recordTurn(userMessage, assistantMessage, channel, userId, toolEvents).catch(() => {});
 
   // Queue turn for async RAG vector indexing
   queueForIndexing(userMessage, assistantMessage, userId);
@@ -232,22 +235,25 @@ export function registerChatRoutes(app: Express) {
         userId,
         'web'
       );
-      const aiResponse = await generateAIResponse(
-        data.text,
-        conversationHistory,
-        'Danny Ray',
-        imageData,
-        userId,
-        undefined,
-        false,
-        { canRunShellCommands: true }
+      const { value: aiResponse, toolEvents } = await withToolBag(() =>
+        generateAIResponse(
+          data.text,
+          conversationHistory,
+          'Danny Ray',
+          imageData,
+          userId,
+          undefined,
+          false,
+          { canRunShellCommands: true }
+        )
       );
 
       await persistConversationTurn(
         userId,
         data.text,
         aiResponse.content,
-        'web'
+        'web',
+        toolEvents
       );
 
       res.json({
@@ -316,22 +322,25 @@ export function registerChatRoutes(app: Express) {
       }
 
       // Generate AI Response
-      const aiResponse = await generateAIResponse(
-        processedMessage,
-        conversationHistory,
-        'Danny Ray',
-        imageData,
-        userId,
-        userEmotionalState,
-        bypassFunctionCalls,
-        { canRunShellCommands: true }
+      const { value: aiResponse, toolEvents } = await withToolBag(() =>
+        generateAIResponse(
+          processedMessage,
+          conversationHistory,
+          'Danny Ray',
+          imageData,
+          userId,
+          userEmotionalState,
+          bypassFunctionCalls,
+          { canRunShellCommands: true }
+        )
       );
 
       await persistConversationTurn(
         userId,
         processedMessage,
         aiResponse.content,
-        'web'
+        'web',
+        toolEvents
       );
 
       res.json({

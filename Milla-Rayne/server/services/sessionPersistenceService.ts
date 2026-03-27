@@ -12,6 +12,8 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import type { ToolEvent } from './toolEventBag';
+import { formatToolEvents } from './toolEventBag';
 
 const SNAPSHOT_PATH = path.join(
   process.cwd(),
@@ -27,6 +29,7 @@ export interface HotContextTurn {
   content: string;
   channel: string;
   ts: number;
+  toolEvents?: ToolEvent[];
 }
 
 export interface HotContext {
@@ -122,7 +125,8 @@ export async function recordTurn(
   userMessage: string,
   assistantReply: string,
   channel: string = 'web',
-  userId: string = 'default-user'
+  userId: string = 'default-user',
+  toolEvents?: ToolEvent[]
 ): Promise<void> {
   const ctx = await loadHotContext();
   const now = Date.now();
@@ -139,6 +143,7 @@ export async function recordTurn(
       content: assistantReply.slice(0, 500),
       channel,
       ts: now,
+      toolEvents: toolEvents && toolEvents.length > 0 ? toolEvents : undefined,
     }
   );
 
@@ -177,7 +182,13 @@ export function getHotContextString(): string {
 
   const turns = _snapshot.recentTurns
     .slice(-10) // last 5 turns
-    .map((t) => `[${t.role.toUpperCase()}]: ${t.content}`)
+    .map((t) => {
+      const base = `[${t.role.toUpperCase()}]: ${t.content}`;
+      if (t.role === 'assistant' && t.toolEvents && t.toolEvents.length > 0) {
+        return `${base}\n[TOOL CALLS]: ${formatToolEvents(t.toolEvents)}`;
+      }
+      return base;
+    })
     .join('\n');
 
   const topics =
