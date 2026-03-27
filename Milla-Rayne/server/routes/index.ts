@@ -14,6 +14,7 @@ import { registerPersonalTaskRoutes } from './personalTask.routes';
 import { registerMerchRoutes } from './merch.routes';
 import { registerCyclesRoutes } from './cycles.routes';
 import { registerVisionRoutes } from './vision.routes';
+import { registerPrivacyRoutes } from './privacy.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
@@ -57,6 +58,9 @@ export async function registerModularRoutes(app: Express) {
 
   // Vision analysis + pixel grounding routes
   registerVisionRoutes(app);
+
+  // Privacy policy static page
+  registerPrivacyRoutes(app);
 
   // RAG search + manual indexing routes
   const { registerRagRoutes } = await import('./rag.routes');
