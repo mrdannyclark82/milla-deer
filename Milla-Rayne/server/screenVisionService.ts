@@ -63,8 +63,12 @@ function normalizeVisionTextContent(content: unknown): string | undefined {
   return undefined;
 }
 
-function parseImageDataUrl(imageData: string): { mimeType: string; data: string } | null {
-  const match = imageData.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+function parseImageDataUrl(
+  imageData: string
+): { mimeType: string; data: string } | null {
+  const match = imageData.match(
+    /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/
+  );
   if (!match) {
     return null;
   }
@@ -151,40 +155,44 @@ async function analyzeWithOpenRouter(
     };
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'X-Title': 'Milla Rayne Screen Vision',
-    },
-    body: JSON.stringify({
-      model: config.openrouter.geminiFlashModel || DEFAULT_OPENROUTER_VISION_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: buildSystemPrompt(userName),
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: buildUserPrompt(userMessage),
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageData,
+  const response = await fetch(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'Milla Rayne Screen Vision',
+      },
+      body: JSON.stringify({
+        model:
+          config.openrouter.geminiFlashModel || DEFAULT_OPENROUTER_VISION_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: buildSystemPrompt(userName),
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: buildUserPrompt(userMessage),
               },
-            },
-          ],
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.2,
-    }),
-  });
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageData,
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 500,
+        temperature: 0.2,
+      }),
+    }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -328,6 +336,129 @@ export async function analyzeScreenShareImage(
 
   return {
     success: false,
-    error: [openRouterResult.error, xaiResult.error].filter(Boolean).join(' | '),
+    error: [openRouterResult.error, xaiResult.error]
+      .filter(Boolean)
+      .join(' | '),
   };
+}
+
+// ── Pixel-level grounding via Qwen-2.5-VL (OpenRouter) ───────────────────────
+
+export interface GroundingResult {
+  success: boolean;
+  description?: string;
+  boxes?: Array<{
+    label: string;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }>;
+  error?: string;
+}
+
+const GROUNDING_MODEL = 'qwen/qwen-2.5-vl-72b-instruct';
+const GROUNDING_MODEL_FALLBACK = 'qwen/qwen-2-vl-72b-instruct';
+
+/**
+ * Parses Qwen-2.5-VL bounding box tokens.
+ * Format: <|box_start|>(x1,y1),(x2,y2)<|box_end|>
+ * Coordinates are 0-1000 normalized — we return them as fractions (0-1).
+ */
+function parseGroundingBoxes(
+  text: string,
+  label: string
+): Array<{ label: string; x1: number; y1: number; x2: number; y2: number }> {
+  const boxes: Array<{
+    label: string;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }> = [];
+  const re = /\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*,\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    boxes.push({
+      label,
+      x1: parseInt(m[1]) / 1000,
+      y1: parseInt(m[2]) / 1000,
+      x2: parseInt(m[3]) / 1000,
+      y2: parseInt(m[4]) / 1000,
+    });
+  }
+  return boxes;
+}
+
+/**
+ * Ground a natural-language query against a screenshot.
+ * Returns pixel-level bounding boxes for the described element.
+ * Uses Qwen-2.5-VL via OpenRouter (best open-source grounding model as of 2026).
+ */
+export async function groundElement(
+  imageData: string,
+  query: string
+): Promise<GroundingResult> {
+  const apiKey =
+    config.openrouter?.geminiFlashApiKey || config.openrouter?.apiKey;
+  if (!apiKey) {
+    return { success: false, error: 'OpenRouter API key not configured.' };
+  }
+
+  const parsed = parseImageDataUrl(imageData);
+  if (!parsed) {
+    return { success: false, error: 'Invalid image data URL.' };
+  }
+
+  const groundingPrompt = `Locate: "${query}"\nReturn the bounding box coordinates in the format (x1,y1),(x2,y2) where values are 0-1000 normalized. Output ONLY the coordinates, nothing else.`;
+
+  for (const model of [GROUNDING_MODEL, GROUNDING_MODEL_FALLBACK]) {
+    try {
+      const response = await fetch(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:${parsed.mimeType};base64,${parsed.data}`,
+                    },
+                  },
+                  { type: 'text', text: groundingPrompt },
+                ],
+              },
+            ],
+            max_tokens: 128,
+          }),
+        }
+      );
+
+      if (!response.ok) continue;
+
+      const json = (await response.json()) as {
+        choices?: Array<{ message?: { content?: unknown } }>;
+      };
+      const raw = normalizeVisionTextContent(
+        json.choices?.[0]?.message?.content
+      );
+      if (!raw) continue;
+
+      const boxes = parseGroundingBoxes(raw, query);
+      return { success: true, description: raw, boxes };
+    } catch {
+      continue;
+    }
+  }
+
+  return { success: false, error: 'Grounding failed on all models.' };
 }

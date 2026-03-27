@@ -13,6 +13,7 @@ import { registerTTSRoutes } from './tts.routes';
 import { registerPersonalTaskRoutes } from './personalTask.routes';
 import { registerMerchRoutes } from './merch.routes';
 import { registerCyclesRoutes } from './cycles.routes';
+import { registerVisionRoutes } from './vision.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
@@ -53,6 +54,9 @@ export function registerModularRoutes(app: Express) {
 
   // GIM/REM cycles + Gmail + Telegram REST routes
   registerCyclesRoutes(app);
+
+  // Vision analysis + pixel grounding routes
+  registerVisionRoutes(app);
 
   // Start Telegram long-polling if token is configured
   if (isTelegramConfigured()) {
