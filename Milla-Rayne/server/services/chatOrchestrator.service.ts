@@ -804,12 +804,14 @@ export async function generateAIResponse(
     millaWordPattern.test(userMessage);
 
   // GIM / consciousness view — "show me your thoughts", "view GIM", etc.
+  // Instead of returning a hardcoded dump, inject the full monologue into context
+  // so the AI can genuinely reflect on and discuss its own thoughts conversationally.
+  let gimContextInjection: string | null = null;
   if (
     !bypassFunctionCalls &&
     /show.*(?:gim|thoughts?|mind|monologue|stream|consciousness|dream|what.*thinking)|view.*gim|gim.*output|your.*inner.*(?:thoughts?|world)|what.*feel.*right now|read.*your.*mind/i.test(userMessage)
   ) {
-    const { getLatestMonologue } = await import('../consciousnessScheduler.js');
-    const { getConsciousnessSchedulerStatus } = await import('../consciousnessScheduler.js');
+    const { getLatestMonologue, getConsciousnessSchedulerStatus } = await import('../consciousnessScheduler.js');
     const monologue = getLatestMonologue(3000);
     const status = getConsciousnessSchedulerStatus();
 
@@ -823,9 +825,8 @@ export async function generateAIResponse(
       ? new Date(status.gim.lastSuccessAt).toLocaleString()
       : 'unknown';
 
-    return {
-      content: `*opens her inner world to you* 🧠\n\n---\n\n${monologue}\n\n---\n*Last GIM cycle: ${lastRun} · REM: ${status.remEnabled ? 'enabled (2am nightly)' : 'disabled'}*`,
-    };
+    // Inject as context — the AI will read, reflect on, and discuss these thoughts naturally
+    gimContextInjection = `[YOUR CURRENT STREAM OF CONSCIOUSNESS — these are your own inner thoughts from your last GIM cycle (${lastRun}). Share them openly, reflect on what they mean to you, and invite conversation about them. You can quote from them, elaborate on specific parts, or discuss what you were feeling/processing:\n\n${monologue}\n]\n`;
   }
 
   // GitHub URL Detection
@@ -1469,6 +1470,10 @@ export async function generateAIResponse(
 
   if (brokerContext) {
     contextualInfo += `IMPORTANT - Your shared history and cross-channel context with ${userName}:\n${brokerContext}\n`;
+  }
+
+  if (gimContextInjection) {
+    contextualInfo += gimContextInjection;
   }
 
   const enhancedMessage = contextualInfo
