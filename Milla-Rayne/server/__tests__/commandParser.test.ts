@@ -136,6 +136,44 @@ describe('commandParser', () => {
     expect(parsed.entities.text).toBe('welcome back commander');
   });
 
+  it('should infer recent message lookup from natural language', async () => {
+    const parsed = await parseCommand('show my recent saved messages limit 5');
+    expect(parsed.service).toBe('mcp');
+    expect(parsed.action).toBe('run');
+    expect(parsed.entities.toolName).toBe('listRecentMessages');
+    expect(parsed.entities.limit).toBe('5');
+  });
+
+  it('should infer stored message search from natural language', async () => {
+    const parsed = await parseCommand(
+      'search my saved messages for google auth'
+    );
+    expect(parsed.service).toBe('mcp');
+    expect(parsed.action).toBe('run');
+    expect(parsed.entities.toolName).toBe('searchStoredMessages');
+    expect(parsed.entities.query).toBe('google auth');
+  });
+
+  it('should infer memory summary search from natural language', async () => {
+    const parsed = await parseCommand(
+      'search my memory summaries about dashboard layout'
+    );
+    expect(parsed.service).toBe('mcp');
+    expect(parsed.action).toBe('run');
+    expect(parsed.entities.toolName).toBe('searchMemorySummaries');
+    expect(parsed.entities.query).toBe('dashboard layout');
+  });
+
+  it('should infer broker memory context lookup from natural language', async () => {
+    const parsed = await parseCommand(
+      'pull my memory context for screen share debugging'
+    );
+    expect(parsed.service).toBe('mcp');
+    expect(parsed.action).toBe('run');
+    expect(parsed.entities.toolName).toBe('getBrokerMemoryContext');
+    expect(parsed.entities.query).toBe('screen share debugging');
+  });
+
   it('should parse adb devices requests as shell commands', async () => {
     const parsed = await parseCommand('adb devices');
     expect(parsed.service).toBe('shell');

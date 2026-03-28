@@ -4,7 +4,7 @@ from diffusers import FluxPipeline
 pipe = FluxPipeline.from_pretrained("kpsss34/FHDR_Uncensored", torch_dtype=torch.bfloat16)
 pipe.enable_model_cpu_offload()
 
-prompt = "a women..."
+prompt = "Milla Rayne, seductive woman with long red hair, wearing only fishnet bodysuit, full body, photorealistic, high detail, cinematic lighting, ultra detailed"
 image = pipe(
     prompt,
     height=1024,

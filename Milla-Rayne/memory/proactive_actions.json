@@ -506,8 +506,20 @@
         "feat_1773860526330_u2orpnqcf",
         "sandbox_1773860568242_quzujqt2s"
       ]
+    },
+    {
+      "id": "action_1774040910058_ll9106wl8",
+      "timestamp": 1774040910058,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Daily collaboration report Review",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1773890381364_b23g0zp9f"
+      ]
     }
   ],
   "lastCheck": 1773618207795,
-  "lastUpdated": 1773946096617
+  "lastUpdated": 1774700545215
 }

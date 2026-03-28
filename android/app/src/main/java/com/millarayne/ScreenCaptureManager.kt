@@ -65,7 +65,7 @@ class ScreenCaptureManager(private val context: Context) {
     }
 
     fun start(resultCode: Int, data: Intent): Boolean {
-        stop()
+        stop(stopService = false)
 
         val projectionManager = context.getSystemService(MediaProjectionManager::class.java)
             ?: return false
@@ -107,10 +107,13 @@ class ScreenCaptureManager(private val context: Context) {
         return true
     }
 
-    suspend fun captureFrameDataUrl(): String? = withContext(Dispatchers.Default) {
+    suspend fun captureFrameDataUrl(
+        maxAttempts: Int = 15,
+        retryDelayMs: Long = 100
+    ): String? = withContext(Dispatchers.Default) {
         val reader = imageReader ?: return@withContext null
 
-        repeat(15) {
+        repeat(maxAttempts.coerceAtLeast(1)) {
             val image = reader.acquireLatestImage()
             if (image != null) {
                 try {
@@ -120,19 +123,21 @@ class ScreenCaptureManager(private val context: Context) {
                     image.close()
                 }
             }
-            delay(100)
+            delay(retryDelayMs.coerceAtLeast(1L))
         }
 
         Log.w(TAG, "No screen frame became available during capture window")
         null
     }
 
-    fun stop() {
+    fun stop(stopService: Boolean = true) {
         Log.d(TAG, "Stopping MediaProjection session")
         isStoppingInternally = true
         releaseResources(stopProjection = true)
         isStoppingInternally = false
-        ScreenShareForegroundService.stop(context)
+        if (stopService) {
+            ScreenShareForegroundService.stop(context)
+        }
     }
 
     private fun releaseResources(stopProjection: Boolean) {

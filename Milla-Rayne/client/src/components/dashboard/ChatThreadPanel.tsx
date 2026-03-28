@@ -240,7 +240,12 @@ export function ChatThreadPanel({
   }, [messages]);
 
   useEffect(() => {
-    const nextLastMessage = visibleMessages[visibleMessages.length - 1];
+    const allVis = activeChannel === 'all'
+      ? messages
+      : messages.filter((m) => (m.channel || 'web') === activeChannel);
+    const hasMoreMsgs = allVis.length > displayLimit;
+    const latest = hasMoreMsgs ? allVis.slice(allVis.length - displayLimit) : allVis;
+    const nextLastMessage = latest[latest.length - 1];
     const nextLastMessageKey = nextLastMessage
       ? getMessageKey(nextLastMessage)
       : null;
@@ -255,7 +260,7 @@ export function ChatThreadPanel({
 
     lastMessageKeyRef.current = nextLastMessageKey;
     shouldAutoScrollRef.current = false;
-  }, [visibleMessages]);
+  }, [messages, displayLimit, activeChannel]);
 
   useEffect(() => {
     let isMounted = true;

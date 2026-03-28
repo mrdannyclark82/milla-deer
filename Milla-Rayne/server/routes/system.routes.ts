@@ -46,6 +46,7 @@ import {
   getReplycaSocialStatus,
   syncReplycaSharedHistory,
 } from '../replycaSocialBridgeService';
+import { offlineService } from '../offlineModelService';
 
 const PROACTIVE_BASE_URL = (
   process.env.PROACTIVE_BASE_URL || 'http://localhost:5001'
@@ -72,13 +73,17 @@ function getNetworkAccessSnapshot(hostHeader?: string) {
     new Set(
       Object.values(os.networkInterfaces())
         .flat()
-        .filter(
-          (details): details is NonNullable<typeof details> =>
-            Boolean(details) &&
+        .filter((details): details is os.NetworkInterfaceInfo => {
+          if (!details) {
+            return false;
+          }
+
+          return (
             details.family === 'IPv4' &&
             !details.internal &&
             Boolean(details.address)
-        )
+          );
+        })
         .map((details) => details.address)
         .filter(
           (address) =>
@@ -442,6 +447,7 @@ export function registerSystemRoutes(app: Express) {
       }
 
       const githubToken = getGitHubToken();
+      const localModel = await offlineService.refreshStatus();
 
       let github = {
         configured: Boolean(githubToken),
@@ -472,6 +478,7 @@ export function registerSystemRoutes(app: Express) {
           repositoryDiscovery: getRepositoryDiscoverySchedulerStatus(),
           collaboration: getCollaborationSchedulerStatus(),
           replycaSocial: await getReplycaSocialStatus(),
+          localModel,
         },
       });
     })
@@ -533,7 +540,7 @@ export function registerSystemRoutes(app: Express) {
   router.get(
     '/system/shell/runs/:runId',
     asyncHandler(async (req, res) => {
-      const run = getShellRun(req.params.runId);
+      const run = getShellRun(String(req.params.runId));
       if (!run) {
         res.status(404).json({
           success: false,

@@ -203,11 +203,14 @@ class MainActivity : ComponentActivity() {
                     "Capturing your current screen..."
                 }
             )
-            val imageData = screenCaptureManager.captureFrameDataUrl()
+            val imageData = screenCaptureManager.captureFrameDataUrl(
+                maxAttempts = if (autoTriggered) 30 else 15,
+                retryDelayMs = if (autoTriggered) 150 else 100
+            )
             if (imageData == null) {
                 viewModel.setScreenShareStatus(
                     if (autoTriggered) {
-                        "The first automatic capture missed. Open the app you want to share, then tap Capture current screen."
+                        "The first automatic capture missed. Open the app you want to share, wait a moment, then tap Capture current screen."
                     } else {
                         "I couldn't capture the screen yet. Try again in a moment."
                     }
@@ -225,7 +228,6 @@ class MainActivity : ComponentActivity() {
 
     private fun stopScreenShare() {
         screenCaptureManager.stop()
-        ScreenShareForegroundService.stop(this)
         viewModel.setScreenShareActive(false)
         viewModel.setScreenSharePreview(null)
         viewModel.setScreenShareStatus("Screen sharing stopped.")
@@ -247,6 +249,7 @@ private fun ChatScreen(
     val error by viewModel.error.collectAsStateWithLifecycle()
     val isOfflineMode by viewModel.isOfflineMode.collectAsStateWithLifecycle()
     val serverUrl by viewModel.serverUrl.collectAsStateWithLifecycle()
+    val sessionToken by viewModel.sessionToken.collectAsStateWithLifecycle()
     val offlineModeEnabled by viewModel.offlineModeEnabled.collectAsStateWithLifecycle()
     val autoFallback by viewModel.autoFallback.collectAsStateWithLifecycle()
     val spokenRepliesEnabled by viewModel.spokenRepliesEnabled.collectAsStateWithLifecycle()
@@ -258,6 +261,7 @@ private fun ChatScreen(
     var localError by remember { mutableStateOf<String?>(null) }
     var isSettingsOpen by remember { mutableStateOf(false) }
     var pendingServerUrl by remember { mutableStateOf(serverUrl) }
+    var pendingSessionToken by remember { mutableStateOf(sessionToken) }
     var pendingOfflineMode by remember { mutableStateOf(offlineModeEnabled) }
     var pendingAutoFallback by remember { mutableStateOf(autoFallback) }
     var pendingSpokenReplies by remember { mutableStateOf(spokenRepliesEnabled) }
@@ -414,9 +418,17 @@ private fun ChatScreen(
         }
     }
 
-    LaunchedEffect(isSettingsOpen, serverUrl, offlineModeEnabled, autoFallback, spokenRepliesEnabled) {
+    LaunchedEffect(
+        isSettingsOpen,
+        serverUrl,
+        sessionToken,
+        offlineModeEnabled,
+        autoFallback,
+        spokenRepliesEnabled
+    ) {
         if (isSettingsOpen) {
             pendingServerUrl = serverUrl
+            pendingSessionToken = sessionToken
             pendingOfflineMode = offlineModeEnabled
             pendingAutoFallback = autoFallback
             pendingSpokenReplies = spokenRepliesEnabled
@@ -613,7 +625,7 @@ private fun ChatScreen(
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF3E5F5), Color(0xFFE1BEE7))
+                        colors = listOf(Color(0xFF0A0A0F), Color(0xFF0D0D1A))
                     )
                 )
                 .padding(paddingValues)
@@ -734,16 +746,19 @@ private fun ChatScreen(
     if (isSettingsOpen) {
         SettingsDialog(
             serverUrl = pendingServerUrl,
+            sessionToken = pendingSessionToken,
             offlineModeEnabled = pendingOfflineMode,
             autoFallback = pendingAutoFallback,
             spokenRepliesEnabled = pendingSpokenReplies,
             onServerUrlChange = { pendingServerUrl = it },
+            onSessionTokenChange = { pendingSessionToken = it },
             onOfflineModeChange = { pendingOfflineMode = it },
             onAutoFallbackChange = { pendingAutoFallback = it },
             onSpokenRepliesChange = { pendingSpokenReplies = it },
             onDismiss = { isSettingsOpen = false },
             onSave = {
                 viewModel.updateServerUrl(pendingServerUrl)
+                viewModel.updateSessionToken(pendingSessionToken)
                 viewModel.setOfflineModeEnabled(pendingOfflineMode)
                 viewModel.setAutoFallback(pendingAutoFallback)
                 viewModel.setSpokenRepliesEnabled(pendingSpokenReplies)
@@ -909,10 +924,12 @@ private fun queryDisplayName(context: android.content.Context, uri: Uri): String
 @Composable
 private fun SettingsDialog(
     serverUrl: String,
+    sessionToken: String,
     offlineModeEnabled: Boolean,
     autoFallback: Boolean,
     spokenRepliesEnabled: Boolean,
     onServerUrlChange: (String) -> Unit,
+    onSessionTokenChange: (String) -> Unit,
     onOfflineModeChange: (Boolean) -> Unit,
     onAutoFallbackChange: (Boolean) -> Unit,
     onSpokenRepliesChange: (Boolean) -> Unit,
@@ -931,6 +948,16 @@ private fun SettingsDialog(
                     placeholder = { Text(SettingsRepository.DEFAULT_SERVER_URL) },
                     supportingText = {
                         Text("Use your computer IP like http://192.168.1.50:5000/ or adb reverse with http://127.0.0.1:5000/")
+                    },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = sessionToken,
+                    onValueChange = onSessionTokenChange,
+                    label = { Text("Session token") },
+                    placeholder = { Text("Optional bearer token for shared account sync") },
+                    supportingText = {
+                        Text("Paste the same session token used by the dashboard/mobile app to sync the exact same user thread.")
                     },
                     singleLine = true
                 )

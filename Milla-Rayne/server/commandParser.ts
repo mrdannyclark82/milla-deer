@@ -338,6 +338,48 @@ function inferNaturalLanguageMcpRequest(message: string): ParsedCommand | null {
     });
   }
 
+  const recentMessagesMatch = sanitizedMessage.match(
+    /(?:show|list|get)\s+(?:my\s+)?(?:recent|latest|last)\s+(?:saved\s+)?messages(?:\s+limit\s+(\d+))?/i
+  );
+  if (recentMessagesMatch) {
+    return createMcpRunCommand({
+      toolName: 'listRecentMessages',
+      ...(recentMessagesMatch[1]
+        ? { limit: sanitizePromptInput(recentMessagesMatch[1]) }
+        : {}),
+    });
+  }
+
+  const storedMessagesSearchMatch = sanitizedMessage.match(
+    /(?:search|find|look\s+(?:through|up))\s+(?:my\s+)?(?:saved|stored)\s+messages\s+(?:for|about)\s+([\s\S]+)/i
+  );
+  if (storedMessagesSearchMatch?.[1]) {
+    return createMcpRunCommand({
+      toolName: 'searchStoredMessages',
+      query: sanitizeCapturedContent(storedMessagesSearchMatch[1]),
+    });
+  }
+
+  const memorySummaryMatch = sanitizedMessage.match(
+    /(?:search|find|show)\s+(?:my\s+)?memory\s+summaries\s+(?:for|about)\s+([\s\S]+)/i
+  );
+  if (memorySummaryMatch?.[1]) {
+    return createMcpRunCommand({
+      toolName: 'searchMemorySummaries',
+      query: sanitizeCapturedContent(memorySummaryMatch[1]),
+    });
+  }
+
+  const brokerContextMatch = sanitizedMessage.match(
+    /(?:get|pull|show)\s+(?:my\s+)?(?:broker\s+)?memory\s+context\s+(?:for|about)\s+([\s\S]+)/i
+  );
+  if (brokerContextMatch?.[1]) {
+    return createMcpRunCommand({
+      toolName: 'getBrokerMemoryContext',
+      query: sanitizeCapturedContent(brokerContextMatch[1]),
+    });
+  }
+
   return null;
 }
 

@@ -17,12 +17,12 @@ const queryClient = new QueryClient({
 });
 
 function AuthGate() {
-  const { data, isLoading } = useQuery<{ authenticated: boolean }>({
+  const { data, isLoading } = useQuery({
     queryKey: ['auth-status'],
-    queryFn: async () => {
+    queryFn: async (): Promise<{ authenticated: boolean }> => {
       const res = await fetch('/api/auth/status');
       if (!res.ok) return { authenticated: false };
-      return res.json() as Promise<{ authenticated: boolean }>;
+      return res.json();
     },
     staleTime: 60_000,
   });

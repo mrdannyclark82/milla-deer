@@ -157,7 +157,8 @@ export async function generateImage(
           },
         });
 
-        const arrayBuffer = await response.arrayBuffer();
+        const imageBlob = response as unknown as Blob;
+        const arrayBuffer = await imageBlob.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const imageUrl = `data:image/png;base64,${buffer.toString('base64')}`;
 

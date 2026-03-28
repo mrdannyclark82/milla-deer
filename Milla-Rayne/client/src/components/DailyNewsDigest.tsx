@@ -18,6 +18,7 @@ import {
   CalendarDays,
   Mail,
   Clock3,
+  Sparkles,
 } from 'lucide-react';
 import type { DailyNewsDigest, NewsItem } from '@/types/millalyzer';
 

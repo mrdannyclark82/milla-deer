@@ -698,4 +698,101 @@ describe('chatOrchestrator provider fallback handling', () => {
     expect(response.content).toContain('The forest hummed with neon life.');
   });
 
+  it('invokes memory message search from natural-language routing', async () => {
+    vi.mocked(parseCommand).mockResolvedValue({
+      service: 'mcp',
+      action: 'run',
+      entities: {
+        toolName: 'searchStoredMessages',
+        query: 'google auth',
+      },
+    } as any);
+    vi.mocked(listMcpTools).mockResolvedValue([
+      {
+        serverId: 'memory',
+        serverName: 'Memory MCP',
+        name: 'searchStoredMessages',
+        description: 'Search stored messages',
+      },
+    ] as any);
+    vi.mocked(invokeMcpTool).mockResolvedValue({
+      serverId: 'memory',
+      toolName: 'searchStoredMessages',
+      result: {
+        content: [{ type: 'text', text: '1. Google auth connected on mobile.' }],
+      },
+    } as any);
+
+    const response = await generateAIResponse(
+      'search my saved messages for google auth',
+      [],
+      'Danny Ray',
+      undefined,
+      'default-user',
+      undefined,
+      false,
+      { canRunShellCommands: true }
+    );
+
+    expect(invokeMcpTool).toHaveBeenCalledWith(
+      'memory',
+      'searchStoredMessages',
+      {
+        userId: 'default-user',
+        query: 'google auth',
+      }
+    );
+    expect(response.content).toContain('Google auth connected on mobile.');
+  });
+
+  it('invokes broker memory context lookup from natural-language routing', async () => {
+    vi.mocked(parseCommand).mockResolvedValue({
+      service: 'mcp',
+      action: 'run',
+      entities: {
+        toolName: 'getBrokerMemoryContext',
+        query: 'screen share debugging',
+      },
+    } as any);
+    vi.mocked(listMcpTools).mockResolvedValue([
+      {
+        serverId: 'memory',
+        serverName: 'Memory MCP',
+        name: 'getBrokerMemoryContext',
+        description: 'Get broker memory context',
+      },
+    ] as any);
+    vi.mocked(invokeMcpTool).mockResolvedValue({
+      serverId: 'memory',
+      toolName: 'getBrokerMemoryContext',
+      result: {
+        content: [{ type: 'text', text: 'Recent context shows Android screen-share blockers.' }],
+      },
+    } as any);
+
+    const response = await generateAIResponse(
+      'pull my memory context for screen share debugging',
+      [],
+      'Danny Ray',
+      undefined,
+      'default-user',
+      undefined,
+      false,
+      { canRunShellCommands: true }
+    );
+
+    expect(invokeMcpTool).toHaveBeenCalledWith(
+      'memory',
+      'getBrokerMemoryContext',
+      {
+        userId: 'default-user',
+        query: 'screen share debugging',
+        activeChannel: 'web',
+      }
+    );
+    expect(response.content).toContain(
+      'Recent context shows Android screen-share blockers.'
+    );
+  });
+
 });

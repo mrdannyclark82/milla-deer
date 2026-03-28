@@ -1,5 +1,7 @@
 import { Router, type Express } from 'express';
+import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { config } from '../config';
 import { analyzeVideo, generateVideoInsights } from '../gemini';
@@ -23,6 +25,7 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerMediaRoutes(app: Express) {
   const router = Router();
+  const generatedImageDirectory = path.join(os.tmpdir(), 'milla-generated-images');
   const aspectRatioToSize = (
     aspectRatio?: string
   ): { width: number; height: number } => {
@@ -39,6 +42,41 @@ export function registerMediaRoutes(app: Express) {
       default:
         return { width: 1024, height: 1024 };
       }
+    };
+  const getGeneratedImageFileExtension = (mimeType: string) => {
+    switch (mimeType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/webp':
+        return 'webp';
+      case 'image/gif':
+        return 'gif';
+      case 'image/png':
+      default:
+        return 'png';
+    }
+  };
+  const persistGeneratedImageForAndroid = (
+    imageUrl?: string
+  ): string | undefined => {
+    if (!imageUrl?.startsWith('data:image/')) {
+      return imageUrl;
+    }
+
+    const match = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) {
+      return imageUrl;
+    }
+
+    const [, mimeType, base64Payload] = match;
+    fs.mkdirSync(generatedImageDirectory, { recursive: true });
+    const fileName = `${Date.now()}-${crypto.randomUUID()}.${getGeneratedImageFileExtension(mimeType)}`;
+    const absoluteFilePath = path.join(generatedImageDirectory, fileName);
+    fs.writeFileSync(absoluteFilePath, Buffer.from(base64Payload, 'base64'));
+    return fileName;
+  };
+  const buildGeneratedImageUrl = (req: Parameters<typeof router.get>[1] extends never ? never : any, fileName: string) => {
+    return `${req.protocol}://${req.get('host')}/api/generated-images/${fileName}`;
   };
   const contactIconPath = path.resolve(
     import.meta.dirname,
@@ -81,6 +119,20 @@ export function registerMediaRoutes(app: Express) {
     '..',
     '..',
     'milla_studio.mp4'
+  );
+
+  router.get(
+    '/generated-images/:fileName',
+    asyncHandler(async (req, res) => {
+      const fileName = path.basename(String(req.params.fileName));
+      const filePath = path.join(generatedImageDirectory, fileName);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Generated image not found' });
+      }
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.sendFile(filePath);
+    })
   );
 
   router.get(
@@ -247,6 +299,7 @@ export function registerMediaRoutes(app: Express) {
     '/image/generate',
     asyncHandler(async (req, res) => {
       const { prompt, aspectRatio, model } = req.body;
+      const compactAndroidResponse = req.get('x-milla-platform') === 'android';
       if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
@@ -282,16 +335,27 @@ export function registerMediaRoutes(app: Express) {
         }
       }
 
+      let responseImageUrl = imageResult.imageUrl;
+      if (compactAndroidResponse) {
+        const generatedImageFileName = persistGeneratedImageForAndroid(imageResult.imageUrl);
+        if (generatedImageFileName && generatedImageFileName !== imageResult.imageUrl) {
+          responseImageUrl = buildGeneratedImageUrl(req, generatedImageFileName);
+        }
+      }
+
       res.json({
         success: imageResult.success,
-        imageUrl: imageResult.imageUrl,
+        imageUrl: responseImageUrl,
         error: imageResult.error,
-        response: formatImageResponse(
-          prompt,
-          imageResult.success,
-          imageResult.imageUrl,
-          imageResult.error
-        ),
+        response:
+          compactAndroidResponse && imageResult.success
+            ? `Generated image for "${prompt}".`
+            : formatImageResponse(
+                prompt,
+                imageResult.success,
+                responseImageUrl,
+                imageResult.error
+              ),
       });
     })
   );

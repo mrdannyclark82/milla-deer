@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { registerMemoryRoutes } from './memory.routes';
 import { storage } from '../storage';
 import * as memoryService from '../memoryService';
 import * as replycaSocialBridgeService from '../replycaSocialBridgeService';
+import * as authService from '../authService';
 
 vi.mock('../storage');
 vi.mock('../memoryService');
 vi.mock('../replycaSocialBridgeService');
+vi.mock('../authService');
 vi.mock('../services/chatOrchestrator.service');
 vi.mock('../proactiveService');
 vi.mock('../visualMemoryService');
@@ -21,6 +24,7 @@ describe('Memory Routes', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
+    app.use(cookieParser());
     registerMemoryRoutes(app);
     vi.clearAllMocks();
     vi.spyOn(
@@ -65,6 +69,25 @@ describe('Memory Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
       expect(response.body[0].content).toBe('gmail message');
+    });
+
+    it('should accept bearer authorization when resolving message history', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'mobile-user' } as any,
+      });
+      vi.spyOn(storage, 'getMessages').mockResolvedValue([
+        { id: '1', content: 'mobile hello', userId: 'mobile-user' } as any,
+      ]);
+
+      const response = await request(app)
+        .get('/api/messages')
+        .set('Authorization', 'Bearer mobile-token');
+
+      expect(response.status).toBe(200);
+      expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
+      expect(storage.getMessages).toHaveBeenCalledWith('mobile-user');
+      expect(response.body[0].content).toBe('mobile hello');
     });
   });
 

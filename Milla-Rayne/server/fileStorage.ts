@@ -223,6 +223,11 @@ export class FileStorage implements IStorage {
     const message: Message = {
       ...insertMessage,
       id,
+      channel: insertMessage.channel ?? null,
+      sourcePlatform: insertMessage.sourcePlatform ?? null,
+      channelThreadId: insertMessage.channelThreadId ?? null,
+      externalMessageId: insertMessage.externalMessageId ?? null,
+      metadata: insertMessage.metadata ?? null,
       timestamp: new Date(),
       personalityMode: insertMessage.personalityMode || null,
       displayRole: insertMessage.displayRole || null,

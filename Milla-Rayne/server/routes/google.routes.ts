@@ -1,4 +1,4 @@
-import { Router, type Express } from 'express';
+import { Router, type Express, type Request } from 'express';
 import { loginOrRegisterWithGoogle } from '../authService';
 import { validateSession } from '../authService';
 import {
@@ -35,6 +35,75 @@ import {
  */
 export function registerGoogleRoutes(app: Express) {
   const router = Router();
+  const MOBILE_APP_SCHEME = 'deer-milla://';
+
+  const resolveExternalOrigin = (req: Request) => {
+    const forwardedProto = req.get('x-forwarded-proto');
+    const protocol = forwardedProto ? forwardedProto.split(',')[0].trim() : req.protocol;
+    return `${protocol}://${req.get('host')}`;
+  };
+
+  const buildGoogleCallbackUrl = (req: Request) =>
+    `${resolveExternalOrigin(req)}/oauth/callback`;
+
+  const getSessionToken = (req: Request) => {
+    const authHeader = req.get('authorization');
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      return authHeader.slice(7).trim();
+    }
+
+    return req.cookies.session_token;
+  };
+
+  const normalizeMobileRedirectUri = (rawValue: unknown) => {
+    if (typeof rawValue !== 'string') {
+      return null;
+    }
+
+    const trimmedValue = rawValue.trim();
+    if (!trimmedValue) {
+      return null;
+    }
+
+    try {
+      const parsedUrl = new URL(trimmedValue);
+      if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+        return null;
+      }
+
+      return trimmedValue;
+    } catch {
+      return trimmedValue.includes('://') ? trimmedValue : null;
+    }
+  };
+
+  const encodeAuthState = (payload: Record<string, string>) =>
+    Buffer.from(JSON.stringify(payload)).toString('base64url');
+
+  const decodeAuthState = (rawValue: unknown): Record<string, string> => {
+    if (typeof rawValue !== 'string' || !rawValue.trim()) {
+      return {};
+    }
+
+    try {
+      const parsedValue = JSON.parse(
+        Buffer.from(rawValue, 'base64url').toString('utf8')
+      ) as Record<string, string>;
+      return parsedValue && typeof parsedValue === 'object' ? parsedValue : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const appendQueryParams = (baseUrl: string, params: Record<string, string>) => {
+    const url = new URL(baseUrl);
+
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.set(key, value);
+    });
+
+    return url.toString();
+  };
 
   const decodeBase64Url = (value?: string) => {
     if (!value) return '';
@@ -286,7 +355,18 @@ export function registerGoogleRoutes(app: Express) {
     return 'default-user';
   };
 
-  const renderGoogleOAuthSuccess = (res: any) => {
+  const renderGoogleOAuthSuccess = (
+    res: any,
+    options?: { mobileRedirectUri?: string; sessionToken?: string }
+  ) => {
+    const deepLinkUrl =
+      options?.mobileRedirectUri && options.sessionToken
+        ? appendQueryParams(options.mobileRedirectUri, {
+            googleConnected: '1',
+            session_token: options.sessionToken,
+          })
+        : null;
+
     res
       .status(200)
       .type('html')
@@ -299,24 +379,38 @@ export function registerGoogleRoutes(app: Express) {
   <body style="background:#0c021a;color:#fff;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
     <div style="text-align:center;max-width:420px;padding:24px;">
       <h1 style="margin:0 0 12px;font-size:24px;">Google connected</h1>
-      <p style="margin:0 0 16px;color:rgba(255,255,255,0.75);">You can close this window and return to Milla.</p>
-      <button id="close-window" style="display:none;border:1px solid rgba(0,242,255,0.35);background:rgba(0,242,255,0.12);color:#b8f8ff;border-radius:12px;padding:10px 16px;cursor:pointer;">Close window</button>
+      <p style="margin:0 0 16px;color:rgba(255,255,255,0.75);">${
+        deepLinkUrl
+          ? 'Returning you to Milla now. If nothing happens, tap the button below.'
+          : 'You can close this window and return to Milla.'
+      }</p>
+      <a id="return-to-app" href="${deepLinkUrl || '#'}" style="display:${
+        deepLinkUrl ? 'inline-flex' : 'none'
+      };border:1px solid rgba(0,242,255,0.35);background:rgba(0,242,255,0.12);color:#b8f8ff;border-radius:12px;padding:10px 16px;cursor:pointer;text-decoration:none;justify-content:center;">Return to Milla</a>
+      <button id="close-window" style="display:${
+        deepLinkUrl ? 'none' : 'inline-flex'
+      };border:1px solid rgba(0,242,255,0.35);background:rgba(0,242,255,0.12);color:#b8f8ff;border-radius:12px;padding:10px 16px;cursor:pointer;">Close window</button>
     </div>
     <script>
+      const deepLinkUrl = ${JSON.stringify(deepLinkUrl)};
+
       try {
         if (window.opener) {
           window.opener.postMessage({ type: 'google-oauth-complete', connected: true }, window.location.origin);
-          window.close();
+          if (!deepLinkUrl) {
+            window.close();
+          }
         }
       } catch (_error) {
       }
 
-      if (!window.closed) {
-        const button = document.getElementById('close-window');
-        if (button) {
-          button.style.display = 'inline-flex';
-          button.addEventListener('click', () => window.close());
-        }
+      if (deepLinkUrl) {
+        window.location.replace(deepLinkUrl);
+      }
+
+      const button = document.getElementById('close-window');
+      if (button) {
+        button.addEventListener('click', () => window.close());
       }
     </script>
   </body>
@@ -328,11 +422,14 @@ export function registerGoogleRoutes(app: Express) {
     if (!code) return res.status(400).send('Code is required');
 
     try {
+      const authState = decodeAuthState(req.query.state);
+      const mobileRedirectUri = normalizeMobileRedirectUri(authState.mobileRedirectUri);
       const { exchangeCodeForToken, storeOAuthToken } = await import(
         '../oauthService'
       );
+      const redirectUri = mobileRedirectUri ? undefined : buildGoogleCallbackUrl(req);
 
-      const tokenData = await exchangeCodeForToken(code as string);
+      const tokenData = await exchangeCodeForToken(code as string, redirectUri);
 
       const userRes = await fetch(
         'https://www.googleapis.com/oauth2/v2/userinfo',
@@ -368,13 +465,27 @@ export function registerGoogleRoutes(app: Express) {
         );
       }
 
+      if (mobileRedirectUri) {
+        await storeOAuthToken(
+          'default-user',
+          'google',
+          tokenData.accessToken,
+          tokenData.refreshToken,
+          tokenData.expiresIn,
+          tokenData.scope
+        );
+      }
+
       res.cookie('session_token', result.sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      renderGoogleOAuthSuccess(res);
+      renderGoogleOAuthSuccess(res, {
+        mobileRedirectUri: mobileRedirectUri || undefined,
+        sessionToken: result.sessionToken,
+      });
     } catch (error) {
       console.error('Google callback error:', error);
       res.status(500).send('Internal server error during authentication');
@@ -383,16 +494,22 @@ export function registerGoogleRoutes(app: Express) {
 
   router.get(
     '/auth/google/url',
-    asyncHandler(async (_req, res) => {
-      const url = getAuthorizationUrl();
+    asyncHandler(async (req, res) => {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      const mobileRedirectUri = normalizeMobileRedirectUri(req.query.mobileRedirectUri);
+      const url = mobileRedirectUri
+        ? getAuthorizationUrl(undefined, encodeAuthState({ mobileRedirectUri }))
+        : getAuthorizationUrl(buildGoogleCallbackUrl(req));
       res.json({ success: true, url });
     })
   );
 
   router.get(
     '/auth/google',
-    asyncHandler(async (_req, res) => {
-      res.redirect(getAuthorizationUrl());
+    asyncHandler(async (req, res) => {
+      res.redirect(getAuthorizationUrl(buildGoogleCallbackUrl(req)));
     })
   );
 
@@ -401,10 +518,12 @@ export function registerGoogleRoutes(app: Express) {
   router.get(
     '/oauth/authenticated',
     asyncHandler(async (req, res) => {
-      const sessionToken = req.cookies.session_token;
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      const sessionToken = getSessionToken(req);
       const userId = await resolveUserId(sessionToken);
-      const authenticated =
-        userId !== 'default-user' && (await isGoogleAuthenticated(userId));
+      const authenticated = Boolean(await isGoogleAuthenticated(userId));
 
       res.json({
         success: true,
@@ -418,7 +537,7 @@ export function registerGoogleRoutes(app: Express) {
     '/gmail/recent',
     asyncHandler(async (req, res) => {
       const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await getRecentEmails(
         userId,
         Number.isNaN(maxResults) ? 10 : Math.min(maxResults, 10)
@@ -445,7 +564,7 @@ export function registerGoogleRoutes(app: Express) {
           .json({ success: false, error: 'Message ID is required' });
       }
 
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await getEmailContent(userId, messageId);
 
       res.status(result.success ? 200 : 400).json({
@@ -468,7 +587,7 @@ export function registerGoogleRoutes(app: Express) {
         });
       }
 
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await sendEmail(userId, String(to), String(subject), String(body));
 
       res.status(result.success ? 200 : 400).json(result);
@@ -481,7 +600,7 @@ export function registerGoogleRoutes(app: Express) {
       const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
       const timeMin = req.query.timeMin ? String(req.query.timeMin) : undefined;
       const timeMax = req.query.timeMax ? String(req.query.timeMax) : undefined;
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await listEvents(
         userId,
         timeMin,
@@ -511,7 +630,7 @@ export function registerGoogleRoutes(app: Express) {
         });
       }
 
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await addEventToGoogleCalendar(
         String(title),
         String(date),
@@ -527,8 +646,8 @@ export function registerGoogleRoutes(app: Express) {
   router.delete(
     '/calendar/events/:eventId',
     asyncHandler(async (req, res) => {
-      const { eventId } = req.params;
-      const userId = await resolveUserId(req.cookies.session_token);
+      const eventId = String(req.params.eventId);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await deleteEvent(userId, eventId);
       res.status(result.success ? 200 : 400).json(result);
     })
@@ -539,7 +658,7 @@ export function registerGoogleRoutes(app: Express) {
     asyncHandler(async (req, res) => {
       const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
       const showCompleted = String(req.query.showCompleted || 'false') === 'true';
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await listTasks(
         userId,
         Number.isNaN(maxResults) ? 10 : Math.min(maxResults, 20),
@@ -561,7 +680,7 @@ export function registerGoogleRoutes(app: Express) {
         });
       }
 
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await addNoteToGoogleTasks(
         String(title).trim(),
         notes ? String(notes) : '',
@@ -575,7 +694,7 @@ export function registerGoogleRoutes(app: Express) {
   router.get(
     '/daily-brief',
     asyncHandler(async (req, res) => {
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const today = new Date();
       const timeMin = new Date(today);
       timeMin.setHours(0, 0, 0, 0);
@@ -620,15 +739,8 @@ export function registerGoogleRoutes(app: Express) {
   router.delete(
     '/oauth/disconnect',
     asyncHandler(async (req, res) => {
-      const sessionToken = req.cookies.session_token;
+      const sessionToken = getSessionToken(req);
       const userId = await resolveUserId(sessionToken);
-
-      if (userId === 'default-user') {
-        return res.status(401).json({
-          success: false,
-          message: 'You must be signed in before disconnecting Google.',
-        });
-      }
 
       await deleteOAuthToken(userId, 'google');
 
@@ -644,7 +756,7 @@ export function registerGoogleRoutes(app: Express) {
     '/youtube/subscriptions',
     asyncHandler(async (req, res) => {
       const maxResults = Number.parseInt(String(req.query.maxResults || '10'), 10);
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await getMySubscriptions(userId, Number.isNaN(maxResults) ? 10 : maxResults);
       res.status(result.success ? 200 : 400).json(result);
     })
@@ -663,7 +775,7 @@ export function registerGoogleRoutes(app: Express) {
           .json({ success: false, message: 'Query is required', error: 'INVALID_INPUT' });
       }
 
-      const userId = await resolveUserId(req.cookies.session_token);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await searchVideos(
         userId,
         query,
@@ -677,8 +789,8 @@ export function registerGoogleRoutes(app: Express) {
   router.get(
     '/youtube/videos/:videoId',
     asyncHandler(async (req, res) => {
-      const { videoId } = req.params;
-      const userId = await resolveUserId(req.cookies.session_token);
+      const videoId = String(req.params.videoId);
+      const userId = await resolveUserId(getSessionToken(req));
       const result = await getVideoDetails(videoId, userId);
       res.status(result.success ? 200 : 400).json(result);
     })
@@ -686,8 +798,8 @@ export function registerGoogleRoutes(app: Express) {
 
   // Mount routes
   app.use('/api', router);
-  app.get('/oauth/google', (_req, res) => {
-    res.redirect(getAuthorizationUrl());
+  app.get('/oauth/google', (req, res) => {
+    res.redirect(getAuthorizationUrl(buildGoogleCallbackUrl(req)));
   });
   app.get('/oauth/callback', handleGoogleCallback);
 }

@@ -164,6 +164,47 @@ interface BrowserTarget {
   description: string;
 }
 
+interface GoogleAuthStatusResponse {
+  authenticated?: boolean;
+  isAuthenticated?: boolean;
+}
+
+interface GmailSummary {
+  id: string;
+  threadId: string;
+  from: string;
+  subject: string;
+  preview: string;
+  date: string;
+  isRead: boolean;
+  isStarred: boolean;
+}
+
+interface GmailRecentResponse {
+  success: boolean;
+  message?: string;
+  emails: GmailSummary[];
+  error?: string;
+}
+
+interface CalendarEventSummary {
+  id: string;
+  summary: string;
+  description: string;
+  location: string;
+  start: string;
+  end: string;
+  htmlLink: string;
+  status: string;
+}
+
+interface CalendarEventsResponse {
+  success: boolean;
+  message?: string;
+  events: CalendarEventSummary[];
+  error?: string;
+}
+
 const TABLET_COMMAND_IDS = [
   'adb-devices',
   'adb-device-info',
@@ -277,7 +318,9 @@ export const Sandbox: React.FC<SandboxProps> = ({
   const [mcpError, setMcpError] = useState<string | null>(null);
   const [isMcpLoading, setIsMcpLoading] = useState(false);
   const [isMcpCallSubmitting, setIsMcpCallSubmitting] = useState(false);
-  const [quickToolPrompt, setQuickToolPrompt] = useState(QUICK_MCP_PROMPTS[0]);
+  const [quickToolPrompt, setQuickToolPrompt] = useState<string>(
+    QUICK_MCP_PROMPTS[0]
+  );
   const [networkAccess, setNetworkAccess] = useState<NetworkAccessState | null>(null);
   const [networkAccessError, setNetworkAccessError] = useState<string | null>(null);
   const [browserTargets, setBrowserTargets] = useState<BrowserTarget[]>([]);
@@ -285,6 +328,10 @@ export const Sandbox: React.FC<SandboxProps> = ({
   const [isBrowserTargetsLoading, setIsBrowserTargetsLoading] = useState(false);
   const [browserUrlInput, setBrowserUrlInput] = useState('');
   const [browserFrameMode, setBrowserFrameMode] = useState<BrowserFrameMode>('preview');
+  const [workspaceActionResult, setWorkspaceActionResult] = useState('');
+  const [workspaceActionPayload, setWorkspaceActionPayload] = useState<unknown>(null);
+  const [workspaceActionError, setWorkspaceActionError] = useState<string | null>(null);
+  const [isWorkspaceActionSubmitting, setIsWorkspaceActionSubmitting] = useState(false);
   const [showMcpWorkspace, setShowMcpWorkspace] = useState(false);
   const [isMcpRegistryCollapsed, setIsMcpRegistryCollapsed] = useState(true);
 
@@ -720,6 +767,128 @@ export const Sandbox: React.FC<SandboxProps> = ({
     }
   }, []);
 
+  const formatWorkspaceDate = useCallback((value: string) => {
+    if (!value) {
+      return 'No date provided';
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    const options: Intl.DateTimeFormatOptions = value.includes('T')
+      ? { dateStyle: 'medium', timeStyle: 'short' }
+      : { dateStyle: 'medium' };
+
+    return parsed.toLocaleString([], options);
+  }, []);
+
+  const ensureGoogleAuthenticated = useCallback(async () => {
+    const auth = await fetchAdminJson<GoogleAuthStatusResponse & { success: boolean }>(
+      '/api/oauth/authenticated'
+    );
+    if (!auth.authenticated && !auth.isAuthenticated) {
+      throw new Error(
+        'Connect Google in the dashboard before using Gmail or Calendar quick actions.'
+      );
+    }
+  }, [fetchAdminJson]);
+
+  const runWorkspaceQuickAction = useCallback(
+    async (action: 'gmail-recent' | 'calendar-today') => {
+      setIsWorkspaceActionSubmitting(true);
+      setWorkspaceActionError(null);
+
+      try {
+        await ensureGoogleAuthenticated();
+
+        if (action === 'gmail-recent') {
+          const data = await fetchAdminJson<GmailRecentResponse>(
+            '/api/gmail/recent?maxResults=5'
+          );
+          const emails = Array.isArray(data.emails) ? data.emails : [];
+          const formatted = emails.length
+            ? [
+                'Recent Gmail messages',
+                '',
+                ...emails.map((email, index) =>
+                  [
+                    `${index + 1}. ${email.subject}`,
+                    `   From: ${email.from}`,
+                    `   ${email.preview}`,
+                    `   ${formatWorkspaceDate(email.date)}`,
+                  ].join('\n')
+                ),
+              ].join('\n')
+            : 'Recent Gmail messages\n\nNo inbox messages were returned.';
+
+          setWorkspaceActionPayload(data);
+          setWorkspaceActionResult(formatted);
+          return;
+        }
+
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+        const params = new URLSearchParams({
+          timeMin: todayStart.toISOString(),
+          timeMax: tomorrowStart.toISOString(),
+          maxResults: '8',
+        });
+        const data = await fetchAdminJson<CalendarEventsResponse>(
+          `/api/calendar/events?${params.toString()}`
+        );
+        const events = Array.isArray(data.events) ? data.events : [];
+        const formatted = events.length
+          ? [
+              "Today's calendar",
+              '',
+              ...events.map((event, index) =>
+                [
+                  `${index + 1}. ${event.summary}`,
+                  `   Starts: ${formatWorkspaceDate(event.start)}`,
+                  event.location ? `   Location: ${event.location}` : null,
+                  event.description ? `   ${event.description}` : null,
+                ]
+                  .filter(Boolean)
+                  .join('\n')
+              ),
+            ].join('\n')
+          : "Today's calendar\n\nNo events are scheduled for today.";
+
+        setWorkspaceActionPayload(data);
+        setWorkspaceActionResult(formatted);
+      } catch (error) {
+        setWorkspaceActionPayload(null);
+        setWorkspaceActionResult('');
+        setWorkspaceActionError(
+          error instanceof Error ? error.message : 'Unable to run the quick action.'
+        );
+      } finally {
+        setIsWorkspaceActionSubmitting(false);
+      }
+    },
+    [ensureGoogleAuthenticated, fetchAdminJson, formatWorkspaceDate]
+  );
+
+  const openBrowserTargetById = useCallback(
+    (targetId: string) => {
+      const target = browserTargets.find((candidate) => candidate.id === targetId);
+      if (!target) {
+        setWorkspaceActionError('That browser target is not available right now.');
+        return;
+      }
+
+      setConsoleTab('browser');
+      setWorkspaceActionError(null);
+      openBrowserUrl(target.url);
+    },
+    [browserTargets, openBrowserUrl]
+  );
+
   // Get current active file
   const activeFile = files[activeFileIndex];
 
@@ -1077,6 +1246,75 @@ export const Sandbox: React.FC<SandboxProps> = ({
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-3 pr-3">
+          <div className="rounded-md border border-cyan-400/20 bg-cyan-500/10 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div>
+                <div className="text-xs font-semibold text-cyan-100">
+                  Workspace quick actions
+                </div>
+                <div className="text-[11px] text-cyan-100/70">
+                  Pull live Gmail and Calendar data or jump straight into the collaboration and proactive browser views.
+                </div>
+              </div>
+              <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-100">
+                supervised
+              </Badge>
+            </div>
+            <div className="mb-2 flex flex-wrap gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void runWorkspaceQuickAction('gmail-recent')}
+                disabled={isWorkspaceActionSubmitting}
+                className="h-7 px-3 text-xs text-cyan-100 hover:bg-cyan-500/15 disabled:opacity-40"
+              >
+                Recent Gmail
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void runWorkspaceQuickAction('calendar-today')}
+                disabled={isWorkspaceActionSubmitting}
+                className="h-7 px-3 text-xs text-cyan-100 hover:bg-cyan-500/15 disabled:opacity-40"
+              >
+                Today&apos;s calendar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openBrowserTargetById('collaboration-cycle')}
+                disabled={!browserTargets.some((target) => target.id === 'collaboration-cycle')}
+                className="h-7 px-3 text-xs text-cyan-100 hover:bg-cyan-500/15 disabled:opacity-40"
+              >
+                Open collaboration status
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openBrowserTargetById('proactive-recommendations')}
+                disabled={!browserTargets.some((target) => target.id === 'proactive-recommendations')}
+                className="h-7 px-3 text-xs text-cyan-100 hover:bg-cyan-500/15 disabled:opacity-40"
+              >
+                Open proactive feed
+              </Button>
+            </div>
+            {workspaceActionError ? (
+              <div className="mb-2 rounded-md border border-amber-400/20 bg-amber-500/10 px-2 py-1 text-xs text-amber-100">
+                {workspaceActionError}
+              </div>
+            ) : null}
+            <div className="rounded-md border border-white/10 bg-[#050816] p-2">
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs text-cyan-50">
+                {workspaceActionResult ||
+                  'Use Recent Gmail or Today’s calendar to pull live results here.'}
+              </pre>
+            </div>
+            {workspaceActionPayload ? (
+              <div className="mt-2 text-[11px] text-cyan-100/60">
+                Results are using the current signed-in Google session.
+              </div>
+            ) : null}
+          </div>
           <div className="rounded-md border border-white/10 bg-white/5 p-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
@@ -2063,7 +2301,7 @@ export const Sandbox: React.FC<SandboxProps> = ({
       <div
         role="separator"
         aria-label="Resize sandbox"
-        aria-orientation="both"
+        aria-orientation="horizontal"
         onPointerDown={startPanelResize}
         className={`absolute bottom-0 right-0 z-20 flex h-6 w-6 cursor-nwse-resize items-end justify-end ${
           isResizingPanel ? 'text-cyan-300' : 'text-white/35 hover:text-cyan-200'

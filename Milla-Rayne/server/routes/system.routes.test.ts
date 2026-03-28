@@ -16,6 +16,7 @@ import * as collaborationScheduler from '../collaborationScheduler';
 import * as mcpRuntimeService from '../mcpRuntimeService';
 import * as shellExecutionService from '../shellExecutionService';
 import * as replycaSocialBridgeService from '../replycaSocialBridgeService';
+import { offlineService } from '../offlineModelService';
 import { config } from '../config';
 
 vi.mock('../agentController');
@@ -228,6 +229,15 @@ describe('System Routes', () => {
       lastSyncedAt: 1710000500000,
       synced: true,
       importedThisRun: 2,
+    });
+    vi.spyOn(offlineService, 'refreshStatus').mockResolvedValue({
+      enabled: true,
+      preferLocal: false,
+      configured: true,
+      host: 'http://localhost:11434',
+      requestedModel: 'gemma3:1b',
+      available: true,
+      activeModel: 'gemma3:1b',
     });
     vi.spyOn(mcpRuntimeService, 'getMcpRuntimeStatus').mockReturnValue({
       enabled: true,
@@ -452,6 +462,10 @@ describe('System Routes', () => {
       expect(response.body.integrationChecks.shell.enabled).toBe(true);
       expect(response.body.integrationChecks.shell.queueLength).toBe(1);
       expect(response.body.integrationChecks.mcp.connectedServerCount).toBe(1);
+      expect(response.body.integrationChecks.localModel.available).toBe(true);
+      expect(response.body.integrationChecks.localModel.activeModel).toBe(
+        'gemma3:1b'
+      );
       expect(response.body.integrationChecks.consciousness.isInitialized).toBe(
         true
       );

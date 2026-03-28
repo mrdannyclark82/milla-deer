@@ -821,8 +821,8 @@ export async function generateAIResponse(
       };
     }
 
-    const lastRun = status.gim?.lastSuccessAt
-      ? new Date(status.gim.lastSuccessAt).toLocaleString()
+    const lastRun = status.cycles.gim?.lastSuccessAt
+      ? new Date(status.cycles.gim.lastSuccessAt).toLocaleString()
       : 'unknown';
 
     // Inject as context — the AI will read, reflect on, and discuss these thoughts naturally
@@ -1346,6 +1346,7 @@ export async function generateAIResponse(
       parsedCommand.service === 'consciousness' &&
       parsedCommand.action === 'trigger'
     ) {
+      const cycle = (parsedCommand.entities?.cycle ?? 'gim') as 'gim' | 'rem';
       const t0Gim = Date.now();
       const success = await triggerConsciousnessCycle(cycle);
       const gimContent = success

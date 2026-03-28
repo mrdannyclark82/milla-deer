@@ -62,6 +62,25 @@ describe('Chat Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.model).toBe('xai');
     });
+
+    it('should accept bearer authorization for authenticated model lookup', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'user-2' } as any,
+      });
+      vi.spyOn(authService, 'getUserAIModel').mockResolvedValue({
+        success: true,
+        model: 'gemini',
+      });
+
+      const response = await request(app)
+        .get('/api/ai-model/current')
+        .set('Authorization', 'Bearer mobile-token');
+
+      expect(response.status).toBe(200);
+      expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
+      expect(response.body.model).toBe('gemini');
+    });
   });
 
   describe('POST /api/chat', () => {
@@ -120,6 +139,30 @@ describe('Chat Routes', () => {
         false,
         { canRunShellCommands: true }
       );
+    });
+
+    it('uses bearer authorization to resolve the chat user', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'mobile-user' } as any,
+      });
+      vi.spyOn(
+        chatOrchestrator,
+        'validateAndSanitizePrompt'
+      ).mockImplementation((p) => p);
+      vi.spyOn(chatOrchestrator, 'generateAIResponse').mockResolvedValue({
+        content: 'Synced mobile response',
+      });
+
+      const response = await request(app)
+        .post('/api/chat')
+        .set('Authorization', 'Bearer mobile-token')
+        .send({ message: 'Sync me up' });
+
+      expect(response.status).toBe(200);
+      expect(storage.getMessages).toHaveBeenCalledWith('mobile-user');
+      expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
+      expect(storage.createMessage).toHaveBeenCalledTimes(2);
     });
 
     it('should return 400 for empty message', async () => {

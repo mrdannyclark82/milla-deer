@@ -9,6 +9,16 @@ interface LocalModelResponse {
   usedLocal: boolean;
 }
 
+export interface LocalModelRuntimeStatus {
+  enabled: boolean;
+  preferLocal: boolean;
+  configured: boolean;
+  host: string;
+  requestedModel: string;
+  available: boolean;
+  activeModel: string | null;
+}
+
 /**
  * Offline Model Service
  * Handles interaction with local LLMs via Ollama.
@@ -137,6 +147,23 @@ export class OfflineModelService {
       );
       this.isModelAvailable = false;
     }
+  }
+
+  public async refreshStatus(): Promise<LocalModelRuntimeStatus> {
+    await this.initialize();
+    return this.getRuntimeStatus();
+  }
+
+  public getRuntimeStatus(): LocalModelRuntimeStatus {
+    return {
+      enabled: Boolean(config.localModel?.enabled),
+      preferLocal: Boolean(config.localModel?.preferLocal),
+      configured: Boolean(this.ollamaHost && this.preferredModel),
+      host: this.ollamaHost,
+      requestedModel: this.preferredModel,
+      available: this.isModelAvailable,
+      activeModel: this.availableModel,
+    };
   }
 
   /**

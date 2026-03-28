@@ -521,7 +521,17 @@ class SandboxEnvironmentService {
       const parsed = JSON.parse(data);
       this.sandboxes = new Map(Object.entries(parsed.sandboxes || {}));
     } catch (error) {
-      console.log('No existing sandboxes found, starting fresh');
+      const errorCode =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String(error.code)
+          : undefined;
+
+      if (errorCode === 'ENOENT') {
+        console.log('No existing sandboxes found, starting fresh');
+        return;
+      }
+
+      console.error('Error loading sandbox environments:', error);
     }
   }
 

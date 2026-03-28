@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { codingAgent } from '../agents/codingAgent.js';
+import {
+  codingAgent,
+  isLikelyUnifiedDiff,
+  normalizeGeneratedPatch,
+  parseCodingModelResponse,
+} from '../agents/codingAgent.js';
 import { AgentTask } from '../agents/taskStorage.js';
 import * as sandboxService from '../sandboxEnvironmentService.js';
 import * as automatedPRService from '../automatedPRService.js';
@@ -18,6 +23,64 @@ describe('CodingAgent', () => {
         reasoning: 'Mock reasoning',
       }),
       success: true,
+    });
+  });
+
+  describe('patch response parsing', () => {
+    it('extracts a diff from fenced JSON output', () => {
+      const response = `\`\`\`json
+${JSON.stringify({
+  description: 'Add feature',
+  reasoning: 'Wire it in',
+  changes: `\`\`\`diff
+diff --git a/server/example.ts b/server/example.ts
+--- a/server/example.ts
++++ b/server/example.ts
+@@ -1 +1 @@
+-old
++new
+\`\`\``,
+})}
+\`\`\``;
+
+      const parsed = parseCodingModelResponse(response, 'Fallback description');
+
+      expect(parsed.description).toBe('Add feature');
+      expect(parsed.reasoning).toBe('Wire it in');
+      expect(parsed.changes).toContain('diff --git a/server/example.ts b/server/example.ts');
+      expect(parsed.changes).not.toContain('```');
+      expect(isLikelyUnifiedDiff(parsed.changes || '')).toBe(true);
+    });
+
+    it('extracts a diff from markdown prose when JSON is absent', () => {
+      const response = `Here is the patch to apply:
+
+\`\`\`diff
+diff --git a/server/example.ts b/server/example.ts
+--- a/server/example.ts
++++ b/server/example.ts
+@@ -1 +1 @@
+-old
++new
+\`\`\`
+
+Please run tests afterwards.`;
+
+      const parsed = parseCodingModelResponse(response, 'Fallback description');
+
+      expect(parsed.description).toBe('Fallback description');
+      expect(parsed.changes).toBe(`diff --git a/server/example.ts b/server/example.ts
+--- a/server/example.ts
++++ b/server/example.ts
+@@ -1 +1 @@
+-old
++new`);
+      expect(isLikelyUnifiedDiff(parsed.changes || '')).toBe(true);
+    });
+
+    it('rejects non-diff content after normalization', () => {
+      expect(normalizeGeneratedPatch('Mock code changes')).toBe('Mock code changes');
+      expect(isLikelyUnifiedDiff('Mock code changes')).toBe(false);
     });
   });
 

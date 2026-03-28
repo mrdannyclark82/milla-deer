@@ -10,6 +10,8 @@ export interface PollinationsImageResult {
   error?: string;
 }
 
+const POLLINATIONS_TIMEOUT_MS = 25000;
+
 function sanitizePrompt(prompt: string): string {
   return prompt.replace(/\s+/g, ' ').trim();
 }
@@ -38,12 +40,30 @@ async function requestPollinationsImage(
 
   console.log('[Pollinations.AI] Generating image:', imageUrl);
 
-  const response = await fetch(imageUrl, {
-    method: 'GET',
-    headers: {
-      Accept: 'image/*,application/json;q=0.9,text/plain;q=0.8',
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), POLLINATIONS_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(imageUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'image/*,application/json;q=0.9,text/plain;q=0.8',
+      },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        error: `Pollinations timed out after ${POLLINATIONS_TIMEOUT_MS / 1000}s.`,
+      };
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const contentType = response.headers.get('content-type') || '';
 

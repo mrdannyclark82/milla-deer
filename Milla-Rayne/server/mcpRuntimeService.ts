@@ -317,7 +317,7 @@ export async function initializeMcpRuntime(): Promise<void> {
 
     const client = new Client(
       { name: 'milla-rayne-mcp-runtime', version: '1.0.0' },
-      { capabilities: { tools: {} } }
+      { capabilities: {} }
     );
 
     try {

@@ -1,4 +1,4 @@
-import { Router, type Express } from 'express';
+import { Router, type Express, type Request } from 'express';
 import { loginOrRegisterWithGoogle, validateSession } from '../authService';
 import { addNoteToGoogleTasks, listTasks } from '../googleTasksService';
 import { getAuthorizationUrl, isGoogleAuthenticated } from '../oauthService';
@@ -9,6 +9,52 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerGoogleRoutes(app: Express) {
   const router = Router();
+
+  const resolveExternalOrigin = (req: Request) => {
+    const forwardedProto = req.get('x-forwarded-proto');
+    const protocol = forwardedProto ? forwardedProto.split(',')[0].trim() : req.protocol;
+    return `${protocol}://${req.get('host')}`;
+  };
+
+  const buildGoogleCallbackUrl = (req: Request) =>
+    `${resolveExternalOrigin(req)}/api/auth/google/callback`;
+
+  const renderGoogleOAuthSuccess = (res: any) => {
+    res
+      .status(200)
+      .type('html')
+      .send(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Google Connected</title>
+  </head>
+  <body style="background:#0c021a;color:#fff;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;">
+    <div style="text-align:center;max-width:420px;padding:24px;">
+      <h1 style="margin:0 0 12px;font-size:24px;">Google connected</h1>
+      <p style="margin:0 0 16px;color:rgba(255,255,255,0.75);">You can close this window and return to Milla.</p>
+      <button id="close-window" style="display:none;border:1px solid rgba(0,242,255,0.35);background:rgba(0,242,255,0.12);color:#b8f8ff;border-radius:12px;padding:10px 16px;cursor:pointer;">Close window</button>
+    </div>
+    <script>
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ type: 'google-oauth-complete', connected: true }, window.location.origin);
+          window.close();
+        }
+      } catch (_error) {
+      }
+
+      if (!window.closed) {
+        const button = document.getElementById('close-window');
+        if (button) {
+          button.style.display = 'inline-flex';
+          button.addEventListener('click', () => window.close());
+        }
+      }
+    </script>
+  </body>
+</html>`);
+  };
 
   const resolveUserId = async (sessionToken?: string) => {
     if (!sessionToken) return 'default-user';
@@ -22,7 +68,7 @@ export function registerGoogleRoutes(app: Express) {
   };
 
   router.get('/auth/google/url', (req, res) => {
-    const url = getAuthorizationUrl();
+    const url = getAuthorizationUrl(buildGoogleCallbackUrl(req));
     res.json({ url });
   });
 
@@ -34,9 +80,10 @@ export function registerGoogleRoutes(app: Express) {
 
       try {
         const { exchangeCodeForToken, storeOAuthToken } = await import('../oauthService');
+        const redirectUri = buildGoogleCallbackUrl(req);
 
         // Exchange code for tokens
-        const tokenData = await exchangeCodeForToken(code as string);
+        const tokenData = await exchangeCodeForToken(code as string, redirectUri);
 
         // Fetch user info
         const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -78,7 +125,7 @@ export function registerGoogleRoutes(app: Express) {
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        res.redirect('/');
+        renderGoogleOAuthSuccess(res);
       } catch (error) {
         console.error('Google callback error:', error);
         res.status(500).send('Internal server error during authentication');

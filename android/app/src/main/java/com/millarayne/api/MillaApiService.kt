@@ -2,7 +2,7 @@ package com.millarayne.api
 
 import com.millarayne.data.ChatRequest
 import com.millarayne.data.ChatResponse
-import com.millarayne.data.Message
+import com.millarayne.data.RemoteMessage
 import com.millarayne.data.SensorData
 import retrofit2.Response
 import retrofit2.http.Body
@@ -19,7 +19,7 @@ interface MillaApiService {
     suspend fun sendMessage(@Body request: ChatRequest): Response<ChatResponse>
 
     @GET("/api/messages")
-    suspend fun getMessages(@Query("limit") limit: Int = 50): Response<List<Message>>
+    suspend fun getMessages(@Query("limit") limit: Int = 50): Response<List<RemoteMessage>>
     
     /**
      * Send real-time sensor data for context-aware processing

@@ -22,6 +22,7 @@ import { withToolBag } from '../services/toolEventBag';
 import { appendToSharedChat } from '../replycaSocialBridgeService';
 import { recordTurn } from '../services/sessionPersistenceService';
 import { queueForIndexing } from '../services/ragAutoIndexer';
+import { scanForMerchSignals } from '../services/contextMerchService';
 import { analyzeVoiceInput } from '../voiceAnalysisService';
 import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
@@ -116,6 +117,9 @@ async function persistConversationTurn(
 
   // Queue turn for async RAG vector indexing
   queueForIndexing(userMessage, assistantMessage, userId);
+
+  // Scan for context-triggered merch signals (fire-and-forget)
+  scanForMerchSignals(userMessage, assistantMessage, userId);
 }
 
 /**

@@ -53,7 +53,10 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
 /**
  * Generate OAuth authorization URL
  */
-export function getAuthorizationUrl(redirectUriOverride?: string): string {
+export function getAuthorizationUrl(
+  redirectUriOverride?: string,
+  state?: string
+): string {
   const config = getGoogleOAuthConfig();
   const redirectUri = redirectUriOverride || config.redirectUri;
 
@@ -65,6 +68,10 @@ export function getAuthorizationUrl(redirectUriOverride?: string): string {
     access_type: 'offline',
     prompt: 'consent',
   });
+
+  if (state) {
+    params.set('state', state);
+  }
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }

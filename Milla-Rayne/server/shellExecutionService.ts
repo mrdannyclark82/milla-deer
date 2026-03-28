@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
+import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
@@ -236,7 +236,7 @@ const allowedCommands: AllowedShellCommand[] = [
 ];
 
 let activeRun: ShellCommandRunRecord | null = null;
-let activeProcess: ChildProcessWithoutNullStreams | null = null;
+let activeProcess: ReturnType<typeof spawn> | null = null;
 const queuedRuns: ShellCommandRunRecord[] = [];
 const recentRuns: ShellCommandRunRecord[] = [];
 const runIndex = new Map<string, ShellCommandRunRecord>();

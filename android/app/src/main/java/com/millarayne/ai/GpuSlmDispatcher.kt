@@ -30,16 +30,22 @@ class GpuSlmDispatcher(private val context: Context) {
         const val DEFAULT_MAX_TOKENS = 512
         const val DEFAULT_TEMPERATURE = 0.7f
 
-        /** Threshold: if MediaPipe first-token > this, prefer MLC dispatch */
+        /** Gemma Nano model path — ultra-fast, <100ms first-token target */
+        const val GEMMA_NANO_MODEL_PATH = "gemma-nano-it-q8.bin"
+        const val GEMMA_NANO_MAX_TOKENS = 256 // Nano gets shorter budget
+
+        /** Threshold: if a backend first-token exceeds this, fall to next tier */
         const val LATENCY_THRESHOLD_MS = 200L
+        const val NANO_LATENCY_THRESHOLD_MS = 100L
     }
 
     data class Config(
         val modelDir: String = DEFAULT_MODEL_DIR,
         val maxTokens: Int = DEFAULT_MAX_TOKENS,
         val temperature: Float = DEFAULT_TEMPERATURE,
-        /** Force OpenCL backend regardless of NNAPI availability */
         val forceOpenCL: Boolean = true,
+        /** Skip Nano tier even if model exists (for complex prompts needing full model) */
+        val skipNano: Boolean = false,
     )
 
     data class DispatchResult(
@@ -48,18 +54,21 @@ class GpuSlmDispatcher(private val context: Context) {
         val backend: String,
     )
 
-    enum class Backend { MEDIAPIPE, MLC_OPENCL, CPU_FALLBACK }
+    enum class Backend { GEMMA_NANO, MEDIAPIPE, MLC_OPENCL, CPU_FALLBACK }
 
     private val mediapipe = MediaPipeInferenceEngine(context)
-    private var mlcEngine: Any? = null   // ai.mlc.mlcllm.MLCEngine placeholder
+    private var nanoEngine: MediaPipeInferenceEngine? = null
+    private var mlcEngine: Any? = null
     private var config = Config()
     private var preferredBackend = Backend.MEDIAPIPE
 
-    val isReady: Boolean get() = mediapipe.isReady || mlcEngine != null
+    val isReady: Boolean get() = nanoEngine?.isReady == true || mediapipe.isReady || mlcEngine != null
 
     /**
-     * Initialise both backends concurrently.
-     * Falls back gracefully if either fails.
+     * Initialise all three backends concurrently.
+     * Tier 0 = Gemma Nano   (~60–100ms, shallow context)
+     * Tier 1 = MediaPipe Gemma-3 1B  (~150–200ms, balanced)
+     * Tier 2 = MLC-LLM OpenCL Gemma-2B  (>200ms, most capable)
      */
     suspend fun initialize(
         mpConfig: MediaPipeInferenceEngine.Config = MediaPipeInferenceEngine.Config(),
@@ -67,15 +76,30 @@ class GpuSlmDispatcher(private val context: Context) {
     ) {
         config = slmConfig
 
-        // Try MediaPipe first (higher priority)
+        // Tier 0: Gemma Nano
+        try {
+            val nanoConfig = MediaPipeInferenceEngine.Config(
+                modelPath = GEMMA_NANO_MODEL_PATH,
+                maxTokens = GEMMA_NANO_MAX_TOKENS,
+                preferGpu = true,
+            )
+            val nano = MediaPipeInferenceEngine(context)
+            nano.initialize(nanoConfig)
+            nanoEngine = nano
+            Log.i(TAG, "Gemma Nano backend ready")
+        } catch (e: Exception) {
+            Log.w(TAG, "Gemma Nano init failed (model may not be downloaded): ${e.message}")
+        }
+
+        // Tier 1: MediaPipe Gemma-3 1B
         try {
             mediapipe.initialize(mpConfig)
-            Log.i(TAG, "MediaPipe backend ready")
+            Log.i(TAG, "MediaPipe Gemma-3 backend ready")
         } catch (e: Exception) {
             Log.w(TAG, "MediaPipe init failed: ${e.message}")
         }
 
-        // Try MLC LLM OpenCL backend
+        // Tier 2: MLC LLM OpenCL
         try {
             mlcEngine = initMlcEngine(slmConfig)
             Log.i(TAG, "MLC-LLM OpenCL backend ready")
@@ -84,6 +108,7 @@ class GpuSlmDispatcher(private val context: Context) {
         }
 
         preferredBackend = when {
+            !slmConfig.skipNano && nanoEngine?.isReady == true -> Backend.GEMMA_NANO
             mediapipe.isReady -> Backend.MEDIAPIPE
             mlcEngine != null -> Backend.MLC_OPENCL
             else -> Backend.CPU_FALLBACK
@@ -100,6 +125,21 @@ class GpuSlmDispatcher(private val context: Context) {
      */
     suspend fun dispatch(prompt: String): DispatchResult = withContext(Dispatchers.Default) {
         when (preferredBackend) {
+            Backend.GEMMA_NANO -> {
+                val result = nanoEngine!!.infer(prompt)
+                if (result.latencyMs > NANO_LATENCY_THRESHOLD_MS) {
+                    Log.w(TAG, "Nano latency ${result.latencyMs}ms > ${NANO_LATENCY_THRESHOLD_MS}ms — promoting to MediaPipe")
+                    if (mediapipe.isReady) preferredBackend = Backend.MEDIAPIPE
+                }
+                // Nano returns empty on complex prompts — fall through to Tier 1
+                if (result.text.isBlank() && mediapipe.isReady) {
+                    Log.w(TAG, "Nano returned empty — falling through to MediaPipe")
+                    preferredBackend = Backend.MEDIAPIPE
+                    return@withContext dispatch(prompt)
+                }
+                DispatchResult(text = result.text, latencyMs = result.latencyMs, backend = "gemma-nano")
+            }
+
             Backend.MEDIAPIPE -> {
                 val result = mediapipe.infer(prompt)
                 if (result.latencyMs > LATENCY_THRESHOLD_MS && mlcEngine != null) {
@@ -126,7 +166,9 @@ class GpuSlmDispatcher(private val context: Context) {
         prompt: String,
         onToken: (token: String) -> Unit,
     ): DispatchResult = withContext(Dispatchers.Default) {
-        if (mediapipe.isReady && preferredBackend != Backend.MLC_OPENCL) {
+        // Nano doesn't support streaming — skip it and go direct to MediaPipe
+        val useNano = preferredBackend == Backend.GEMMA_NANO
+        if (!useNano && mediapipe.isReady && preferredBackend != Backend.MLC_OPENCL) {
             val result = mediapipe.inferStreaming(prompt, onToken)
             DispatchResult(text = result.text, latencyMs = result.latencyMs, backend = "mediapipe-stream")
         } else {
@@ -138,6 +180,8 @@ class GpuSlmDispatcher(private val context: Context) {
     }
 
     fun release() {
+        nanoEngine?.release()
+        nanoEngine = null
         mediapipe.release()
         mlcEngine = null
     }

@@ -43,6 +43,121 @@ export interface CodeFix {
   changes: string;
 }
 
+interface ParsedCodingModelResponse {
+  description?: string;
+  reasoning?: string;
+  changes?: string;
+}
+
+const FENCED_BLOCK_PATTERN = /```(?:(\w+)[^\n]*)?\n([\s\S]*?)\n```/g;
+
+function extractFencedBlock(
+  input: string,
+  languages?: readonly string[]
+): string | null {
+  const normalizedLanguages = languages?.map((language) => language.toLowerCase()) ?? null;
+  FENCED_BLOCK_PATTERN.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = FENCED_BLOCK_PATTERN.exec(input)) !== null) {
+    const language = (match[1] || '').toLowerCase();
+    if (!normalizedLanguages || normalizedLanguages.length === 0) {
+      return match[2];
+    }
+
+    if (
+      normalizedLanguages.includes(language) ||
+      (language.length === 0 && normalizedLanguages.includes(''))
+    ) {
+      return match[2];
+    }
+  }
+
+  return null;
+}
+
+export function normalizeGeneratedPatch(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const fencedDiff = extractFencedBlock(trimmed, ['diff', 'patch']);
+  if (fencedDiff) {
+    return fencedDiff.trim();
+  }
+
+  const fullFence = extractFencedBlock(trimmed);
+  if (fullFence && fullFence.trim() !== trimmed) {
+    return normalizeGeneratedPatch(fullFence);
+  }
+
+  const diffStart = trimmed.search(/(^|\n)(diff --git |--- )/m);
+  if (diffStart >= 0) {
+    const normalizedStart =
+      trimmed[diffStart] === '\n' ? diffStart + 1 : diffStart;
+    return trimmed.slice(normalizedStart).trim();
+  }
+
+  return trimmed;
+}
+
+export function isLikelyUnifiedDiff(input: string): boolean {
+  const normalized = input.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  return (
+    /(^|\n)diff --git [^\n]+/m.test(normalized) ||
+    /(^|\n)--- [^\n]+\n\+\+\+ [^\n]+/m.test(normalized)
+  );
+}
+
+export function parseCodingModelResponse(
+  rawResponse: string,
+  fallbackDescription?: string
+): ParsedCodingModelResponse {
+  const parseCandidate = (candidate: string): ParsedCodingModelResponse | null => {
+    try {
+      const parsed = JSON.parse(candidate) as ParsedCodingModelResponse | null;
+      if (!parsed || typeof parsed !== 'object') {
+        return null;
+      }
+
+      return {
+        description: parsed.description,
+        reasoning: parsed.reasoning,
+        changes:
+          typeof parsed.changes === 'string'
+            ? normalizeGeneratedPatch(parsed.changes)
+            : undefined,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const trimmed = rawResponse.trim();
+  const jsonCandidates = [
+    trimmed,
+    extractFencedBlock(trimmed, ['json', 'javascript', 'js', '']),
+  ].filter((candidate): candidate is string => Boolean(candidate?.trim()));
+
+  for (const candidate of jsonCandidates) {
+    const parsed = parseCandidate(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return {
+    description: fallbackDescription || trimmed.slice(0, 200),
+    reasoning: 'The model did not return JSON. Raw output captured as patch.',
+    changes: normalizeGeneratedPatch(trimmed),
+  };
+}
+
 class CodingAgent extends BaseAgent {
   constructor() {
     super(
@@ -291,17 +406,10 @@ Please provide:
 Format your response as JSON with keys: description, changes, reasoning.
 IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
       const modelResponse = await this.runCodingModelPrompt(prompt);
-      let aiResponse;
-      try {
-        aiResponse = JSON.parse(modelResponse);
-      } catch {
-        // Fallback if AI doesn't return valid JSON
-        aiResponse = {
-          description: modelResponse.slice(0, 200),
-          changes: modelResponse,
-          reasoning: 'AI-generated fix',
-        };
-      }
+      const aiResponse = parseCodingModelResponse(
+        modelResponse,
+        modelResponse.slice(0, 200)
+      );
 
       return {
         description:
@@ -413,6 +521,71 @@ IMPORTANT: 'changes' must be a valid unified diff string string that can be appl
     return sections.filter(Boolean).join('\n\n---\n\n');
   }
 
+  private buildImplementationPrompt(params: {
+    gitRoot: string;
+    appRelativePath: string;
+    feature: DiscoveredFeature;
+    featureContext: string;
+    previousError?: string;
+  }): string {
+    const retryGuidance = params.previousError
+      ? `
+
+Previous patch attempt failed with:
+${params.previousError}
+
+Correct the patch and return a new response. Focus on the smallest viable change.
+The "changes" value must be a syntactically valid unified diff with accurate hunk counts.
+Do not include markdown fences inside the "changes" string.`
+      : '';
+
+    return `You are implementing a real repository feature.
+
+Repository root: ${params.gitRoot}
+Primary application path: ${params.appRelativePath}
+
+Feature name: ${params.feature.name}
+Feature description: ${params.feature.description}
+Feature source: ${params.feature.source}
+Tags: ${params.feature.tags.join(', ') || 'none'}
+Repository example: ${params.feature.repositoryExample || 'none'}
+
+Requirements:
+- Make the smallest real end-to-end implementation that fits the existing architecture.
+- Only modify files inside ${params.appRelativePath === '.' ? 'the repository root' : `${params.appRelativePath}/`}.
+- Return a valid unified diff that can be applied with git apply from the repository root.
+- Keep changes tightly scoped to existing files unless a new file is strictly required.
+- Favor wiring into the existing dashboard/server flow over adding a parallel system.
+- Ensure every unified-diff hunk header count exactly matches the hunk body.
+- Use repository-root-relative file paths in the diff.${retryGuidance}
+
+Relevant repository context:
+${params.featureContext}
+
+Respond as JSON with:
+{
+  "description": "short summary",
+  "reasoning": "why these changes implement the feature",
+  "changes": "unified diff"
+}`;
+  }
+
+  private async requestImplementationPatch(params: {
+    gitRoot: string;
+    appRelativePath: string;
+    feature: DiscoveredFeature;
+    featureContext: string;
+    previousError?: string;
+  }): Promise<ParsedCodingModelResponse> {
+    const prompt = this.buildImplementationPrompt(params);
+    const rawResponse = await this.runCodingModelPrompt(
+      prompt,
+      params.previousError ? 12288 : 8192
+    );
+
+    return parseCodingModelResponse(rawResponse, params.feature.description);
+  }
+
   private async ensureSandboxWorktree(params: {
     gitRoot: string;
     sandbox: SandboxEnvironment;
@@ -450,14 +623,27 @@ IMPORTANT: 'changes' must be a valid unified diff string string that can be appl
     worktreeRoot: string;
     patchContent: string;
   }): Promise<void> {
+    const normalizedPatch = normalizeGeneratedPatch(params.patchContent);
+    if (!isLikelyUnifiedDiff(normalizedPatch)) {
+      throw new Error(
+        'The coding model did not return a valid unified diff patch.'
+      );
+    }
+
     const patchFilePath = path.join(
       params.worktreeRoot,
       `.milla-feature-${Date.now()}.patch`
     );
 
-    await fs.writeFile(patchFilePath, params.patchContent, 'utf-8');
+    await fs.writeFile(patchFilePath, normalizedPatch, 'utf-8');
 
     try {
+      await execFileAsync(
+        'git',
+        ['-C', params.worktreeRoot, 'apply', '--check', patchFilePath],
+        { maxBuffer: 1024 * 1024 * 4 }
+      );
+
       await execFileAsync(
         'git',
         ['-C', params.worktreeRoot, 'apply', '--reject', '--whitespace=nowarn', patchFilePath],
@@ -533,58 +719,44 @@ IMPORTANT: 'changes' must be a valid unified diff string string that can be appl
         feature: params.feature,
         appRelativePath,
       });
+      let generated: ParsedCodingModelResponse | undefined;
+      let lastPatchError: Error | undefined;
 
-      const prompt = `You are implementing a real repository feature.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        generated = await this.requestImplementationPatch({
+          gitRoot,
+          appRelativePath,
+          feature: params.feature,
+          featureContext,
+          previousError: lastPatchError?.message,
+        });
 
-Repository root: ${gitRoot}
-Primary application path: ${appRelativePath}
+        if (!generated?.changes?.trim()) {
+          lastPatchError = new Error(
+            'The coding model did not return a patch to apply.'
+          );
+        } else {
+          try {
+            await this.applyGeneratedPatch({
+              worktreeRoot,
+              patchContent: generated.changes,
+            });
+            lastPatchError = undefined;
+            break;
+          } catch (error) {
+            lastPatchError =
+              error instanceof Error ? error : new Error(String(error));
+          }
+        }
 
-Feature name: ${params.feature.name}
-Feature description: ${params.feature.description}
-Feature source: ${params.feature.source}
-Tags: ${params.feature.tags.join(', ') || 'none'}
-Repository example: ${params.feature.repositoryExample || 'none'}
-
-Requirements:
-- Make the smallest real end-to-end implementation that fits the existing architecture.
-- Only modify files inside ${appRelativePath === '.' ? 'the repository root' : `${appRelativePath}/`}.
-- Return a valid unified diff that can be applied with git apply from the repository root.
-- Do not invent placeholder files unless they are required for the feature to work.
-- Favor wiring into the existing dashboard/server flow over adding a parallel system.
-
-Relevant repository context:
-${featureContext}
-
-Respond as JSON with:
-{
-  "description": "short summary",
-  "reasoning": "why these changes implement the feature",
-  "changes": "unified diff"
-}`;
-
-      const rawResponse = await this.runCodingModelPrompt(prompt, 8192);
-      let generated:
-        | { description?: string; reasoning?: string; changes?: string }
-        | undefined;
-
-      try {
-        generated = JSON.parse(rawResponse);
-      } catch {
-        generated = {
-          description: params.feature.description,
-          reasoning: 'The model did not return JSON. Raw output captured as patch.',
-          changes: rawResponse,
-        };
+        if (attempt === 1 && lastPatchError) {
+          throw lastPatchError;
+        }
       }
 
-      if (!generated?.changes?.trim()) {
-        throw new Error('The coding model did not return a patch to apply.');
+      if (!generated || lastPatchError) {
+        throw lastPatchError || new Error('Failed to generate an implementation patch.');
       }
-
-      await this.applyGeneratedPatch({
-        worktreeRoot,
-        patchContent: generated.changes,
-      });
 
       const changedFiles = await this.getChangedFiles(worktreeRoot);
       if (changedFiles.length === 0) {
