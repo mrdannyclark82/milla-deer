@@ -25,4 +25,7 @@ interface MessageDao {
 
     @Query("SELECT COUNT(*) FROM messages")
     suspend fun getMessageCount(): Int
+
+    @Query("SELECT id FROM messages")
+    suspend fun getAllMessageIds(): List<Long>
 }

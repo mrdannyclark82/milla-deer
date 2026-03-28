@@ -681,7 +681,7 @@ private fun ChatScreen(
                             .weight(1f),
                         contentPadding = PaddingValues(8.dp)
                     ) {
-                        items(messages) { message ->
+                        items(messages, key = { it.id }) { message ->
                             MessageBubble(message = message)
                             Spacer(modifier = Modifier.height(8.dp))
                         }

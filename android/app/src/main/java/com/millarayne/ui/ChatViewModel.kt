@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.FlowPreview::class)
+
 package com.millarayne.ui
 
 import android.app.Application
@@ -308,18 +310,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         for (baseUrl in candidateServerUrls()) {
             try {
-                val response = MillaApiClient.createApiService(baseUrl).getMessages(limit = 80)
+                val response = MillaApiClient.createApiService(baseUrl).getMessages(limit = 20)
                 if (!response.isSuccessful || response.body() == null) {
                     throw HttpException(response)
                 }
 
                 val remoteMessages = response.body()!!.map { it.toLocalMessage() }
-                val localMessageCount = messageDao.getMessageCount()
 
-                if (remoteMessages.isNotEmpty() || localMessageCount == 0) {
-                    messageDao.deleteAllMessages()
-                    if (remoteMessages.isNotEmpty()) {
-                        messageDao.insertMessages(remoteMessages)
+                if (remoteMessages.isNotEmpty()) {
+                    // Smart merge: only insert messages the local DB doesn't already have
+                    val existingIds = messageDao.getAllMessageIds().toHashSet()
+                    val newMessages = remoteMessages.filterNot { existingIds.contains(it.id) }
+                    if (newMessages.isNotEmpty()) {
+                        messageDao.insertMessages(newMessages)
                     }
                 }
 
