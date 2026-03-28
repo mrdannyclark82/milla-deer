@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import {
+  CalendarDays,
   Check,
   ExternalLink,
   GitBranch,
-  Globe,
   Link2,
+  Mail,
   Menu,
-  PictureInPicture2,
   Play,
   RefreshCw,
   Sparkles,
@@ -19,7 +19,24 @@ import { HologramAvatar } from './HologramAvatar';
 import { ModelSelector, type AIModel } from './ModelSelector';
 import { VideoAnalysisPanel } from './VideoAnalysisPanel';
 import { ScoreSettings } from './ScoreSettings';
+import { ConsciousnessPanel } from './ConsciousnessPanel';
+import { CollaborationPanel } from './CollaborationPanel';
+import { FusionMetricsPanel } from './FusionMetricsPanel';
+import { GoogleSyncCard } from './GoogleSyncCard';
+import { IntegrationHealthCard } from './IntegrationHealthCard';
+import { FeatureDiscoveryCard } from './FeatureDiscoveryCard';
 import { ChatThreadPanel } from './ChatThreadPanel';
+import type {
+    CollaborationSchedulerState,
+    ConsciousnessState,
+    FusionTelemetrySnapshot,
+    ProactiveFeature,
+    SandboxFeatureSummary,
+    SandboxReadiness,
+    SandboxSummary,
+    SystemConfigStatus,
+  } from './dashboardTypes';
+import type { DeviceCapabilityProfile } from '@shared/swarm';
 import { Sandbox } from '@/components/Sandbox';
 import { KnowledgeBaseSearch } from '@/components/KnowledgeBaseSearch';
 import { DailyNewsDigest } from '@/components/DailyNewsDigest';
@@ -57,208 +74,97 @@ const TRANSITION_AVATAR_MEDIA = {
   type: 'video' as const,
 };
 
-const DEFAULT_BROWSER_URL = 'https://example.com';
+const DASHBOARD_SWARM_SESSION_STORAGE_KEY = 'milla-dashboard-swarm-session-id';
 
-interface ProactiveFeature {
+function getDashboardSwarmSessionId() {
+  const existingValue = window.localStorage.getItem(
+    DASHBOARD_SWARM_SESSION_STORAGE_KEY
+  );
+  if (existingValue) {
+    return existingValue;
+  }
+
+  const nextValue = `dashboard_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+  window.localStorage.setItem(DASHBOARD_SWARM_SESSION_STORAGE_KEY, nextValue);
+  return nextValue;
+}
+
+function buildBrowserCapabilityProfile(): DeviceCapabilityProfile {
+  const deviceMemory = (navigator as Navigator & { deviceMemory?: number })
+    .deviceMemory;
+  const deviceLabel = `${navigator.platform || 'browser'} ${navigator.userAgent
+    .split(' ')
+    .slice(0, 2)
+    .join(' ')}`.trim();
+
+  return {
+    sessionId: getDashboardSwarmSessionId(),
+    userId: 'default-user',
+    surface: 'web',
+    platform: navigator.userAgent,
+    deviceLabel,
+    syncedAt: Date.now(),
+    network: navigator.onLine ? 'online' : 'offline',
+    capabilities: {
+      aiCore: false,
+      liteRt: false,
+      localModel: false,
+      mediaPipe: 'gpu' in navigator || 'mediaCapabilities' in navigator,
+      vision: true,
+      voice: 'speechSynthesis' in window,
+      webgpu: Boolean((navigator as Navigator & { gpu?: unknown }).gpu),
+    },
+    preferredBackends: Boolean((navigator as Navigator & { gpu?: unknown }).gpu)
+      ? ['webgpu-browser', 'remote-cloud', 'openai-edge-stub']
+      : ['remote-cloud', 'openai-edge-stub'],
+    runtime: {
+      activeProfile: Boolean((navigator as Navigator & { gpu?: unknown }).gpu)
+        ? 'webgpu'
+        : 'browser',
+      activeModelSource: null,
+      importedModelSizeMb: null,
+      lastKnownLatencyMs: Boolean((navigator as Navigator & { gpu?: unknown }).gpu)
+        ? 110
+        : 260,
+      totalRamMb: typeof deviceMemory === 'number' ? deviceMemory * 1024 : null,
+    },
+  };
+}
+
+interface GmailSummary {
   id: string;
-  name: string;
-  description: string;
-  source: 'github' | 'web' | 'youtube' | 'user_pattern';
-  repositoryExample?: string;
-  relevance: number;
-  popularity: number;
-  estimatedValue: number;
-  implementationComplexity: 'low' | 'medium' | 'high';
-  status:
-    | 'discovered'
-    | 'analyzed'
-    | 'planned'
-    | 'in_sandbox'
-    | 'implemented'
-    | 'rejected';
-  tags: string[];
+  threadId: string;
+  from: string;
+  subject: string;
+  preview: string;
+  date: string;
+  isRead: boolean;
+  isStarred: boolean;
 }
 
-interface SystemConfigStatus {
-  warnings: string[];
-  integrations: {
-    proactiveBaseUrl: string;
-  };
-  integrationChecks?: {
-    proactive?: {
-      reachable: boolean;
-      error: string | null;
-    };
-    github?: {
-      configured: boolean;
-      valid: boolean | null;
-      scopes: string[];
-      error: string | null;
-    };
-    consciousness?: {
-      isInitialized: boolean;
-      replycaResolved: boolean;
-      gimEnabled: boolean;
-      remEnabled: boolean;
-      gimCron: string;
-      remCron: string;
-      cycles: {
-        gim: {
-          totalRuns: number;
-          successfulRuns: number;
-          lastError: string | null;
-        };
-        rem: {
-          totalRuns: number;
-          successfulRuns: number;
-          lastError: string | null;
-        };
-      };
-    };
-    repositoryDiscovery?: {
-      isScheduled: boolean;
-      isRunning: boolean;
-      enabled: boolean;
-      cron: string;
-      maxReposPerCycle: number;
-      totalRuns: number;
-      successfulRuns: number;
-      lastError: string | null;
-    };
-    shell?: {
-      enabled: boolean;
-      requiresAdminToken: boolean;
-      activeRunId: string | null;
-      queuedRunIds: string[];
-      queueLength: number;
-    };
-  };
+interface GmailRecentResponse {
+  success: boolean;
+  emails: GmailSummary[];
+  error?: string;
 }
 
-interface ConsciousnessState {
-  scheduler: NonNullable<SystemConfigStatus['integrationChecks']>['consciousness'];
-  storage: {
-    available: boolean;
-    error?: string;
-    gim?: {
-      exists: boolean;
-      path: string;
-      updatedAt: number | null;
-      archiveCount: number;
-      latestSessionAt: string | null;
-      latestPreview: string | null;
-    };
-    rem?: {
-      exists: boolean;
-      path: string;
-      updatedAt: number | null;
-      summary: {
-        atpEnergy: number | null;
-        adenosine: number | null;
-        painLevel: number | null;
-        journalEntries: number;
-        eventsBuffered: number;
-        plasticityEvents: number;
-        chemicals: Record<string, number>;
-      } | null;
-    };
-  };
-}
-
-interface SandboxFeatureSummary {
+interface CalendarEventSummary {
   id: string;
-  name: string;
+  summary: string;
   description: string;
-  files: string[];
-  sourceFeatureId?: string;
-  status: 'draft' | 'testing' | 'approved' | 'rejected';
-  testsPassed: number;
-  testsFailed: number;
-  addedAt: number;
-  implementation?: {
-    status: 'idle' | 'running' | 'succeeded' | 'failed';
-    startedAt?: number;
-    completedAt?: number;
-    summary?: string;
-    reasoning?: string;
-    worktreePath?: string;
-    changedFiles?: string[];
-    lastError?: string;
-    validation?: Array<{
-      command: string;
-      passed: boolean;
-      output: string;
-    }>;
-  };
+  location: string;
+  start: string;
+  end: string;
+  htmlLink: string;
+  status: string;
 }
 
-interface SandboxSummary {
-  id: string;
-  name: string;
-  description: string;
-  branchName: string;
-  status: 'active' | 'testing' | 'merged' | 'archived';
-  createdAt: number;
-  createdBy: 'milla' | 'user';
-  features: SandboxFeatureSummary[];
-  readyForProduction: boolean;
-}
-
-interface SandboxReadiness {
-  ready: boolean;
-  reasons: string[];
-  featuresApproved: number;
-  featuresPending: number;
-}
-
-interface CollaborationSuggestion {
-  feature_name: string;
-  reasoning: string;
-  code_snippet: string;
-  pr_title: string;
-}
-
-interface CollaborationReport {
-  generatedAt: number;
-  repoPath: string;
-  proactive: {
-    discoveredCount: number;
-    recommendedCount: number;
-    topRecommendations: string[];
-    scheduler: {
-      cron: string;
-      isScheduled: boolean;
-      isRunning: boolean;
-      lastRunAt: number | null;
-      lastSuccessAt: number | null;
-      lastError: string | null;
-      totalRuns: number;
-      successfulRuns: number;
-    };
-  };
-  sarii: {
-    success: boolean;
-    suggestion: CollaborationSuggestion | null;
-    syncedFeatureId: string | null;
-    error: string | null;
-  };
-}
-
-interface CollaborationSchedulerState {
-  isInitialized: boolean;
-  isScheduled: boolean;
-  isRunning: boolean;
-  settings: {
-    enabled: boolean;
-    cron: string;
-    timezone: string;
-  };
-  lastRunAt: number | null;
-  lastSuccessAt: number | null;
-  lastError: string | null;
-  totalRuns: number;
-  successfulRuns: number;
-  latestReport: CollaborationReport | null;
+interface CalendarEventsResponse {
+  success: boolean;
+  events: CalendarEventSummary[];
+  error?: string;
 }
 
 
@@ -297,9 +203,7 @@ export function DashboardLayout() {
   const [developerMode, setDeveloperMode] = useState(false);
   const [showSettings, setShowSettings] = useState(true);
   const [showVideoPanel, setShowVideoPanel] = useState(true);
-  const [showBrowserPip, setShowBrowserPip] = useState(false);
-  const [browserDraftUrl, setBrowserDraftUrl] = useState(DEFAULT_BROWSER_URL);
-  const [browserUrl, setBrowserUrl] = useState(DEFAULT_BROWSER_URL);
+
   const [activityLog, setActivityLog] = useState<string[]>([
     `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Session initialized`,
   ]);
@@ -315,8 +219,14 @@ export function DashboardLayout() {
     inboxSummary: { unreadCount: 0, emails: [] },
     dailySchedule: { count: 0, events: [] },
   });
+  const [isDailyBriefLoading, setIsDailyBriefLoading] = useState(false);
+  const [dailyBriefError, setDailyBriefError] = useState<string | null>(null);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const [isGoogleActionLoading, setIsGoogleActionLoading] = useState(false);
+  const [googleActionError, setGoogleActionError] = useState<string | null>(null);
+  const [hubQuickActionResult, setHubQuickActionResult] = useState('');
+  const [hubQuickActionError, setHubQuickActionError] = useState<string | null>(null);
+  const [isHubQuickActionLoading, setIsHubQuickActionLoading] = useState(false);
   const [isFeatureDiscoveryLoading, setIsFeatureDiscoveryLoading] =
     useState(false);
   const [featureDiscoveryError, setFeatureDiscoveryError] = useState<
@@ -337,9 +247,12 @@ export function DashboardLayout() {
   >(null);
   const [systemConfigStatus, setSystemConfigStatus] =
     useState<SystemConfigStatus | null>(null);
+  const [isSystemConfigLoading, setIsSystemConfigLoading] = useState(false);
+  const [systemConfigError, setSystemConfigError] = useState<string | null>(null);
   const [consciousnessState, setConsciousnessState] =
     useState<ConsciousnessState | null>(null);
   const [isConsciousnessLoading, setIsConsciousnessLoading] = useState(false);
+  const [consciousnessError, setConsciousnessError] = useState<string | null>(null);
   const [triggeringCycle, setTriggeringCycle] = useState<'gim' | 'rem' | null>(
     null
   );
@@ -349,6 +262,11 @@ export function DashboardLayout() {
     '0 8 * * *'
   );
   const [isCollaborationLoading, setIsCollaborationLoading] = useState(false);
+  const [collaborationError, setCollaborationError] = useState<string | null>(null);
+  const [fusionSnapshot, setFusionSnapshot] =
+    useState<FusionTelemetrySnapshot | null>(null);
+  const [fusionError, setFusionError] = useState<string | null>(null);
+  const [isFusionLoading, setIsFusionLoading] = useState(false);
   const googlePopupPollRef = useRef<number | null>(null);
   const [avatarMedia, setAvatarMedia] = useState<{
     url: string;
@@ -385,6 +303,7 @@ export function DashboardLayout() {
     if (activeSection === 'knowledge') {
       void refreshConsciousnessState();
       void refreshCollaborationScheduler();
+      void refreshFusionSnapshot();
     }
   }, [activeSection]);
 
@@ -395,6 +314,8 @@ export function DashboardLayout() {
     }
 
     void (async () => {
+      setIsDailyBriefLoading(true);
+      setDailyBriefError(null);
       try {
         const response = await fetch('/api/daily-brief');
         if (!response.ok) {
@@ -414,9 +335,32 @@ export function DashboardLayout() {
         logActivity('Daily brief synced');
       } catch (error) {
         console.error('Failed to load daily brief:', error);
+        setDailyBriefError(
+          error instanceof Error
+            ? error.message
+            : 'Daily brief is unavailable right now.'
+        );
+      } finally {
+        setIsDailyBriefLoading(false);
       }
     })();
   }, [activeSection]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        await fetch('/api/swarm/devices/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(buildBrowserCapabilityProfile()),
+        });
+      } catch (error) {
+        console.error('Failed to register dashboard swarm profile:', error);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchConnectionState = async () => {
@@ -426,9 +370,11 @@ export function DashboardLayout() {
         const data = await response.json();
         const connected = Boolean(data.isAuthenticated ?? data.authenticated);
         setIsGoogleConnected(connected);
+        setGoogleActionError(null);
         return connected;
       } catch (error) {
         console.error('Failed to check Google connection state:', error);
+        setGoogleActionError('Unable to check Google sync status right now.');
         return false;
       }
     };
@@ -484,13 +430,106 @@ export function DashboardLayout() {
     logActivity(`Opened YouTube player for ${videoId}`);
   };
 
-  const normalizeBrowserUrl = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return DEFAULT_BROWSER_URL;
+  const formatHubQuickActionDate = (value: string) => {
+    if (!value) {
+      return 'No date provided';
     }
 
-    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    const options: Intl.DateTimeFormatOptions = value.includes('T')
+      ? { dateStyle: 'medium', timeStyle: 'short' }
+      : { dateStyle: 'medium' };
+
+    return parsed.toLocaleString([], options);
+  };
+
+  const runHubQuickAction = async (action: 'gmail-recent' | 'calendar-today') => {
+    if (!isGoogleConnected) {
+      setHubQuickActionError(
+        'Connect Google first to use Gmail and Calendar quick actions.'
+      );
+      setHubQuickActionResult('');
+      return;
+    }
+
+    setIsHubQuickActionLoading(true);
+    setHubQuickActionError(null);
+
+    try {
+      if (action === 'gmail-recent') {
+        const response = await fetch('/api/gmail/recent?maxResults=5');
+        const data = (await response.json()) as GmailRecentResponse;
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Unable to load recent Gmail messages.');
+        }
+
+        const formatted = data.emails.length
+          ? [
+              'Recent Gmail messages',
+              '',
+              ...data.emails.map((email, index) =>
+                [
+                  `${index + 1}. ${email.subject}`,
+                  `   From: ${email.from}`,
+                  `   ${email.preview}`,
+                  `   ${formatHubQuickActionDate(email.date)}`,
+                ].join('\n')
+              ),
+            ].join('\n')
+          : 'Recent Gmail messages\n\nNo inbox messages were returned.';
+
+        setHubQuickActionResult(formatted);
+        logActivity('Loaded recent Gmail messages');
+        return;
+      }
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const tomorrowStart = new Date(todayStart);
+      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+      const params = new URLSearchParams({
+        timeMin: todayStart.toISOString(),
+        timeMax: tomorrowStart.toISOString(),
+        maxResults: '8',
+      });
+      const response = await fetch(`/api/calendar/events?${params.toString()}`);
+      const data = (await response.json()) as CalendarEventsResponse;
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Unable to load today’s calendar.');
+      }
+
+      const formatted = data.events.length
+        ? [
+            "Today's calendar",
+            '',
+            ...data.events.map((event, index) =>
+              [
+                `${index + 1}. ${event.summary}`,
+                `   Starts: ${formatHubQuickActionDate(event.start)}`,
+                event.location ? `   Location: ${event.location}` : null,
+                event.description ? `   ${event.description}` : null,
+              ]
+                .filter(Boolean)
+                .join('\n')
+            ),
+          ].join('\n')
+        : "Today's calendar\n\nNo events are scheduled for today.";
+
+      setHubQuickActionResult(formatted);
+      logActivity("Loaded today's calendar");
+    } catch (error) {
+      console.error('Failed to run dashboard quick action:', error);
+      setHubQuickActionResult('');
+      setHubQuickActionError(
+        error instanceof Error ? error.message : 'Unable to run the quick action.'
+      );
+    } finally {
+      setIsHubQuickActionLoading(false);
+    }
   };
 
   const handleScoreChange = (next: typeof scoreSettings) => {
@@ -513,6 +552,7 @@ export function DashboardLayout() {
 
   const refreshGoogleConnectionState = async () => {
     try {
+      setGoogleActionError(null);
       const response = await fetch('/api/oauth/authenticated');
       if (!response.ok) {
         throw new Error('Unable to refresh Google status');
@@ -526,11 +566,17 @@ export function DashboardLayout() {
       );
     } catch (error) {
       console.error('Failed to refresh Google connection state:', error);
+      setGoogleActionError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to refresh Google status.'
+      );
     }
   };
 
   const handleGoogleConnect = async () => {
     setIsGoogleActionLoading(true);
+    setGoogleActionError(null);
 
     try {
       const response = await fetch('/api/auth/google/url');
@@ -575,6 +621,9 @@ export function DashboardLayout() {
       }, 500);
     } catch (error) {
       console.error('Failed to connect Google:', error);
+      setGoogleActionError(
+        error instanceof Error ? error.message : 'Unable to connect Google right now.'
+      );
     } finally {
       setIsGoogleActionLoading(false);
     }
@@ -582,6 +631,7 @@ export function DashboardLayout() {
 
   const handleGoogleDisconnect = async () => {
     setIsGoogleActionLoading(true);
+    setGoogleActionError(null);
 
     try {
       const response = await fetch('/api/oauth/disconnect', {
@@ -596,6 +646,9 @@ export function DashboardLayout() {
       logActivity('Google disconnected');
     } catch (error) {
       console.error('Failed to disconnect Google:', error);
+      setGoogleActionError(
+        error instanceof Error ? error.message : 'Unable to disconnect Google right now.'
+      );
     } finally {
       setIsGoogleActionLoading(false);
     }
@@ -842,6 +895,8 @@ export function DashboardLayout() {
   };
 
   const refreshSystemConfigStatus = async () => {
+    setIsSystemConfigLoading(true);
+    setSystemConfigError(null);
     try {
       const response = await fetch('/api/system/config-status');
       if (!response.ok) {
@@ -856,11 +911,19 @@ export function DashboardLayout() {
       }
     } catch (error) {
       console.error('Failed to load system config status:', error);
+      setSystemConfigError(
+        error instanceof Error
+          ? error.message
+          : 'Integration health is unavailable right now.'
+      );
+    } finally {
+      setIsSystemConfigLoading(false);
     }
   };
 
   const refreshConsciousnessState = async () => {
     setIsConsciousnessLoading(true);
+    setConsciousnessError(null);
     try {
       const response = await fetch('/api/system/consciousness');
       if (!response.ok) {
@@ -871,8 +934,37 @@ export function DashboardLayout() {
       setConsciousnessState(data);
     } catch (error) {
       console.error('Failed to load consciousness state:', error);
+      setConsciousnessError(
+        error instanceof Error
+          ? error.message
+          : 'Consciousness memory is unavailable right now.'
+      );
     } finally {
       setIsConsciousnessLoading(false);
+    }
+  };
+
+  const refreshFusionSnapshot = async () => {
+    setIsFusionLoading(true);
+    setFusionError(null);
+
+    try {
+      const response = await fetch('/api/monitoring/fusion');
+      if (!response.ok) {
+        throw new Error('Unable to refresh fusion telemetry');
+      }
+
+      const data = await response.json();
+      setFusionSnapshot(data.snapshot ?? null);
+    } catch (error) {
+      console.error('Failed to load fusion telemetry:', error);
+      setFusionError(
+        error instanceof Error
+          ? error.message
+          : 'Fusion telemetry is unavailable right now.'
+      );
+    } finally {
+      setIsFusionLoading(false);
     }
   };
 
@@ -907,6 +999,7 @@ export function DashboardLayout() {
 
   const refreshCollaborationScheduler = async () => {
     setIsCollaborationLoading(true);
+    setCollaborationError(null);
     try {
       const response = await fetch('/api/system/collaboration-cycle');
       if (!response.ok) {
@@ -918,6 +1011,11 @@ export function DashboardLayout() {
       setCollaborationCronDraft(data.settings?.cron || '0 8 * * *');
     } catch (error) {
       console.error('Failed to load collaboration scheduler:', error);
+      setCollaborationError(
+        error instanceof Error
+          ? error.message
+          : 'Collaboration cycle is unavailable right now.'
+      );
     } finally {
       setIsCollaborationLoading(false);
     }
@@ -927,6 +1025,7 @@ export function DashboardLayout() {
     updates: Partial<CollaborationSchedulerState['settings']>
   ) => {
     setIsCollaborationLoading(true);
+    setCollaborationError(null);
     try {
       const response = await fetch('/api/system/collaboration-cycle/schedule', {
         method: 'POST',
@@ -945,6 +1044,11 @@ export function DashboardLayout() {
       logActivity('Updated collaboration schedule');
     } catch (error) {
       console.error('Failed to update collaboration schedule:', error);
+      setCollaborationError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to update collaboration schedule right now.'
+      );
       logActivity('Collaboration schedule update failed');
     } finally {
       setIsCollaborationLoading(false);
@@ -953,6 +1057,7 @@ export function DashboardLayout() {
 
   const triggerCollaborationCycleFromDashboard = async () => {
     setIsCollaborationLoading(true);
+    setCollaborationError(null);
     try {
       const response = await fetch('/api/system/collaboration-cycle/trigger', {
         method: 'POST',
@@ -969,6 +1074,11 @@ export function DashboardLayout() {
       await refreshSystemConfigStatus();
     } catch (error) {
       console.error('Failed to run collaboration cycle:', error);
+      setCollaborationError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to run the collaboration cycle right now.'
+      );
       logActivity('Collaboration cycle failed');
     } finally {
       setIsCollaborationLoading(false);
@@ -1005,6 +1115,24 @@ export function DashboardLayout() {
 
   const summarizeFeatureIntent = (feature: ProactiveFeature) =>
     feature.description || `${feature.name} enhancement discovered from ${formatFeatureSource(feature.source)}.`;
+
+  const renderPanelNotice = (
+    message: string,
+    tone: 'warning' | 'error' | 'info' = 'info'
+  ) => {
+    const classes =
+      tone === 'error'
+        ? 'border-rose-400/20 bg-rose-500/10 text-rose-100'
+        : tone === 'warning'
+          ? 'border-amber-400/20 bg-amber-400/10 text-amber-100'
+          : 'border-cyan-400/20 bg-cyan-400/10 text-cyan-100';
+
+    return (
+      <div className={`mt-4 rounded-xl border px-4 py-3 text-sm ${classes}`}>
+        {message}
+      </div>
+    );
+  };
 
   const renderFeatureActions = (
     feature: ProactiveFeature,
@@ -1226,256 +1354,6 @@ export function DashboardLayout() {
     );
   };
 
-  const renderConsciousnessPanel = () => (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(255,0,170,0.08)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h4 className="text-lg font-semibold text-white">
-            Consciousness memory
-          </h4>
-          <p className="mt-2 text-sm text-white/65">
-            Stored GIM monologues and REM bio-state from ReplycA, with manual cycle controls.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => void triggerConsciousnessCycleFromDashboard('gim')}
-            disabled={triggeringCycle !== null}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {triggeringCycle === 'gim' ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : null}
-            Run GIM
-          </button>
-          <button
-            onClick={() => void triggerConsciousnessCycleFromDashboard('rem')}
-            disabled={triggeringCycle !== null}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {triggeringCycle === 'rem' ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : null}
-            Run REM
-          </button>
-          <button
-            onClick={() => void refreshConsciousnessState()}
-            disabled={isConsciousnessLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isConsciousnessLoading ? 'animate-spin' : ''}`}
-            />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {!consciousnessState?.storage.available ? (
-        <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-          {consciousnessState?.storage.error ||
-            'ReplycA storage is not available yet.'}
-        </div>
-      ) : (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                GIM stream
-              </div>
-              <div className="text-xs text-white/45">
-                {consciousnessState.storage.gim?.archiveCount ?? 0} archives
-              </div>
-            </div>
-            <div className="mt-2 text-sm text-white/70">
-              Saved {formatTimestamp(consciousnessState.storage.gim?.updatedAt ?? null)}
-            </div>
-            <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white/85">
-              {consciousnessState.storage.gim?.latestPreview ||
-                'No GIM monologue has been saved yet.'}
-            </div>
-            <div className="mt-3 text-xs text-white/45">
-              {consciousnessState.storage.gim?.latestSessionAt
-                ? `Latest session: ${consciousnessState.storage.gim.latestSessionAt}`
-                : 'Waiting for first GIM session'}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-              REM state
-            </div>
-            <div className="mt-2 text-sm text-white/70">
-              Saved {formatTimestamp(consciousnessState.storage.rem?.updatedAt ?? null)}
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-white/85">
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                ATP {consciousnessState.storage.rem?.summary?.atpEnergy?.toFixed(1) ?? 'n/a'}
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                Adenosine {consciousnessState.storage.rem?.summary?.adenosine?.toFixed(2) ?? 'n/a'}
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                Pain {consciousnessState.storage.rem?.summary?.painLevel?.toFixed(2) ?? 'n/a'}
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                Journal {consciousnessState.storage.rem?.summary?.journalEntries ?? 0}
-              </div>
-            </div>
-            <div className="mt-3 text-xs text-white/45">
-              {consciousnessState.storage.rem?.summary
-                ? `${consciousnessState.storage.rem.summary.eventsBuffered} buffered events • ${consciousnessState.storage.rem.summary.plasticityEvents} plasticity entries`
-                : 'No REM state saved yet.'}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderCollaborationPanel = () => (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(0,242,255,0.08)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h4 className="text-lg font-semibold text-white">
-            Collaboration cycle
-          </h4>
-          <p className="mt-2 text-sm text-white/65">
-            SARIi planner + proactive repository discovery + coding-agent handoff on a cron schedule.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => void triggerCollaborationCycleFromDashboard()}
-            disabled={isCollaborationLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#00f2ff]/30 bg-[#00f2ff]/10 px-3 py-2 text-xs font-medium text-[#b8f8ff] transition hover:bg-[#00f2ff]/20 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Sparkles className="h-4 w-4" />
-            {isCollaborationLoading ? 'Running...' : 'Run updates now'}
-          </button>
-          <button
-            onClick={() => void refreshCollaborationScheduler()}
-            disabled={isCollaborationLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isCollaborationLoading ? 'animate-spin' : ''}`}
-            />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-          <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-            Schedule
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-white">
-            {collaborationScheduler?.isScheduled ? 'Scheduled' : 'Paused'}
-          </div>
-          <div className="mt-2 text-xs text-white/45">
-            {collaborationScheduler?.settings.timezone || 'America/Chicago'} •{' '}
-            {collaborationScheduler?.settings.cron || collaborationCronDraft}
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-          <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-            Latest run
-          </div>
-          <div className="mt-2 text-2xl font-semibold text-white">
-            {collaborationScheduler?.lastSuccessAt ? 'Healthy' : 'Pending'}
-          </div>
-          <div className="mt-2 text-xs text-white/45">
-            {collaborationScheduler?.lastError ||
-              `Last success ${formatTimestamp(collaborationScheduler?.lastSuccessAt ?? null)}`}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <input
-          value={collaborationCronDraft}
-          onChange={(event) => setCollaborationCronDraft(event.target.value)}
-          className="min-w-[220px] flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm text-white outline-none transition focus:border-[#00f2ff]/30"
-          placeholder="0 8 * * *"
-        />
-        <button
-          onClick={() =>
-            void updateCollaborationScheduleFromDashboard({
-              enabled: true,
-              cron: collaborationCronDraft,
-            })
-          }
-          disabled={isCollaborationLoading}
-          className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Save cron
-        </button>
-        <button
-          onClick={() =>
-            void updateCollaborationScheduleFromDashboard({
-              enabled: !(collaborationScheduler?.settings.enabled ?? true),
-            })
-          }
-          disabled={isCollaborationLoading}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {(collaborationScheduler?.settings.enabled ?? true) ? 'Pause cycle' : 'Resume cycle'}
-        </button>
-      </div>
-
-      <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/80">
-        <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-          Collaboration path
-        </div>
-        <div className="mt-2">
-          This cycle uses proactive repository discovery first, then asks SARIi&apos;s planner for the next high-value idea. Approved follow-up work can be sent into the coding-agent sandbox flow.
-        </div>
-      </div>
-
-      {collaborationScheduler?.latestReport ? (
-        <div className="mt-4 space-y-3">
-          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-              Proactive summary
-            </div>
-            <div className="mt-2 text-sm text-white/85">
-              {collaborationScheduler.latestReport.proactive.discoveredCount} discovered •{' '}
-              {collaborationScheduler.latestReport.proactive.recommendedCount} recommended
-            </div>
-            <div className="mt-2 text-xs text-white/45">
-              {collaborationScheduler.latestReport.proactive.topRecommendations.join(', ') ||
-                'No top recommendations yet.'}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-              SARIi recommendation
-            </div>
-            <div className="mt-2 text-sm text-white/85">
-              {collaborationScheduler.latestReport.sarii.suggestion?.feature_name ||
-                'No recommendation generated yet.'}
-            </div>
-            <div className="mt-2 text-xs text-white/55">
-              {collaborationScheduler.latestReport.sarii.suggestion?.reasoning ||
-                collaborationScheduler.latestReport.sarii.error ||
-                'Waiting for planner output.'}
-            </div>
-            <div className="mt-3 text-xs text-white/45">
-              {collaborationScheduler.latestReport.sarii.syncedFeatureId
-                ? `Synced into proactive discovery as ${collaborationScheduler.latestReport.sarii.syncedFeatureId}`
-                : collaborationScheduler.latestReport.sarii.success
-                  ? 'Planner output is advisory only until it is synced into proactive discovery.'
-                  : 'Planner output could not be synced yet.'}
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-
   const emptyDigest: DailyNewsDigestType = {
     date: new Date().toLocaleDateString(),
     totalVideos: 0,
@@ -1637,14 +1515,78 @@ export function DashboardLayout() {
               </section>
 
               {activeSection === 'hub' ? (
-                <>
+                <div className="space-y-6">
                   <ChatThreadPanel
                     onPlayVideo={(videoId) => {
                       handlePlayVideo(videoId);
                       handleAnalyzeComplete(`YouTube Video ${videoId}`);
                     }}
                   />
-                </>
+                  <section className="rounded-2xl border border-cyan-400/20 bg-white/5 p-5 backdrop-blur-xl">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.28em] text-cyan-200/75">
+                          Quick actions
+                        </div>
+                        <h3 className="mt-2 text-xl font-semibold text-white">
+                          Workspace tools on the Hub
+                        </h3>
+                        <p className="mt-2 max-w-2xl text-sm text-white/65">
+                          Pull live Gmail and Calendar data without opening the Sandbox, or jump straight to the dashboard areas that manage collaboration and proactive discoveries.
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/60">
+                        Google {isGoogleConnected ? 'connected' : 'not connected'}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <button
+                        onClick={() => void runHubQuickAction('gmail-recent')}
+                        disabled={isHubQuickActionLoading || !isGoogleConnected}
+                        className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Mail className="h-4 w-4" />
+                        Recent Gmail
+                      </button>
+                      <button
+                        onClick={() => void runHubQuickAction('calendar-today')}
+                        disabled={isHubQuickActionLoading || !isGoogleConnected}
+                        className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <CalendarDays className="h-4 w-4" />
+                        Today&apos;s calendar
+                      </button>
+                      <button
+                        onClick={() => setActiveSection('knowledge')}
+                        className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20"
+                      >
+                        <Link2 className="h-4 w-4" />
+                        Collaboration status
+                      </button>
+                      <button
+                        onClick={() => setActiveSection('settings')}
+                        className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Proactive features
+                      </button>
+                    </div>
+
+                    {hubQuickActionError ? (
+                      <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                        {hubQuickActionError}
+                      </div>
+                    ) : null}
+
+                    <div className="mt-4 rounded-xl border border-white/10 bg-[#050816] p-4">
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs text-cyan-50">
+                        {hubQuickActionResult ||
+                          'Use the quick actions above to load recent Gmail or today’s calendar right here on the Hub.'}
+                      </pre>
+                    </div>
+                  </section>
+                </div>
               ) : activeSection === 'studio' ? (
                 <CreativeStudio
                   isOpen={true}
@@ -1670,20 +1612,58 @@ export function DashboardLayout() {
                     className="min-h-[500px]"
                     onClose={() => setActiveSection('hub')}
                   />
-                  {renderConsciousnessPanel()}
-                  {renderCollaborationPanel()}
+                  <ConsciousnessPanel
+                    consciousnessError={consciousnessError}
+                    consciousnessState={consciousnessState}
+                    formatTimestamp={formatTimestamp}
+                    isConsciousnessLoading={isConsciousnessLoading}
+                    refreshConsciousnessState={refreshConsciousnessState}
+                    renderPanelNotice={renderPanelNotice}
+                    triggerConsciousnessCycleFromDashboard={
+                      triggerConsciousnessCycleFromDashboard
+                    }
+                    triggeringCycle={triggeringCycle}
+                  />
+                  <CollaborationPanel
+                    collaborationCronDraft={collaborationCronDraft}
+                    collaborationError={collaborationError}
+                    collaborationScheduler={collaborationScheduler}
+                    formatTimestamp={formatTimestamp}
+                    isCollaborationLoading={isCollaborationLoading}
+                    refreshCollaborationScheduler={refreshCollaborationScheduler}
+                    renderPanelNotice={renderPanelNotice}
+                    setCollaborationCronDraft={setCollaborationCronDraft}
+                    triggerCollaborationCycleFromDashboard={
+                      triggerCollaborationCycleFromDashboard
+                    }
+                    updateCollaborationScheduleFromDashboard={
+                      updateCollaborationScheduleFromDashboard
+                    }
+                  />
+                  <FusionMetricsPanel
+                    formatTimestamp={formatTimestamp}
+                    fusionError={fusionError}
+                    fusionSnapshot={fusionSnapshot}
+                    isFusionLoading={isFusionLoading}
+                    refreshFusionSnapshot={refreshFusionSnapshot}
+                    renderPanelNotice={renderPanelNotice}
+                  />
                 </div>
               ) : activeSection === 'news' ? (
-                <DailyNewsDigest
-                  digest={dailyBrief || emptyDigest}
-                  className="min-h-[500px]"
-                  onWatchVideo={handlePlayVideo}
-                  onAnalyzeVideo={(videoId) => {
-                    handlePlayVideo(videoId);
-                    setShowVideoPanel(true);
-                    handleAnalyzeComplete(`Queued digest video ${videoId}`);
-                  }}
-                />
+                <div className="space-y-4">
+                  {dailyBriefError ? renderPanelNotice(dailyBriefError, 'warning') : null}
+                  {isDailyBriefLoading ? renderPanelNotice('Refreshing daily brief...') : null}
+                  <DailyNewsDigest
+                    digest={dailyBrief || emptyDigest}
+                    className="min-h-[500px]"
+                    onWatchVideo={handlePlayVideo}
+                    onAnalyzeVideo={(videoId) => {
+                      handlePlayVideo(videoId);
+                      setShowVideoPanel(true);
+                      handleAnalyzeComplete(`Queued digest video ${videoId}`);
+                    }}
+                  />
+                </div>
               ) : activeSection === 'gmail' ? (
                 <GmailTasksView />
               ) : activeSection === 'database' ? (
@@ -1707,357 +1687,42 @@ export function DashboardLayout() {
                   <h3 className="text-xl font-semibold text-white mb-6">
                     System Settings
                   </h3>
-                    <div className="grid gap-8 md:grid-cols-2">
-                      <ScoreSettings
-                        values={scoreSettings}
-                        onChange={handleScoreChange}
+                  <div className="grid gap-8 md:grid-cols-2">
+                    <ScoreSettings
+                      values={scoreSettings}
+                      onChange={handleScoreChange}
                       onClose={() => {}}
                     />
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(0,242,255,0.08)]">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-white">
-                            Google sync
-                          </h4>
-                          <p className="mt-2 text-sm text-white/65">
-                            Connect Google once to sync Gmail, Tasks, and
-                            YouTube features from the dashboard.
-                          </p>
-                        </div>
-                        <div
-                          className={`mt-1 h-3 w-3 rounded-full ${
-                            isGoogleConnected
-                              ? 'bg-[#00f2ff] shadow-[0_0_18px_rgba(0,242,255,0.95)]'
-                              : 'bg-white/20'
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </div>
-
-                      <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80">
-                        {isGoogleConnected
-                          ? 'Google is connected and ready to sync.'
-                          : 'Google is not connected yet.'}
-                      </div>
-
-                      <div className="mt-5 flex flex-wrap gap-3">
-                        <button
-                          onClick={
-                            isGoogleConnected
-                              ? handleGoogleDisconnect
-                              : handleGoogleConnect
-                          }
-                          disabled={isGoogleActionLoading}
-                          className="inline-flex items-center gap-2 rounded-xl border border-[#00f2ff]/30 bg-[#00f2ff]/10 px-4 py-2 text-sm font-medium text-[#b8f8ff] transition hover:bg-[#00f2ff]/20 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {isGoogleConnected ? (
-                            <Unplug className="h-4 w-4" />
-                          ) : (
-                            <Link2 className="h-4 w-4" />
-                          )}
-                          {isGoogleActionLoading
-                            ? 'Working...'
-                            : isGoogleConnected
-                              ? 'Disconnect Google'
-                              : 'Connect Google'}
-                        </button>
-
-                        <button
-                          onClick={refreshGoogleConnectionState}
-                          disabled={isGoogleActionLoading}
-                          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                          Sync status
-                        </button>
-
-                        {isGoogleConnected && (
-                          <button
-                            onClick={() => {
-                              setActiveSection('gmail');
-                              logActivity('Opened Gmail & Tasks');
-                            }}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/10"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Open Gmail & Tasks
-                          </button>
-                        )}
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(255,0,170,0.08)]">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h4 className="text-lg font-semibold text-white">
-                              Integration health
-                            </h4>
-                            <p className="mt-2 text-sm text-white/65">
-                              Runtime status for GitHub, proactive services, and
-                              self-healing config warnings.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => void refreshSystemConfigStatus()}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                            Refresh
-                          </button>
-                        </div>
-
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              GitHub
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {systemConfigStatus?.integrationChecks?.github?.valid
-                                ? 'Connected'
-                                : systemConfigStatus?.integrationChecks?.github?.configured
-                                  ? 'Needs attention'
-                                  : 'Not configured'}
-                            </div>
-                            <div className="mt-2 text-xs text-white/45">
-                              {systemConfigStatus?.integrationChecks?.github?.error ||
-                                systemConfigStatus?.integrationChecks?.github?.scopes
-                                  ?.slice(0, 3)
-                                  .join(', ') ||
-                                'No GitHub scopes detected'}
-                            </div>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              Proactive
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {systemConfigStatus?.integrationChecks?.proactive
-                                ?.reachable
-                                ? 'Reachable'
-                                : 'Unavailable'}
-                            </div>
-                            <div className="mt-2 text-xs text-white/45">
-                              {systemConfigStatus?.integrationChecks?.proactive
-                                ?.error ||
-                                systemConfigStatus?.integrations?.proactiveBaseUrl ||
-                                'Proactive base URL unavailable'}
-                            </div>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              Consciousness
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {systemConfigStatus?.integrationChecks?.consciousness
-                                ?.replycaResolved
-                                ? 'Scheduled'
-                                : 'Blocked'}
-                            </div>
-                            <div className="mt-2 text-xs text-white/45">
-                              {systemConfigStatus?.integrationChecks?.consciousness
-                                ?.cycles?.gim?.lastError ||
-                                systemConfigStatus?.integrationChecks
-                                  ?.consciousness?.cycles?.rem?.lastError ||
-                                `GIM ${systemConfigStatus?.integrationChecks?.consciousness?.gimCron || 'n/a'} • REM ${systemConfigStatus?.integrationChecks?.consciousness?.remCron || 'n/a'}`}
-                            </div>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              Repo discovery
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {systemConfigStatus?.integrationChecks
-                                ?.repositoryDiscovery?.isScheduled
-                                ? 'Scheduled'
-                                : 'Idle'}
-                            </div>
-                            <div className="mt-2 text-xs text-white/45">
-                              {systemConfigStatus?.integrationChecks
-                                ?.repositoryDiscovery?.lastError ||
-                                `${systemConfigStatus?.integrationChecks?.repositoryDiscovery?.cron || 'n/a'} • ${systemConfigStatus?.integrationChecks?.repositoryDiscovery?.maxReposPerCycle || 0} repos/cycle`}
-                            </div>
-                          </div>
-                        </div>
-
-                        {systemConfigStatus?.warnings?.length ? (
-                          <div className="mt-4 space-y-2">
-                            {systemConfigStatus.warnings
-                              .slice(0, 4)
-                              .map((warning) => (
-                                <div
-                                  key={warning}
-                                  className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100"
-                                >
-                                  {warning}
-                                </div>
-                              ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(255,0,170,0.08)]">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h4 className="text-lg font-semibold text-white">
-                              Feature discovery
-                            </h4>
-                            <p className="mt-2 text-sm text-white/65">
-                              See what the proactive system pulled in from GitHub
-                              and which features it currently recommends.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => void refreshFeatureDiscovery()}
-                            disabled={isFeatureDiscoveryLoading}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/85 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            <RefreshCw
-                              className={`h-4 w-4 ${
-                                isFeatureDiscoveryLoading
-                                  ? 'animate-spin'
-                                  : ''
-                              }`}
-                            />
-                            Refresh
-                          </button>
-                        </div>
-
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              Discovered
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {discoveredFeatures.length}
-                            </div>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.2em] text-white/45">
-                              Recommended
-                            </div>
-                            <div className="mt-2 text-2xl font-semibold text-white">
-                              {recommendedFeatures.length}
-                            </div>
-                          </div>
-                        </div>
-
-                        {featureDiscoveryError ? (
-                          <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-                            {featureDiscoveryError}
-                          </div>
-                        ) : null}
-
-                        <div className="mt-5 space-y-5">
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <h5 className="text-sm font-medium text-white/85">
-                                Top recommendations
-                              </h5>
-                              <span className="text-xs text-white/40">
-                                Ready to review
-                              </span>
-                            </div>
-
-                            <div className="mt-3 space-y-3">
-                              {recommendedFeatures.length > 0 ? (
-                                recommendedFeatures.map((feature) => (
-                                  <div
-                                    key={`recommended-${feature.id}`}
-                                    className="rounded-xl border border-[#ff00aa]/15 bg-[#ff00aa]/5 px-4 py-3"
-                                  >
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-sm font-semibold text-white">
-                                        {feature.name}
-                                      </span>
-                                      <span className="rounded-full border border-[#ff00aa]/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#ff9dda]">
-                                        {formatFeatureStatus(feature.status)}
-                                      </span>
-                                      <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/55">
-                                        {formatFeatureSource(feature.source)}
-                                      </span>
-                                    </div>
-                                    <p className="mt-2 text-sm text-white/70">
-                                      {feature.description}
-                                    </p>
-                                    <div className="mt-2 text-xs text-white/45">
-                                      Relevance {feature.relevance}/10 · Value{' '}
-                                      {feature.estimatedValue}/10
-                                      {feature.repositoryExample
-                                        ? ` · Inspired by ${feature.repositoryExample}`
-                                        : ''}
-                                    </div>
-                                    {renderFeatureActions(feature, 'pink')}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/55">
-                                  No recommended features yet.
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <h5 className="text-sm font-medium text-white/85">
-                                Recently discovered
-                              </h5>
-                              <span className="text-xs text-white/40">
-                                Showing top 5
-                              </span>
-                            </div>
-
-                            <div className="mt-3 space-y-3">
-                              {discoveredFeatures.slice(0, 5).map((feature) => (
-                                <div
-                                  key={`discovered-${feature.id}`}
-                                  className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
-                                >
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-semibold text-white">
-                                      {feature.name}
-                                    </span>
-                                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/55">
-                                      {formatFeatureStatus(feature.status)}
-                                    </span>
-                                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/55">
-                                      {feature.implementationComplexity}
-                                    </span>
-                                  </div>
-                                   <div className="mt-2 text-xs text-white/45">
-                                     Popularity {feature.popularity}/10 ·
-                                     Relevance {feature.relevance}/10
-                                     {feature.repositoryExample
-                                       ? ` · ${feature.repositoryExample}`
-                                       : ''}
-                                   </div>
-                                   {feature.tags.length > 0 ? (
-                                     <div className="mt-2 flex flex-wrap gap-2">
-                                      {feature.tags.map((tag) => (
-                                        <span
-                                          key={`${feature.id}-${tag}`}
-                                          className="rounded-full border border-[#00f2ff]/20 bg-[#00f2ff]/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#9ef6ff]"
-                                        >
-                                          {tag}
-                                        </span>
-                                       ))}
-                                     </div>
-                                   ) : null}
-                                   {renderFeatureActions(feature, 'cyan')}
-                                 </div>
-                               ))}
-
-                              {discoveredFeatures.length === 0 &&
-                              !isFeatureDiscoveryLoading &&
-                              !featureDiscoveryError ? (
-                                <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/55">
-                                  No discovered features are stored yet.
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <GoogleSyncCard
+                      googleActionError={googleActionError}
+                      handleGoogleConnect={handleGoogleConnect}
+                      handleGoogleDisconnect={handleGoogleDisconnect}
+                      isGoogleActionLoading={isGoogleActionLoading}
+                      isGoogleConnected={isGoogleConnected}
+                      logActivity={logActivity}
+                      refreshGoogleConnectionState={refreshGoogleConnectionState}
+                      renderPanelNotice={renderPanelNotice}
+                      setActiveSection={setActiveSection}
+                    />
+                    <IntegrationHealthCard
+                      isSystemConfigLoading={isSystemConfigLoading}
+                      refreshSystemConfigStatus={refreshSystemConfigStatus}
+                      renderPanelNotice={renderPanelNotice}
+                      systemConfigError={systemConfigError}
+                      systemConfigStatus={systemConfigStatus}
+                    />
+                    <FeatureDiscoveryCard
+                      discoveredFeatures={discoveredFeatures}
+                      featureDiscoveryError={featureDiscoveryError}
+                      formatFeatureSource={formatFeatureSource}
+                      formatFeatureStatus={formatFeatureStatus}
+                      isFeatureDiscoveryLoading={isFeatureDiscoveryLoading}
+                      recommendedFeatures={recommendedFeatures}
+                      refreshFeatureDiscovery={refreshFeatureDiscovery}
+                      renderFeatureActions={renderFeatureActions}
+                    />
                   </div>
+                </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-center min-h-[400px]">
                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
@@ -2143,16 +1808,6 @@ export function DashboardLayout() {
                     Video Analysis
                   </button>
                   <button
-                    onClick={() => setShowBrowserPip(!showBrowserPip)}
-                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
-                      showBrowserPip
-                        ? 'border-violet-400/40 bg-violet-500/10 text-violet-200'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    Browser PiP
-                  </button>
-                  <button
                     onClick={() => {
                       setActiveSection('studio');
                       logActivity('Opened Studio for avatar video creation');
@@ -2205,72 +1860,7 @@ export function DashboardLayout() {
         />
       )}
 
-      {showBrowserPip && (
-        <div className="fixed bottom-8 right-6 z-[95] w-[420px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#0c021a]/70 shadow-[0_0_45px_rgba(124,58,237,0.18)] backdrop-blur-2xl">
-          <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.04] px-4 py-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-white/85">
-              <PictureInPicture2 className="h-4 w-4 text-violet-300" />
-              Browser PiP
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => window.open(browserUrl, '_blank', 'noopener,noreferrer')}
-                className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/65 transition hover:bg-white/10 hover:text-white"
-                title="Open in a full tab"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setShowBrowserPip(false)}
-                className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/65 transition hover:bg-white/10 hover:text-white"
-                title="Close PiP browser"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
 
-          <div className="space-y-3 p-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
-                <input
-                  value={browserDraftUrl}
-                  onChange={(event) => setBrowserDraftUrl(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      setBrowserUrl(normalizeBrowserUrl(browserDraftUrl));
-                    }
-                  }}
-                  placeholder="https://example.com"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-white outline-none transition focus:border-violet-400/40"
-                />
-              </div>
-              <button
-                onClick={() => setBrowserUrl(normalizeBrowserUrl(browserDraftUrl))}
-                className="rounded-xl border border-violet-400/30 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20"
-              >
-                Go
-              </button>
-            </div>
-
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-              <iframe
-                src={browserUrl}
-                title="Browser PiP"
-                className="h-[260px] w-full bg-white"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
-            </div>
-
-            <p className="text-xs text-white/50">
-              This mini-browser works best for sites that allow iframe embedding.
-              Some pages will block PiP previews and should be opened in a full tab.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (

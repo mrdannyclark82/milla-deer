@@ -1,0 +1,348 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Client } = require('castv2-client');
+
+// YouTube Cast app ID (official Google receiver)
+const YOUTUBE_CAST_APP_ID = '233637DE';
+
+export type TvCommand =
+  | 'power_on'
+  | 'power_off'
+  | 'volume_up'
+  | 'volume_down'
+  | 'volume_set'
+  | 'mute'
+  | 'unmute'
+  | 'play'
+  | 'pause'
+  | 'youtube_search'
+  | 'youtube_play';
+
+export interface TvCommandResult {
+  success: boolean;
+  message: string;
+  data?: unknown;
+}
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const VIZIO_TV_IP = process.env.VIZIO_TV_IP;
+const VIZIO_AUTH_TOKEN = process.env.VIZIO_AUTH_TOKEN;
+const YOUTUBE_LOUNGE_TOKEN = process.env.YOUTUBE_LOUNGE_TOKEN;
+const YOUTUBE_SCREEN_ID = process.env.YOUTUBE_SCREEN_ID;
+
+// ─── Vizio SmartCast local API (power / volume / mute) ───────────────────────
+
+const VIZIO_KEY_MAP: Record<string, { CODESET: number; CODE: number }> = {
+  power_on:    { CODESET: 11, CODE: 1 },
+  power_off:   { CODESET: 11, CODE: 0 },
+  volume_up:   { CODESET: 5,  CODE: 1 },
+  volume_down: { CODESET: 5,  CODE: 0 },
+  mute:        { CODESET: 5,  CODE: 4 },
+  unmute:      { CODESET: 5,  CODE: 4 },
+  play:        { CODESET: 2,  CODE: 3 },
+  pause:       { CODESET: 2,  CODE: 2 },
+};
+
+async function vizioSendKey(command: string): Promise<TvCommandResult> {
+  if (!VIZIO_TV_IP) {
+    return { success: false, message: 'VIZIO_TV_IP not configured. Add it to your .env file.' };
+  }
+  if (!VIZIO_AUTH_TOKEN) {
+    return { success: false, message: 'VIZIO_AUTH_TOKEN not configured. Run /api/tv/pair first.' };
+  }
+
+  const keyDef = VIZIO_KEY_MAP[command];
+  if (!keyDef) return { success: false, message: `No Vizio key mapping for: ${command}` };
+
+  try {
+    // Vizio SmartCast HTTPS on port 7345 — self-signed cert, ignore TLS
+    const { default: https } = await import('https');
+    const body = JSON.stringify({
+      KEYLIST: [{ CODESET: keyDef.CODESET, CODE: keyDef.CODE, ACTION: 'KEYPRESS' }],
+    });
+
+    return new Promise((resolve) => {
+      const req = https.request(
+        {
+          hostname: VIZIO_TV_IP,
+          port: 7345,
+          path: '/key_command/',
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'AUTH': VIZIO_AUTH_TOKEN!,
+            'Content-Length': Buffer.byteLength(body),
+          },
+          rejectUnauthorized: false,
+        },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => (data += chunk));
+          res.on('end', () =>
+            resolve({
+              success: res.statusCode === 200,
+              message: res.statusCode === 200 ? `TV: ${command}` : `Vizio error ${res.statusCode}: ${data}`,
+            })
+          );
+        }
+      );
+      req.on('error', (err) => resolve({ success: false, message: `Vizio error: ${err.message}` }));
+      req.setTimeout(4000, () => { req.destroy(); resolve({ success: false, message: 'Vizio TV timed out' }); });
+      req.write(body);
+      req.end();
+    });
+  } catch (err) {
+    return { success: false, message: `Vizio request failed: ${String(err)}` };
+  }
+}
+
+// ─── Vizio pairing flow ───────────────────────────────────────────────────────
+
+export async function startVisioPairing(): Promise<{ success: boolean; message: string }> {
+  if (!VIZIO_TV_IP) return { success: false, message: 'VIZIO_TV_IP not set in .env' };
+  const { default: https } = await import('https');
+  const body = JSON.stringify({ DEVICE_ID: 'milla-rayne', DEVICE_NAME: 'Milla' });
+
+  return new Promise((resolve) => {
+    const req = https.request(
+      { hostname: VIZIO_TV_IP, port: 7345, path: '/pairing/start', method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        rejectUnauthorized: false },
+      (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => resolve({ success: res.statusCode === 200,
+          message: res.statusCode === 200 ? 'PIN prompt shown on TV. Call /api/tv/pair/complete with the PIN.' : data }));
+      }
+    );
+    req.on('error', (e) => resolve({ success: false, message: e.message }));
+    req.write(body);
+    req.end();
+  });
+}
+
+export async function completeVisioPairing(pin: string, pairingToken: string): Promise<{ success: boolean; authToken?: string; message: string }> {
+  if (!VIZIO_TV_IP) return { success: false, message: 'VIZIO_TV_IP not set in .env' };
+  const { default: https } = await import('https');
+  const body = JSON.stringify({ DEVICE_ID: 'milla-rayne', PAIRING_REQ_TOKEN: pairingToken, RESPONSE_VALUE: pin });
+
+  return new Promise((resolve) => {
+    const req = https.request(
+      { hostname: VIZIO_TV_IP, port: 7345, path: '/pairing/pair', method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        rejectUnauthorized: false },
+      (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data) as { ITEM?: { AUTH_TOKEN?: string } };
+            const authToken = json.ITEM?.AUTH_TOKEN;
+            resolve(authToken
+              ? { success: true, authToken, message: `Paired! Add VIZIO_AUTH_TOKEN=${authToken} to your .env` }
+              : { success: false, message: data });
+          } catch { resolve({ success: false, message: data }); }
+        });
+      }
+    );
+    req.on('error', (e) => resolve({ success: false, message: e.message }));
+    req.write(body);
+    req.end();
+  });
+}
+
+// ─── Chromecast: cast YouTube video to Vizio built-in Cast ───────────────────
+
+function castYoutubeVideo(videoId: string): Promise<TvCommandResult> {
+  return new Promise((resolve) => {
+    if (!VIZIO_TV_IP) {
+      resolve({ success: false, message: 'VIZIO_TV_IP not configured' });
+      return;
+    }
+
+    const client = new Client();
+    const timeout = setTimeout(() => {
+      client.close();
+      resolve({ success: false, message: 'Cast connection timed out — is the TV on and on the same network?' });
+    }, 10000);
+
+    client.connect(VIZIO_TV_IP, () => {
+      // Launch YouTube Cast receiver app
+      client.launch({ appId: YOUTUBE_CAST_APP_ID }, (err: Error | null, session: { sessionId: string; transportId: string }) => {
+        if (err) {
+          clearTimeout(timeout);
+          client.close();
+          resolve({ success: false, message: `YouTube Cast launch error: ${err.message}` });
+          return;
+        }
+
+        // Send SET_PLAYLIST message via YouTube Cast namespace
+        const youtubeNamespace = 'urn:x-cast:com.google.youtube.mdx';
+        const message = JSON.stringify({
+          type: 'SET_PLAYLIST',
+          videoId,
+          currentIndex: 0,
+          count: 1,
+        });
+
+        client.send(
+          { transportId: session.transportId },
+          { transportId: 'receiver-0' },
+          youtubeNamespace,
+          message
+        );
+
+        clearTimeout(timeout);
+        client.close();
+        resolve({ success: true, message: `Casting youtube.com/watch?v=${videoId} to TV 📺` });
+      });
+    });
+
+    client.on('error', (err: Error) => {
+      clearTimeout(timeout);
+      resolve({ success: false, message: `Cast error: ${err.message}` });
+    });
+  });
+}
+
+// ─── YouTube TV Lounge API (search on TV via paired session) ─────────────────
+
+async function youtubeLoungeCommand(
+  command: 'setPlaylist' | 'pause' | 'play' | 'seekTo',
+  params: Record<string, string>
+): Promise<TvCommandResult> {
+  if (!YOUTUBE_LOUNGE_TOKEN || !YOUTUBE_SCREEN_ID) {
+    return {
+      success: false,
+      message: 'YouTube TV not paired. Run /api/tv/youtube-pair to get a pairing code.',
+    };
+  }
+
+  try {
+    const qs = new URLSearchParams({
+      loungeIdToken: YOUTUBE_LOUNGE_TOKEN,
+      RID: String(Date.now()),
+      AID: '0',
+      CI: '0',
+      TYPE: 'readwrite',
+      device: 'REMOTE_CONTROL',
+      app: 'youtube-desktop',
+      loungeDeviceName: 'Milla',
+    });
+
+    const body = new URLSearchParams({
+      count: '1',
+      ofs: '0',
+      req0__sc: command,
+      ...Object.fromEntries(Object.entries(params).map(([k, v]) => [`req0_${k}`, v])),
+    });
+
+    const { default: fetch } = await import('node-fetch');
+    const res = await fetch(`https://www.youtube.com/api/lounge/bc/bind?${qs}`, {
+      method: 'POST',
+      body,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    return { success: res.ok, message: res.ok ? `YouTube TV: ${command}` : `Lounge error ${res.status}` };
+  } catch (err) {
+    return { success: false, message: `YouTube lounge error: ${String(err)}` };
+  }
+}
+
+export async function getYoutubeTVPairingCode(): Promise<{ code: string; url: string } | null> {
+  try {
+    const { default: fetch } = await import('node-fetch');
+    const res = await fetch('https://www.youtube.com/api/lounge/pairing/generate_screen_id');
+    if (!res.ok) return null;
+    const data = (await res.json()) as { screen_id?: string };
+    const screenId = data.screen_id;
+    if (!screenId) return null;
+    const tokenRes = await fetch('https://www.youtube.com/api/lounge/pairing/get_pairing_code?ctx=android', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ screen_ids: screenId, access_type: 'permanent', app: 'android-phone-13.14' }),
+    });
+    if (!tokenRes.ok) return null;
+    const tokenData = (await tokenRes.json()) as { pairing_code?: string };
+    return tokenData.pairing_code
+      ? { code: tokenData.pairing_code, url: `https://www.youtube.com/tv#${tokenData.pairing_code}` }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Main dispatcher ──────────────────────────────────────────────────────────
+
+export async function executeTvCommand(
+  command: TvCommand,
+  payload?: { query?: string; videoId?: string; volume?: number }
+): Promise<TvCommandResult> {
+  switch (command) {
+    case 'youtube_search':
+      return youtubeLoungeCommand('setPlaylist', {
+        listId: `search:${encodeURIComponent(payload?.query ?? '')}`,
+        videoId: '',
+      });
+
+    case 'youtube_play':
+      if (!payload?.videoId) return { success: false, message: 'videoId required' };
+      // Try Chromecast first (direct cast), fall back to Lounge API
+      return castYoutubeVideo(payload.videoId).then((r) =>
+        r.success ? r : youtubeLoungeCommand('setPlaylist', { videoId: payload.videoId! })
+      );
+
+    case 'play':
+      return youtubeLoungeCommand('play', {}).then((r) =>
+        r.success ? r : vizioSendKey('play')
+      );
+
+    case 'pause':
+      return youtubeLoungeCommand('pause', {}).then((r) =>
+        r.success ? r : vizioSendKey('pause')
+      );
+
+    case 'power_on':
+    case 'power_off':
+    case 'volume_up':
+    case 'volume_down':
+    case 'mute':
+    case 'unmute':
+      return vizioSendKey(command);
+
+    default:
+      return { success: false, message: `Unknown TV command: ${command}` };
+  }
+}
+
+// ─── Natural language intent parser ──────────────────────────────────────────
+
+export function parseTvIntent(message: string): {
+  command: TvCommand;
+  payload?: { query?: string; videoId?: string };
+} | null {
+  const lower = message.toLowerCase();
+
+  // "play <query> on tv" / "put on <query> on the tv"
+  const ytSearchMatch =
+    lower.match(/(?:play|search|put on|find|show)\s+(?:youtube\s+)?["']?(.+?)["']?\s+on\s+(?:the\s+)?tv/i) ||
+    lower.match(/(?:on\s+(?:the\s+)?tv).+?(?:play|search|put on)\s+(.+)/i);
+  if (ytSearchMatch) return { command: 'youtube_search', payload: { query: ytSearchMatch[1].trim() } };
+
+  // youtube.com URL
+  const ytVideoMatch = lower.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (ytVideoMatch) return { command: 'youtube_play', payload: { videoId: ytVideoMatch[1] } };
+
+  if (/turn\s+(?:on|off)\s+(?:the\s+)?tv|tv\s+(?:on|off)|power\s+(?:on|off)\s+tv/i.test(lower))
+    return { command: lower.includes('off') ? 'power_off' : 'power_on' };
+
+  if (/volume\s+up|turn\s+(?:it\s+)?up|louder/i.test(lower)) return { command: 'volume_up' };
+  if (/volume\s+down|turn\s+(?:it\s+)?down|quieter|lower\s+(?:the\s+)?volume/i.test(lower)) return { command: 'volume_down' };
+  if (/\bmute\b/i.test(lower)) return { command: 'mute' };
+  if (/\bunmute\b/i.test(lower)) return { command: 'unmute' };
+  if (/\bpause\b/i.test(lower)) return { command: 'pause' };
+  if (/\bresume\b|\bplay\b/i.test(lower) && /\btv\b/i.test(lower)) return { command: 'play' };
+
+  return null;
+}

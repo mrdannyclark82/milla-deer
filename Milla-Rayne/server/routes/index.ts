@@ -62,6 +62,10 @@ export async function registerModularRoutes(app: Express) {
   // Privacy policy static page
   registerPrivacyRoutes(app);
 
+  // TV control routes (Vizio SmartCast + Google Cast + YouTube)
+  const tvRouter = (await import('./tv.routes')).default;
+  app.use('/api/tv', tvRouter);
+
   // RAG search + manual indexing routes
   const { registerRagRoutes } = await import('./rag.routes');
   registerRagRoutes(app);

@@ -877,6 +877,32 @@ export async function generateAIResponse(
     }
   }
 
+  // TV / YouTube Cast intent detection
+  if (!bypassFunctionCalls) {
+    const { parseTvIntent, executeTvCommand } = await import('./tvControlService.js');
+    const tvIntent = parseTvIntent(userMessage);
+    if (tvIntent) {
+      const result = await executeTvCommand(tvIntent.command, tvIntent.payload);
+      const friendlyCmd: Record<string, string> = {
+        youtube_search: `searching for "${tvIntent.payload?.query}" on your TV`,
+        youtube_play: `playing that on your TV`,
+        power_on: 'turning on the TV',
+        power_off: 'turning off the TV',
+        volume_up: 'turning the volume up',
+        volume_down: 'turning the volume down',
+        mute: 'muting the TV',
+        unmute: 'unmuting the TV',
+        play: 'resuming playback',
+        pause: 'pausing',
+      };
+      return {
+        content: result.success
+          ? `*taps remote* Done — ${friendlyCmd[tvIntent.command] ?? tvIntent.command}. 📺`
+          : `*frowns* I tried ${friendlyCmd[tvIntent.command] ?? tvIntent.command} but hit a snag: ${result.message}`,
+      };
+    }
+  }
+
   // Repository Improvement Workflow
   if (
     !hasCoreTrigger &&
