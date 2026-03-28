@@ -306,20 +306,22 @@ export async function initApp() {
     console.warn('⚠️ Gmail inbox poller failed to start (non-fatal):', err);
   }
 
-  // Initialize IoT services (graceful failure — won't crash server)
-  try {
-    const { haService } = await import('./services/homeAssistantService');
-    const { mqttService } = await import('./services/mqttBrokerService');
-    const { thermalMonitor } = await import('./services/thermalMonitorService');
-    const { reactLoop } = await import('./services/reactLoopService');
+  // Initialize IoT services only if Home Assistant is configured
+  if (process.env.HA_URL || process.env.HA_TOKEN) {
+    try {
+      const { haService } = await import('./services/homeAssistantService');
+      const { mqttService } = await import('./services/mqttBrokerService');
+      const { thermalMonitor } = await import('./services/thermalMonitorService');
+      const { reactLoop } = await import('./services/reactLoopService');
 
-    await haService.connect();
-    await mqttService.connect();
-    thermalMonitor.initialize();
-    reactLoop.startMonitoring(30000);
-    console.log('✅ IoT services initialized');
-  } catch (err) {
-    console.warn('⚠️ IoT services failed to initialize (non-fatal):', err);
+      await haService.connect();
+      await mqttService.connect();
+      thermalMonitor.initialize();
+      reactLoop.startMonitoring(30000);
+      console.log('✅ IoT services initialized');
+    } catch (err) {
+      console.warn('⚠️ IoT services failed to initialize (non-fatal):', (err as Error).message);
+    }
   }
 
   // Admin endpoints for email delivery (manual trigger)
