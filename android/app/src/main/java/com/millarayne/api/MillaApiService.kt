@@ -10,6 +10,9 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+data class TtsRequest(val text: String)
+data class TtsResponse(val audioUrl: String?, val fallback: String? = null)
+
 /**
  * Retrofit service interface for Milla API
  */
@@ -20,7 +23,10 @@ interface MillaApiService {
 
     @GET("/api/messages")
     suspend fun getMessages(@Query("limit") limit: Int = 50): Response<List<RemoteMessage>>
-    
+
+    @POST("/api/tts/speak")
+    suspend fun requestTts(@Body request: TtsRequest): Response<TtsResponse>
+
     /**
      * Send real-time sensor data for context-aware processing
      */

@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.os.Build
 import android.util.Base64
 import android.speech.RecognizerIntent
-import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -86,6 +85,7 @@ import com.millarayne.ui.ChatViewModel
 import com.millarayne.ui.theme.AssistantBubble
 import com.millarayne.ui.theme.MillaTheme
 import com.millarayne.ui.theme.UserBubble
+import com.millarayne.voice.MillaTtsPlayer
 import java.text.SimpleDateFormat
 import java.io.ByteArrayOutputStream
 import java.util.Date
@@ -271,7 +271,8 @@ private fun ChatScreen(
     var lastSpokenAssistantMessageId by remember { mutableStateOf<Long?>(null) }
     var pendingAttachmentPrompt by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val textToSpeech = rememberTextToSpeech()
+    val ttsPlayer = remember(context) { MillaTtsPlayer(context) }
+    DisposableEffect(Unit) { onDispose { ttsPlayer.release() } }
     val locationContextProvider = remember(context) {
         LocationContextProvider(context.applicationContext)
     }
@@ -447,11 +448,10 @@ private fun ChatScreen(
         }
 
         lastSpokenAssistantMessageId = latestAssistantMessage.id
-        textToSpeech?.speak(
-            latestAssistantMessage.content.replace('\n', ' '),
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "assistant-${latestAssistantMessage.id}"
+        ttsPlayer.speak(
+            text = latestAssistantMessage.content,
+            serverUrl = serverUrl,
+            useServer = !offlineModeEnabled && !isOfflineMode
         )
     }
 
@@ -1031,31 +1031,6 @@ private fun SettingsToggleRow(
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
-}
-
-@Composable
-private fun rememberTextToSpeech(): TextToSpeech? {
-    val context = LocalContext.current
-    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
-
-    DisposableEffect(context) {
-        var createdTextToSpeech: TextToSpeech? = null
-        createdTextToSpeech = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                createdTextToSpeech?.language = Locale.getDefault()
-                createdTextToSpeech?.setSpeechRate(1.0f)
-            }
-        }
-        textToSpeech = createdTextToSpeech
-
-        onDispose {
-            textToSpeech?.stop()
-            textToSpeech?.shutdown()
-            textToSpeech = null
-        }
-    }
-
-    return textToSpeech
 }
 
 @Composable
