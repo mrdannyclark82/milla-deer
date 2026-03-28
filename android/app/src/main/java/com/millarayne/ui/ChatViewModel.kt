@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.ConnectException
@@ -82,7 +85,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         MillaApiClient.setSessionTokenProvider { _sessionToken.value }
         observeMessages()
         observeSettings()
-        refreshMessagesFromServer()
+        // refreshMessagesFromServer() is called once by observeSettings() after all settings load
     }
 
     override fun onCleared() {
@@ -105,26 +108,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun observeSettings() {
+        // Collect individual settings into state
         viewModelScope.launch {
-            settingsRepository.serverUrl.collectLatest {
-                _serverUrl.value = it
-                refreshMessagesFromServer()
-            }
+            settingsRepository.serverUrl.collectLatest { _serverUrl.value = it }
         }
         viewModelScope.launch {
-            settingsRepository.sessionToken.collectLatest {
-                _sessionToken.value = it
-                refreshMessagesFromServer()
-            }
+            settingsRepository.sessionToken.collectLatest { _sessionToken.value = it }
         }
         viewModelScope.launch {
             settingsRepository.offlineModeEnabled.collectLatest {
                 _offlineModeEnabled.value = it
-                if (it) {
-                    _isOfflineMode.value = true
-                } else {
-                    refreshMessagesFromServer()
-                }
+                if (it) _isOfflineMode.value = true
             }
         }
         viewModelScope.launch {
@@ -138,9 +132,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             settingsRepository.nanoEnabled.collectLatest { enabled ->
                 _nanoEnabled.value = enabled
-                // Re-initialise SLM backends when user toggles Nano in settings
                 offlineGenerator.reinitialize(enabled)
             }
+        }
+
+        // Single debounced refresh — fires once after all settings emit their initial values,
+        // then again only when something that affects the server URL actually changes.
+        viewModelScope.launch {
+            combine(
+                settingsRepository.serverUrl,
+                settingsRepository.sessionToken,
+                settingsRepository.offlineModeEnabled
+            ) { url, _, offline -> url to offline }
+                .debounce(150)
+                .collectLatest { (_, offline) ->
+                    if (!offline) refreshMessagesFromServer()
+                }
         }
     }
 
