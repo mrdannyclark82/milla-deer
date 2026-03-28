@@ -2,10 +2,15 @@ import {
   Loader2,
   Mail,
   MessageSquare,
+  Mic,
+  MicOff,
   RefreshCw,
   Send,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useVoice } from '@/hooks/useVoice';
 
 type MessageChannelFilter = 'all' | 'web' | 'gmail';
 
@@ -154,9 +159,13 @@ export function ChatThreadPanel({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeChannel, setActiveChannel] =
     useState<MessageChannelFilter>('all');
+  const [displayLimit, setDisplayLimit] = useState(25);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageKeyRef = useRef<string | null>(null);
   const shouldAutoScrollRef = useRef(true);
+  const lastSpokenIdRef = useRef<string | null>(null);
+
+  const voice = useVoice();
 
   const isNearBottom = () => {
     const container = messagesContainerRef.current;
@@ -191,7 +200,7 @@ export function ChatThreadPanel({
 
     try {
       setIsRefreshing(true);
-      const response = await fetch('/api/messages?limit=80');
+      const response = await fetch('/api/messages?limit=50');
       if (!response.ok) return;
 
       const data = await response.json();
@@ -229,16 +238,6 @@ export function ChatThreadPanel({
       { all: 0, web: 0, gmail: 0 }
     );
   }, [messages]);
-
-  const visibleMessages = useMemo(() => {
-    if (activeChannel === 'all') {
-      return messages;
-    }
-
-    return messages.filter(
-      (message) => (message.channel || 'web') === activeChannel
-    );
-  }, [activeChannel, messages]);
 
   useEffect(() => {
     const nextLastMessage = visibleMessages[visibleMessages.length - 1];
@@ -279,7 +278,7 @@ export function ChatThreadPanel({
     };
 
     void guardedLoad();
-    const intervalId = window.setInterval(guardedLoad, 15000);
+    const intervalId = window.setInterval(guardedLoad, 30000);
     window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -316,6 +315,14 @@ export function ChatThreadPanel({
 
       if (data.response || data.content) {
         await loadMessages();
+
+        // Auto-speak the new response if enabled
+        if (voice.autoSpeak) {
+          const replyText = data.response || data.content;
+          if (typeof replyText === 'string' && replyText.trim()) {
+            void voice.speak(replyText);
+          }
+        }
 
         if (data.youtube_play && data.youtube_play.videoId && onPlayVideo) {
           onPlayVideo(data.youtube_play.videoId);
@@ -355,9 +362,30 @@ export function ChatThreadPanel({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   };
+
+  const handleMic = () => {
+    if (voice.isListening) {
+      voice.stopListening();
+    } else {
+      voice.startListening((transcript) => {
+        setInputValue(transcript);
+      });
+    }
+  };
+
+  // Paginated visible messages (newest 25 by default, load more shows older)
+  const allVisible = useMemo(() => {
+    if (activeChannel === 'all') return messages;
+    return messages.filter((m) => (m.channel || 'web') === activeChannel);
+  }, [activeChannel, messages]);
+
+  const hasMore = allVisible.length > displayLimit;
+  const visibleMessages = hasMore
+    ? allVisible.slice(allVisible.length - displayLimit)
+    : allVisible;
 
   return (
     <section className="relative flex h-[500px] flex-col overflow-hidden rounded-2xl border border-[#00f2ff]/20 bg-white/5 backdrop-blur-2xl shadow-[0_0_35px_rgba(0,242,255,0.12),0_25px_120px_rgba(0,0,0,0.45)]">
@@ -379,16 +407,36 @@ export function ChatThreadPanel({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void loadMessages()}
-            className="rounded-lg p-2 text-white/45 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Refresh thread"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Auto-speak toggle */}
+            <button
+              type="button"
+              onClick={voice.toggleAutoSpeak}
+              title={voice.autoSpeak ? 'Auto-speak on' : 'Auto-speak off'}
+              className={`rounded-lg p-2 transition-colors ${
+                voice.autoSpeak
+                  ? 'text-[#00f2ff] hover:bg-[#00f2ff]/10'
+                  : 'text-white/30 hover:bg-white/5 hover:text-white/60'
+              }`}
+            >
+              {voice.autoSpeak ? (
+                <Volume2 className="h-4 w-4" />
+              ) : (
+                <VolumeX className="h-4 w-4" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void loadMessages()}
+              className="rounded-lg p-2 text-white/45 transition-colors hover:bg-white/5 hover:text-white"
+              aria-label="Refresh thread"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+            </button>
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -418,6 +466,16 @@ export function ChatThreadPanel({
         className="relative z-10 flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
       >
         <div className="space-y-6">
+          {/* Load more older messages */}
+          {hasMore && (
+            <button
+              onClick={() => setDisplayLimit((l) => l + 25)}
+              className="w-full rounded-xl border border-white/10 bg-white/5 py-2 text-xs text-white/50 hover:bg-white/10 hover:text-white/80 transition-colors"
+            >
+              ↑ Load older messages ({allVisible.length - displayLimit} more)
+            </button>
+          )}
+
           {visibleMessages.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-6 text-sm text-white/45">
               No {activeChannel === 'all' ? '' : `${activeChannel} `}messages in
@@ -467,6 +525,18 @@ export function ChatThreadPanel({
                     </div>
 
                     <div>{msg.content}</div>
+
+                    {/* Speak button for Milla messages */}
+                    {msg.role === 'assistant' && (
+                      <button
+                        onClick={() => voice.speak(msg.content)}
+                        title="Read aloud"
+                        className="mt-2 flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
+                      >
+                        <Volume2 className="h-3 w-3" />
+                        <span>speak</span>
+                      </button>
+                    )}
 
                     {msg.image && (
                       <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
@@ -523,12 +593,30 @@ export function ChatThreadPanel({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message Milla..."
+            placeholder={voice.isListening ? 'Listening...' : 'Message Milla...'}
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
             disabled={isSending}
           />
+          {/* Mic button */}
           <button
-            onClick={handleSend}
+            type="button"
+            onClick={handleMic}
+            disabled={isSending}
+            title={voice.isListening ? 'Stop listening' : 'Voice input'}
+            className={`rounded-lg p-2 transition-colors ${
+              voice.isListening
+                ? 'text-[#ff00aa] animate-pulse'
+                : 'text-white/30 hover:bg-white/5 hover:text-white/60'
+            }`}
+          >
+            {voice.isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+          </button>
+          <button
+            onClick={() => void handleSend()}
             disabled={!inputValue.trim() || isSending}
             className={`rounded-lg p-2 transition-colors ${
               !inputValue.trim() || isSending

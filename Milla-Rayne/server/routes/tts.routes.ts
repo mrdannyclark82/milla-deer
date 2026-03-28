@@ -3,8 +3,45 @@ import {
   generateCoquiSpeech,
   getCoquiSpeechCacheStats,
 } from '../api/coquiService';
+import { generateElevenLabsSpeech } from '../api/elevenLabsService';
 import { cacheMiddleware } from '../middleware/caching';
 import { asyncHandler } from '../utils/routeHelpers';
+import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+
+// OpenAI TTS client — only initialised when OPENAI_API_KEY is set
+let openaiTTS: OpenAI | null = null;
+function getOpenAITTS() {
+  if (!openaiTTS && process.env.OPENAI_API_KEY) {
+    openaiTTS = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiTTS;
+}
+
+async function generateOpenAISpeech(text: string): Promise<string | null> {
+  const client = getOpenAITTS();
+  if (!client) return null;
+  try {
+    const audioDir = path.resolve(process.cwd(), 'client', 'public', 'audio');
+    if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+    const hash = crypto.createHash('sha256').update(`openai:nova:${text}`).digest('hex');
+    const filePath = path.join(audioDir, `${hash}.mp3`);
+    if (!fs.existsSync(filePath)) {
+      const mp3 = await client.audio.speech.create({
+        model: 'tts-1',
+        voice: 'nova',
+        input: text,
+      });
+      const buffer = Buffer.from(await mp3.arrayBuffer());
+      fs.writeFileSync(filePath, buffer);
+    }
+    return `/audio/${hash}.mp3`;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Text-to-Speech Routes
@@ -13,32 +50,32 @@ export function registerTTSRoutes(app: Express) {
   const router = Router();
 
   /**
-   * POST /api/coqui/tts
-   * Generate speech using Coqui TTS
+   * POST /api/tts/speak
+   * Unified TTS endpoint — tries ElevenLabs → OpenAI → Coqui in priority order.
+   * Falls back gracefully; client handles browser synthesis when all return null.
    */
   router.post(
-    '/coqui/tts',
+    '/tts/speak',
     asyncHandler(async (req: Request, res: Response) => {
-      const { text, voiceId } = req.body;
-
-      if (!text) {
-        return res.status(400).json({ error: 'Text is required' });
+      const { text } = req.body as { text?: string };
+      if (!text?.trim()) {
+        return res.status(400).json({ error: 'text is required' });
       }
 
-      // Call Coqui service
-      const audioUrl = await generateCoquiSpeech(text, voiceId);
+      const truncated = text.slice(0, 4096); // hard cap
+
+      // Priority chain
+      const audioUrl =
+        (await generateElevenLabsSpeech(truncated)) ??
+        (await generateOpenAISpeech(truncated)) ??
+        (await generateCoquiSpeech(truncated));
 
       if (!audioUrl) {
-        return res.status(500).json({
-          error:
-            'Failed to generate speech. Ensure Coqui TTS server is running and configured.',
-        });
+        // No server TTS available — tell client to use browser speech
+        return res.json({ audioUrl: null, fallback: 'browser' });
       }
 
-      res.json({
-        success: true,
-        audioUrl,
-      });
+      return res.json({ audioUrl });
     })
   );
 
