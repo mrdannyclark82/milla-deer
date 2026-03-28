@@ -1,5 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { Client } = require('castv2-client');
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { Client } = _require('castv2-client') as any;
 
 // YouTube Cast app ID (official Google receiver)
 const YOUTUBE_CAST_APP_ID = '233637DE';
