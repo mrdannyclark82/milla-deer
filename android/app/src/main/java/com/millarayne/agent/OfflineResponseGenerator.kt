@@ -28,47 +28,68 @@ class OfflineResponseGenerator(private val context: Context) {
     private val slmDispatcher = GpuSlmDispatcher(context)
     private var slmReady = false
 
+    /** Last backend that produced a response — observable by ChatViewModel */
+    var lastBackend: String = "pattern"
+        private set
+
     /**
      * Pre-warm the GPU SLM engine in the background.
-     * Call from ViewModel.init or Application.onCreate for lowest first-response latency.
+     * [nanoEnabled] controls whether the Gemma Nano Tier 0 is attempted.
+     * Call from Application.onCreate for lowest first-response latency.
      */
-    suspend fun warmUp() {
+    suspend fun warmUp(nanoEnabled: Boolean = true) {
         try {
             slmDispatcher.initialize(
                 mpConfig = MediaPipeInferenceEngine.Config(preferGpu = true),
+                slmConfig = GpuSlmDispatcher.Config(skipNano = !nanoEnabled),
             )
             slmReady = true
-            Log.i(TAG, "GPU SLM dispatcher warmed up")
+            Log.i(TAG, "GPU SLM dispatcher warmed up (nano=${nanoEnabled})")
         } catch (e: Exception) {
             Log.w(TAG, "GPU SLM warm-up failed (model may not be downloaded yet): ${e.message}")
         }
     }
+
+    /**
+     * Re-initialise backends with updated settings (e.g. user toggled Nano in Settings).
+     * Existing engine is released first.
+     */
+    suspend fun reinitialize(nanoEnabled: Boolean) {
+        slmDispatcher.release()
+        slmReady = false
+        warmUp(nanoEnabled)
+    }
     
     /**
-     * Generate a response for the given user message
-     * Returns a response and whether it was handled locally
+     * Generate a response for the given user message.
+     * Returns Pair(responseText, handledLocally).
+     * Also updates [lastBackend] to reflect the tier that responded.
      */
     suspend fun generateResponse(userMessage: String): Pair<String, Boolean> {
         val lowercaseMessage = userMessage.lowercase().trim()
         
-        // 1. Try instant edge command (< 10 ms)
+        // 1. Instant edge command (< 10 ms)
         val edgeResult = localEdgeAgent.processNaturalLanguage(userMessage)
         if (edgeResult.success && !edgeResult.requiresServer) {
+            lastBackend = "edge"
             return Pair(edgeResult.message, true)
         }
 
-        // 2. Try on-device LLM via GPU SLM dispatcher (< 150 ms on GPU)
+        // 2. On-device LLM via tri-dispatch (Nano → Gemma-3 → MLC → pattern)
         if (slmReady) {
             return try {
                 val result = slmDispatcher.dispatch(userMessage)
                 if (result.text.isNotBlank()) {
+                    lastBackend = result.backend  // "gemma-nano" | "mediapipe" | "mlc-opencl"
                     Log.d(TAG, "SLM response in ${result.latencyMs}ms via ${result.backend}")
                     Pair(result.text.trim(), true)
                 } else {
+                    lastBackend = "pattern"
                     patternResponse(lowercaseMessage)
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "SLM dispatch failed: ${e.message}")
+                lastBackend = "pattern"
                 patternResponse(lowercaseMessage)
             }
         }

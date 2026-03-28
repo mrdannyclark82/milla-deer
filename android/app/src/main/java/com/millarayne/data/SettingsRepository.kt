@@ -23,13 +23,14 @@ class SettingsRepository(private val context: Context) {
         private val OFFLINE_MODE_ENABLED_KEY = booleanPreferencesKey("offline_mode_enabled")
         private val AUTO_FALLBACK_KEY = booleanPreferencesKey("auto_fallback")
         private val SPOKEN_REPLIES_ENABLED_KEY = booleanPreferencesKey("spoken_replies_enabled")
+        private val NANO_ENABLED_KEY = booleanPreferencesKey("nano_enabled")
 
         const val DEFAULT_SERVER_URL = "http://10.0.2.2:5000/"
-        // Set this to your Cloudflare tunnel URL or public domain. Leave empty to disable remote fallback.
         const val REMOTE_SERVER_URL = ""
         const val DEFAULT_OFFLINE_MODE_ENABLED = false
         const val DEFAULT_AUTO_FALLBACK = true
         const val DEFAULT_SPOKEN_REPLIES_ENABLED = true
+        const val DEFAULT_NANO_ENABLED = true
 
         fun normalizeServerUrl(url: String): String {
             var normalized = url.trim()
@@ -69,6 +70,10 @@ class SettingsRepository(private val context: Context) {
         preferences[SPOKEN_REPLIES_ENABLED_KEY] ?: DEFAULT_SPOKEN_REPLIES_ENABLED
     }
 
+    val nanoEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[NANO_ENABLED_KEY] ?: DEFAULT_NANO_ENABLED
+    }
+
     suspend fun setServerUrl(url: String) {
         context.dataStore.edit { preferences ->
             preferences[SERVER_URL_KEY] = normalizeServerUrl(url)
@@ -101,6 +106,12 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSpokenRepliesEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[SPOKEN_REPLIES_ENABLED_KEY] = enabled
+        }
+    }
+
+    suspend fun setNanoEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[NANO_ENABLED_KEY] = enabled
         }
     }
 }

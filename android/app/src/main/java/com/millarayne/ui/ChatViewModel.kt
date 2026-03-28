@@ -45,6 +45,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _isOfflineMode = MutableStateFlow(false)
     val isOfflineMode: StateFlow<Boolean> = _isOfflineMode.asStateFlow()
 
+    /** Which inference tier last generated an offline response: "server" | "gemma-nano" | "mediapipe" | "mlc-opencl" | "edge" | "pattern" */
+    private val _inferenceBackend = MutableStateFlow("server")
+    val inferenceBackend: StateFlow<String> = _inferenceBackend.asStateFlow()
+
     private val _serverUrl = MutableStateFlow(SettingsRepository.DEFAULT_SERVER_URL)
     val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
 
@@ -61,6 +65,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _spokenRepliesEnabled =
         MutableStateFlow(SettingsRepository.DEFAULT_SPOKEN_REPLIES_ENABLED)
     val spokenRepliesEnabled: StateFlow<Boolean> = _spokenRepliesEnabled.asStateFlow()
+
+    private val _nanoEnabled = MutableStateFlow(SettingsRepository.DEFAULT_NANO_ENABLED)
+    val nanoEnabled: StateFlow<Boolean> = _nanoEnabled.asStateFlow()
 
     private val _screenShareActive = MutableStateFlow(false)
     val screenShareActive: StateFlow<Boolean> = _screenShareActive.asStateFlow()
@@ -126,6 +133,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             settingsRepository.spokenRepliesEnabled.collectLatest {
                 _spokenRepliesEnabled.value = it
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.nanoEnabled.collectLatest { enabled ->
+                _nanoEnabled.value = enabled
+                // Re-initialise SLM backends when user toggles Nano in settings
+                offlineGenerator.reinitialize(enabled)
             }
         }
     }
@@ -244,6 +258,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setNanoEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setNanoEnabled(enabled)
+        }
+    }
+
     fun setScreenShareActive(active: Boolean) {
         _screenShareActive.value = active
     }
@@ -329,6 +349,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 _isOfflineMode.value = false
+                _inferenceBackend.value = "server"
                 val synced = syncMessagesFromServer()
                 return ChatDispatchResult(
                     content = response.body()!!.response,
@@ -352,15 +373,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun offlineFallbackResponse(content: String, imageData: String?): String {
-        if (imageData != null) {
-            // SLM can't process raw pixels, but can reason about the prompt itself offline
-            val prompt = if (content.isNotBlank()) content else
-                "I captured your screen but am offline — describe what you need help with."
-            val (response, _) = offlineGenerator.generateResponse(prompt)
-            return response
-        }
+        val prompt = if (imageData != null && content.isBlank())
+            "I captured your screen but am offline — describe what you need help with."
+        else content
 
-        val (offlineResponse, _) = offlineGenerator.generateResponse(content)
+        val (offlineResponse, _) = offlineGenerator.generateResponse(prompt)
+        _inferenceBackend.value = offlineGenerator.lastBackend
         return offlineResponse
     }
 

@@ -253,6 +253,8 @@ private fun ChatScreen(
     val offlineModeEnabled by viewModel.offlineModeEnabled.collectAsStateWithLifecycle()
     val autoFallback by viewModel.autoFallback.collectAsStateWithLifecycle()
     val spokenRepliesEnabled by viewModel.spokenRepliesEnabled.collectAsStateWithLifecycle()
+    val nanoEnabled by viewModel.nanoEnabled.collectAsStateWithLifecycle()
+    val inferenceBackend by viewModel.inferenceBackend.collectAsStateWithLifecycle()
     val screenShareActive by viewModel.screenShareActive.collectAsStateWithLifecycle()
     val screenShareStatus by viewModel.screenShareStatus.collectAsStateWithLifecycle()
     val screenSharePreview by viewModel.screenSharePreview.collectAsStateWithLifecycle()
@@ -265,6 +267,7 @@ private fun ChatScreen(
     var pendingOfflineMode by remember { mutableStateOf(offlineModeEnabled) }
     var pendingAutoFallback by remember { mutableStateOf(autoFallback) }
     var pendingSpokenReplies by remember { mutableStateOf(spokenRepliesEnabled) }
+    var pendingNanoEnabled by remember { mutableStateOf(nanoEnabled) }
     var lastSpokenAssistantMessageId by remember { mutableStateOf<Long?>(null) }
     var pendingAttachmentPrompt by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -424,7 +427,8 @@ private fun ChatScreen(
         sessionToken,
         offlineModeEnabled,
         autoFallback,
-        spokenRepliesEnabled
+        spokenRepliesEnabled,
+        nanoEnabled
     ) {
         if (isSettingsOpen) {
             pendingServerUrl = serverUrl
@@ -432,6 +436,7 @@ private fun ChatScreen(
             pendingOfflineMode = offlineModeEnabled
             pendingAutoFallback = autoFallback
             pendingSpokenReplies = spokenRepliesEnabled
+            pendingNanoEnabled = nanoEnabled
         }
     }
 
@@ -459,7 +464,7 @@ private fun ChatScreen(
                         Text(
                             when {
                                 offlineModeEnabled -> "Offline only"
-                                isOfflineMode -> "Offline fallback"
+                                isOfflineMode -> "Offline · ${inferenceBackend.replace("-", " ")}"
                                 else -> "Connected"
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -750,11 +755,13 @@ private fun ChatScreen(
             offlineModeEnabled = pendingOfflineMode,
             autoFallback = pendingAutoFallback,
             spokenRepliesEnabled = pendingSpokenReplies,
+            nanoEnabled = pendingNanoEnabled,
             onServerUrlChange = { pendingServerUrl = it },
             onSessionTokenChange = { pendingSessionToken = it },
             onOfflineModeChange = { pendingOfflineMode = it },
             onAutoFallbackChange = { pendingAutoFallback = it },
             onSpokenRepliesChange = { pendingSpokenReplies = it },
+            onNanoEnabledChange = { pendingNanoEnabled = it },
             onDismiss = { isSettingsOpen = false },
             onSave = {
                 viewModel.updateServerUrl(pendingServerUrl)
@@ -762,6 +769,7 @@ private fun ChatScreen(
                 viewModel.setOfflineModeEnabled(pendingOfflineMode)
                 viewModel.setAutoFallback(pendingAutoFallback)
                 viewModel.setSpokenRepliesEnabled(pendingSpokenReplies)
+                viewModel.setNanoEnabled(pendingNanoEnabled)
                 isSettingsOpen = false
                 localError = null
             }
@@ -928,11 +936,13 @@ private fun SettingsDialog(
     offlineModeEnabled: Boolean,
     autoFallback: Boolean,
     spokenRepliesEnabled: Boolean,
+    nanoEnabled: Boolean,
     onServerUrlChange: (String) -> Unit,
     onSessionTokenChange: (String) -> Unit,
     onOfflineModeChange: (Boolean) -> Unit,
     onAutoFallbackChange: (Boolean) -> Unit,
     onSpokenRepliesChange: (Boolean) -> Unit,
+    onNanoEnabledChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -978,6 +988,12 @@ private fun SettingsDialog(
                     description = "Read assistant responses out loud after they arrive.",
                     checked = spokenRepliesEnabled,
                     onCheckedChange = onSpokenRepliesChange
+                )
+                SettingsToggleRow(
+                    label = "Gemma Nano (Tier 0)",
+                    description = "Use Gemma Nano for ultra-fast offline responses (~60ms). Disable for complex queries that need the full Gemma-3 1B model.",
+                    checked = nanoEnabled,
+                    onCheckedChange = onNanoEnabledChange
                 )
             }
         },
