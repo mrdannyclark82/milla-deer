@@ -112,7 +112,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // MediaPipe Tasks GenAI — on-device LLM inference (Gemma-3 1B 4-bit + Gemma-4 preview)
-    implementation("com.google.mediapipe:tasks-genai:0.10.38")
+    implementation("com.google.mediapipe:tasks-genai:0.10.33")
 
     // MLC LLM — loaded via reflection at runtime (not available in standard Maven repos;
     // install the AAR manually or build from source: https://github.com/mlc-ai/mlc-llm)
