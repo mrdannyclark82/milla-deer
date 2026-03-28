@@ -124,7 +124,7 @@ export async function startVisioPairing(): Promise<{ success: boolean; message: 
 export async function completeVisioPairing(pin: string, pairingToken: string): Promise<{ success: boolean; authToken?: string; message: string }> {
   if (!VIZIO_TV_IP) return { success: false, message: 'VIZIO_TV_IP not set in .env' };
   const { default: https } = await import('https');
-  const body = JSON.stringify({ DEVICE_ID: 'milla-rayne', PAIRING_REQ_TOKEN: pairingToken, RESPONSE_VALUE: pin });
+  const body = JSON.stringify({ DEVICE_ID: 'milla-rayne', CHALLENGE_TYPE: 1, PAIRING_REQ_TOKEN: Number(pairingToken), RESPONSE_VALUE: pin });
 
   return new Promise((resolve) => {
     const req = https.request(
