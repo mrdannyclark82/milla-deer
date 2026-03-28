@@ -2,7 +2,7 @@ import nodeFetch from 'node-fetch';
 import { InferenceClient } from '@huggingface/inference';
 import { getHuggingFaceMCPService } from './huggingfaceMcpService.ts';
 import { config } from './config';
-import { generateImageWithGoogle } from './googleImageService';
+import { generateImageWithXAI } from './xaiImageService';
 import { generateImageWithVenice } from './veniceImageService';
 import { generateImageWithPollinations } from './pollinationsImageService';
 globalThis.fetch = nodeFetch as unknown as typeof fetch;
@@ -27,21 +27,11 @@ function isHuggingFaceAuthError(error?: string): boolean {
 
 async function generateFallbackImage(
   prompt: string,
-  reason?: string,
-  attemptedGoogleResult?: ImageGenerationResult
+  reason?: string
 ): Promise<ImageGenerationResult> {
-  const googleResult =
-    attemptedGoogleResult ?? (await generateImageWithGoogle(prompt));
-  if (googleResult.success) {
-    return googleResult;
-  }
-  console.warn('Google image fallback failed:', googleResult.error);
-
   if (config.venice.apiKey) {
     const veniceResult = await generateImageWithVenice(prompt);
-    if (veniceResult.success) {
-      return veniceResult;
-    }
+    if (veniceResult.success) return veniceResult;
     console.warn('Venice image fallback failed:', veniceResult.error);
   }
 
@@ -51,16 +41,11 @@ async function generateFallbackImage(
     model: 'flux',
   });
 
-  if (pollinationsResult.success) {
-    return pollinationsResult;
-  }
+  if (pollinationsResult.success) return pollinationsResult;
 
   return {
     success: false,
-    error:
-      pollinationsResult.error ||
-      reason ||
-      'All configured image backends failed.',
+    error: pollinationsResult.error || reason || 'All configured image backends failed.',
   };
 }
 
@@ -73,128 +58,57 @@ async function generateFallbackImage(
 export async function generateImage(
   prompt: string
 ): Promise<ImageGenerationResult> {
-  const googleResult = await generateImageWithGoogle(prompt);
-  if (googleResult.success) {
-    return googleResult;
+  // 1. xAI Aurora (primary)
+  if (process.env.XAI_API_KEY) {
+    const xaiResult = await generateImageWithXAI(prompt);
+    if (xaiResult.success) return xaiResult;
+    console.warn('[imageService] xAI Aurora failed:', xaiResult.error);
   }
 
+  // 2. HuggingFace (secondary)
   const huggingFaceApiKey = config.huggingface.apiKey;
-  if (!huggingFaceApiKey) {
-    return generateFallbackImage(
-      prompt,
-      googleResult.error ||
-        'Hugging Face API key is not configured and no alternate backend succeeded.',
-      googleResult
-    );
-  }
-
-  // Try using MCP service first
-  const mcpService = getHuggingFaceMCPService();
-  if (mcpService) {
-    try {
-      const mcpResult = await mcpService.generateImage(prompt, {
-        numInferenceSteps: 30,
-        guidanceScale: 7.5,
-      });
-
-      if (mcpResult.success && mcpResult.imageUrl) {
-        return {
-          success: true,
-          imageUrl: mcpResult.imageUrl,
-        };
-      }
-      if (isHuggingFaceAuthError(mcpResult.error)) {
-        return generateFallbackImage(
-          prompt,
-          'Hugging Face authentication failed and fallback backends were unavailable.',
-          googleResult
-        );
-      }
-      // If MCP fails, fall back to direct API
-      console.warn(
-        'MCP generation failed, falling back to direct API:',
-        mcpResult.error
-      );
-    } catch (mcpError) {
-      const errorMessage =
-        mcpError instanceof Error ? mcpError.message : String(mcpError);
-      if (isHuggingFaceAuthError(errorMessage)) {
-        return generateFallbackImage(
-          prompt,
-          'Hugging Face authentication failed and fallback backends were unavailable.',
-          googleResult
-        );
-      }
-      console.warn('MCP service error, falling back to direct API:', mcpError);
-    }
-  }
-
-  // Fallback to direct API implementation
-  try {
-    const model =
-      config.huggingface.model || 'stabilityai/stable-diffusion-2-1';
-
-    if (isLikelyUnsupportedHuggingFaceImageModel(model)) {
-      return generateFallbackImage(
-        prompt,
-        `Hugging Face model "${model}" looks like a LoRA or adapter, not a standalone text-to-image inference model.`,
-        googleResult
-      );
-    }
-
-    const maxAttempts = 3;
-    let lastError: string | undefined;
-    const client = new InferenceClient(huggingFaceApiKey);
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  if (huggingFaceApiKey) {
+    const mcpService = getHuggingFaceMCPService();
+    if (mcpService) {
       try {
-        const response = await client.textToImage({
-          model,
-          inputs: prompt,
-          parameters: {
-            num_inference_steps: 30,
-            guidance_scale: 7.5,
-          },
+        const mcpResult = await mcpService.generateImage(prompt, {
+          numInferenceSteps: 30,
+          guidanceScale: 7.5,
         });
-
-        const imageBlob = response as unknown as Blob;
-        const arrayBuffer = await imageBlob.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const imageUrl = `data:image/png;base64,${buffer.toString('base64')}`;
-
-        return { success: true, imageUrl };
-      } catch (err) {
-        lastError = err instanceof Error ? err.message : String(err);
-        if (isHuggingFaceAuthError(lastError)) {
-          return generateFallbackImage(
-            prompt,
-            'Hugging Face authentication failed and fallback backends were unavailable.',
-            googleResult
-          );
-        }
-        if (/loading/i.test(lastError)) {
-          lastError = 'Model is currently loading. Please try again in a moment.';
-        }
-        if (attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, 1000 * attempt));
-        }
+        if (mcpResult.success && mcpResult.imageUrl) return { success: true, imageUrl: mcpResult.imageUrl };
+        if (isHuggingFaceAuthError(mcpResult.error)) return generateFallbackImage(prompt, 'HuggingFace auth failed.');
+        console.warn('[imageService] MCP failed, trying direct HF:', mcpResult.error);
+      } catch (mcpError) {
+        const msg = mcpError instanceof Error ? mcpError.message : String(mcpError);
+        if (isHuggingFaceAuthError(msg)) return generateFallbackImage(prompt, 'HuggingFace auth failed.');
+        console.warn('[imageService] MCP error:', mcpError);
       }
     }
 
-    return generateFallbackImage(
-      prompt,
-      lastError || 'Failed to generate image with Hugging Face.',
-      googleResult
-    );
-  } catch (error) {
-    return generateFallbackImage(
-      prompt,
-      error instanceof Error
-        ? error.message
-        : 'Unknown error during image generation.',
-      googleResult
-    );
+    const model = config.huggingface.model || 'stabilityai/stable-diffusion-2-1';
+    if (!isLikelyUnsupportedHuggingFaceImageModel(model)) {
+      const client = new InferenceClient(huggingFaceApiKey);
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const response = await client.textToImage({
+            model,
+            inputs: prompt,
+            parameters: { num_inference_steps: 30, guidance_scale: 7.5 },
+          });
+          const imageBlob = response as unknown as Blob;
+          const buffer = Buffer.from(await imageBlob.arrayBuffer());
+          return { success: true, imageUrl: `data:image/png;base64,${buffer.toString('base64')}` };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (isHuggingFaceAuthError(msg)) return generateFallbackImage(prompt, 'HuggingFace auth failed.');
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
   }
+
+  // 3. Venice → Pollinations
+  return generateFallbackImage(prompt, 'xAI and HuggingFace unavailable.');
 }
 
 export function extractImagePrompt(userMessage: string): string | null {
