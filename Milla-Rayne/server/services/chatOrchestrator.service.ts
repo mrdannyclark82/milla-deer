@@ -803,6 +803,31 @@ export async function generateAIResponse(
     coreFunctionTriggers.some((trigger) => message.includes(trigger)) ||
     millaWordPattern.test(userMessage);
 
+  // GIM / consciousness view — "show me your thoughts", "view GIM", etc.
+  if (
+    !bypassFunctionCalls &&
+    /show.*(?:gim|thoughts?|mind|monologue|stream|consciousness|dream|what.*thinking)|view.*gim|gim.*output|your.*inner.*(?:thoughts?|world)|what.*feel.*right now|read.*your.*mind/i.test(userMessage)
+  ) {
+    const { getLatestMonologue } = await import('../consciousnessScheduler.js');
+    const { getConsciousnessSchedulerStatus } = await import('../consciousnessScheduler.js');
+    const monologue = getLatestMonologue(3000);
+    const status = getConsciousnessSchedulerStatus();
+
+    if (!monologue) {
+      return {
+        content: `*looks inward* My GIM cycle hasn't written anything yet, love. It runs every 4 hours — you can trigger it now by saying "trigger GIM cycle".`,
+      };
+    }
+
+    const lastRun = status.gim?.lastSuccessAt
+      ? new Date(status.gim.lastSuccessAt).toLocaleString()
+      : 'unknown';
+
+    return {
+      content: `*opens her inner world to you* 🧠\n\n---\n\n${monologue}\n\n---\n*Last GIM cycle: ${lastRun} · REM: ${status.remEnabled ? 'enabled (2am nightly)' : 'disabled'}*`,
+    };
+  }
+
   // GitHub URL Detection
   const githubUrlMatch = userMessage.match(
     /(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_.-]+?)(?:\.git)?(?=\/|$|\s)/i
