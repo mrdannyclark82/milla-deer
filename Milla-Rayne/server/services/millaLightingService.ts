@@ -134,6 +134,96 @@ print('ok')
   }
 }
 
+/** Tuya Cloud API — works without local key, just needs iot.tuya.com credentials */
+class TuyaCloudController implements LightController {
+  name = 'TuyaCloud';
+  private clientId     = process.env.TUYA_CLIENT_ID     || '';
+  private clientSecret = process.env.TUYA_CLIENT_SECRET || '';
+  private deviceId     = process.env.LIGHT_STRIP_DEVICE_ID || '';
+  private region       = process.env.TUYA_REGION        || 'us';
+  private accessToken: string | null = null;
+  private tokenExpiry  = 0;
+
+  private get baseUrl() { return `https://openapi.tuya${this.region}.com`; }
+
+  async isAvailable(): Promise<boolean> {
+    return !!(this.clientId && this.clientSecret && this.deviceId);
+  }
+
+  private async sign(str: string): Promise<string> {
+    const { createHmac } = await import('crypto');
+    return createHmac('sha256', this.clientSecret).update(str).digest('hex').toUpperCase();
+  }
+
+  private async getToken(): Promise<string | null> {
+    if (this.accessToken && Date.now() < this.tokenExpiry) return this.accessToken;
+    const ts = Date.now().toString();
+    const sign = await this.sign(this.clientId + ts);
+    try {
+      const res = await fetch(`${this.baseUrl}/v1.0/token?grant_type=1`, {
+        headers: { client_id: this.clientId, sign, t: ts, sign_method: 'HMAC-SHA256' },
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = await res.json() as any;
+      if (data.success) {
+        this.accessToken = data.result.access_token;
+        this.tokenExpiry  = Date.now() + (data.result.expire_time * 1000) - 60000;
+        return this.accessToken;
+      }
+      console.error('[TuyaCloud] Auth failed:', data.msg);
+    } catch (err) { console.error('[TuyaCloud] Token error:', err); }
+    return null;
+  }
+
+  async setMood(mood: MillaMood, profile: MoodProfile): Promise<boolean> {
+    const token = await this.getToken();
+    if (!token) return false;
+    const { r, g, b } = profile.color;
+    // Convert RGB to HSV for Tuya colour_data_v2
+    const max = Math.max(r, g, b) / 255;
+    const min = Math.min(r, g, b) / 255;
+    const delta = max - min;
+    let h = 0;
+    if (delta > 0) {
+      if (max === r/255) h = ((g/255 - b/255) / delta) % 6;
+      else if (max === g/255) h = (b/255 - r/255) / delta + 2;
+      else h = (r/255 - g/255) / delta + 4;
+      h = Math.round(h * 60);
+      if (h < 0) h += 360;
+    }
+    const s = max === 0 ? 0 : Math.round((delta / max) * 1000);
+    const v = Math.round(max * 1000);
+
+    const commands = [
+      { code: 'switch_led',      value: true },
+      { code: 'work_mode',       value: profile.mode === 'static' ? 'colour' : 'scene' },
+      { code: 'colour_data_v2',  value: { h, s, v } },
+      { code: 'bright_value_v2', value: Math.round(profile.brightness * 10) },
+    ];
+
+    const ts    = Date.now().toString();
+    const path  = `/v1.0/devices/${this.deviceId}/commands`;
+    const body  = JSON.stringify({ commands });
+    const sign  = await this.sign(this.clientId + token + ts + path + body);
+
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method: 'POST',
+        headers: {
+          client_id: this.clientId, access_token: token,
+          sign, t: ts, sign_method: 'HMAC-SHA256', 'Content-Type': 'application/json',
+        },
+        body,
+        signal: AbortSignal.timeout(6000),
+      });
+      const data = await res.json() as any;
+      if (data.success) { console.log(`[TuyaCloud] ✓ ${mood}`); return true; }
+      console.error('[TuyaCloud] cmd error:', data.msg);
+      return false;
+    } catch (err) { console.error('[TuyaCloud] request failed:', err); return false; }
+  }
+}
+
 /** OpenRGB CLI — controls USB-HID RGB devices */
 class OpenRGBController implements LightController {
   name = 'OpenRGB';
@@ -206,6 +296,7 @@ class WledController implements LightController {
 
 class MillaLightingService {
   private controllers: LightController[] = [
+    new TuyaCloudController(),
     new TuyaLocalController(),
     new WledController(),
     new OpenRGBController(),

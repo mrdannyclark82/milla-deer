@@ -64,8 +64,8 @@
           "description": "Integrate a security scanning tool into the CI/CD pipeline. This example demonstrates adding GitHub CodeQL Static Application Security Testing (SAST) to a GitHub Actions workflow. The fix involves adding a new job to the CI/CD pipeline configuration that checks out the repository, initializes CodeQL for the relevant programming languages, and then performs a security analysis. The results are typically uploaded as security alerts to the repository.",
           "files": [],
           "status": "testing",
-          "testsPassed": 2,
-          "testsFailed": 2,
+          "testsPassed": 5,
+          "testsFailed": 3,
           "addedAt": 1774683236399
         }
       ],
@@ -102,6 +102,42 @@
           "id": "test_1774700533217_ns5zrzq4v",
           "featureId": "feat_1774683236399_a1kqt74mx",
           "timestamp": 1774700533217,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774711273214_ryf79q9bv",
+          "featureId": "feat_1774683236399_a1kqt74mx",
+          "timestamp": 1774711273214,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774722073215_x6fx79ht3",
+          "featureId": "feat_1774683236399_a1kqt74mx",
+          "timestamp": 1774722073215,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1774732873215_iic61yaip",
+          "featureId": "feat_1774683236399_a1kqt74mx",
+          "timestamp": 1774732873215,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774743673216_zhh7lnia0",
+          "featureId": "feat_1774683236399_a1kqt74mx",
+          "timestamp": 1774743673216,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
@@ -166,8 +202,8 @@
           "description": "Integrate a security scanning step into the existing CI/CD pipeline. This involves adding a new job or step to the CI/CD configuration file (e.g., `your_ci_cd_config.yml`) that executes a static application security testing (SAST) tool, dependency scanner, or other relevant security checks. The provided changes demonstrate how to add a generic 'security_scan' job to a CI/CD workflow, which should be customized with the actual commands or actions for your chosen security scanner and project technology.",
           "files": [],
           "status": "testing",
-          "testsPassed": 1,
-          "testsFailed": 1,
+          "testsPassed": 4,
+          "testsFailed": 2,
           "addedAt": 1774700545214
         }
       ],
@@ -190,9 +226,240 @@
           "passed": false,
           "details": "Some tests failed - review needed",
           "duration": 0
+        },
+        {
+          "id": "test_1774711273218_34yffkm62",
+          "featureId": "feat_1774700545213_n9jagi604",
+          "timestamp": 1774711273218,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774722073216_bcq46unc0",
+          "featureId": "feat_1774700545213_n9jagi604",
+          "timestamp": 1774722073216,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1774732873220_wt3hmn2m6",
+          "featureId": "feat_1774700545213_n9jagi604",
+          "timestamp": 1774732873220,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774743673220_7hq5fdxsx",
+          "featureId": "feat_1774700545213_n9jagi604",
+          "timestamp": 1774743673220,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1774711284951_lhzsrp148": {
+      "id": "sandbox_1774711284951_lhzsrp148",
+      "name": "fix-security-1774711284951",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1774711284951_1774711284951",
+      "status": "active",
+      "createdAt": 1774711284951,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1774711285041_eke185qd6",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Integrate security scanning tools into the existing CI/CD pipeline. This involves adding new steps or a dedicated stage to the pipeline that automatically performs security analysis, such as Static Application Security Testing (SAST) and Software Composition Analysis (SCA), during the build or testing phases. The pipeline should be configured to fail if critical vulnerabilities are detected, preventing the deployment of insecure code.",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1774711285041
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1774711285042_9pldv3p8o",
+          "featureId": "feat_1774711285041_eke185qd6",
+          "timestamp": 1774711285042,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774711285042_b2xhb3h0h",
+          "featureId": "feat_1774711285041_eke185qd6",
+          "timestamp": 1774711285042,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1774722082685_f1lapc0cg": {
+      "id": "sandbox_1774722082685_f1lapc0cg",
+      "name": "fix-security-1774722082684",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1774722082684_1774722082685",
+      "status": "active",
+      "createdAt": 1774722082685,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1774722082705_ifukwujun",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The fix involves integrating a Static Application Security Testing (SAST) tool, such as Snyk, into the CI/CD pipeline. This example specifically demonstrates adding a Snyk scan step to a hypothetical GitHub Actions workflow (`.github/workflows/main.yml`). This step will automatically scan the codebase for known vulnerabilities and misconfigurations with every push or pull request, providing early feedback on potential security issues. This helps in identifying and remediating security flaws before they reach production.",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 2,
+          "testsFailed": 2,
+          "addedAt": 1774722082706
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1774722082706_1ipmwb4n2",
+          "featureId": "feat_1774722082705_ifukwujun",
+          "timestamp": 1774722082706,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1774722082706_mx4mrlfhm",
+          "featureId": "feat_1774722082705_ifukwujun",
+          "timestamp": 1774722082706,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774732873227_2pos52ceo",
+          "featureId": "feat_1774722082705_ifukwujun",
+          "timestamp": 1774732873227,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774743673228_9f2ckd5h3",
+          "featureId": "feat_1774722082705_ifukwujun",
+          "timestamp": 1774743673228,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1774732885917_pnn75hb3v": {
+      "id": "sandbox_1774732885917_pnn75hb3v",
+      "name": "fix-security-1774732885917",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1774732885917_1774732885917",
+      "status": "active",
+      "createdAt": 1774732885917,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1774732885938_735okypmy",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The issue recommends integrating security scanning into the Continuous Integration/Continuous Delivery (CI/CD) pipeline. This involves adding automated tools to analyze code for vulnerabilities, misconfigurations, and other security flaws early in the development lifecycle. This can include Static Application Security Testing (SAST) for source code analysis, Software Composition Analysis (SCA) for identifying vulnerabilities in third-party dependencies, and potentially Dynamic Application Security Testing (DAST) or Infrastructure as Code (IaC) scanning depending on the pipeline's scope.",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 2,
+          "testsFailed": 1,
+          "addedAt": 1774732885938
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1774732885939_92x3ykcjm",
+          "featureId": "feat_1774732885938_735okypmy",
+          "timestamp": 1774732885939,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1774732885939_nhz28g9hz",
+          "featureId": "feat_1774732885938_735okypmy",
+          "timestamp": 1774732885939,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774743673229_1pzekm9ct",
+          "featureId": "feat_1774732885938_735okypmy",
+          "timestamp": 1774743673229,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1774743688276_0jowokzlx": {
+      "id": "sandbox_1774743688276_0jowokzlx",
+      "name": "fix-security-1774743688275",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1774743688275_1774743688276",
+      "status": "active",
+      "createdAt": 1774743688276,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1774743688325_y6mqjfkd5",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The fix involves integrating security scanning tools into your existing CI/CD pipeline. This typically means adding one or more new jobs or steps to your pipeline configuration file (e.g., `.github/workflows/ci.yml`, `.gitlab-ci.yml`, `Jenkinsfile`, etc.). The provided example demonstrates how to add a dedicated `security-scan` job that includes steps for Static Application Security Testing (SAST) and Software Composition Analysis (SCA). These steps should be configured with actual security scanning tools relevant to your project's technology stack (e.g., Bandit for Python, Trivy for containers/dependencies, SonarQube, Snyk, Dependabot, etc.). It's crucial that these scanning steps are configured to fail the pipeline if critical or medium severity vulnerabilities are detected.",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1774743688325
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1774743688326_ywhpzhjy8",
+          "featureId": "feat_1774743688325_y6mqjfkd5",
+          "timestamp": 1774743688326,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1774743688326_t3727zyft",
+          "featureId": "feat_1774743688325_y6mqjfkd5",
+          "timestamp": 1774743688326,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     }
   },
-  "lastUpdated": 1774700545214
+  "lastUpdated": 1774743688326
 }
