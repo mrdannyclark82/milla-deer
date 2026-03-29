@@ -70,6 +70,10 @@ export async function registerModularRoutes(app: Express) {
   const { registerRagRoutes } = await import('./rag.routes');
   registerRagRoutes(app);
 
+  // Milla mood lighting (Monster RGB strip)
+  const lightingRouter = (await import('./lighting.routes')).default;
+  app.use('/api/lighting', lightingRouter);
+
   // Start Telegram long-polling if token is configured
   if (isTelegramConfigured()) {
     startTelegramPolling();

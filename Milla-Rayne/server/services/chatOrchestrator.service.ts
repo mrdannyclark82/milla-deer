@@ -1497,6 +1497,11 @@ export async function generateAIResponse(
   );
 
   if (aiResponse.success && aiResponse.content) {
+    // Fire-and-forget mood lighting update
+    import('../services/millaLightingService').then(({ millaLighting, detectMoodFromText }) => {
+      millaLighting.setMood(detectMoodFromText(aiResponse.content));
+    }).catch(() => {});
+
     return {
       content: aiResponse.content,
       reasoning: userMessage.length > 20 ? reasoning : undefined,
