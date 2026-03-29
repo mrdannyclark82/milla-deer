@@ -238,8 +238,18 @@ class OpenRGBController implements LightController {
   async setMood(mood: MillaMood, profile: MoodProfile): Promise<boolean> {
     const { r, g, b } = profile.color;
     const hex = `${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    const modeMap: Record<MoodProfile['mode'], string> = {
+      static: 'Static', breathe: 'Breathing', pulse: 'Breathing',
+      chase: 'Chase Fade', rainbow: 'Rainbow', fade: 'Breathing',
+    };
+    const rgbMode = modeMap[profile.mode] || 'Static';
     try {
-      await execAsync(`openrgb --noautoconnect --color ${hex} 2>/dev/null`, { timeout: 5000 });
+      // sudo required for i2c DRAM access
+      await execAsync(
+        `sudo openrgb --device 0 --mode "${rgbMode}" --color ${hex} 2>/dev/null`,
+        { timeout: 6000 }
+      );
+      console.log(`[OpenRGB] ✓ ${mood} → #${hex} (${rgbMode})`);
       return true;
     } catch (err) {
       console.error('[OpenRGB] Failed:', err);
@@ -296,10 +306,10 @@ class WledController implements LightController {
 
 class MillaLightingService {
   private controllers: LightController[] = [
+    new OpenRGBController(),
     new TuyaCloudController(),
     new TuyaLocalController(),
     new WledController(),
-    new OpenRGBController(),
   ];
 
   private currentMood: MillaMood = 'default';
