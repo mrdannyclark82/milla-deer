@@ -144,24 +144,54 @@ class TuyaCloudController implements LightController {
   private accessToken: string | null = null;
   private tokenExpiry  = 0;
 
-  private get baseUrl() { return `https://openapi.tuya${this.region}.com`; }
+  private get baseUrl(): string {
+    const regionMap: Record<string, string> = {
+      'us':                           'openapi.tuyaus.com',
+      'az':                           'openapi.tuyaus.com',
+      'us-e':                         'openapi-ueaz.tuyaus.com',
+      'ue':                           'openapi-ueaz.tuyaus.com',
+      'Eastern America Data Center':  'openapi-ueaz.tuyaus.com',
+      'eu':                           'openapi.tuyaeu.com',
+      'eu-w':                         'openapi-weaz.tuyaeu.com',
+      'we':                           'openapi-weaz.tuyaeu.com',
+      'cn':                           'openapi.tuyacn.com',
+      'in':                           'openapi.tuyain.com',
+      'sg':                           'openapi-sg.iotbing.com',
+    };
+    return `https://${regionMap[this.region] ?? 'openapi.tuyaus.com'}`;
+  }
 
   async isAvailable(): Promise<boolean> {
     return !!(this.clientId && this.clientSecret && this.deviceId);
   }
 
-  private async sign(str: string): Promise<string> {
-    const { createHmac } = await import('crypto');
-    return createHmac('sha256', this.clientSecret).update(str).digest('hex').toUpperCase();
+  /** Tuya post-2021 signing: clientId + [token] + ts + METHOD\nSHA256(body)\n\npath */
+  private async signRequest(
+    method: string, path: string, body: string, token: string | null,
+  ): Promise<{ sign: string; ts: string }> {
+    const { createHmac, createHash } = await import('crypto');
+    const ts = Date.now().toString();
+    const bodyHash = createHash('sha256').update(body).digest('hex');
+    const tokenPart = token ?? '';
+    const payload = `${this.clientId}${tokenPart}${ts}${method}\n${bodyHash}\n\n${path}`;
+    const sign = createHmac('sha256', this.clientSecret).update(payload).digest('hex').toUpperCase();
+    return { sign, ts };
   }
 
   private async getToken(): Promise<string | null> {
     if (this.accessToken && Date.now() < this.tokenExpiry) return this.accessToken;
-    const ts = Date.now().toString();
-    const sign = await this.sign(this.clientId + ts);
+    const tokenPath = '/v1.0/token?grant_type=1';
+    const { sign, ts } = await this.signRequest('GET', tokenPath, '', null);
     try {
-      const res = await fetch(`${this.baseUrl}/v1.0/token?grant_type=1`, {
-        headers: { client_id: this.clientId, sign, t: ts, sign_method: 'HMAC-SHA256' },
+      const res = await fetch(`${this.baseUrl}${tokenPath}`, {
+        headers: {
+          client_id: this.clientId,
+          secret: this.clientSecret,
+          sign,
+          t: ts,
+          sign_method: 'HMAC-SHA256',
+          mode: 'cors',
+        },
         signal: AbortSignal.timeout(5000),
       });
       const data = await res.json() as any;
@@ -201,17 +231,20 @@ class TuyaCloudController implements LightController {
       { code: 'bright_value_v2', value: Math.round(profile.brightness * 10) },
     ];
 
-    const ts    = Date.now().toString();
-    const path  = `/v1.0/devices/${this.deviceId}/commands`;
-    const body  = JSON.stringify({ commands });
-    const sign  = await this.sign(this.clientId + token + ts + path + body);
+    const path = `/v1.0/iot-03/devices/${this.deviceId}/commands`;
+    const body = JSON.stringify({ commands });
+    const { sign, ts } = await this.signRequest('POST', path, body, token);
 
     try {
       const res = await fetch(`${this.baseUrl}${path}`, {
         method: 'POST',
         headers: {
-          client_id: this.clientId, access_token: token,
-          sign, t: ts, sign_method: 'HMAC-SHA256', 'Content-Type': 'application/json',
+          client_id: this.clientId,
+          access_token: token,
+          sign,
+          t: ts,
+          sign_method: 'HMAC-SHA256',
+          'Content-Type': 'application/json',
         },
         body,
         signal: AbortSignal.timeout(6000),
