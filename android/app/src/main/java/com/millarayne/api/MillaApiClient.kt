@@ -33,9 +33,9 @@ object MillaApiClient {
             chain.proceed(request)
         }
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private val serviceCache = ConcurrentHashMap<String, MillaApiService>()

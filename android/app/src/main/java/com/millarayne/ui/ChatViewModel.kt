@@ -396,10 +396,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val configuredUrl = SettingsRepository.normalizeServerUrl(_serverUrl.value)
         val candidates = linkedSetOf(configuredUrl)
 
-        if (configuredUrl == SettingsRepository.DEFAULT_SERVER_URL) {
-            candidates += "http://127.0.0.1:5000/"
-        }
-
         // Always try Cloudflare tunnel as remote fallback
         candidates += SettingsRepository.REMOTE_SERVER_URL
 

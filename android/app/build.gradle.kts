@@ -3,17 +3,18 @@ import org.gradle.api.tasks.compile.JavaCompile
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
 
 android {
     namespace = "com.millarayne"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.millarayne"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
@@ -50,10 +51,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
     }
 
     packaging {

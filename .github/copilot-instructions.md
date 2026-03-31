@@ -1,5 +1,7 @@
 # Copilot Instructions – Milla-Rayne / Milla-Deer
 
+> **System role, task completion rules, and operational directives are defined in `.github/COPILOT.md`. Read that first.**
+
 ## Repository Structure
 
 This is a **pnpm monorepo** with the following workspaces:
