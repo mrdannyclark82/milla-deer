@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * Milla AI CLI — poly-model AI-powered command-line toolbox
+ * Axiom — subconscious AI brain for Milla-Rayne
+ * Powered by nemotron-3-nano:30b on dray-dx4870 (Ollama)
  *
  * Features:
- *   chat   – interactive chat with Milla (default)
+ *   chat   – interactive chat with Milla via Axiom (default)
  *   exec   – run shell commands with human-in-the-loop safety gate
- *   gen    – ask Milla to generate a bash/python script and save it
+ *   gen    – ask Axiom to generate a bash/python script and save it
  *   tool   – list / add / run registered skill scripts (~/.milla_tools/)
  *   models – show available AI models
  *
- * AI backend: Milla-Rayne server at localhost:5000
- * Switch model with /model <name> inside chat, or via the web UI.
+ * Primary brain: nemotron-3-nano:30b @ dray-dx4870.lan:11434 (Ollama)
+ * Fallback:      Milla-Rayne server @ localhost:5000
  */
 
 import readline from 'readline';
@@ -67,7 +68,7 @@ function banner() {
   console.log(`
 ${c.magenta}╔══════════════════════════════════════════════════╗
 ║                                                  ║
-║  ${c.bold}💜  Milla AI CLI  —  poly-model toolbox  💜${c.reset}${c.magenta}     ║
+║  ${c.bold}💜  Axiom  —  Milla's subconscious brain  💜${c.reset}${c.magenta}    ║
 ║                                                  ║
 ╚══════════════════════════════════════════════════╝${c.reset}
 ${c.dim}Commands: chat (default) | exec | gen | tool | models
@@ -337,7 +338,7 @@ async function chatMode(): Promise<void> {
 
     // ── slash commands ──────────────────────────────
     if (input === '/exit' || input === '/quit') {
-      console.log(`\n${c.magenta}See ya Danny 💜${c.reset}\n`);
+      console.log(`\n${c.magenta}Axiom out. 💜${c.reset}\n`);
       rl.close();
       process.exit(0);
     }
@@ -400,11 +401,11 @@ async function chatMode(): Promise<void> {
     }
 
     // ── AI chat ─────────────────────────────────────
-    process.stdout.write(`\n${c.magenta}Milla${c.reset} ${c.dim}[${activeModel}] thinking…${c.reset}`);
+    process.stdout.write(`\n${c.magenta}Axiom${c.reset} ${c.dim}[${activeModel}] thinking…${c.reset}`);
     try {
       const reply = await askAI(input);
       process.stdout.write('\r\x1b[K');
-      console.log(`${c.magenta}Milla:${c.reset} ${reply}`);
+      console.log(`${c.magenta}Axiom:${c.reset} ${reply}`);
     } catch (e) {
       process.stdout.write('\r\x1b[K');
       console.log(`${c.red}✗ ${(e as Error).message}${c.reset}`);
