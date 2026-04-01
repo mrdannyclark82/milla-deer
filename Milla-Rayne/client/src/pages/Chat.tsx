@@ -20,6 +20,7 @@ import {
   Image,
 } from 'lucide-react';
 import { YoutubePlayerCyberpunk } from '../components/YoutubePlayerCyberpunk';
+import { YouTubeFYP } from '../components/YouTubeFYP';
 import { SandboxManager } from '../components/SandboxManager';
 import { Sandbox } from '../components/Sandbox';
 
@@ -164,7 +165,7 @@ export default function Chat() {
   const handleNavClick = (id: string) => {
     setActiveNav(id);
     if (id === 'youtube') {
-      setShowYoutubePlayer(true);
+      // FYP panel renders inline — no floating overlay
     } else if (id === 'memory') {
       setShowMemoryPanel(true);
     } else if (id === 'knowledge') {
@@ -335,6 +336,20 @@ export default function Chat() {
           </header>
 
           <div className="chat-area">
+            {activeNav === 'youtube' ? (
+              <YouTubeFYP
+                className="h-full"
+                onPlayVideo={(id) => {
+                  setCurrentVideoId(id);
+                  setShowYoutubePlayer(true);
+                }}
+                onAnalyzeVideo={(id) => {
+                  setActiveNav('chat');
+                  const url = `https://youtube.com/watch?v=${id}`;
+                  setMessage(`Analyze this video: ${url}`);
+                }}
+              />
+            ) : (
             <div className="chat-container">
               {messages.map((msg) => (
                 <div
@@ -384,6 +399,7 @@ export default function Chat() {
               )}
               <div ref={chatEndRef} />
             </div>
+            )}
           </div>
 
           <div className="input-area">

@@ -15,7 +15,10 @@ import {
   getMySubscriptions,
   getVideoDetails,
   searchVideos,
+  getMyChannel,
+  getTrendingVideos,
 } from '../googleYoutubeService';
+import { predictYouTubeQuery } from '../youtubePredictionService';
 import { addNoteToGoogleTasks, listTasks } from '../googleTasksService';
 import { asyncHandler } from '../utils/routeHelpers';
 import {
@@ -782,6 +785,86 @@ export function registerGoogleRoutes(app: Express) {
         Number.isNaN(maxResults) ? 8 : maxResults,
         order
       );
+      res.status(result.success ? 200 : 400).json(result);
+    })
+  );
+
+  router.get(
+    '/youtube/fyp',
+    asyncHandler(async (req, res) => {
+      const userId = await resolveUserId(getSessionToken(req));
+
+      // Run all sources in parallel
+      const [trendingResult, predictedQueries] = await Promise.all([
+        getTrendingVideos(userId, 'US', 12),
+        predictYouTubeQuery(),
+      ]);
+
+      // Search personalized topics (top 2 predicted queries)
+      const topQueries = predictedQueries.slice(0, 2);
+      const personalizedResults = await Promise.all(
+        topQueries.map((q) => searchVideos(userId, q, 6, 'relevance'))
+      );
+
+      // Normalize video shape
+      const normalizeVideo = (v: any, source: string) => ({
+        id: v.id?.videoId || v.id || '',
+        title: v.snippet?.title || v.title || '',
+        channel: v.snippet?.channelTitle || v.channel || '',
+        thumbnail:
+          v.snippet?.thumbnails?.medium?.url ||
+          v.snippet?.thumbnails?.default?.url ||
+          v.thumbnail ||
+          `https://img.youtube.com/vi/${v.id?.videoId || v.id}/mqdefault.jpg`,
+        description: v.snippet?.description || '',
+        publishedAt: v.snippet?.publishedAt || '',
+        viewCount: v.statistics?.viewCount ? Number(v.statistics.viewCount) : undefined,
+        source,
+      });
+
+      const trending = trendingResult.success
+        ? (trendingResult.data || []).map((v: any) => normalizeVideo(v, 'trending'))
+        : [];
+
+      const personalized = personalizedResults.flatMap((r, i) =>
+        r.success ? (r.data || []).map((v: any) => normalizeVideo(v, topQueries[i])) : []
+      );
+
+      // Interleave: 2 personalized, 1 trending pattern
+      const feed: any[] = [];
+      const seen = new Set<string>();
+      let pi = 0;
+      let ti = 0;
+      while (feed.length < 20 && (pi < personalized.length || ti < trending.length)) {
+        for (let j = 0; j < 2 && pi < personalized.length; j++, pi++) {
+          if (personalized[pi].id && !seen.has(personalized[pi].id)) {
+            seen.add(personalized[pi].id);
+            feed.push(personalized[pi]);
+          }
+        }
+        if (ti < trending.length) {
+          if (trending[ti].id && !seen.has(trending[ti].id)) {
+            seen.add(trending[ti].id);
+            feed.push(trending[ti]);
+          }
+          ti++;
+        }
+      }
+
+      res.json({
+        success: true,
+        feed,
+        predictedTopics: topQueries,
+        totalCount: feed.length,
+      });
+    })
+  );
+
+  router.get(
+    '/youtube/channel/mine',
+    asyncHandler(async (req, res) => {
+      const userId = await resolveUserId(getSessionToken(req));
+      const result = await getMyChannel(userId);
       res.status(result.success ? 200 : 400).json(result);
     })
   );

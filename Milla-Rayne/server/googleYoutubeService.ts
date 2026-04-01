@@ -495,6 +495,81 @@ export async function getChannelDetails(
   }
 }
 
+export async function getMyChannel(
+  userId: string = 'default-user'
+): Promise<YouTubeAPIResult> {
+  try {
+    const accessToken = await getValidAccessToken(userId, 'google');
+
+    if (!accessToken) {
+      return {
+        success: false,
+        message: 'You need to connect your Google account first.',
+        error: 'NO_TOKEN',
+      };
+    }
+
+    const params = new URLSearchParams({
+      part: 'snippet,contentDetails,statistics,brandingSettings',
+      mine: 'true',
+    });
+
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error?.message || 'Unknown error';
+      return {
+        success: false,
+        message: `Failed to fetch your channel: ${errorMessage}`,
+        error: `API_ERROR: ${errorMessage}`,
+      };
+    }
+
+    const data = await response.json();
+    if (!data.items || data.items.length === 0) {
+      return {
+        success: false,
+        message: 'No YouTube channel found for this account.',
+        error: 'NO_CHANNEL',
+      };
+    }
+
+    const channel = data.items[0];
+    return {
+      success: true,
+      message: `Channel: ${channel.snippet.title}`,
+      data: {
+        id: channel.id,
+        title: channel.snippet.title,
+        description: channel.snippet.description,
+        customUrl: channel.snippet.customUrl,
+        thumbnail: channel.snippet.thumbnails?.default?.url,
+        banner: channel.brandingSettings?.image?.bannerExternalUrl,
+        stats: {
+          subscribers: Number(channel.statistics.subscriberCount || 0),
+          views: Number(channel.statistics.viewCount || 0),
+          videoCount: Number(channel.statistics.videoCount || 0),
+          hiddenSubscriberCount: channel.statistics.hiddenSubscriberCount,
+        },
+        publishedAt: channel.snippet.publishedAt,
+        country: channel.snippet.country,
+        uploadsPlaylistId: channel.contentDetails?.relatedPlaylists?.uploads,
+      },
+    };
+  } catch (error) {
+    console.error('[Google YouTube API] Error fetching my channel:', error);
+    return {
+      success: false,
+      message: `Error fetching channel: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    };
+  }
+}
+
 export async function getTrendingVideos(
   userId: string = 'default-user',
   regionCode: string = 'US',
