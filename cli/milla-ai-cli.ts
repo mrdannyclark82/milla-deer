@@ -61,6 +61,7 @@ const c = {
 // HELPERS
 // ─────────────────────────────────────────────
 function banner() {
+  const ctxLoaded = PROJECT_CONTEXT.length > 0;
   console.log(`
 ${c.magenta}╔══════════════════════════════════════════════════╗
 ║                                                  ║
@@ -68,7 +69,7 @@ ${c.magenta}╔═════════════════════�
 ║                                                  ║
 ╚══════════════════════════════════════════════════╝${c.reset}
 ${c.dim}Commands: chat (default) | exec | gen | tool | models
-Type /help inside chat for all commands.${c.reset}
+Type /help inside chat for all commands.${c.reset}${ctxLoaded ? `\n${c.green}✓ Project context loaded${c.reset}` : ''}
 `);
 }
 
@@ -87,9 +88,32 @@ function saveState(s: Record<string, unknown>) {
 // Active model preference (sent as hint to the server)
 let activeModel = loadState().model as string | undefined ?? 'gemini';
 
+// Load project context from .github/copilot-instructions.md — injected as system context
+function loadProjectContext(): string {
+  const candidates = [
+    path.resolve(__dirname, '../.github/copilot-instructions.md'),
+    path.resolve(__dirname, '../../.github/copilot-instructions.md'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) {
+      try {
+        const raw = readFileSync(p, 'utf8');
+        // Extract just the Agent Context section (everything up to ## Repository Structure)
+        const match = raw.match(/## Agent Context[\s\S]*?(?=## Repository Structure|$)/);
+        const ctx = match ? match[0].trim() : raw.slice(0, 3000);
+        return `[Project Context]\n${ctx}`;
+      } catch { /* ignore */ }
+    }
+  }
+  return '';
+}
+
+const PROJECT_CONTEXT = loadProjectContext();
+
 async function askAI(message: string, systemContext?: string): Promise<string> {
+  const ctx = [PROJECT_CONTEXT, systemContext].filter(Boolean).join('\n\n');
   const body = JSON.stringify({
-    message: systemContext ? `${systemContext}\n\n${message}` : message,
+    message: ctx ? `${ctx}\n\n${message}` : message,
     model: activeModel,
   });
 
