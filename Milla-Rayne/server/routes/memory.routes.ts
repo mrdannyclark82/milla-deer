@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { storage } from '../storage';
 import { insertMessageSchema } from '@shared/schema';
 import { validateSession } from '../authService';
+import { requireAuth } from '../middleware/auth.middleware';
 import {
   searchKnowledge,
   updateMemories,
@@ -66,11 +67,10 @@ export function registerMemoryRoutes(app: Express) {
       const limit = parseInt(req.query.limit as string) || 50;
       const channel =
         typeof req.query.channel === 'string' ? req.query.channel.trim() : '';
-      try {
-        await syncReplycaSharedHistory();
-      } catch (error) {
-        console.warn('ReplycA social sync skipped during message fetch:', error);
-      }
+      // Fire-and-forget — don't block message fetch on social sync
+      syncReplycaSharedHistory().catch((error: unknown) =>
+        console.warn('ReplycA social sync skipped during message fetch:', error)
+      );
       const userId = await resolveUserId(getSessionToken(req));
       // Use getRecentMessages to avoid full-table decryption — only fetch what we need
       const messages = await storage.getRecentMessages(userId, limit, channel || undefined);
@@ -334,6 +334,10 @@ ${suggestion.suggestionText}`,
     })
   );
 
-  // Mount routes
-  app.use('/api', router);
+  // Mount routes — memory endpoints require authentication.
+  // Skip requireAuth for OAuth/auth initiation paths so login flow isn't blocked.
+  app.use('/api', (req, res, next) => {
+    if (req.path.startsWith('/auth/') || req.path.startsWith('/oauth/')) return next();
+    return requireAuth(req, res, next);
+  }, router);
 }
