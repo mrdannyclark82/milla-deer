@@ -33,6 +33,47 @@ export interface ParsedCommand {
     | 'cancel'
     | null;
   entities: { [key: string]: string };
+  /** 0–1 score of how confident this parse is. Values below 0.65 should fall through to generic AI. */
+  confidence: number;
+}
+
+/** Services whose trigger keywords are broad enough to generate false positives. */
+const BROAD_TRIGGER_SERVICES = new Set<string>(['youtube', 'profile']);
+
+/** Specific, unambiguous keywords per service — presence boosts confidence. */
+const SPECIFIC_KEYWORDS: Record<string, string[]> = {
+  calendar: ['calendar', 'schedule', 'event'],
+  gmail: ['email', 'inbox', 'mail'],
+  mcp: ['mcp', 'model context protocol'],
+  shell: ['shell', 'terminal', 'git status', 'git diff', 'workspace check', 'workspace lint', 'workspace build', 'workspace test'],
+  youtube: ['youtube'],
+  tasks: ['task', 'todo', 'to-do'],
+  consciousness: ['gim cycle', 'rem cycle', 'dream cycle', 'consciousness'],
+  repository: ['repo discovery', 'repository discovery', 'feature discovery', 'scan github'],
+  profile: [],
+};
+
+function scoreConfidence(result: Omit<ParsedCommand, 'confidence'>, lowerMessage: string): number {
+  if (!result.service) return 0;
+
+  let score = 0.5; // base for any service match
+
+  // Action matched → more specific
+  if (result.action) score += 0.15;
+
+  // Entity extracted → strong signal
+  if (Object.keys(result.entities).length > 0) score += 0.15;
+
+  // Specific (unambiguous) keyword present → boost
+  const specific = SPECIFIC_KEYWORDS[result.service] ?? [];
+  if (specific.some(kw => lowerMessage.includes(kw))) {
+    score += 0.2;
+  } else if (BROAD_TRIGGER_SERVICES.has(result.service)) {
+    // Matched only on a broad word like "find", "play", "show me", "i like"
+    score -= 0.2;
+  }
+
+  return Math.min(1, Math.max(0, score));
 }
 
 function createMcpRunCommand(
@@ -42,6 +83,7 @@ function createMcpRunCommand(
     service: 'mcp',
     action: 'run',
     entities,
+    confidence: 0.9,
   };
 }
 
@@ -387,7 +429,7 @@ export async function parseCommand(message: string): Promise<ParsedCommand> {
   // Sanitize input to prevent prompt injection
   const sanitizedMessage = sanitizePromptInput(message);
   const lowerMessage = sanitizedMessage.toLowerCase();
-  const result: ParsedCommand = {
+  const result: Omit<ParsedCommand, 'confidence'> = {
     service: null,
     action: null,
     entities: {},
@@ -861,5 +903,5 @@ export async function parseCommand(message: string): Promise<ParsedCommand> {
     );
   }
 
-  return result;
+  return { ...result, confidence: scoreConfidence(result, lowerMessage) };
 }

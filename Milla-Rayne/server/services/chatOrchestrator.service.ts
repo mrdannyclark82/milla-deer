@@ -35,6 +35,7 @@ import { sanitizePromptInput } from '../sanitization';
 import { repositoryCache } from './repositoryCache.service';
 import { queueBackgroundImageGeneration } from '../imageGenerationQueue';
 import { listEvents } from '../googleCalendarService';
+import { isActionRequest, runGenkitFlow, isGenkitAvailable } from './genkitService';
 import {
   addNoteToGoogleTasks,
   completeTask as completeGoogleTask,
@@ -71,10 +72,15 @@ import {
 } from '../mcpRuntimeService';
 import { analyzeScreenShareImage } from '../screenVisionService';
 import { captureToolEvent } from './toolEventBag';
+import { notifyDanny } from './telegramBotService';
+import { resolveIntent, dispatchToAgent } from './agentRouterService';
 import { getIotTools } from '../mcp/iotMcpServer';
 
 const MAX_INPUT_LENGTH = 10000;
 const MAX_PROMPT_LENGTH = 5000;
+
+// Pending cast confirmations: userId → intent (expires on next message)
+const pendingCastConfirms = new Map<string, { command: any; payload?: any }>();
 
 export interface MessageAnalysis {
   sentiment: 'positive' | 'negative' | 'neutral';
@@ -767,6 +773,41 @@ export async function generateAIResponse(
 ): Promise<any> {
   const message = userMessage.toLowerCase();
 
+  // ── Cast confirmation flow ───────────────────────────────────────────────
+  const pendingCast = pendingCastConfirms.get(userId);
+  if (pendingCast) {
+    if (/\b(yes|yeah|yep|yup|do it|go ahead|sure|ok|okay|cast it|play it|confirm)\b/i.test(userMessage)) {
+      pendingCastConfirms.delete(userId);
+      const { executeTvCommand } = await import('./tvControlService.js');
+      const result = await executeTvCommand(pendingCast.command, pendingCast.payload);
+      if (result.success && (pendingCast.command === 'youtube_search' || pendingCast.command === 'youtube_play')) {
+        const query = pendingCast.payload?.query || pendingCast.payload?.videoId || '';
+        if (query) {
+          const { startCoWatch } = await import('../coWatchService.js');
+          startCoWatch(query).catch((e: unknown) => console.error('[CoWatch]', e));
+        }
+      }
+      return { content: result.success ? `*taps remote* Done — casting "${pendingCast.payload?.query}" to your TV 📺` : `*frowns* Couldn't cast: ${result.message}` };
+    } else if (/\b(no|nope|cancel|never mind|stop|forget it)\b/i.test(userMessage)) {
+      pendingCastConfirms.delete(userId);
+      return { content: `*sets down remote* Got it, never mind then.` };
+    }
+    // They said something else — clear pending and continue normally
+    pendingCastConfirms.delete(userId);
+  }
+
+  // ── Genkit power-tool routing ────────────────────────────────────────────
+  if (!imageData && !bypassFunctionCalls && isActionRequest(userMessage)) {
+    const genkitUp = await isGenkitAvailable();
+    if (genkitUp) {
+      const result = await runGenkitFlow(userMessage);
+      if (result.success && result.text) {
+        return { content: result.text };
+      }
+      // fall through to normal AI if Genkit returns empty/error
+    }
+  }
+
   if (imageData) {
     const screenResult = await analyzeScreenShareImage(
       userMessage,
@@ -908,9 +949,8 @@ export async function generateAIResponse(
     const { parseTvIntent, executeTvCommand } = await import('./tvControlService.js');
     const tvIntent = parseTvIntent(userMessage);
     if (tvIntent) {
-      const result = await executeTvCommand(tvIntent.command, tvIntent.payload);
       const friendlyCmd: Record<string, string> = {
-        youtube_search: `searching for "${tvIntent.payload?.query}" on your TV`,
+        youtube_search: `casting "${tvIntent.payload?.query}" to your TV`,
         youtube_play: `playing that on your TV`,
         power_on: 'turning on the TV',
         power_off: 'turning off the TV',
@@ -921,11 +961,18 @@ export async function generateAIResponse(
         play: 'resuming playback',
         pause: 'pausing',
       };
-      return {
-        content: result.success
-          ? `*taps remote* Done — ${friendlyCmd[tvIntent.command] ?? tvIntent.command}. 📺`
-          : `*frowns* I tried ${friendlyCmd[tvIntent.command] ?? tvIntent.command} but hit a snag: ${result.message}`,
-      };
+
+      // Instant commands (no confirmation needed)
+      const instantCommands = ['power_on','power_off','volume_up','volume_down','mute','unmute','play','pause'];
+      if (instantCommands.includes(tvIntent.command)) {
+        const result = await executeTvCommand(tvIntent.command, tvIntent.payload);
+        return { content: result.success ? `*taps remote* ${friendlyCmd[tvIntent.command]} 📺` : `*frowns* Couldn't do that: ${result.message}` };
+      }
+
+      // YouTube cast — ask for confirmation first
+      const query = tvIntent.payload?.query || tvIntent.payload?.videoId || 'that';
+      pendingCastConfirms.set(userId, { command: tvIntent.command, payload: tvIntent.payload });
+      return { content: `*picks up remote* Cast "${query}" to your TV? Just say yes or no 📺` };
     }
   }
 
@@ -985,6 +1032,52 @@ export async function generateAIResponse(
   if (!bypassFunctionCalls) {
     const parsedCommand = await parseCommand(userMessage);
 
+    // Agent activity trace — surfaces silent tool-call misfires in logs
+    console.log('[tool-trace]', JSON.stringify({
+      service: parsedCommand.service,
+      action: parsedCommand.action,
+      entities: parsedCommand.entities,
+      confidence: parsedCommand.confidence,
+      userId,
+      ts: new Date().toISOString(),
+    }));
+
+    // Confidence gate — below 0.65 means ambiguous keyword match; fall through to generic AI
+    if (parsedCommand.service !== null && (parsedCommand.confidence ?? 1) < 0.65) {
+      console.log(`[tool-trace] LOW CONFIDENCE (${parsedCommand.confidence?.toFixed(2)}) — routing to generic AI instead of ${parsedCommand.service}`);
+      // Skip tool dispatch by treating as no-match
+      parsedCommand.service = null;
+    }
+
+    // Notify Danny on Telegram when a real tool fires (non-blocking, best-effort)
+    if (parsedCommand.service !== null) {
+      notifyDanny(
+        `🔧 Tool executing: *${parsedCommand.service}* → *${parsedCommand.action ?? 'run'}*` +
+        (Object.keys(parsedCommand.entities).length
+          ? `\n\`${JSON.stringify(parsedCommand.entities)}\``
+          : '')
+      ).catch(() => {/* silent — never block chat */});
+    }
+
+    // AgentRouter — for messages with no matched service, check if a specialist agent should handle it
+    // AgentRouter — aggressive delegation.
+    // Pure-language intents (coding, qa, ux, review) always go to a specialist BEFORE tools.
+    // Research/memory only delegate when no tool matched (they need real data first).
+    const ALWAYS_DELEGATE = new Set(['coding', 'qa_testing', 'ux_impact', 'code_review']);
+    const intent = resolveIntent(userMessage);
+    if (intent !== 'fallback' && ALWAYS_DELEGATE.has(intent)) {
+      console.log(`[agent-router] Pre-tool delegation → ${intent}`);
+      const agentReply = await dispatchToAgent(intent, {
+        message: userMessage,
+        userId,
+        context: messages?.slice(-4) ?? [],
+      });
+      if (agentReply) {
+        notifyDanny(`🤝 Milla → ${intent} agent\n${agentReply.slice(0, 200)}`).catch(() => {});
+        return { content: agentReply };
+      }
+      console.log(`[agent-router] ${intent} unreachable, continuing to tool/AI`);
+    }
     if (parsedCommand.service === 'gmail' && parsedCommand.action === 'list') {
       const t0 = Date.now();
       const result = await getRecentEmails(10, userId);
@@ -1000,14 +1093,13 @@ export async function generateAIResponse(
           return `${index + 1}. ${subject} — ${from}`;
         });
 
-        const content = `Here are your latest emails:\n\n${emailLines.join('\n')}`;
         captureToolEvent({
           name: 'gmail_list',
           args: { count: 10, userId },
           result: `Fetched ${emailLines.length} emails. Subjects: ${emailLines.slice(0, 3).join(' | ')}`,
           durationMs: Date.now() - t0,
         });
-        return { content };
+        return { content: `Here are your latest emails:\n\n${emailLines.join('\n')}` };
       }
 
       return {
@@ -1059,14 +1151,20 @@ export async function generateAIResponse(
       if (result.success && Array.isArray(result.events)) {
         const events = result.events.map((event: any, index: number) => {
           const start = event.start?.dateTime || event.start?.date || '';
-          return `${index + 1}. ${event.summary || '(Untitled event)'} — ${start}`;
+          return `${index + 1}. ${event.summary || '(Untitled event)'} - ${start}`;
         });
 
+        const toolData = events.length > 0
+          ? `Today's calendar events:\n${events.join('\n')}`
+          : 'No events scheduled today.';
+
+        const agentReply = null; // synthesis removed — direct return avoids rate-limit hangs
         return {
-          content:
+          content: agentReply || (
             events.length > 0
-              ? `Here’s your schedule for today:\n\n${events.join('\n')}`
-              : "You're clear today — I don't see any events on your calendar.",
+              ? `Here's your schedule for today:\n\n${events.join('\n')}`
+              : "You're clear today - no events on your calendar."
+          ),
         };
       }
 

@@ -20,7 +20,7 @@ function getXAIClient(): OpenAI | null {
 
 export async function generateImageWithXAI(
   prompt: string,
-  options: { size?: '1024x1024' | '1792x1024' | '1024x1792'; n?: number } = {}
+  options: { n?: number } = {}
 ): Promise<ImageGenerationResult> {
   const client = getXAIClient();
   if (!client) {
@@ -32,9 +32,7 @@ export async function generateImageWithXAI(
       model: 'aurora',
       prompt,
       n: options.n ?? 1,
-      size: options.size ?? '1024x1024',
-      response_format: 'url',
-    });
+    } as any);
 
     const url = response.data?.[0]?.url;
     if (!url) {

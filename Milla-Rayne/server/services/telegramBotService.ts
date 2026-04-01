@@ -16,6 +16,9 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const BASE = TOKEN ? `https://api.telegram.org/bot${TOKEN}` : '';
 const POLL_TIMEOUT = 25; // long-poll seconds
 const TELEGRAM_USER_ID = process.env.TELEGRAM_USER_ID?.trim() || 'danny-ray';
+const DANNY_CHAT_ID = process.env.TELEGRAM_CHAT_ID
+  ? parseInt(process.env.TELEGRAM_CHAT_ID, 10)
+  : null;
 
 interface TelegramMessage {
   message_id: number;
@@ -52,8 +55,7 @@ export function getTelegramStatus() {
 export async function sendTelegramMessage(
   chatId: number,
   text: string
-): Promise<boolean> {
-  if (!TOKEN) return false;
+): Promise<boolean> {  if (!TOKEN) return false;
   const MAX = 4000;
   const chunks =
     text.length <= MAX
@@ -80,6 +82,18 @@ export async function sendTelegramMessage(
     if (chunks.length > 1) await sleep(300);
   }
   return true;
+}
+
+/**
+ * Send a milestone / progress notification directly to Danny's Telegram.
+ * Uses TELEGRAM_CHAT_ID from env — no chat_id needed at call site.
+ */
+export async function notifyDanny(text: string): Promise<boolean> {
+  if (!DANNY_CHAT_ID) {
+    console.warn('[Telegram] TELEGRAM_CHAT_ID not set — skipping notifyDanny');
+    return false;
+  }
+  return sendTelegramMessage(DANNY_CHAT_ID, text);
 }
 
 export function startTelegramPolling(): void {

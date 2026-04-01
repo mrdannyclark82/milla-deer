@@ -592,6 +592,7 @@ export async function dispatchAIResponse(
           userEmotionalState: context.userEmotionalState,
           urgency: context.urgency,
           userName: context.userName,
+          userMessage: augmentedMessage,
       } as OpenRouterContext,
       maxTokens
     );

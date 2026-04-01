@@ -5,6 +5,7 @@
 import { ScreenShare } from 'lucide-react';
 import { getMillaPersona } from '../shared/millaPersona';
 import { getAllSceneSettings } from '../shared/sceneSettings';
+import { buildMemoryContext } from './longTermMemoryService';
 
 export interface OpenRouterResponse {
   content: string;
@@ -17,8 +18,9 @@ export interface OpenRouterContext {
   userEmotionalState?: 'positive' | 'negative' | 'neutral';
   urgency?: 'low' | 'medium' | 'high';
   userName?: string;
-  model?: string; // Optional model override
-  apiKey?: string; // Optional API key override
+  userMessage?: string; // current message for memory retrieval
+  model?: string;
+  apiKey?: string;
 }
 
 import { config } from './config';
@@ -391,34 +393,34 @@ export async function generateGrokResponse(
  * Create system prompt for the chat model
  */
 function createSystemPrompt(context: OpenRouterContext): string {
-  // Use centralized persona and scene settings
   const basePersonality = getMillaPersona();
   const sceneSettings = getAllSceneSettings();
 
-  // Combine persona with scene settings and add the new response style instruction
   let contextualPrompt = `${basePersonality}\n\n${sceneSettings}`;
 
-  // Add response style instruction
   contextualPrompt += `\n\n**Response Style:** Keep your responses concise and natural, typically 2-4 sentences, unless the user asks for detailed information. Focus on being a conversational partner.`;
 
-  // Add user-specific context
   if (context.userName) {
     contextualPrompt += `\n\nYou are speaking with ${context.userName}. Use their name naturally in conversation.`;
   }
 
-  // Add emotional context
+  // Inject long-term memory context from ogdray
+  try {
+    const memoryCtx = buildMemoryContext(context.userMessage || '');
+    if (memoryCtx) contextualPrompt += `\n\n${memoryCtx}`;
+  } catch { /* non-fatal */ }
+
   if (context.userEmotionalState) {
     switch (context.userEmotionalState) {
       case 'negative':
-        contextualPrompt += `\n\nThe user seems to be in a negative emotional state.Be especially empathetic and supportive.`;
+        contextualPrompt += `\n\nThe user seems to be in a negative emotional state. Be especially empathetic and supportive.`;
         break;
       case 'positive':
-        contextualPrompt += `\n\nThe user seems to be in a positive mood.Match their energy and enthusiasm.`;
+        contextualPrompt += `\n\nThe user seems to be in a positive mood. Match their energy and enthusiasm.`;
         break;
     }
   }
 
-  // Add urgency context
   if (context.urgency === 'high') {
     contextualPrompt += `\n\nThe user's message seems urgent. Prioritize direct, actionable responses.`;
   }

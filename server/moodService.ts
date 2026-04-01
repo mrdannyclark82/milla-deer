@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import { getPersonalTasks } from './personalTaskService';
+import { setLightFromMillaColor } from './tuyaLightService';
 
 export interface MillaMood {
   primary: string;
@@ -342,6 +343,11 @@ function determineOverallMood(
     emoji = '😟';
     color = '#F97316';
   }
+
+  // Sync Milla's mood to the room LED strip
+  setLightFromMillaColor(color).catch((err) =>
+    console.warn('[MoodService] Light sync failed:', err)
+  );
 
   return {
     primary,

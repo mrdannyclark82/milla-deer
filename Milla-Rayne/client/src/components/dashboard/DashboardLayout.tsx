@@ -46,6 +46,7 @@ import AIModelSelector from '@/components/AIModelSelector';
 import { YoutubePlayerCyberpunk } from '@/components/YoutubePlayerCyberpunk';
 import { CreativeStudio } from '@/components/CreativeStudio';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { YouTubeFYP } from '@/components/YouTubeFYP';
 import { proactiveGet, proactivePost } from '@/lib/proactiveApi';
 import {
   loadSceneSettings,
@@ -1095,6 +1096,7 @@ export function DashboardLayout() {
     models: 'AI Models',
     settings: 'Settings',
     ide: 'IDE Sandbox',
+    fyp: 'For You',
   };
 
   const formatFeatureStatus = (status: ProactiveFeature['status']) =>
@@ -1666,6 +1668,18 @@ export function DashboardLayout() {
                 </div>
               ) : activeSection === 'gmail' ? (
                 <GmailTasksView />
+              ) : activeSection === 'fyp' ? (
+                <YouTubeFYP
+                  onPlayVideo={(id) => {
+                    setYoutubeVideos([]);
+                    setActiveVideoId(id);
+                  }}
+                  onAnalyzeVideo={(id) => {
+                    setActiveSection('hub');
+                    // TODO: wire to chat input when hub chat state is accessible
+                    console.log('Analyze video:', id);
+                  }}
+                />
               ) : activeSection === 'database' ? (
                 <DatabaseView />
               ) : activeSection === 'models' ? (

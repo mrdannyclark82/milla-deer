@@ -28,6 +28,7 @@ import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
 import { sceneService } from '../services/scene.service';
 import { upload } from '../middleware/upload.middleware';
+import { requireAuth } from '../middleware/auth.middleware';
 import { asyncHandler } from '../utils/routeHelpers';
 import { storage } from '../storage';
 import {
@@ -190,6 +191,7 @@ export function registerChatRoutes(app: Express) {
   // Chat/Audio endpoint
   router.post(
     '/chat/audio',
+    requireAuth,
     upload.single('audio'),
     asyncHandler(async (req, res) => {
       const shouldStubAudio = process.env.ENABLE_AUDIO_STUB !== 'false';
@@ -270,6 +272,7 @@ export function registerChatRoutes(app: Express) {
   // Chat endpoint
   router.post(
     '/chat',
+    requireAuth,
     asyncHandler(async (req, res) => {
       let { message } = req.body;
       const { audioData, audioMimeType, imageData } = req.body;

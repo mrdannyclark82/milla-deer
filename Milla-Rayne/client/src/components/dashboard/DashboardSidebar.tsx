@@ -13,6 +13,7 @@ import {
   Sparkles,
   Code,
   Palette,
+  Tv2,
 } from 'lucide-react';
 
 interface NavItem {
@@ -74,6 +75,11 @@ export function DashboardSidebar({
       id: 'studio',
       label: 'Studio',
       icon: <Palette className="w-4 h-4" />,
+    },
+    {
+      id: 'fyp',
+      label: 'For You',
+      icon: <Tv2 className="w-4 h-4" />,
     },
   ];
 

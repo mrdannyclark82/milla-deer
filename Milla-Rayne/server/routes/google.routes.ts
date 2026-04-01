@@ -794,19 +794,22 @@ export function registerGoogleRoutes(app: Express) {
     asyncHandler(async (req, res) => {
       const userId = await resolveUserId(getSessionToken(req));
 
-      // Run all sources in parallel
+      // Fetch trending + watch-history-based predictions in parallel
       const [trendingResult, predictedQueries] = await Promise.all([
-        getTrendingVideos(userId, 'US', 12),
+        getTrendingVideos(userId, 'US', 10),
         predictYouTubeQuery(),
       ]);
 
-      // Search personalized topics (top 2 predicted queries)
-      const topQueries = predictedQueries.slice(0, 2);
+      // Use top queries from actual watch history (predictYouTubeQuery reads youtube_predictions.json)
+      // Top queries are things like "music on", "cli ai coding", "local ai agent" etc.
+      const searchQueries = predictedQueries.slice(0, 4);
+      const fallbackQueries: string[] = [];
+
+      // Search recent videos for each picked channel/query
       const personalizedResults = await Promise.all(
-        topQueries.map((q) => searchVideos(userId, q, 6, 'relevance'))
+        searchQueries.map((q) => searchVideos(userId, q, 5, 'date'))
       );
 
-      // Normalize video shape
       const normalizeVideo = (v: any, source: string) => ({
         id: v.id?.videoId || v.id || '',
         title: v.snippet?.title || v.title || '',
@@ -827,16 +830,16 @@ export function registerGoogleRoutes(app: Express) {
         : [];
 
       const personalized = personalizedResults.flatMap((r, i) =>
-        r.success ? (r.data || []).map((v: any) => normalizeVideo(v, topQueries[i])) : []
+        r.success ? (r.data || []).map((v: any) => normalizeVideo(v, searchQueries[i])) : []
       );
 
-      // Interleave: 2 personalized, 1 trending pattern
+      // Interleave: 3 personalized (from subs), 1 trending
       const feed: any[] = [];
       const seen = new Set<string>();
       let pi = 0;
       let ti = 0;
       while (feed.length < 20 && (pi < personalized.length || ti < trending.length)) {
-        for (let j = 0; j < 2 && pi < personalized.length; j++, pi++) {
+        for (let j = 0; j < 3 && pi < personalized.length; j++, pi++) {
           if (personalized[pi].id && !seen.has(personalized[pi].id)) {
             seen.add(personalized[pi].id);
             feed.push(personalized[pi]);
@@ -854,7 +857,7 @@ export function registerGoogleRoutes(app: Express) {
       res.json({
         success: true,
         feed,
-        predictedTopics: topQueries,
+        sources: { watchHistory: searchQueries, fallback: fallbackQueries },
         totalCount: feed.length,
       });
     })

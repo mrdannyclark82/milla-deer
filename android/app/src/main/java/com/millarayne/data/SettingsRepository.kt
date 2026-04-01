@@ -25,8 +25,8 @@ class SettingsRepository(private val context: Context) {
         private val SPOKEN_REPLIES_ENABLED_KEY = booleanPreferencesKey("spoken_replies_enabled")
         private val NANO_ENABLED_KEY = booleanPreferencesKey("nano_enabled")
 
-        const val DEFAULT_SERVER_URL = "http://10.0.2.2:5000/"
-        const val REMOTE_SERVER_URL = ""
+        const val DEFAULT_SERVER_URL = "https://milla-rayne.com/"
+        const val REMOTE_SERVER_URL = "https://milla-rayne.com/"
         const val DEFAULT_OFFLINE_MODE_ENABLED = false
         const val DEFAULT_AUTO_FALLBACK = true
         const val DEFAULT_SPOKEN_REPLIES_ENABLED = true

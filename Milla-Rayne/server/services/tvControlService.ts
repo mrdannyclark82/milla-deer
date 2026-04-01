@@ -1,4 +1,7 @@
 import { createRequire } from 'module';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+const execAsync = promisify(exec);
 const _require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { Client } = _require('castv2-client') as any;
@@ -155,20 +158,16 @@ export async function completeVisioPairing(pin: string, pairingToken: string): P
 
 // ─── Chromecast: cast YouTube video to Vizio built-in Cast ───────────────────
 
-function castYoutubeVideo(videoId: string): Promise<TvCommandResult> {
+function castYoutubeVideo(videoId: string, deviceIp?: string): Promise<TvCommandResult> {
+  const ip = deviceIp || BEDROOM_IP;
   return new Promise((resolve) => {
-    if (!VIZIO_TV_IP) {
-      resolve({ success: false, message: 'VIZIO_TV_IP not configured' });
-      return;
-    }
-
     const client = new Client();
     const timeout = setTimeout(() => {
       client.close();
       resolve({ success: false, message: 'Cast connection timed out — is the TV on and on the same network?' });
     }, 10000);
 
-    client.connect(VIZIO_TV_IP, () => {
+    client.connect(ip, () => {
       // Launch YouTube Cast receiver app
       client.launch({ appId: YOUTUBE_CAST_APP_ID }, (err: Error | null, session: { sessionId: string; transportId: string }) => {
         if (err) {
@@ -252,6 +251,68 @@ async function youtubeLoungeCommand(
   }
 }
 
+// ─── Resolve YouTube search query → video ID via yt-dlp ──────────────────────
+
+async function resolveYouTubeVideoId(query: string): Promise<string | null> {
+  try {
+    const safe = query.replace(/"/g, '').replace(/'/g, '');
+    const { stdout } = await execAsync(
+      `yt-dlp "ytsearch1:${safe}" --get-id --no-playlist --no-warnings 2>/dev/null`,
+      { timeout: 15000 }
+    );
+    const id = stdout.trim().split('\n').find(l => /^[a-zA-Z0-9_-]{11}$/.test(l.trim()));
+    return id?.trim() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── catt fallback cast ───────────────────────────────────────────────────────
+
+// ─── Device map ───────────────────────────────────────────────────────────────
+// Primary bedroom Chromecast is the default target.
+// Add more rooms here as you add devices.
+
+const BEDROOM_IP   = process.env.BEDROOM_CHROMECAST_IP   || '192.168.40.244';
+const LIVINGROOM_IP = process.env.LIVINGROOM_CHROMECAST_IP || '192.168.40.12';
+
+const ROOM_MAP: Record<string, string> = {
+  bedroom:      BEDROOM_IP,
+  'primary bedroom': BEDROOM_IP,
+  tv:           BEDROOM_IP,
+  'living room': LIVINGROOM_IP,
+  livingroom:   LIVINGROOM_IP,
+  vizio:        LIVINGROOM_IP,
+  chromecast:   BEDROOM_IP,
+};
+
+function resolveRoomIP(text?: string): string {
+  if (!text) return BEDROOM_IP;
+  const lower = text.toLowerCase().trim();
+  return ROOM_MAP[lower] ?? BEDROOM_IP;
+}
+
+const CHROMECAST_IP = process.env.CHROMECAST_IP || BEDROOM_IP;
+
+async function cattCast(url: string, deviceIp?: string): Promise<TvCommandResult> {
+  const ip = deviceIp || BEDROOM_IP;
+  try {
+    const { stdout, stderr } = await execAsync(
+      `catt -d ${ip} cast -y "-f bestvideo[height<=1080]+bestaudio/best[height<=1080]" "${url}"`,
+      { timeout: 30000 }
+    );
+    return { success: true, message: (stdout + stderr).trim() || 'Casting' };
+  } catch (err: any) {
+    // fallback: no quality arg
+    try {
+      const { stdout, stderr } = await execAsync(`catt -d ${ip} cast "${url}"`, { timeout: 30000 });
+      return { success: true, message: (stdout + stderr).trim() || 'Casting' };
+    } catch (e2: any) {
+      return { success: false, message: e2?.stderr?.trim() || e2?.message || 'catt error' };
+    }
+  }
+}
+
 export async function getYoutubeTVPairingCode(): Promise<{ code: string; url: string } | null> {
   try {
     const { default: fetch } = await import('node-fetch');
@@ -279,19 +340,34 @@ export async function getYoutubeTVPairingCode(): Promise<{ code: string; url: st
 
 export async function executeTvCommand(
   command: TvCommand,
-  payload?: { query?: string; videoId?: string; volume?: number }
+  payload?: { query?: string; videoId?: string; volume?: number; room?: string }
 ): Promise<TvCommandResult> {
+  const deviceIp = resolveRoomIP(payload?.room);
+
   switch (command) {
-    case 'youtube_search':
-      return youtubeLoungeCommand('setPlaylist', {
-        listId: `search:${encodeURIComponent(payload?.query ?? '')}`,
+    case 'youtube_search': {
+      const query = payload?.query ?? '';
+      const resolvedId = await resolveYouTubeVideoId(query);
+      if (resolvedId) {
+        const castResult = await castYoutubeVideo(resolvedId, deviceIp);
+        if (castResult.success) return castResult;
+        // Fallback: catt
+        const url = `https://www.youtube.com/watch?v=${resolvedId}`;
+        return cattCast(url, deviceIp);
+      }
+      // No video ID — try YouTube Lounge search, then catt search URL
+      const loungeResult = await youtubeLoungeCommand('setPlaylist', {
+        listId: `search:${encodeURIComponent(query)}`,
         videoId: '',
       });
+      if (loungeResult.success) return loungeResult;
+      const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+      return cattCast(searchUrl, deviceIp);
+    }
 
     case 'youtube_play':
       if (!payload?.videoId) return { success: false, message: 'videoId required' };
-      // Try Chromecast first (direct cast), fall back to Lounge API
-      return castYoutubeVideo(payload.videoId).then((r) =>
+      return castYoutubeVideo(payload.videoId, deviceIp).then((r) =>
         r.success ? r : youtubeLoungeCommand('setPlaylist', { videoId: payload.videoId! })
       );
 
@@ -322,19 +398,41 @@ export async function executeTvCommand(
 
 export function parseTvIntent(message: string): {
   command: TvCommand;
-  payload?: { query?: string; videoId?: string };
+  payload?: { query?: string; videoId?: string; room?: string };
 } | null {
   const lower = message.toLowerCase();
 
-  // "play <query> on tv" / "put on <query> on the tv"
+  const hasTvContext =
+    /\btv\b|\btelevision\b|\bbedroom\b|\bcast\b|\bchromecast\b|\bliving room\b|\bscreen\b|\bvizio\b|\byoutube\b|\bstream\b/.test(lower);
+
+  // Extract room from message
+  const roomMatch = lower.match(/\b(bedroom|primary bedroom|living room|office|kitchen)\b/);
+  const room = roomMatch?.[1];
+
+  if (hasTvContext) {
+    const playMatch =
+      lower.match(/(?:play|cast|put on|stream|show)\s+(.+?)\s+(?:on|in|to)\s+(?:the\s+)?(?:bedroom|living room|tv|television|screen|vizio|chromecast)/i) ||
+      lower.match(/(?:play|cast|put on|stream|show)\s+(?:me\s+)?(.+?)\s+on\s+(?:the\s+)?(?:tv|screen)/i) ||
+      lower.match(/(?:play|cast|stream)\s+(.+?)\s+on\s+youtube\s+in\s+(?:the\s+)?(?:bedroom|living room)/i) ||
+      lower.match(/(?:play|cast|stream)\s+(.+?)\s+(?:in\s+the\s+)?bedroom/i);
+
+    if (playMatch) {
+      const query = playMatch[1]
+        .replace(/\b(?:on youtube|on the tv|on tv|please|for me|right now)\b/gi, '')
+        .trim();
+      // Block vague/open-ended queries — Danny picks, Milla executes
+      const isVague = /\b(something|anything|whatever|surprise|random|anything good)\b/i.test(query);
+      if (query.length > 1 && !isVague) return { command: 'youtube_search', payload: { query, room } };
+    }
+  }
+
   const ytSearchMatch =
     lower.match(/(?:play|search|put on|find|show)\s+(?:youtube\s+)?["']?(.+?)["']?\s+on\s+(?:the\s+)?tv/i) ||
     lower.match(/(?:on\s+(?:the\s+)?tv).+?(?:play|search|put on)\s+(.+)/i);
-  if (ytSearchMatch) return { command: 'youtube_search', payload: { query: ytSearchMatch[1].trim() } };
+  if (ytSearchMatch) return { command: 'youtube_search', payload: { query: ytSearchMatch[1].trim(), room } };
 
-  // youtube.com URL
   const ytVideoMatch = lower.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytVideoMatch) return { command: 'youtube_play', payload: { videoId: ytVideoMatch[1] } };
+  if (ytVideoMatch) return { command: 'youtube_play', payload: { videoId: ytVideoMatch[1], room } };
 
   if (/turn\s+(?:on|off)\s+(?:the\s+)?tv|tv\s+(?:on|off)|power\s+(?:on|off)\s+tv/i.test(lower))
     return { command: lower.includes('off') ? 'power_off' : 'power_on' };

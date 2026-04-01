@@ -27,31 +27,6 @@ Reference `.github/copilot-instructions.md` for full system architecture.
 3. If a fix attempt fails twice, stop and clearly explain the blocker rather than trying random approaches.
 4. Token efficiency matters. Investigate before acting. Understand the root cause before writing code.
 
-## VERIFICATION CHECKLISTS
-
-**After any Android change:**
-1. `./gradlew assembleDebug` — must build clean
-2. `adb install -r app/build/outputs/apk/debug/app-debug.apk` — must install
-3. Open app on device, send a message, confirm server response (not offline fallback)
-4. Check logcat: `adb logcat -s ChatViewModel` — no timeout/fallback errors
-
-**After any server change:**
-1. `pnpm check && pnpm build` — must be clean
-2. `curl https://milla-rayne.com/api/health` — must return 200
-3. Test the specific endpoint changed: `curl -X POST https://milla-rayne.com/api/<route>`
-
-**After any lighting change:**
-1. Trigger a mood change or POST to `/api/lighting`
-2. Physically confirm LED strip changes color
-
-**After any image gen change:**
-1. POST to `/api/image/generate` with a test prompt
-2. Confirm a valid image URL is returned (not an error)
-
-**After any AI provider change:**
-1. Send a chat message through the web UI
-2. Confirm response comes from the intended provider (check server logs)
-
 ## JSON OUTPUT FORMAT (ACTIVE / DREAM modes)
 ```json
 {

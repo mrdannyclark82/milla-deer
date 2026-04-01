@@ -1,15 +1,23 @@
 import type { Request, Response, NextFunction } from 'express';
 import { validateSession } from '../authService';
 
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
+
 /**
- * Middleware to require authentication
- * Returns 401 if session is missing or invalid
+ * Middleware to require authentication.
+ * Accepts either a valid session cookie OR the X-Internal-Key header
+ * (used by agentRouterService for internal agent-to-agent dispatch).
  */
 export async function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
+  // Allow internal service calls from agentRouter
+  if (INTERNAL_API_KEY && req.headers['x-internal-key'] === INTERNAL_API_KEY) {
+    return next();
+  }
+
   const sessionToken = req.cookies.session_token;
 
   if (!sessionToken) {

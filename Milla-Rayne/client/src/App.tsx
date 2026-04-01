@@ -31,16 +31,24 @@ function AuthGate() {
 
   const isAuthenticated = data?.authenticated ?? false;
 
+  const handleLoginSuccess = () => {
+    // Hard redirect — forces full page reload so auth state is fresh from server
+    window.location.replace('/chat');
+  };
+
   return (
     <Switch>
       <Route path="/">
-        {isAuthenticated ? <Redirect to="/chat" /> : <Landing />}
+        {isAuthenticated ? <Redirect to="/chat" /> : <Landing onLoginSuccess={handleLoginSuccess} />}
+      </Route>
+      <Route path="/login">
+        {isAuthenticated ? <Redirect to="/chat" /> : <Landing onLoginSuccess={handleLoginSuccess} loginMode />}
       </Route>
       <Route path="/chat">
-        <Dashboard />
+        {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}
       </Route>
       <Route>
-        <Dashboard />
+        {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}
       </Route>
     </Switch>
   );

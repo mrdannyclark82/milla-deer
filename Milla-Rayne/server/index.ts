@@ -1,6 +1,14 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
+// Keep the process alive — never let a single error crash the server
+process.on('uncaughtException', (err) => {
+  console.error('[PROCESS] Uncaught exception (kept alive):', err?.message || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[PROCESS] Unhandled rejection (kept alive):', reason);
+});
+
 for (const envPath of [
   path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), '../.env'),
@@ -357,9 +365,28 @@ export async function initApp() {
   httpServer = createServer(app);
 
   // Setup sensor data WebSocket for mobile clients
-  const { setupSensorDataWebSocket } = await import('./websocketService');
+  const { setupWebSocketServer, setupSensorDataWebSocket, setupVoiceWebSocket } = await import('./websocketService');
+  const mainWss = await setupWebSocketServer(httpServer);
+  (httpServer as any).__mainWss = mainWss;
   await setupSensorDataWebSocket(httpServer);
   console.log('✅ Mobile sensor data WebSocket initialized');
+
+  // Setup always-on voice WebSocket + shared upgrade dispatcher
+  setupVoiceWebSocket(httpServer);
+  console.log('✅ Voice WebSocket initialized on /ws/voice');
+
+  // Serve the tablet listener page — must be BEFORE setupVite to avoid catch-all
+  const { readFileSync } = await import('fs');
+  const listenHtmlPath = path.resolve(process.cwd(), 'server/listen.html');
+  app.get('/listen', (_req, res) => {
+    try {
+      const html = readFileSync(listenHtmlPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch {
+      res.status(404).send('Listener page not found');
+    }
+  });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

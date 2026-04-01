@@ -209,7 +209,7 @@ class TuyaCloudController implements LightController {
     const token = await this.getToken();
     if (!token) return false;
     const { r, g, b } = profile.color;
-    // Convert RGB to HSV for Tuya colour_data_v2
+    // Convert RGB to HSV for Tuya colour_data (h:0-360, s:0-1000, v:0-1000)
     const max = Math.max(r, g, b) / 255;
     const min = Math.min(r, g, b) / 255;
     const delta = max - min;
@@ -222,13 +222,13 @@ class TuyaCloudController implements LightController {
       if (h < 0) h += 360;
     }
     const s = max === 0 ? 0 : Math.round((delta / max) * 1000);
-    const v = Math.round(max * 1000);
+    // Brightness (0-1) applied to HSV value component (0-1000)
+    const v = Math.round(max * 1000 * Math.max(0.1, Math.min(1, profile.brightness)));
 
     const commands = [
-      { code: 'switch_led',      value: true },
-      { code: 'work_mode',       value: profile.mode === 'static' ? 'colour' : 'scene' },
-      { code: 'colour_data_v2',  value: { h, s, v } },
-      { code: 'bright_value_v2', value: Math.round(profile.brightness * 10) },
+      { code: 'switch_led', value: true },
+      { code: 'work_mode',  value: profile.mode === 'static' ? 'colour' : 'scene' },
+      { code: 'colour_data', value: { h, s, v } },
     ];
 
     const path = `/v1.0/iot-03/devices/${this.deviceId}/commands`;

@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import LoginDialog from '../components/auth/LoginDialog';
 
 const GITHUB_URL = 'https://github.com/mrdannyclark82/Milla-Deer';
 const DEMO_URL = 'https://processors-event-utilities-tops.trycloudflare.com';
+
+interface LandingProps {
+  onLoginSuccess?: () => void;
+  loginMode?: boolean;
+}
 
 interface FeatureCardProps {
   icon: string;
@@ -25,6 +31,7 @@ interface PricingCardProps {
   highlighted?: boolean;
   cta: string;
   href: string;
+  onCta?: (e: React.MouseEvent) => void;
 }
 
 const PricingCard: React.FC<PricingCardProps> = ({
@@ -35,6 +42,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   highlighted,
   cta,
   href,
+  onCta,
 }) => (
   <div
     className={`rounded-xl p-6 flex flex-col gap-4 transition-all duration-300 ${
@@ -63,6 +71,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
     </ul>
     <a
       href={href}
+      onClick={onCta}
       className={`block text-center py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
         highlighted
           ? 'bg-pink-500 text-white hover:bg-pink-400'
@@ -74,9 +83,30 @@ const PricingCard: React.FC<PricingCardProps> = ({
   </div>
 );
 
-const Landing: React.FC = () => {
+const Landing: React.FC<LandingProps> = ({ onLoginSuccess, loginMode = false }) => {
+  const [loginOpen, setLoginOpen] = useState(loginMode);
+
+  useEffect(() => {
+    if (loginMode) setLoginOpen(true);
+  }, [loginMode]);
+
+  const openLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLoginOpen(true);
+  };
+
+  const handleLoginSuccess = (user: { id: string; username: string; email: string }) => {
+    setLoginOpen(false);
+    onLoginSuccess?.();
+  };
+
   return (
     <div className="min-h-screen bg-[#06060f] text-white">
+      <LoginDialog
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-md bg-[#06060f]/80 border-b border-white/5">
         <span className="font-bold text-lg tracking-tight">
@@ -89,6 +119,7 @@ const Landing: React.FC = () => {
         </div>
         <a
           href="/chat"
+          onClick={openLogin}
           className="bg-pink-500 hover:bg-pink-400 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
           Launch App
@@ -120,6 +151,7 @@ const Landing: React.FC = () => {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
               href="/chat"
+              onClick={openLogin}
               className="bg-pink-500 hover:bg-pink-400 text-white font-bold px-8 py-3.5 rounded-xl text-base transition-all duration-200 shadow-[0_0_30px_rgba(244,114,182,0.4)] hover:shadow-[0_0_40px_rgba(244,114,182,0.6)]"
             >
               Get Started Free
@@ -204,7 +236,8 @@ const Landing: React.FC = () => {
                 'Community support',
               ]}
               cta="Get Started"
-              href="/chat"
+              href="#"
+              onCta={openLogin}
             />
             <PricingCard
               tier="Pro"
@@ -221,7 +254,8 @@ const Landing: React.FC = () => {
                 'Email support',
               ]}
               cta="Start Pro Trial"
-              href={`${DEMO_URL}/pricing`}
+              href="#"
+              onCta={openLogin}
             />
             <PricingCard
               tier="Enterprise"
