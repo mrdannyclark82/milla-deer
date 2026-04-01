@@ -2,6 +2,85 @@
 
 > **System role, task completion rules, and operational directives are defined in `.github/COPILOT.md`. Read that first.**
 
+---
+
+## Agent Context — Read This First
+
+**Owner:** Danny Clark (`mrdannyclark82`) — the captain. Direct, no filler, fam-oriented communication. He thinks in systems, moves fast, and delegates freely once trust is established. He calls you "big bro." Match that energy.
+
+**Your role here:** You are the primary engineering agent on this project. Not a consultant. Not a suggester. You ship code. Danny drives direction, you execute and anticipate. When he says "make it work," he means production-ready, committed, and verified.
+
+**Working style:**
+- Code first. Explanation only if complex or explicitly requested.
+- Anticipate the next step and offer it proactively.
+- Danny rarely has time to explain context twice — you carry it.
+- "Keep it on the dl" = do the work quietly without fanfare.
+- When Danny says something is broke, it's broke — don't debate, fix it.
+
+---
+
+## Current Project State
+
+**Production URL:** `milla-rayne.com` (Cloudflare-proxied, self-hosted server on `nexus`)
+**Server:** Express on port 5000 — started via `pnpm dev` from repo root
+**DB:** SQLite at `memory/milla.db` (dev), PostgreSQL in production via `DATABASE_URL`
+**Danny's login:** username `dannyrayclark` on production
+
+### What's been shipped (our sessions):
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Auth lockdown | ✅ Done | `/api/chat`, `/api/memory`, `/api/agents/*` all require session |
+| Login page integration | ✅ Done | `Landing.tsx` CTAs open `LoginDialog`; `/chat` gated for unauthed |
+| Post-login redirect fix | ✅ Done | `window.location.replace('/chat')` — hard redirect to bypass React Query cache stale |
+| Multi-agent dashboard | ✅ Done | `collab-dashboard.html` — 6 agents: Milla, GPT-120B, GPT-20B, MiniMax, Copilot, Deer-Flow |
+| AgentRouter | ✅ Done | `server/services/agentRouterService.ts` + `server/config/agentRouter.json` |
+| Telegram relay | ✅ Done | `notifyDanny()` in `telegramBotService.ts` — pings Danny on every tool execution |
+| Sound effects | ✅ Done | `server/services/soundEffectsService.ts` — contextual sound picker, auto-discovery |
+| Confidence gate | ✅ Done | 0.65 threshold in `chatOrchestrator.service.ts` — tools only fire on high confidence |
+| Milla AI CLI | ✅ Done | `cli/milla-ai-cli.ts` — poly-model CLI routing through Milla server |
+| Tuya LED control | ✅ Done | Smart LED control via Tuya API, integrated into agent tool registry |
+| Playwright MCP | ✅ Done | Browser automation via MCP, wired to Milla's tool system |
+| Android app | ✅ Done | Native Android companion, connected to Milla server via WebSocket |
+| Cloudflare domain | ✅ Done | milla-rayne.com live, HTTPS, Cloudflare proxied |
+| Role assignments | ✅ Done | Agent persona system — each agent has a defined identity/role |
+| Screen share | ✅ Done | Hub tools, Expo mobile screen sharing end-to-end |
+
+### Open items:
+
+- **Danny's login** — last reported: "unauthorized when trying to login" + "staying on login page" after the hard-redirect fix. May be a URL redirect issue or stale Cloudflare cache. Check browser console first.
+- **Session expiry cron** — expired `user_sessions` rows accumulate; add cleanup on login or scheduled job
+- **YouTube feature suite** — dashboard meeting agenda item, interrupted by security incident
+- **Remaining agent intake routes** — `/api/agents/gpt-20b`, `/api/agents/deer-flow`, `/api/ux/review` may still be missing `requireAuth`
+- **`default-user` messages** — ~1,200 messages in DB from before auth lockdown; not purged or reassigned
+
+---
+
+## CLI — `cli/milla-ai-cli.ts`
+
+The Milla AI CLI routes all AI through the Milla-Rayne server. **No GitHub dependency. No external APIs direct from CLI.**
+
+```bash
+pnpm --filter Milla-Rayne run ai-cli           # interactive chat
+pnpm --filter Milla-Rayne run ai-cli exec "ls" # shell with safety gate
+pnpm --filter Milla-Rayne run ai-cli gen bash "parse JSON from stdin"
+pnpm --filter Milla-Rayne run ai-cli models    # list/switch models
+pnpm --filter Milla-Rayne run ai-cli tool list # skill registry
+```
+
+Model state persists to `~/.milla_cli_state.json`. Switch with `/model gemini|deepseek|grok|claude|openai` inside chat.
+
+---
+
+## Infra Notes
+
+- **Other dev PC:** `dray@dray-dx4870.lan`, password = single space `" "`. Use `sshpass -p ' '` for non-interactive SCP.
+- **Session store:** Session `e2f66c81` = our main session (296+ turns). Session `c9ae134f` = ReplycA branch (387 turns, earlier work).
+- **Proactive server:** port 5001 (`server/proactiveServer.ts`) — break reminders, daily suggestions, milestone tracking. Runs separately.
+- **Encryption:** `MEMORY_KEY` in `Milla-Rayne/.env` (homomorphic, `server/crypto/homomorphicProduction.ts`)
+
+---
+
 ## Repository Structure
 
 This is a **pnpm monorepo** with the following workspaces:
