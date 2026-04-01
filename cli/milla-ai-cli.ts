@@ -30,17 +30,19 @@ config({ path: path.resolve(__dirname, '../.env') });
 // ─────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────
-const API_BASE  = process.env.API_URL || 'http://localhost:5000';
-const TOOL_DIR  = path.join(homedir(), '.milla_tools');
-const STATE_FILE = path.join(homedir(), '.milla_cli_state.json');
+const API_BASE      = process.env.API_URL       || 'http://localhost:5000';
+const OLLAMA_BASE   = process.env.OLLAMA_URL    || 'http://dray-dx4870.lan:11434';
+const TOOL_DIR      = path.join(homedir(), '.milla_tools');
+const STATE_FILE    = path.join(homedir(), '.milla_cli_state.json');
 
-// Models available through the Milla-Rayne server
+// Models — nemotron on the office PC is primary brain; others via Milla server
 const MODEL_LIST = [
-  { id: 'gemini',    label: 'gemini-2.0-flash',     provider: 'Google Gemini'  },
-  { id: 'deepseek',  label: 'deepseek-chat',         provider: 'DeepSeek'       },
-  { id: 'grok',      label: 'grok-2-latest',         provider: 'xAI Grok'       },
-  { id: 'claude',    label: 'claude-3-5-sonnet',     provider: 'Anthropic'      },
-  { id: 'openai',    label: 'gpt-4o',                provider: 'OpenAI'         },
+  { id: 'nemotron',  label: 'nemotron-3-nano:30b-cloud', provider: 'Ollama / dray-dx4870 ★', backend: 'ollama' },
+  { id: 'gemini',    label: 'gemini-2.0-flash',           provider: 'Google Gemini',           backend: 'milla'  },
+  { id: 'deepseek',  label: 'deepseek-chat',               provider: 'DeepSeek',                backend: 'milla'  },
+  { id: 'grok',      label: 'grok-2-latest',               provider: 'xAI Grok',                backend: 'milla'  },
+  { id: 'claude',    label: 'claude-3-5-sonnet',           provider: 'Anthropic',               backend: 'milla'  },
+  { id: 'openai',    label: 'gpt-4o',                      provider: 'OpenAI',                  backend: 'milla'  },
 ];
 
 // ANSI colours (no external dep)
@@ -85,8 +87,8 @@ function saveState(s: Record<string, unknown>) {
   writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 }
 
-// Active model preference (sent as hint to the server)
-let activeModel = loadState().model as string | undefined ?? 'gemini';
+// Active model preference — nemotron is the default brain
+let activeModel = loadState().model as string | undefined ?? 'nemotron';
 
 // Load project context from .github/copilot-instructions.md — injected as system context
 function loadProjectContext(): string {
@@ -112,18 +114,39 @@ const PROJECT_CONTEXT = loadProjectContext();
 
 async function askAI(message: string, systemContext?: string): Promise<string> {
   const ctx = [PROJECT_CONTEXT, systemContext].filter(Boolean).join('\n\n');
+  const model = MODEL_LIST.find((m) => m.id === activeModel) ?? MODEL_LIST[0];
+
+  // ── Ollama backend (nemotron on the office PC) ──
+  if (model.backend === 'ollama') {
+    const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: model.label,
+        messages: [
+          ...(ctx ? [{ role: 'system', content: ctx }] : []),
+          { role: 'user', content: message },
+        ],
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
+    if (!res.ok) throw new Error(`Ollama error ${res.status} at ${OLLAMA_BASE}`);
+    const data = (await res.json()) as { message?: { content: string } };
+    return data.message?.content ?? '(no response)';
+  }
+
+  // ── Milla server backend (all other models) ──
   const body = JSON.stringify({
     message: ctx ? `${ctx}\n\n${message}` : message,
     model: activeModel,
   });
-
   const res = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,
     signal: AbortSignal.timeout(60_000),
   });
-
   if (!res.ok) throw new Error(`Milla server error ${res.status} — is it running?`);
   const data = (await res.json()) as { response?: string; message?: string };
   return data.response || data.message || '(no response)';
@@ -243,15 +266,25 @@ async function toolRun(name: string, args: string[]): Promise<void> {
 // ─────────────────────────────────────────────
 async function showModels(): Promise<void> {
   const state = loadState();
-  const current = (state.model as string) ?? 'gemini';
+  const current = (state.model as string) ?? 'nemotron';
 
-  console.log(`\n${c.bold}Available Models${c.reset} — all served through Milla-Rayne\n`);
+  console.log(`\n${c.bold}Available Models${c.reset}\n`);
   MODEL_LIST.forEach((m) => {
     const active = m.id === current ? `${c.green} ◀ active${c.reset}` : '';
-    console.log(`  ${c.magenta}${m.id.padEnd(10)}${c.reset} ${m.label.padEnd(24)} ${c.dim}${m.provider}${c.reset}${active}`);
+    const backendLabel = m.backend === 'ollama'
+      ? `${c.cyan}[ollama]${c.reset}`
+      : `${c.dim}[milla] ${c.reset}`;
+    console.log(`  ${backendLabel} ${c.magenta}${m.id.padEnd(10)}${c.reset} ${m.label.padEnd(30)} ${c.dim}${m.provider}${c.reset}${active}`);
   });
   console.log(`\n${c.dim}Switch with: /model <id>  (e.g. /model deepseek)${c.reset}\n`);
 
+  // Check both backends
+  try {
+    await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    console.log(`${c.green}✓ Ollama online${c.reset} — ${OLLAMA_BASE} ${c.cyan}(nemotron brain)${c.reset}`);
+  } catch {
+    console.log(`${c.yellow}⚠ Ollama unreachable at ${OLLAMA_BASE}${c.reset}`);
+  }
   try {
     await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
     console.log(`${c.green}✓ Milla server online${c.reset} — ${API_BASE}`);
@@ -270,16 +303,30 @@ async function chatMode(): Promise<void> {
     prompt: `\n${c.cyan}You:${c.reset} `,
   });
 
-  const modelLabel = () => `${c.magenta}[${activeModel}]${c.reset}`;
+  const modelLabel = () => {
+    const m = MODEL_LIST.find((x) => x.id === activeModel);
+    const backend = m?.backend === 'ollama' ? `${c.cyan}ollama${c.reset}` : `${c.dim}milla${c.reset}`;
+    return `${c.magenta}[${activeModel}]${c.reset} via ${backend}`;
+  };
 
   console.log(`${c.dim}Tip: prefix with ! to run a shell command. /model <id> to switch AI.${c.reset}`);
-  console.log(`Model: ${modelLabel()}\n`);
+  console.log(`Brain: ${modelLabel()}\n`);
 
-  try {
-    await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
-    console.log(`${c.green}✓ Milla server online${c.reset} — ${API_BASE}\n`);
-  } catch {
-    console.log(`${c.yellow}⚠ Milla server offline — start with: pnpm dev${c.reset}\n`);
+  const curModel = MODEL_LIST.find((m) => m.id === activeModel);
+  if (curModel?.backend === 'ollama') {
+    try {
+      await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(3000) });
+      console.log(`${c.green}✓ Nemotron online${c.reset} — ${OLLAMA_BASE} ${c.cyan}(dray-dx4870)${c.reset}\n`);
+    } catch {
+      console.log(`${c.yellow}⚠ Ollama unreachable at ${OLLAMA_BASE} — trying Milla fallback${c.reset}\n`);
+    }
+  } else {
+    try {
+      await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
+      console.log(`${c.green}✓ Milla server online${c.reset} — ${API_BASE}\n`);
+    } catch {
+      console.log(`${c.yellow}⚠ Milla server offline — start with: pnpm dev${c.reset}\n`);
+    }
   }
 
   rl.prompt();
