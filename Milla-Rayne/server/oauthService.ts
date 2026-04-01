@@ -33,9 +33,8 @@ export const GOOGLE_OAUTH_SCOPES = [
   'https://www.googleapis.com/auth/gmail.modify',
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/drive.readonly',
-  'https://www.googleapis.com/auth/photoslibrary.readonly',
-  'https://www.googleapis.com/auth/photoslibrary.sharing',
-  'https://www.googleapis.com/auth/sdm.service',
+  // photoslibrary scopes removed — Google Photos Library API shut down March 2025
+  // sdm.service removed — requires Device Access program enrollment
 ] as const;
 
 /**
