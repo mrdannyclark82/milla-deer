@@ -29,7 +29,8 @@
     "lint": "npx --yes eslint . --ext .js,.mjs,.cjs",
     "format": "npx --yes prettier --write .",
     "docs:generate": "npx --yes typedoc",
-    "docs:watch": "npx --yes typedoc --watch"
+    "docs:watch": "npx --yes typedoc --watch",
+    "ai-cli": "npx --yes tsx ../cli/milla-ai-cli.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.56",
