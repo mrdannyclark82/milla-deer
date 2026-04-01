@@ -3,19 +3,20 @@
  * Milla AI CLI — poly-model AI-powered command-line toolbox
  *
  * Features:
- *   chat     – interactive chat with Milla (default)
- *   exec     – run shell commands with human-in-the-loop safety gate
- *   gen      – ask Milla to generate a bash/python script and save it
- *   tool     – list / add / run registered skill scripts (~/.milla_tools/)
- *   models   – show available AI models and current selection
+ *   chat   – interactive chat with Milla (default)
+ *   exec   – run shell commands with human-in-the-loop safety gate
+ *   gen    – ask Milla to generate a bash/python script and save it
+ *   tool   – list / add / run registered skill scripts (~/.milla_tools/)
+ *   models – show available AI models
  *
  * AI backend: Milla-Rayne server at localhost:5000
+ * Switch model with /model <name> inside chat, or via the web UI.
  */
 
 import readline from 'readline';
-import { execSync, spawn } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync, readdirSync, copyFileSync } from 'fs';
-import { resolve, basename, extname } from 'path';
+import { execSync } from 'child_process';
+import { mkdirSync, readFileSync, writeFileSync, chmodSync, readdirSync, copyFileSync, existsSync } from 'fs';
+import { resolve, extname } from 'path';
 import { homedir } from 'os';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -29,31 +30,31 @@ config({ path: path.resolve(__dirname, '../.env') });
 // ─────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────
-const API_BASE = process.env.API_URL || 'http://localhost:5000';
-const TOOL_DIR = path.join(homedir(), '.milla_tools');
+const API_BASE  = process.env.API_URL || 'http://localhost:5000';
+const TOOL_DIR  = path.join(homedir(), '.milla_tools');
 const STATE_FILE = path.join(homedir(), '.milla_cli_state.json');
 
-// Available models (displayed in `models` command)
+// Models available through the Milla-Rayne server
 const MODEL_LIST = [
-  'gemini-2.0-flash',
-  'deepseek-chat',
-  'grok-2-latest',
-  'claude-3-5-sonnet',
-  'mistralai/Mistral-7B-Instruct-v0.2',
+  { id: 'gemini',    label: 'gemini-2.0-flash',     provider: 'Google Gemini'  },
+  { id: 'deepseek',  label: 'deepseek-chat',         provider: 'DeepSeek'       },
+  { id: 'grok',      label: 'grok-2-latest',         provider: 'xAI Grok'       },
+  { id: 'claude',    label: 'claude-3-5-sonnet',     provider: 'Anthropic'      },
+  { id: 'openai',    label: 'gpt-4o',                provider: 'OpenAI'         },
 ];
 
 // ANSI colours (no external dep)
 const c = {
-  reset: '\x1b[0m',
-  bold: '\x1b[1m',
-  dim: '\x1b[2m',
-  cyan: '\x1b[36m',
+  reset:   '\x1b[0m',
+  bold:    '\x1b[1m',
+  dim:     '\x1b[2m',
+  cyan:    '\x1b[36m',
   magenta: '\x1b[35m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  blue: '\x1b[34m',
-  white: '\x1b[37m',
+  yellow:  '\x1b[33m',
+  red:     '\x1b[31m',
+  green:   '\x1b[32m',
+  blue:    '\x1b[34m',
+  white:   '\x1b[37m',
 };
 
 // ─────────────────────────────────────────────
@@ -67,7 +68,7 @@ ${c.magenta}╔═════════════════════�
 ║                                                  ║
 ╚══════════════════════════════════════════════════╝${c.reset}
 ${c.dim}Commands: chat (default) | exec | gen | tool | models
-Type /help inside chat for commands.${c.reset}
+Type /help inside chat for all commands.${c.reset}
 `);
 }
 
@@ -76,9 +77,20 @@ function prompt(question: string): Promise<string> {
   return new Promise((res) => rl.question(question, (a) => { rl.close(); res(a.trim()); }));
 }
 
-async function askAI(message: string, context?: string): Promise<string> {
+function loadState(): Record<string, unknown> {
+  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
+}
+function saveState(s: Record<string, unknown>) {
+  writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
+}
+
+// Active model preference (sent as hint to the server)
+let activeModel = loadState().model as string | undefined ?? 'gemini';
+
+async function askAI(message: string, systemContext?: string): Promise<string> {
   const body = JSON.stringify({
-    message: context ? `${context}\n\n${message}` : message,
+    message: systemContext ? `${systemContext}\n\n${message}` : message,
+    model: activeModel,
   });
 
   const res = await fetch(`${API_BASE}/api/chat`, {
@@ -88,17 +100,9 @@ async function askAI(message: string, context?: string): Promise<string> {
     signal: AbortSignal.timeout(60_000),
   });
 
-  if (!res.ok) throw new Error(`Server error ${res.status}`);
+  if (!res.ok) throw new Error(`Milla server error ${res.status} — is it running?`);
   const data = (await res.json()) as { response?: string; message?: string };
   return data.response || data.message || '(no response)';
-}
-
-function loadState(): Record<string, unknown> {
-  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
-}
-
-function saveState(state: Record<string, unknown>) {
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
 
 // ─────────────────────────────────────────────
@@ -215,27 +219,20 @@ async function toolRun(name: string, args: string[]): Promise<void> {
 // ─────────────────────────────────────────────
 async function showModels(): Promise<void> {
   const state = loadState();
-  const current = (state.model as string) || 'server-default';
+  const current = (state.model as string) ?? 'gemini';
 
-  console.log(`\n${c.bold}Available Models${c.reset} (via Milla-Rayne server)\n`);
-  MODEL_LIST.forEach((m, i) => {
-    const active = m === current ? `${c.green} ◀ active${c.reset}` : '';
-    console.log(`  ${c.dim}${i + 1}.${c.reset} ${m}${active}`);
+  console.log(`\n${c.bold}Available Models${c.reset} — all served through Milla-Rayne\n`);
+  MODEL_LIST.forEach((m) => {
+    const active = m.id === current ? `${c.green} ◀ active${c.reset}` : '';
+    console.log(`  ${c.magenta}${m.id.padEnd(10)}${c.reset} ${m.label.padEnd(24)} ${c.dim}${m.provider}${c.reset}${active}`);
   });
-  console.log(`\n${c.dim}Current: ${c.reset}${c.cyan}${current}${c.reset}`);
-  console.log(`${c.dim}Switch model via the web UI or update preferredAiModel in your profile.${c.reset}\n`);
+  console.log(`\n${c.dim}Switch with: /model <id>  (e.g. /model deepseek)${c.reset}\n`);
 
-  // Try to get actual server model info
   try {
-    const res = await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
-    if (res.ok) {
-      const data = (await res.json()) as { authenticated?: boolean };
-      if (data.authenticated) {
-        console.log(`${c.green}✓ Server connected${c.reset} — ${API_BASE}`);
-      }
-    }
+    await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
+    console.log(`${c.green}✓ Milla server online${c.reset} — ${API_BASE}`);
   } catch {
-    console.log(`${c.yellow}⚠ Server unreachable at ${API_BASE}${c.reset}`);
+    console.log(`${c.yellow}⚠ Milla server unreachable at ${API_BASE}${c.reset}`);
   }
 }
 
@@ -249,15 +246,16 @@ async function chatMode(): Promise<void> {
     prompt: `\n${c.cyan}You:${c.reset} `,
   });
 
-  console.log(`${c.dim}Tip: prefix a message with ! to run it as a shell command.`);
-  console.log(`Type /exec <cmd>, /gen <prompt>, /tools, /models, /help, or /exit${c.reset}\n`);
+  const modelLabel = () => `${c.magenta}[${activeModel}]${c.reset}`;
 
-  // Check server
+  console.log(`${c.dim}Tip: prefix with ! to run a shell command. /model <id> to switch AI.${c.reset}`);
+  console.log(`Model: ${modelLabel()}\n`);
+
   try {
     await fetch(`${API_BASE}/api/auth/status`, { signal: AbortSignal.timeout(3000) });
-    console.log(`${c.green}✓ Connected to Milla at ${API_BASE}${c.reset}\n`);
+    console.log(`${c.green}✓ Milla server online${c.reset} — ${API_BASE}\n`);
   } catch {
-    console.log(`${c.yellow}⚠ Cannot reach ${API_BASE} — start the server first${c.reset}\n`);
+    console.log(`${c.yellow}⚠ Milla server offline — start with: pnpm dev${c.reset}\n`);
   }
 
   rl.prompt();
@@ -268,7 +266,7 @@ async function chatMode(): Promise<void> {
 
     // ── slash commands ──────────────────────────────
     if (input === '/exit' || input === '/quit') {
-      console.log(`\n${c.magenta}Milla:${c.reset} Catch you later 💜\n`);
+      console.log(`\n${c.magenta}See ya Danny 💜${c.reset}\n`);
       rl.close();
       process.exit(0);
     }
@@ -276,20 +274,35 @@ async function chatMode(): Promise<void> {
     if (input === '/help') {
       console.log(`
   ${c.bold}Chat commands:${c.reset}
-  ${c.cyan}/exec <cmd>${c.reset}          run a shell command (with safety gate)
-  ${c.cyan}/gen <prompt>${c.reset}        generate a bash script
-  ${c.cyan}/gen:py <prompt>${c.reset}     generate a python script
-  ${c.cyan}/tools${c.reset}              list registered tools
-  ${c.cyan}/models${c.reset}             show available AI models
-  ${c.cyan}!<cmd>${c.reset}              shorthand for /exec
-  ${c.cyan}/exit${c.reset}               quit
+  ${c.magenta}/model <id>${c.reset}          switch AI model (gemini|deepseek|grok|claude|openai)
+  ${c.cyan}/exec <cmd>${c.reset}          run a shell command (safety gate on sudo/abs paths)
+  ${c.cyan}/gen <prompt>${c.reset}        generate + save a bash script
+  ${c.cyan}/gen:py <prompt>${c.reset}     generate + save a python script
+  ${c.cyan}/tools${c.reset}               list registered skill tools
+  ${c.cyan}/models${c.reset}              show all available models
+  ${c.cyan}!<cmd>${c.reset}               shorthand for /exec
+  ${c.cyan}/exit${c.reset}                quit
 `);
+      rl.prompt(); return;
+    }
+
+    // Switch model
+    if (input.startsWith('/model ')) {
+      const req = input.slice(7).trim();
+      const found = MODEL_LIST.find((m) => m.id === req || m.label.startsWith(req));
+      if (!found) {
+        console.log(`${c.red}Unknown model. Choose: ${MODEL_LIST.map((m) => m.id).join(' | ')}${c.reset}`);
+      } else {
+        activeModel = found.id;
+        const state = loadState(); state.model = activeModel; saveState(state);
+        console.log(`${c.green}✓ Switched to ${found.label} (${found.provider})${c.reset}`);
+      }
       rl.prompt(); return;
     }
 
     if (input === '/tools') {
       const tools = toolList();
-      if (tools.length === 0) console.log(`${c.dim}No tools registered yet. Use /tool add <name> <file>${c.reset}`);
+      if (tools.length === 0) console.log(`${c.dim}No tools yet. Add with: milla-ai tool add <name> <file>${c.reset}`);
       else tools.forEach((t) => console.log(`  ${c.cyan}${t}${c.reset}`));
       rl.prompt(); return;
     }
@@ -316,7 +329,7 @@ async function chatMode(): Promise<void> {
     }
 
     // ── AI chat ─────────────────────────────────────
-    process.stdout.write(`\n${c.magenta}Milla:${c.reset} ${c.dim}thinking…${c.reset}`);
+    process.stdout.write(`\n${c.magenta}Milla${c.reset} ${c.dim}[${activeModel}] thinking…${c.reset}`);
     try {
       const reply = await askAI(input);
       process.stdout.write('\r\x1b[K');
@@ -336,7 +349,7 @@ async function chatMode(): Promise<void> {
 // MAIN — simple argv routing (no extra deps)
 // ─────────────────────────────────────────────
 async function main() {
-  const [,, cmd, ...rest] = process.argv;
+  const [cmd, ...rest] = process.argv.slice(2);
 
   banner();
 
