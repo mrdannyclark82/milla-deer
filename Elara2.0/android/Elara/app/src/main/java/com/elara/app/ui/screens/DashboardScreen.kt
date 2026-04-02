@@ -266,7 +266,7 @@ private fun MetricBar(
             )
         }
         LinearProgressIndicator(
-            progress = { value / 100f },
+            progress = value / 100f,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp)

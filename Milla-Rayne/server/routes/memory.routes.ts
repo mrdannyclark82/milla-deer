@@ -2,7 +2,7 @@ import { Router, type Express, type Request } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
 import { insertMessageSchema } from '@shared/schema';
-import { validateSession } from '../authService';
+import { validateSession, validateDemoSession } from '../authService';
 import { requireAuth } from '../middleware/auth.middleware';
 import {
   searchKnowledge,
@@ -53,6 +53,11 @@ export function registerMemoryRoutes(app: Express) {
 
   const resolveUserId = async (sessionToken?: string) => {
     if (!sessionToken) return 'default-user';
+    // Demo sessions get isolated — never load real user data
+    if (sessionToken.startsWith('demo_')) {
+      const demo = validateDemoSession(sessionToken);
+      return demo.valid ? 'demo-guest' : 'default-user';
+    }
     const sessionResult = await validateSession(sessionToken);
     if (sessionResult.valid && sessionResult.user?.id) {
       return sessionResult.user.id as string;
@@ -67,13 +72,24 @@ export function registerMemoryRoutes(app: Express) {
       const limit = parseInt(req.query.limit as string) || 50;
       const channel =
         typeof req.query.channel === 'string' ? req.query.channel.trim() : '';
+
+      // Demo sessions — return empty, never leak real user data
+      const sessionToken = getSessionToken(req);
+      if (sessionToken?.startsWith('demo_')) {
+        return res.json([]);
+      }
+
       // Fire-and-forget — don't block message fetch on social sync
       syncReplycaSharedHistory().catch((error: unknown) =>
         console.warn('ReplycA social sync skipped during message fetch:', error)
       );
-      const userId = await resolveUserId(getSessionToken(req));
+      const userId = await resolveUserId(sessionToken);
       // Use getRecentMessages to avoid full-table decryption — only fetch what we need
-      const messages = await storage.getRecentMessages(userId, limit, channel || undefined);
+      const messages = await storage.getRecentMessages(
+        userId,
+        limit,
+        channel || undefined
+      );
 
       if (messages && messages.length > 0) {
         return res.json(messages);
@@ -336,8 +352,13 @@ ${suggestion.suggestionText}`,
 
   // Mount routes — memory endpoints require authentication.
   // Skip requireAuth for OAuth/auth initiation paths so login flow isn't blocked.
-  app.use('/api', (req, res, next) => {
-    if (req.path.startsWith('/auth/') || req.path.startsWith('/oauth/')) return next();
-    return requireAuth(req, res, next);
-  }, router);
+  app.use(
+    '/api',
+    (req, res, next) => {
+      if (req.path.startsWith('/auth/') || req.path.startsWith('/oauth/'))
+        return next();
+      return requireAuth(req, res, next);
+    },
+    router
+  );
 }

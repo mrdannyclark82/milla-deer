@@ -13,8 +13,8 @@ android {
         applicationId = "com.elara.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "3.0.0"
+        versionCode = 2
+        versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -40,6 +40,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+        )
     }
     buildFeatures {
         compose = true
@@ -105,8 +109,8 @@ dependencies {
     // Charts (for Dashboard radar chart)
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
 
-    // Code Editor
-    implementation("io.github.nicholasboari.compose-highlight:compose-highlight:1.1.2")
+    // Code Editor (syntax highlighting via BasicTextField)
+    // implementation("io.github.nicholasboari.compose-highlight:compose-highlight:1.1.2")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

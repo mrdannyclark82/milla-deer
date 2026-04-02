@@ -23,7 +23,12 @@ fun SettingsScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentPersona by viewModel.currentPersona.collectAsState()
+    val useMillaServer by viewModel.useMillaServer.collectAsState()
+    val millaServerUrl by viewModel.millaServerUrl.collectAsState()
+    val isMillaDemo by viewModel.isMillaDemo.collectAsState()
+    val millaMessagesLeft by viewModel.millaMessagesLeft.collectAsState()
 
+    var millaUrlInput by remember(millaServerUrl) { mutableStateOf(millaServerUrl) }
     var showClearDataDialog by remember { mutableStateOf(false) }
 
     // Clear Data Dialog
@@ -114,7 +119,7 @@ fun SettingsScreen(
                                     color = EmeraldPrimary.copy(alpha = 0.2f)
                                 ) {
                                     Text(
-                                        text = "v3.0.0",
+                                        text = "v4.0.0",
                                         style = MaterialTheme.typography.labelMedium,
                                         color = EmeraldPrimary,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -225,6 +230,74 @@ fun SettingsScreen(
                                 description = "Art generation platform",
                                 color = PinkAccent
                             )
+                        }
+                    }
+                }
+            }
+
+            // Milla-Rayne Server
+            item {
+                SettingsSection(title = "Milla-Rayne Server") {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Route chat through Milla",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = if (isMillaDemo) "Demo mode • ${millaMessagesLeft ?: 10} messages left"
+                                               else "Full access",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isMillaDemo) PinkAccent else EmeraldPrimary
+                                    )
+                                }
+                                Switch(
+                                    checked = useMillaServer,
+                                    onCheckedChange = { viewModel.setUseMillaServer(it) }
+                                )
+                            }
+
+                            if (useMillaServer) {
+                                OutlinedTextField(
+                                    value = millaUrlInput,
+                                    onValueChange = { millaUrlInput = it },
+                                    label = { Text("Server URL") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    trailingIcon = {
+                                        if (millaUrlInput != millaServerUrl) {
+                                            IconButton(onClick = {
+                                                viewModel.setMillaServerUrl(millaUrlInput)
+                                            }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Save URL",
+                                                    tint = EmeraldPrimary
+                                                )
+                                            }
+                                        }
+                                    }
+                                )
+                                Text(
+                                    text = "Use your Tailscale IP (e.g. http://100.x.x.x:5000) for local access",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

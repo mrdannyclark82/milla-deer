@@ -1,12 +1,20 @@
 import type { Request, Response, NextFunction } from 'express';
-import { validateSession } from '../authService';
+import { validateSession, validateDemoSession } from '../authService';
 
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
 
+declare global {
+  namespace Express {
+    interface Request {
+      isDemo?: boolean;
+      demoToken?: string;
+    }
+  }
+}
+
 /**
  * Middleware to require authentication.
- * Accepts either a valid session cookie OR the X-Internal-Key header
- * (used by agentRouterService for internal agent-to-agent dispatch).
+ * Accepts: valid session cookie, X-Internal-Key header, or demo session token.
  */
 export async function requireAuth(
   req: Request,
@@ -22,6 +30,18 @@ export async function requireAuth(
 
   if (!sessionToken) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Check for demo session
+  if (sessionToken.startsWith('demo_')) {
+    const demo = validateDemoSession(sessionToken);
+    if (!demo.valid) {
+      return res.status(401).json({ error: 'Demo session expired' });
+    }
+    req.isDemo = true;
+    req.demoToken = sessionToken;
+    req.user = { id: 'demo-guest', username: 'Guest', email: '' } as any;
+    return next();
   }
 
   const sessionResult = await validateSession(sessionToken);

@@ -207,15 +207,16 @@ export function ChatThreadPanel({
       if (!Array.isArray(data)) return;
 
       const nextMessages = data.map(parseStoredMessage);
-      const normalizedMessages =
-        nextMessages.length > 0 ? nextMessages : [DEFAULT_GREETING];
 
       shouldAutoScrollRef.current = isNearBottom();
-      setMessages((currentMessages) =>
-        areMessagesEqual(currentMessages, normalizedMessages)
-          ? currentMessages
-          : normalizedMessages
-      );
+      if (nextMessages.length > 0) {
+        setMessages((currentMessages) =>
+          areMessagesEqual(currentMessages, nextMessages)
+            ? currentMessages
+            : nextMessages
+        );
+      }
+      // If empty (e.g. demo session), keep existing local messages
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
@@ -240,11 +241,14 @@ export function ChatThreadPanel({
   }, [messages]);
 
   useEffect(() => {
-    const allVis = activeChannel === 'all'
-      ? messages
-      : messages.filter((m) => (m.channel || 'web') === activeChannel);
+    const allVis =
+      activeChannel === 'all'
+        ? messages
+        : messages.filter((m) => (m.channel || 'web') === activeChannel);
     const hasMoreMsgs = allVis.length > displayLimit;
-    const latest = hasMoreMsgs ? allVis.slice(allVis.length - displayLimit) : allVis;
+    const latest = hasMoreMsgs
+      ? allVis.slice(allVis.length - displayLimit)
+      : allVis;
     const nextLastMessage = latest[latest.length - 1];
     const nextLastMessageKey = nextLastMessage
       ? getMessageKey(nextLastMessage)
@@ -307,6 +311,17 @@ export function ChatThreadPanel({
       setActiveChannel('all');
     }
 
+    // Optimistically show user message
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'user',
+        content: userMsg,
+        channel: 'web',
+        sourcePlatform: 'milla-hub',
+      },
+    ]);
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -319,11 +334,25 @@ export function ChatThreadPanel({
       const data = await response.json();
 
       if (data.response || data.content) {
-        await loadMessages();
+        const replyText = data.response || data.content;
+
+        // Append assistant reply directly (works for demo + real users)
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: replyText,
+            displayRole: 'Milla Rayne',
+            channel: 'web',
+            sourcePlatform: 'milla-hub',
+          },
+        ]);
+
+        // Sync from DB in background (no-op for demo sessions)
+        loadMessages().catch(() => {});
 
         // Auto-speak the new response if enabled
         if (voice.autoSpeak) {
-          const replyText = data.response || data.content;
           if (typeof replyText === 'string' && replyText.trim()) {
             void voice.speak(replyText);
           }
@@ -590,7 +619,8 @@ export function ChatThreadPanel({
       <div className="relative z-10 border-t border-white/5 bg-white/[0.02] p-4">
         <div className="mb-2 flex items-center gap-2 text-[11px] text-white/40">
           <Mail className="h-3.5 w-3.5" />
-          Replies here still send to the Hub chat, while Gmail items are shown as shared memory context.
+          Replies here still send to the Hub chat, while Gmail items are shown
+          as shared memory context.
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 transition-all focus-within:border-[#00f2ff]/50 focus-within:bg-white/10">
           <input
@@ -598,7 +628,9 @@ export function ChatThreadPanel({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={voice.isListening ? 'Listening...' : 'Message Milla...'}
+            placeholder={
+              voice.isListening ? 'Listening...' : 'Message Milla...'
+            }
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
             disabled={isSending}
           />
