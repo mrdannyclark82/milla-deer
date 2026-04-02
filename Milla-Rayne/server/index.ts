@@ -21,7 +21,6 @@ for (const envPath of [
 import express, { type Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
-import fs from 'fs';
 import { registerModularRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initializeMemoryCore } from './memoryService';
@@ -415,16 +414,6 @@ export async function initApp() {
     res.status(status).json({ message });
     throw err;
   });
-
-  // Serve Elara2.0 static build at /elara
-  const elaraDist = path.resolve(process.cwd(), '..', 'Elara2.0', 'dist');
-  if (fs.existsSync(elaraDist)) {
-    app.use('/elara', express.static(elaraDist));
-    app.use('/elara', (_req, res) =>
-      res.sendFile(path.join(elaraDist, 'index.html'))
-    );
-    log('Elara2.0 served at /elara');
-  }
 
   if (app.get('env') !== 'development') {
     serveStatic(app);

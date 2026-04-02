@@ -8,6 +8,7 @@ import CreativeStudio from './components/CreativeStudio';
 import ThoughtLogger from './components/ThoughtLogger';
 import { 
   initGemini, 
+  processUserRequest,
   evaluateInteraction, 
   acquireKnowledge, 
   generateFeatureProposal, 
@@ -15,7 +16,6 @@ import {
   proactiveWebResearch,
   geminiService
 } from './services/geminiService';
-import { sendToMilla } from './services/millaService';
 import { 
   initMemoryDB, 
   storeMemory, 
@@ -482,8 +482,7 @@ const App: React.FC = () => {
         setTimeout(() => setThoughtProcess('Selecting optimal model and tools...'), 500);
         setTimeout(() => setThoughtProcess('Generating response with context awareness...'), 1000);
         
-        const imageData = currentAttachments[0]?.previewUri;
-        const result = await sendToMilla(userText, currentTool, imageData);
+        const result = await processUserRequest(userText, currentTool, currentAttachments, persona, knowledgeBase);
         
         // Add thought process to result
         const finalMessage = { 
@@ -557,8 +556,9 @@ const App: React.FC = () => {
     }
   };
 
-  // Gemini optional — Elara routes through Milla server
-  // if (!DEMO_API_KEY) { ... }
+  if (!DEMO_API_KEY) {
+    return <div className="h-screen w-screen bg-slate-950 flex items-center justify-center text-emerald-500">API_KEY Required</div>;
+  }
 
   return (
     <div className="h-screen w-screen bg-black flex overflow-hidden font-sans text-slate-200">
@@ -598,12 +598,12 @@ const App: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900/10 via-slate-950/50 to-black pointer-events-none"></div>
         
         {/* Avatar Area - HEIGHT KEPT REDUCED */}
-        <div className="w-full h-[22%] md:h-[25%] relative z-0">
+        <div className="w-full h-[35%] md:h-[35%] relative z-0">
           <Avatar3D isSpeaking={isThinking} mood={isThinking ? 'thinking' : 'neutral'} />
         </div>
 
         {/* Chat Area - HEIGHT KEPT INCREASED */}
-        <div className="w-full max-w-4xl px-4 pb-6 z-10 flex flex-col h-[78%] md:h-[75%] transition-all duration-500 bg-gradient-to-t from-black via-slate-950/90 to-transparent pt-4">
+        <div className="w-full max-w-4xl px-4 pb-6 z-10 flex flex-col h-[65%] md:h-[65%] transition-all duration-500 bg-gradient-to-t from-black via-slate-950/90 to-transparent pt-4">
             
             {/* Messages */}
             <div className="flex-1 overflow-y-auto mb-4 space-y-6 pr-3 custom-scrollbar">
