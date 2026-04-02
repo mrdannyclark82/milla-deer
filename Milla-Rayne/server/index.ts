@@ -3,7 +3,10 @@ import path from 'path';
 
 // Keep the process alive — never let a single error crash the server
 process.on('uncaughtException', (err) => {
-  console.error('[PROCESS] Uncaught exception (kept alive):', err?.message || err);
+  console.error(
+    '[PROCESS] Uncaught exception (kept alive):',
+    err?.message || err
+  );
 });
 process.on('unhandledRejection', (reason) => {
   console.error('[PROCESS] Unhandled rejection (kept alive):', reason);
@@ -18,6 +21,7 @@ for (const envPath of [
 import express, { type Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
+import fs from 'fs';
 import { registerModularRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initializeMemoryCore } from './memoryService';
@@ -308,7 +312,8 @@ export async function initApp() {
 
   // Gmail inbox poller — Milla reads + replies to incoming emails
   try {
-    const { startGmailInboxPoller } = await import('./services/gmailInboxPollerService');
+    const { startGmailInboxPoller } =
+      await import('./services/gmailInboxPollerService');
     startGmailInboxPoller();
   } catch (err) {
     console.warn('⚠️ Gmail inbox poller failed to start (non-fatal):', err);
@@ -319,7 +324,8 @@ export async function initApp() {
     try {
       const { haService } = await import('./services/homeAssistantService');
       const { mqttService } = await import('./services/mqttBrokerService');
-      const { thermalMonitor } = await import('./services/thermalMonitorService');
+      const { thermalMonitor } =
+        await import('./services/thermalMonitorService');
       const { reactLoop } = await import('./services/reactLoopService');
 
       await haService.connect();
@@ -328,7 +334,10 @@ export async function initApp() {
       reactLoop.startMonitoring(30000);
       console.log('✅ IoT services initialized');
     } catch (err) {
-      console.warn('⚠️ IoT services failed to initialize (non-fatal):', (err as Error).message);
+      console.warn(
+        '⚠️ IoT services failed to initialize (non-fatal):',
+        (err as Error).message
+      );
     }
   }
 
@@ -365,7 +374,11 @@ export async function initApp() {
   httpServer = createServer(app);
 
   // Setup sensor data WebSocket for mobile clients
-  const { setupWebSocketServer, setupSensorDataWebSocket, setupVoiceWebSocket } = await import('./websocketService');
+  const {
+    setupWebSocketServer,
+    setupSensorDataWebSocket,
+    setupVoiceWebSocket,
+  } = await import('./websocketService');
   const mainWss = await setupWebSocketServer(httpServer);
   (httpServer as any).__mainWss = mainWss;
   await setupSensorDataWebSocket(httpServer);
@@ -402,6 +415,16 @@ export async function initApp() {
     res.status(status).json({ message });
     throw err;
   });
+
+  // Serve Elara2.0 static build at /elara
+  const elaraDist = path.resolve(process.cwd(), '..', 'Elara2.0', 'dist');
+  if (fs.existsSync(elaraDist)) {
+    app.use('/elara', express.static(elaraDist));
+    app.use('/elara', (_req, res) =>
+      res.sendFile(path.join(elaraDist, 'index.html'))
+    );
+    log('Elara2.0 served at /elara');
+  }
 
   if (app.get('env') !== 'development') {
     serveStatic(app);
