@@ -1,4 +1,4 @@
-const MILLA_API = 'http://localhost:5000';
+const MILLA_API = 'https://milla-rayne.com';
 
 async function checkServer() {
   const dot = document.getElementById('server-dot');

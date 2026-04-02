@@ -4,7 +4,7 @@
  * Communicates with the Milla-Rayne server at localhost:5000.
  */
 
-const MILLA_API = 'http://localhost:5000';
+const MILLA_API = 'https://milla-rayne.com';
 const STORAGE_KEY = 'milla_session_token';
 
 let sidebarOpen = false;
