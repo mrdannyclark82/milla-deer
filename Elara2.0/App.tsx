@@ -8,7 +8,6 @@ import CreativeStudio from './components/CreativeStudio';
 import ThoughtLogger from './components/ThoughtLogger';
 import { 
   initGemini, 
-  processUserRequest,
   evaluateInteraction, 
   acquireKnowledge, 
   generateFeatureProposal, 
@@ -16,6 +15,7 @@ import {
   proactiveWebResearch,
   geminiService
 } from './services/geminiService';
+import { sendToMilla } from './services/millaService';
 import { 
   initMemoryDB, 
   storeMemory, 
@@ -482,7 +482,8 @@ const App: React.FC = () => {
         setTimeout(() => setThoughtProcess('Selecting optimal model and tools...'), 500);
         setTimeout(() => setThoughtProcess('Generating response with context awareness...'), 1000);
         
-        const result = await processUserRequest(userText, currentTool, currentAttachments, persona, knowledgeBase);
+        const imageData = currentAttachments[0]?.previewUri;
+        const result = await sendToMilla(userText, currentTool, imageData);
         
         // Add thought process to result
         const finalMessage = { 
@@ -556,9 +557,8 @@ const App: React.FC = () => {
     }
   };
 
-  if (!DEMO_API_KEY) {
-    return <div className="h-screen w-screen bg-slate-950 flex items-center justify-center text-emerald-500">API_KEY Required</div>;
-  }
+  // Gemini optional — Elara routes through Milla server
+  // if (!DEMO_API_KEY) { ... }
 
   return (
     <div className="h-screen w-screen bg-black flex overflow-hidden font-sans text-slate-200">
