@@ -45,3 +45,4 @@ home/
 memory/*.db
 memory/*.db-shm
 memory/*.db-wal
+browser_extension/milla-rayne.pem
