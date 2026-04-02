@@ -21,6 +21,7 @@ for (const envPath of [
 import express, { type Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
+import { existsSync } from 'fs';
 import { registerModularRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initializeMemoryCore } from './memoryService';
@@ -414,6 +415,16 @@ export async function initApp() {
     res.status(status).json({ message });
     throw err;
   });
+
+  // Serve Axiom-Rayne (Nexus dashboard) at /axiom-rayne
+  const axiomDist = path.resolve(process.cwd(), '..', '..', 'new-nexus-dashboard', 'dist');
+  if (existsSync(axiomDist)) {
+    app.use('/axiom-rayne', express.static(axiomDist));
+    app.use('/axiom-rayne', (_req, res) =>
+      res.sendFile(path.join(axiomDist, 'index.html'))
+    );
+    log('Axiom-Rayne served at /axiom-rayne');
+  }
 
   if (app.get('env') !== 'development') {
     serveStatic(app);
