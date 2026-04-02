@@ -17,6 +17,7 @@ export interface ParsedCommand {
     | 'profile'
     | 'consciousness'
     | 'repository'
+    | 'axiom'
     | null;
   action:
     | 'list'
@@ -31,6 +32,7 @@ export interface ParsedCommand {
     | 'status'
     | 'run'
     | 'cancel'
+    | 'cast'
     | null;
   entities: { [key: string]: string };
   /** 0–1 score of how confident this parse is. Values below 0.65 should fall through to generic AI. */
@@ -45,11 +47,12 @@ const SPECIFIC_KEYWORDS: Record<string, string[]> = {
   calendar: ['calendar', 'schedule', 'event'],
   gmail: ['email', 'inbox', 'mail'],
   mcp: ['mcp', 'model context protocol'],
-  shell: ['shell', 'terminal', 'git status', 'git diff', 'workspace check', 'workspace lint', 'workspace build', 'workspace test'],
+  shell: ['shell', 'terminal', 'git diff', 'workspace check', 'workspace lint', 'workspace build', 'workspace test'],
   youtube: ['youtube'],
   tasks: ['task', 'todo', 'to-do'],
   consciousness: ['gim cycle', 'rem cycle', 'dream cycle', 'consciousness'],
   repository: ['repo discovery', 'repository discovery', 'feature discovery', 'scan github'],
+  axiom: ['system stats', 'cpu usage', 'git status', 'cast devices', 'docker', 'neuro state', 'daily brief', 'skill', 'backup', 'server logs', 'stream logs'],
   profile: [],
 };
 
@@ -886,6 +889,103 @@ export async function parseCommand(message: string): Promise<ParsedCommand> {
     } else {
       result.action = 'status';
     }
+  }
+
+  // Axiom system tools
+  else if (
+    lowerMessage.includes('system stats') ||
+    lowerMessage.includes('cpu usage') ||
+    lowerMessage.includes('cpu load') ||
+    lowerMessage.includes('memory usage') ||
+    lowerMessage.includes('server stats') ||
+    lowerMessage.includes('how is the server') ||
+    lowerMessage.includes('server health')
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = 'system_stats';
+  }
+
+  else if (
+    (lowerMessage.includes('git') && lowerMessage.includes('status')) ||
+    (lowerMessage.includes('git') && lowerMessage.includes('log')) ||
+    (lowerMessage.includes('what') && lowerMessage.includes('changed') && lowerMessage.includes('repo'))
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = lowerMessage.includes('log') ? 'git_log' : 'git_status';
+  }
+
+  else if (
+    lowerMessage.includes('cast devices') ||
+    lowerMessage.includes('chromecast') ||
+    (lowerMessage.includes('what') && lowerMessage.includes('cast'))
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = 'cast_devices';
+  }
+
+  else if (
+    lowerMessage.includes('docker') ||
+    lowerMessage.includes('containers running') ||
+    lowerMessage.includes('running containers')
+  ) {
+    result.service = 'axiom';
+    result.action = 'list';
+    result.entities.tool = 'docker_list';
+  }
+
+  else if (
+    lowerMessage.includes('neuro state') ||
+    lowerMessage.includes('milla neuro') ||
+    lowerMessage.includes('neurochemical')
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = 'neuro';
+  }
+
+  else if (
+    lowerMessage.includes('daily brief') ||
+    lowerMessage.includes('milla brief') ||
+    (lowerMessage.includes('brief') && (lowerMessage.includes('today') || lowerMessage.includes('latest')))
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = 'brief';
+  }
+
+  else if (
+    lowerMessage.includes('server logs') ||
+    lowerMessage.includes('tail logs') ||
+    lowerMessage.includes('show logs') ||
+    lowerMessage.includes('stream logs')
+  ) {
+    result.service = 'axiom';
+    result.action = 'get';
+    result.entities.tool = 'logs';
+  }
+
+  else if (
+    lowerMessage.includes('backup list') ||
+    lowerMessage.includes('list backups') ||
+    (lowerMessage.includes('backup') && lowerMessage.includes('show'))
+  ) {
+    result.service = 'axiom';
+    result.action = 'list';
+    result.entities.tool = 'backup_list';
+  }
+
+  else if (
+    lowerMessage.includes('installed skills') ||
+    lowerMessage.includes('list skills') ||
+    lowerMessage.includes('milla skills') ||
+    (lowerMessage.includes('what') && lowerMessage.includes('skills'))
+  ) {
+    result.service = 'axiom';
+    result.action = 'list';
+    result.entities.tool = 'skills';
   }
 
   // Profile

@@ -1500,6 +1500,157 @@ export async function generateAIResponse(
         ].join('\n'),
       };
     }
+
+    // ─── Axiom system tools ────────────────────────────────────────────────
+    if (parsedCommand.service === 'axiom') {
+      const tool = parsedCommand.entities?.tool ?? '';
+      try {
+        const { execSync } = await import('child_process');
+        const os = await import('os');
+
+        if (tool === 'system_stats') {
+          const cpus = os.cpus();
+          const totalMem = os.totalmem();
+          const freeMem = os.freemem();
+          const usedMem = totalMem - freeMem;
+          const load = os.loadavg();
+          captureToolEvent({ name: 'axiom_system_stats', args: {}, result: 'ok' });
+          return {
+            content: [
+              `**System Stats**`,
+              `CPU: ${cpus[0]?.model ?? 'unknown'} × ${cpus.length}`,
+              `Load avg (1m/5m/15m): ${load.map(l => l.toFixed(2)).join(' / ')}`,
+              `Memory: ${(usedMem / 1024 ** 3).toFixed(1)} GB used / ${(totalMem / 1024 ** 3).toFixed(1)} GB total`,
+              `Uptime: ${Math.floor(os.uptime() / 3600)}h ${Math.floor((os.uptime() % 3600) / 60)}m`,
+            ].join('\n'),
+          };
+        }
+
+        if (tool === 'git_status' || tool === 'git_log') {
+          const cwd = process.cwd();
+          const cmd = tool === 'git_log'
+            ? 'git --no-pager log --oneline -10'
+            : 'git --no-pager status --short';
+          const output = execSync(cmd, { cwd, encoding: 'utf-8', timeout: 5000 }).trim();
+          captureToolEvent({ name: `axiom_${tool}`, args: {}, result: output.slice(0, 100) });
+          return {
+            content: output
+              ? `**${tool === 'git_log' ? 'Recent Commits' : 'Git Status'}**\n\`\`\`\n${output}\n\`\`\``
+              : `${tool === 'git_log' ? 'No commits found.' : 'Working tree clean.'}`,
+          };
+        }
+
+        if (tool === 'cast_devices') {
+          const raw = execSync(
+            'avahi-browse -r -t _googlecast._tcp 2>/dev/null || echo "avahi unavailable"',
+            { encoding: 'utf-8', timeout: 5000 }
+          ).trim();
+          const devices = [...new Set((raw.match(/= .+ (?:IPv4|IPv6) (\S+)\s+_googlecast/g) ?? [])
+            .map(l => l.replace(/= .+ (?:IPv4|IPv6) /, '').replace(/\s+_googlecast.*/, '')))];
+          captureToolEvent({ name: 'axiom_cast_devices', args: {}, result: devices.join(', ') });
+          return {
+            content: devices.length
+              ? `**Cast Devices Found (${devices.length})**\n${devices.map(d => `• ${d}`).join('\n')}`
+              : 'No cast devices discovered on the network right now.',
+          };
+        }
+
+        if (tool === 'docker_list') {
+          let output = '';
+          try {
+            output = execSync('docker ps --format "{{.Names}}\\t{{.Image}}\\t{{.Status}}"', { encoding: 'utf-8', timeout: 5000 }).trim();
+          } catch {
+            output = '';
+          }
+          captureToolEvent({ name: 'axiom_docker_list', args: {}, result: output ? 'containers found' : 'none' });
+          return {
+            content: output
+              ? `**Running Containers**\n\`\`\`\n${output}\n\`\`\``
+              : 'No Docker containers currently running.',
+          };
+        }
+
+        if (tool === 'neuro') {
+          const { default: fs } = await import('fs');
+          const neuroPath = new URL('../../memory/neuro_state.json', import.meta.url).pathname;
+          let state: Record<string, number> = { dopamine: 0.5, serotonin: 0.5, cortisol: 0.3, oxytocin: 0.6, energy: 0.7 };
+          try {
+            state = JSON.parse(fs.readFileSync(neuroPath, 'utf-8'));
+          } catch { /* use defaults */ }
+          captureToolEvent({ name: 'axiom_neuro', args: {}, result: JSON.stringify(state) });
+          const bar = (v: number) => '█'.repeat(Math.round(v * 10)).padEnd(10, '░');
+          return {
+            content: [
+              '**Milla Neurochemical State**',
+              ...Object.entries(state).map(([k, v]) => `${k.padEnd(12)} ${bar(v as number)} ${((v as number) * 100).toFixed(0)}%`),
+            ].join('\n'),
+          };
+        }
+
+        if (tool === 'brief') {
+          const { default: fs } = await import('fs');
+          const briefPath = new URL('../../memory/briefs/', import.meta.url).pathname;
+          let content = 'No briefs recorded yet. Milla standing by.';
+          try {
+            const files = fs.readdirSync(briefPath).filter(f => f.endsWith('.json')).sort().reverse();
+            if (files[0]) {
+              const data = JSON.parse(fs.readFileSync(`${briefPath}${files[0]}`, 'utf-8'));
+              content = data.content ?? content;
+            }
+          } catch { /* use default */ }
+          captureToolEvent({ name: 'axiom_brief', args: {}, result: content.slice(0, 80) });
+          return { content: `**Daily Brief**\n\n${content}` };
+        }
+
+        if (tool === 'logs') {
+          const logPath = new URL('../../logs/', import.meta.url).pathname;
+          let output = '';
+          try {
+            const { default: fs } = await import('fs');
+            const files = fs.readdirSync(logPath).filter(f => f.endsWith('.log')).sort().reverse();
+            if (files[0]) {
+              const lines = fs.readFileSync(`${logPath}${files[0]}`, 'utf-8').trim().split('\n');
+              output = lines.slice(-20).join('\n');
+            }
+          } catch {
+            try {
+              output = execSync('journalctl -u milla -n 20 --no-pager 2>/dev/null || tail -20 /tmp/milla-server.log 2>/dev/null', { encoding: 'utf-8', timeout: 5000 }).trim();
+            } catch { output = 'Log access unavailable.'; }
+          }
+          captureToolEvent({ name: 'axiom_logs', args: {}, result: output.slice(0, 100) });
+          return { content: `**Server Logs (last 20 lines)**\n\`\`\`\n${output || 'No log data found.'}\n\`\`\`` };
+        }
+
+        if (tool === 'backup_list') {
+          const { default: fs } = await import('fs');
+          const backupPath = new URL('../../memory/backups/', import.meta.url).pathname;
+          let files: string[] = [];
+          try { files = fs.readdirSync(backupPath).sort().reverse(); } catch { /* none */ }
+          captureToolEvent({ name: 'axiom_backup_list', args: {}, result: `${files.length} backups` });
+          return {
+            content: files.length
+              ? `**Backups (${files.length})**\n${files.slice(0, 10).map(f => `• ${f}`).join('\n')}`
+              : 'No backups found.',
+          };
+        }
+
+        if (tool === 'skills') {
+          const { default: fs } = await import('fs');
+          const skillPath = new URL('../../memory/skills.json', import.meta.url).pathname;
+          let skills: string[] = [];
+          try { skills = JSON.parse(fs.readFileSync(skillPath, 'utf-8')); } catch { /* none */ }
+          captureToolEvent({ name: 'axiom_skills', args: {}, result: `${skills.length} skills` });
+          return {
+            content: skills.length
+              ? `**Installed Skills (${skills.length})**\n${skills.map((s: string) => `• ${s}`).join('\n')}`
+              : 'No skills installed yet.',
+          };
+        }
+      } catch (err) {
+        console.error('[axiom-tool] error:', err);
+        return { content: `I hit an error running that system tool. Check server logs for details.` };
+      }
+    }
   }
 
   // Image Generation
