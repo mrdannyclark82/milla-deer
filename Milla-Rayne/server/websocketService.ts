@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { spawn } from 'child_process';
 
 // Game state interfaces
 interface GameMove {
@@ -336,6 +337,15 @@ export function setupVoiceWebSocket(httpServer: Server): WebSocketServer {
       voiceWss.handleUpgrade(req, socket as any, head, (ws) => {
         voiceWss.emit('connection', ws, req);
       });
+    } else if (path === '/ws/terminal') {
+      const terminalWss: WebSocketServer | undefined = (httpServer as any).__terminalWss;
+      if (terminalWss) {
+        terminalWss.handleUpgrade(req, socket as any, head, (ws) => {
+          terminalWss.emit('connection', ws, req);
+        });
+      } else {
+        (socket as any).destroy();
+      }
     } else if (path === '/ws/sensor') {
       sensorWss.handleUpgrade(req, socket as any, head, (ws) => {
         sensorWss.emit('connection', ws, req);
@@ -364,4 +374,53 @@ export function sendVoiceReaction(text: string): void {
       client.send(payload);
     }
   }
+}
+
+/**
+ * Spawns a bash shell and bridges its stdin/stdout to the WebSocket.
+ * node-pty is not required — interactive programs (vim, etc.) won't work,
+ * but all scripted/pipeline commands do.
+ * Must be called BEFORE setupVoiceWebSocket so __terminalWss is available
+ * to the shared upgrade handler.
+ */
+export function setupTerminalWebSocket(httpServer: Server): WebSocketServer {
+  const terminalWss = new WebSocketServer({ noServer: true });
+
+  terminalWss.on('connection', (ws: WebSocket) => {
+    console.log('[Terminal] Client connected');
+
+    const shell = spawn('bash', [], {
+      stdio: 'pipe',
+      env: { ...process.env, TERM: 'xterm-256color' },
+    });
+
+    shell.stdout.on('data', (data: Buffer) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(data.toString());
+    });
+
+    shell.stderr.on('data', (data: Buffer) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(data.toString());
+    });
+
+    ws.on('message', (data: Buffer | string) => {
+      if (!shell.killed && shell.stdin.writable) {
+        shell.stdin.write(typeof data === 'string' ? data : data.toString());
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('[Terminal] Client disconnected');
+      if (!shell.killed) shell.kill();
+    });
+
+    ws.on('error', (err) => console.error('[Terminal] WebSocket error:', err));
+
+    shell.on('close', () => {
+      if (ws.readyState === WebSocket.OPEN) ws.close();
+    });
+  });
+
+  (httpServer as any).__terminalWss = terminalWss;
+  console.log('[Terminal] WebSocket server ready on /ws/terminal');
+  return terminalWss;
 }

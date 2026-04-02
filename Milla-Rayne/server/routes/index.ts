@@ -16,6 +16,7 @@ import { registerCyclesRoutes } from './cycles.routes';
 import { registerVisionRoutes } from './vision.routes';
 import { registerPrivacyRoutes } from './privacy.routes';
 import { registerLAMRoutes } from './lam.routes';
+import { registerAxiomRoutes } from './axiom.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
@@ -69,6 +70,9 @@ export async function registerModularRoutes(app: Express) {
 
   // LAM (Large Action Model) execution + SLM routing + training data pipeline
   registerLAMRoutes(app);
+
+  // Axiom dashboard — git, files, system, logs, cast, cron, briefs, swarm, model
+  registerAxiomRoutes(app);
 
   // TV control routes (Vizio SmartCast + Google Cast + YouTube)
   const { registerTvRoutes } = await import('./tv.routes');
