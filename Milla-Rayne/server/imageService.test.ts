@@ -84,6 +84,7 @@ describe('imageService Hugging Face model compatibility', () => {
   });
 
   it('prefers Google image generation when available', async () => {
+    config.google.genAiApiKey = 'google-test-key';
     vi.mocked(generateImageWithGoogle).mockResolvedValue({
       success: true,
       imageUrl: 'data:image/png;base64,google-image',

@@ -16,6 +16,11 @@ vi.mock('node-fetch', () => ({
   default: vi.fn(),
 }));
 
+vi.mock('../authService', () => ({
+  validateSession: vi.fn().mockResolvedValue({ valid: true, user: { id: 'test-user', username: 'testuser', email: 'test@test.com' } }),
+  validateDemoSession: vi.fn().mockReturnValue({ valid: true }),
+}));
+
 vi.mock('../aiDispatcherService', () => ({
   dispatchAIResponse: vi
     .fn()
@@ -41,6 +46,7 @@ describe('POST /api/chat/audio', () => {
 
     const response = await request(app)
       .post('/api/chat/audio')
+      .set('Cookie', ['session_token=test-token'])
       .attach('audio', audioFilePath);
 
     expect(response.status).toBe(200);

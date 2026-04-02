@@ -101,11 +101,14 @@ describe('replycaSocialBridgeService', () => {
   });
 
   it('reports unsynced status when the shared history file is missing', async () => {
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(31_000); // bypass 30s SYNC_COOLDOWN_MS
     const root = mkdtempSync(path.join(os.tmpdir(), 'replyca-social-empty-'));
     process.env.REPLYCA_ROOT = root;
     process.env.REPLYCA_SOCIAL_STATE_PATH = path.join(root, 'replyca-state.json');
 
     const result = await syncReplycaSharedHistory();
+    vi.useRealTimers();
 
     expect(result.synced).toBe(false);
     expect(result.sharedChatExists).toBe(false);

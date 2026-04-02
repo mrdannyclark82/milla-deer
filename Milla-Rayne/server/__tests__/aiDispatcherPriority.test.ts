@@ -24,6 +24,10 @@ vi.mock('../geminiService', () => ({ generateGeminiResponse: vi.fn() }));
 vi.mock('../authService', () => ({
   getUserAIModel: vi.fn().mockResolvedValue({ success: false }),
 }));
+vi.mock('../aiModelPreferences', () => ({
+  DEFAULT_CHAT_MODEL: 'gemini',
+  normalizeAIModel: vi.fn((model: string) => model),
+}));
 vi.mock('../memoryService', () => ({
   searchMemoryCore: vi.fn().mockResolvedValue([]),
   getSemanticMemoryContext: vi.fn().mockResolvedValue(''),

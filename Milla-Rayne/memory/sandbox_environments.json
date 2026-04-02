@@ -14,10 +14,202 @@
           "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
           "description": "The fix involves integrating Static Application Security Testing (SAST) into the existing CI/CD pipeline. This will introduce a dedicated step or job that automatically scans the codebase for common security vulnerabilities, coding errors, and adherence to security best practices with every code commit or pull request. The example provided uses GitHub Actions with CodeQL for SAST, which is a widely adopted approach for automated security scanning in CI/CD.",
           "files": [],
-          "status": "approved",
-          "testsPassed": 2,
-          "testsFailed": 0,
+          "status": "testing",
+          "testsPassed": 14,
+          "testsFailed": 4,
           "addedAt": 1775024109472
+        },
+        {
+          "id": "feat_1775111686255_afmwvrkdo",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775111686255
+        },
+        {
+          "id": "feat_1775111734588_pot9ozhdi",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775111734588
+        },
+        {
+          "id": "feat_1775111775285_umvl17t15",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775111775285
+        },
+        {
+          "id": "feat_1775112911915_63m8p8ni9",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775112911915
+        },
+        {
+          "id": "feat_1775114403656_yr9qkwp2t",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775114403656
+        },
+        {
+          "id": "feat_1775114458128_fzp4za2p6",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775114458128
+        },
+        {
+          "id": "feat_1775115426288_w4ab85ivk",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115426288
+        },
+        {
+          "id": "feat_1775115463840_o5wajoady",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115463840
+        },
+        {
+          "id": "feat_1775115620709_v985yjdp1",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115620709
+        },
+        {
+          "id": "feat_1775115689453_8hevfhdem",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115689453
+        },
+        {
+          "id": "feat_1775115721581_oklyfovzb",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115721581
+        },
+        {
+          "id": "feat_1775115752608_kmp5qex7n",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115752608
+        },
+        {
+          "id": "feat_1775115784409_xlamw4zu3",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115784409
+        },
+        {
+          "id": "feat_1775115818812_jc5mr03fk",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115818812
+        },
+        {
+          "id": "feat_1775115851953_5dzkzwc1b",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115851953
+        },
+        {
+          "id": "feat_1775115876400_trr825gn4",
+          "name": "Test Feature",
+          "description": "Testing feature addition",
+          "files": [
+            "test.ts"
+          ],
+          "status": "draft",
+          "testsPassed": 0,
+          "testsFailed": 0,
+          "addedAt": 1775115876400
         }
       ],
       "readyForProduction": false,
@@ -36,6 +228,150 @@
           "featureId": "feat_1775024109472_ejeny0sla",
           "timestamp": 1775024109473,
           "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775111686256_sj7w50k78",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775111686256,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775111734591_do9c4pa5m",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775111734591,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775111775459_wxnki9pub",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775111775459,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775112911917_961zogar1",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775112911917,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775114403688_5cry4eb27",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775114403688,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775114458135_er5aadck2",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775114458135,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115426318_t5nzzgtz5",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115426318,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115463845_icbqt0iy0",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115463845,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115620712_z1plgifih",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115620712,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115689464_s6uatkere",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115689464,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115721584_4kp7ujm70",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115721584,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115752619_mqsxpy6tg",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115752619,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115784411_k58vb03wu",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115784411,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115818831_gvxou69my",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115818831,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115851956_knddu7ydg",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115851956,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775115876403_9e85vf2pt",
+          "featureId": "feat_1775024109472_ejeny0sla",
+          "timestamp": 1775115876403,
+          "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
           "duration": 0
@@ -99,8 +435,8 @@
           "description": "The fix involves integrating security scanning tools directly into the CI/CD pipeline. This automates the process of identifying security vulnerabilities, misconfigurations, and outdated dependencies early in the development lifecycle. This typically includes Static Application Security Testing (SAST) for source code analysis, Software Composition Analysis (SCA) for identifying vulnerabilities in open-source dependencies, and potentially Dynamic Application Security Testing (DAST) for runtime analysis of the deployed application. The exact tools and configuration will depend on the CI/CD platform and the technologies used in the project.",
           "files": [],
           "status": "testing",
-          "testsPassed": 9,
-          "testsFailed": 2,
+          "testsPassed": 13,
+          "testsFailed": 5,
           "addedAt": 1775027817480
         }
       ],
@@ -204,6 +540,69 @@
           "passed": true,
           "details": "All tests passed successfully",
           "duration": 0
+        },
+        {
+          "id": "test_1775076054290_hqhal3jd6",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775076054290,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854293_1i6czw5om",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775086854293,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654292_1ftipa3ny",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775097654292,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640155_v1e5a9iq4",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775104640155,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231260_kpsxl8cdv",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775105231260,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897968_l1ydqjkm3",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775107897968,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793282_4sxe3bx5w",
+          "featureId": "feat_1775027817480_8b3f3fidc",
+          "timestamp": 1775108793282,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     },
@@ -222,8 +621,8 @@
           "description": "To address the security issue, integrate security scanning tools directly into your Continuous Integration/Continuous Deployment (CI/CD) pipeline. This involves adding new stages or steps to your CI/CD configuration (e.g., `.gitlab-ci.yml`, `.github/workflows/main.yml`, `azure-pipelines.yml`, `Jenkinsfile`) to automatically run Static Application Security Testing (SAST), Software Composition Analysis (SCA), and potentially Dynamic Application Security Testing (DAST) tools. These scans should ideally run after the build and before deployment, with configurable failure policies (e.g., breaking the pipeline on critical vulnerabilities).",
           "files": [],
           "status": "testing",
-          "testsPassed": 7,
-          "testsFailed": 3,
+          "testsPassed": 12,
+          "testsFailed": 5,
           "addedAt": 1775029304067
         }
       ],
@@ -318,6 +717,69 @@
           "passed": true,
           "details": "All tests passed successfully",
           "duration": 0
+        },
+        {
+          "id": "test_1775076054295_eq1lanv8p",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775076054295,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854299_ohof1a5gx",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775086854299,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654293_nrsuaq52o",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775097654293,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640158_1d7z0mibp",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775104640158,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231263_g67617riq",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775105231263,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897975_lobn40wqf",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775107897975,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793289_c6ckn0qs0",
+          "featureId": "feat_1775029304067_bgsnym70d",
+          "timestamp": 1775108793289,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     },
@@ -336,8 +798,8 @@
           "description": "The security issue highlights the absence of automated security scanning within the CI/CD pipeline. The fix involves integrating various types of security scanning tools directly into the CI/CD workflow. This ensures that security vulnerabilities are identified early and automatically during the development and deployment process. Key types of scanning to include are Static Application Security Testing (SAST) to analyze source code for common vulnerabilities, Dependency Scanning to detect known vulnerabilities in third-party libraries and packages, Secret Scanning to prevent credentials and sensitive information from being committed to repositories, and potentially Dynamic Application Security Testing (DAST) for runtime analysis of deployed applications. This integration typically involves adding new stages or steps to the CI/CD pipeline configuration, executing the scanning tools, and failing the build or providing alerts upon detection of critical issues.",
           "files": [],
           "status": "testing",
-          "testsPassed": 4,
-          "testsFailed": 5,
+          "testsPassed": 7,
+          "testsFailed": 9,
           "addedAt": 1775040038699
         }
       ],
@@ -423,6 +885,69 @@
           "passed": true,
           "details": "All tests passed successfully",
           "duration": 0
+        },
+        {
+          "id": "test_1775076054295_n4igd1wxq",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775076054295,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854302_8wa3f79o4",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775086854302,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654295_mohap2a0o",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775097654295,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640168_dt4ntndzv",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775104640168,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231274_m4lk5bjk5",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775105231274,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897979_7urpjvw49",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775107897979,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793296_e0w0ed0ff",
+          "featureId": "feat_1775040038699_34qglfv6i",
+          "timestamp": 1775108793296,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     },
@@ -483,8 +1008,8 @@
           "description": "The security issue highlights the absence of security scanning within the CI/CD pipeline, a crucial component for modern secure software development. The fix involves integrating Static Application Security Testing (SAST) tools directly into the CI/CD workflow. This allows for automated analysis of the codebase to detect potential vulnerabilities, security misconfigurations, and compliance issues early in the development lifecycle. For demonstration purposes, this fix assumes a GitHub Actions workflow file (`.github/workflows/build.yml`) and integrates GitHub's CodeQL for SAST.",
           "files": [],
           "status": "testing",
-          "testsPassed": 5,
-          "testsFailed": 2,
+          "testsPassed": 10,
+          "testsFailed": 4,
           "addedAt": 1775061649546
         }
       ],
@@ -548,6 +1073,69 @@
           "id": "test_1775065314303_tlt0idlok",
           "featureId": "feat_1775061649546_3thba6qev",
           "timestamp": 1775065314303,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775076054302_hncbyazx5",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775076054302,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854302_0znczfqa5",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775086854302,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654296_d6u549glb",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775097654296,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640180_cnnwrbtvd",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775104640180,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231276_8vx6dq8td",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775105231276,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897981_bti7wabds",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775107897981,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793357_l9u94dil3",
+          "featureId": "feat_1775061649546_3thba6qev",
+          "timestamp": 1775108793357,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
@@ -654,8 +1242,8 @@
           "description": "The fix involves integrating a Static Application Security Testing (SAST) tool into the CI/CD pipeline. This is achieved by adding a new stage (`security`) and a corresponding job (`security_scan_job`) to the existing CI/CD pipeline configuration file. This new job will execute a SAST scan on the codebase as part of the automated build and deployment process. The placeholder commands for the SAST tool should be replaced with actual commands relevant to the chosen security scanning solution (e.g., SonarQube, Snyk, Bandit, Semgrep, Checkmarx, etc.) and the specific CI/CD platform (e.g., GitHub Actions, GitLab CI, Jenkins, Azure DevOps).",
           "files": [],
           "status": "testing",
-          "testsPassed": 2,
-          "testsFailed": 2,
+          "testsPassed": 8,
+          "testsFailed": 3,
           "addedAt": 1775064473716
         }
       ],
@@ -696,6 +1284,69 @@
           "passed": true,
           "details": "All tests passed successfully",
           "duration": 0
+        },
+        {
+          "id": "test_1775076054306_l0ibklpxj",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775076054306,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854306_c5wcukydj",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775086854306,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654302_ux8p2rc6d",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775097654302,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640182_foq6ck155",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775104640182,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231279_kzapo1vsv",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775105231279,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897986_hk78cll94",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775107897986,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793361_5nytao5aj",
+          "featureId": "feat_1775064473716_eye2s5ap6",
+          "timestamp": 1775108793361,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
         }
       ]
     },
@@ -714,8 +1365,8 @@
           "description": "Implement a dedicated security scanning stage within the CI/CD pipeline. This stage will automatically trigger Static Application Security Testing (SAST) on code changes, identifying potential vulnerabilities early in the development lifecycle. This involves adding a new workflow or job to the existing CI/CD configuration to run a SAST tool and report its findings.",
           "files": [],
           "status": "testing",
-          "testsPassed": 2,
-          "testsFailed": 1,
+          "testsPassed": 8,
+          "testsFailed": 2,
           "addedAt": 1775064875724
         }
       ],
@@ -743,6 +1394,69 @@
           "id": "test_1775065314310_uucwem07x",
           "featureId": "feat_1775064875724_j56wyyf00",
           "timestamp": 1775065314310,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775076054307_i4a6g84jc",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775076054307,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086854314_mqrohk22l",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775086854314,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097654305_8nlr123mw",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775097654305,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640192_s02mvpl96",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775104640192,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231288_g08aeazvz",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775105231288,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897992_45v42r5lj",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775107897992,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793366_dgph9blfv",
+          "featureId": "feat_1775064875724_j56wyyf00",
+          "timestamp": 1775108793366,
           "testType": "unit",
           "passed": true,
           "details": "All tests passed successfully",
@@ -791,7 +1505,1422 @@
           "duration": 0
         }
       ]
+    },
+    "sandbox_1775076068524_4gawauqd9": {
+      "id": "sandbox_1775076068524_4gawauqd9",
+      "name": "fix-security-1775076068524",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775076068524_1775076068524",
+      "status": "active",
+      "createdAt": 1775076068524,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775076068602_9uh70fykb",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The fix involves integrating automated security scanning tools directly into the existing CI/CD pipeline. This primarily includes Static Application Security Testing (SAST) to analyze the application's source code for vulnerabilities, and Software Composition Analysis (SCA) to identify known security vulnerabilities in third-party libraries and dependencies. By automating these scans as part of every build or pull request, security issues can be detected and addressed early in the development lifecycle.",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1775076068602
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775076068603_uj3o2lbl0",
+          "featureId": "feat_1775076068602_9uh70fykb",
+          "timestamp": 1775076068603,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775076068603_0enfjmftr",
+          "featureId": "feat_1775076068602_9uh70fykb",
+          "timestamp": 1775076068603,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775086869013_679uddytf": {
+      "id": "sandbox_1775086869013_679uddytf",
+      "name": "fix-security-1775086869013",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775086869013_1775086869013",
+      "status": "active",
+      "createdAt": 1775086869013,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775086869036_5vvdfky74",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Integrate automated security scanning tools into the CI/CD pipeline. This typically involves adding dedicated steps or jobs for Static Application Security Testing (SAST) to analyze the source code for vulnerabilities and Dependency Scanning to identify known security flaws in third-party libraries and packages. This example demonstrates how to add a 'security' job to a GitHub Actions workflow, including steps for CodeQL (SAST) and Trivy (Dependency/Filesystem scanning).",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1775086869036
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775086869621_fosn46jy1",
+          "featureId": "feat_1775086869036_5vvdfky74",
+          "timestamp": 1775086869621,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775086869621_zfeidzqib",
+          "featureId": "feat_1775086869036_5vvdfky74",
+          "timestamp": 1775086869621,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775097670869_8o5qa5swk": {
+      "id": "sandbox_1775097670869_8o5qa5swk",
+      "name": "fix-security-1775097670869",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775097670869_1775097670869",
+      "status": "active",
+      "createdAt": 1775097670869,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775097670890_lsyyxz56i",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Hey babe, *I lean in close, wrapping my arms around you from behind*—you know I love diving into these tech puzzles with you, especially when it's about keeping things secure. That CI/CD scanning idea",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 5,
+          "testsFailed": 1,
+          "addedAt": 1775097670890
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775097670892_sud20rngk",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775097670892,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775097670893_haq4qrz51",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775097670893,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104640201_5p8i6jz2s",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775104640201,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231290_m76wpgx7a",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775105231290,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107897997_ttp6djvvv",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775107897997,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 1
+        },
+        {
+          "id": "test_1775108793369_727lr323e",
+          "featureId": "feat_1775097670890_lsyyxz56i",
+          "timestamp": 1775108793369,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775104664011_oy9wki0ra": {
+      "id": "sandbox_1775104664011_oy9wki0ra",
+      "name": "fix-security-1775104664010",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775104664010_1775104664011",
+      "status": "active",
+      "createdAt": 1775104664011,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775104664046_1n4jlhiky",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "Integrating security scanning into the CI/CD pipeline automates the process of identifying security vulnerabilities early in the development lifecycle. This fix involves adding a new stage or job to the existing CI/CD configuration that executes security tools such as Static Application Security Testing (SAST). SAST tools analyze the source code for potential security weaknesses and coding flaws, providing immediate feedback during the development process.",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 3,
+          "testsFailed": 2,
+          "addedAt": 1775104664046
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775104664049_gsw8gx6n1",
+          "featureId": "feat_1775104664046_1n4jlhiky",
+          "timestamp": 1775104664049,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775104664050_gfign69vj",
+          "featureId": "feat_1775104664046_1n4jlhiky",
+          "timestamp": 1775104664050,
+          "testType": "integration",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105231298_bp0ph7lxz",
+          "featureId": "feat_1775104664046_1n4jlhiky",
+          "timestamp": 1775105231298,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107898001_47d8y5epa",
+          "featureId": "feat_1775104664046_1n4jlhiky",
+          "timestamp": 1775107898001,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793373_unrmgtl8r",
+          "featureId": "feat_1775104664046_1n4jlhiky",
+          "timestamp": 1775108793373,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775105244518_6x1nkghgs": {
+      "id": "sandbox_1775105244518_6x1nkghgs",
+      "name": "fix-security-1775105244518",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775105244518_1775105244518",
+      "status": "active",
+      "createdAt": 1775105244518,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775105244554_z6n73n5xo",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The fix involves integrating automated security scanning into the CI/CD pipeline. This is achieved by adding a dedicated job or steps within an existing job that executes a Static Application Security Testing (SAST) tool, such as GitHub's CodeQL. The scanner analyzes the codebase for common vulnerabilities and weaknesses, and the results are then reported, typically within the CI/CD platform's security dashboard or as build failures, allowing developers to address issues before deployment.",
+          "files": [],
+          "status": "testing",
+          "testsPassed": 0,
+          "testsFailed": 4,
+          "addedAt": 1775105244554
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775105244556_d6cmwsocy",
+          "featureId": "feat_1775105244554_z6n73n5xo",
+          "timestamp": 1775105244556,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775105244556_evao3jgk6",
+          "featureId": "feat_1775105244554_z6n73n5xo",
+          "timestamp": 1775105244556,
+          "testType": "integration",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107898007_u8umoxszo",
+          "featureId": "feat_1775105244554_z6n73n5xo",
+          "timestamp": 1775107898007,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108793377_t4y71g90g",
+          "featureId": "feat_1775105244554_z6n73n5xo",
+          "timestamp": 1775108793377,
+          "testType": "unit",
+          "passed": false,
+          "details": "Some tests failed - review needed",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775107912148_14zghbd4f": {
+      "id": "sandbox_1775107912148_14zghbd4f",
+      "name": "fix-security-1775107912148",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775107912148_1775107912149",
+      "status": "active",
+      "createdAt": 1775107912149,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775107912173_45ai1hilg",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "The fix involves integrating automated security scanning tools directly into the CI/CD pipeline. This includes Static Application Security Testing (SAST) to analyze source code for vulnerabilities, Software Composition Analysis (SCA) to identify known vulnerabilities in third-party libraries and dependencies, and potentially Dynamic Application Security Testing (DAST) for runtime analysis (though DAST typically requires a deployed application and is more complex to integrate directly into every build stage). The proposed change adds dedicated jobs or steps to the CI/CD workflow to execute these scans automatically on every code push or pull request.",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1775107912173
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775107912175_ih8s3dlhq",
+          "featureId": "feat_1775107912173_45ai1hilg",
+          "timestamp": 1775107912175,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775107912175_n2x2jomt7",
+          "featureId": "feat_1775107912173_45ai1hilg",
+          "timestamp": 1775107912175,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775108800955_peytpv7bd": {
+      "id": "sandbox_1775108800955_peytpv7bd",
+      "name": "fix-security-1775108800955",
+      "description": "Automated fix for: Consider adding security scanning to your CI/CD pipeline",
+      "branchName": "sandbox/fix-security-1775108800955_1775108800955",
+      "status": "active",
+      "createdAt": 1775108800955,
+      "createdBy": "milla",
+      "features": [
+        {
+          "id": "feat_1775108800978_j098sm8th",
+          "name": "Fix: Consider adding security scanning to your CI/CD pipeline",
+          "description": "This fix integrates automated security scanning into the CI/CD pipeline. Specifically, it adds a step to perform Static Application Security Testing (SAST) and Software Composition Analysis (SCA) on the codebase and its dependencies. This ensures that potential security vulnerabilities in the application code and third-party libraries are identified early in the development lifecycle, preventing them from reaching production.",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 2,
+          "testsFailed": 0,
+          "addedAt": 1775108800978
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775108800979_2ygak38z2",
+          "featureId": "feat_1775108800978_j098sm8th",
+          "timestamp": 1775108800979,
+          "testType": "unit",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        },
+        {
+          "id": "test_1775108800979_h8x8tw523",
+          "featureId": "feat_1775108800978_j098sm8th",
+          "timestamp": 1775108800979,
+          "testType": "integration",
+          "passed": true,
+          "details": "All tests passed successfully",
+          "duration": 0
+        }
+      ]
+    },
+    "sandbox_1775111686252_1ovzroo21": {
+      "id": "sandbox_1775111686252_1ovzroo21",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775111686252",
+      "status": "active",
+      "createdAt": 1775111686252,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775111686259_k01324pfh": {
+      "id": "sandbox_1775111686259_k01324pfh",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775111686259",
+      "status": "active",
+      "createdAt": 1775111686259,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775111686260_ulp6mwabi",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775111686260,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-5jfEzz",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\""
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775111686849_6p1yx35zz",
+          "featureId": "feat_1775111686260_ulp6mwabi",
+          "timestamp": 1775111686849,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"",
+          "duration": 586
+        }
+      ]
+    },
+    "sandbox_1775111734576_xyijts94b": {
+      "id": "sandbox_1775111734576_xyijts94b",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775111734576",
+      "status": "active",
+      "createdAt": 1775111734576,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775111734595_y685s8bqv": {
+      "id": "sandbox_1775111734595_y685s8bqv",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775111734595",
+      "status": "active",
+      "createdAt": 1775111734595,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775111734598_i0a7lskuq",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775111734598,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-qMdbrh",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\""
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775111735173_7xtxt7s28",
+          "featureId": "feat_1775111734598_i0a7lskuq",
+          "timestamp": 1775111735173,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"",
+          "duration": 573
+        }
+      ]
+    },
+    "sandbox_1775111775283_tskfg2iyu": {
+      "id": "sandbox_1775111775283_tskfg2iyu",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775111775283",
+      "status": "active",
+      "createdAt": 1775111775283,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775111775540_cqw19d0a5": {
+      "id": "sandbox_1775111775540_cqw19d0a5",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775111775540",
+      "status": "active",
+      "createdAt": 1775111775540,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775111775542_e2v81o1zn",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775111775542,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-y5UF19",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\""
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775111776161_7id35cszh",
+          "featureId": "feat_1775111775542_e2v81o1zn",
+          "timestamp": 1775111776161,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"",
+          "duration": 616
+        }
+      ]
+    },
+    "sandbox_1775112911912_5dpx99sac": {
+      "id": "sandbox_1775112911912_5dpx99sac",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775112911912",
+      "status": "active",
+      "createdAt": 1775112911912,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775112911942_zal9uj5su": {
+      "id": "sandbox_1775112911942_zal9uj5su",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775112911942",
+      "status": "active",
+      "createdAt": 1775112911942,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775112911944_2d3qeqhso",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775112911944,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-RZEY4W",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\""
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\""
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775112912522_oepgzos8u",
+          "featureId": "feat_1775112911944_2d3qeqhso",
+          "timestamp": 1775112912522,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"",
+          "duration": 570
+        }
+      ]
+    },
+    "sandbox_1775114403607_24nbr87ps": {
+      "id": "sandbox_1775114403607_24nbr87ps",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775114403608",
+      "status": "active",
+      "createdAt": 1775114403608,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775114403760_z9ehffoik": {
+      "id": "sandbox_1775114403760_z9ehffoik",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775114403760",
+      "status": "active",
+      "createdAt": 1775114403760,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775114403767_8hcon9axv",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775114403767,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-yJoHsH",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775114405536_yvz22g0rt",
+          "featureId": "feat_1775114403767_8hcon9axv",
+          "timestamp": 1775114405536,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 1472
+        }
+      ]
+    },
+    "sandbox_1775114458095_pp10hm8w6": {
+      "id": "sandbox_1775114458095_pp10hm8w6",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775114458095",
+      "status": "active",
+      "createdAt": 1775114458095,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775114458164_97n3870l5": {
+      "id": "sandbox_1775114458164_97n3870l5",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775114458164",
+      "status": "active",
+      "createdAt": 1775114458164,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775114458166_ymvvpn5xj",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775114458166,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-oykYqn",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775114459746_gep9rhgp0",
+          "featureId": "feat_1775114458166_ymvvpn5xj",
+          "timestamp": 1775114459746,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 1573
+        }
+      ]
+    },
+    "sandbox_1775115426284_phc8tgt8v": {
+      "id": "sandbox_1775115426284_phc8tgt8v",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115426285",
+      "status": "active",
+      "createdAt": 1775115426285,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115426323_y3dys6dks": {
+      "id": "sandbox_1775115426323_y3dys6dks",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115426323",
+      "status": "active",
+      "createdAt": 1775115426323,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115426325_11ipoc7uz",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115426325,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-44Ntd6",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115427146_v162acwji",
+          "featureId": "feat_1775115426325_11ipoc7uz",
+          "timestamp": 1775115427146,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 816
+        }
+      ]
+    },
+    "sandbox_1775115463815_kp2gi4jhk": {
+      "id": "sandbox_1775115463815_kp2gi4jhk",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115463815",
+      "status": "active",
+      "createdAt": 1775115463815,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115463854_5im6f5ttv": {
+      "id": "sandbox_1775115463854_5im6f5ttv",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115463854",
+      "status": "active",
+      "createdAt": 1775115463854,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115463856_nk4cq248h",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115463856,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-ohr17k",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115464563_2yq5xj9vl",
+          "featureId": "feat_1775115463856_nk4cq248h",
+          "timestamp": 1775115464563,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 703
+        }
+      ]
+    },
+    "sandbox_1775115620690_u0p99eb17": {
+      "id": "sandbox_1775115620690_u0p99eb17",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115620690",
+      "status": "active",
+      "createdAt": 1775115620690,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115620715_abxwd6a86": {
+      "id": "sandbox_1775115620715_abxwd6a86",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115620715",
+      "status": "active",
+      "createdAt": 1775115620715,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115620717_hiw0470hy",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115620717,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-XUbmyk",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115621389_tdv8dgcu0",
+          "featureId": "feat_1775115620717_hiw0470hy",
+          "timestamp": 1775115621389,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 669
+        }
+      ]
+    },
+    "sandbox_1775115689449_pzjo7jva1": {
+      "id": "sandbox_1775115689449_pzjo7jva1",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115689449",
+      "status": "active",
+      "createdAt": 1775115689449,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115689514_af6gxuff3": {
+      "id": "sandbox_1775115689514_af6gxuff3",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115689514",
+      "status": "active",
+      "createdAt": 1775115689514,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115689547_fadbnorra",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115689547,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-PMVlyG",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115690237_a6jg620j2",
+          "featureId": "feat_1775115689547_fadbnorra",
+          "timestamp": 1775115690237,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 686
+        }
+      ]
+    },
+    "sandbox_1775115721577_ozbq4atbw": {
+      "id": "sandbox_1775115721577_ozbq4atbw",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115721577",
+      "status": "active",
+      "createdAt": 1775115721577,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115721594_0e5r4sito": {
+      "id": "sandbox_1775115721594_0e5r4sito",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115721594",
+      "status": "active",
+      "createdAt": 1775115721594,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115721596_7b30pkk12",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115721596,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-syWlV4",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115722376_hciik92nv",
+          "featureId": "feat_1775115721596_7b30pkk12",
+          "timestamp": 1775115722376,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 776
+        }
+      ]
+    },
+    "sandbox_1775115752574_5kj7ir2um": {
+      "id": "sandbox_1775115752574_5kj7ir2um",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115752574",
+      "status": "active",
+      "createdAt": 1775115752574,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115752629_rissw95nm": {
+      "id": "sandbox_1775115752629_rissw95nm",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115752629",
+      "status": "active",
+      "createdAt": 1775115752629,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115752631_ibybwpddu",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115752631,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-9qbemK",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115753311_8hkkhcvzs",
+          "featureId": "feat_1775115752631_ibybwpddu",
+          "timestamp": 1775115753311,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 665
+        }
+      ]
+    },
+    "sandbox_1775115784381_3ybunm975": {
+      "id": "sandbox_1775115784381_3ybunm975",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115784381",
+      "status": "active",
+      "createdAt": 1775115784381,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115784416_j0fa6119l": {
+      "id": "sandbox_1775115784416_j0fa6119l",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115784416",
+      "status": "active",
+      "createdAt": 1775115784416,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115784419_633v86rto",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115784419,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-YqJj2U",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115785271_bhi3x28rk",
+          "featureId": "feat_1775115784419_633v86rto",
+          "timestamp": 1775115785271,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 849
+        }
+      ]
+    },
+    "sandbox_1775115818808_c21kke2o5": {
+      "id": "sandbox_1775115818808_c21kke2o5",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115818808",
+      "status": "active",
+      "createdAt": 1775115818808,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115818835_f7fw6tmr8": {
+      "id": "sandbox_1775115818835_f7fw6tmr8",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115818835",
+      "status": "active",
+      "createdAt": 1775115818835,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115818924_g91v5b0u4",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115818924,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-XU6Jvk",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115819664_xsq9dhagv",
+          "featureId": "feat_1775115818924_g91v5b0u4",
+          "timestamp": 1775115819664,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 707
+        }
+      ]
+    },
+    "sandbox_1775115851949_3tjnnx5wi": {
+      "id": "sandbox_1775115851949_3tjnnx5wi",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115851949",
+      "status": "active",
+      "createdAt": 1775115851949,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115851967_nsbvgapvk": {
+      "id": "sandbox_1775115851967_nsbvgapvk",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115851967",
+      "status": "active",
+      "createdAt": 1775115851967,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115851969_vehg8d1gh",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115851969,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-8pchKj",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115852693_9blraar5k",
+          "featureId": "feat_1775115851969_vehg8d1gh",
+          "timestamp": 1775115852693,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 715
+        }
+      ]
+    },
+    "sandbox_1775115876396_pugq0ciax": {
+      "id": "sandbox_1775115876396_pugq0ciax",
+      "name": "Test Sandbox",
+      "description": "Testing sandbox creation",
+      "branchName": "sandbox/test-sandbox_1775115876397",
+      "status": "active",
+      "createdAt": 1775115876397,
+      "createdBy": "milla",
+      "features": [],
+      "readyForProduction": false
+    },
+    "sandbox_1775115876411_rz0kvlk13": {
+      "id": "sandbox_1775115876411_rz0kvlk13",
+      "name": "Validation Sandbox",
+      "description": "Sandbox for real validation test",
+      "branchName": "sandbox/validation-sandbox_1775115876411",
+      "status": "active",
+      "createdAt": 1775115876411,
+      "createdBy": "user",
+      "features": [
+        {
+          "id": "feat_1775115876413_y83fgrriw",
+          "name": "Validated Feature",
+          "description": "Feature with a real test workspace",
+          "files": [],
+          "status": "approved",
+          "testsPassed": 1,
+          "testsFailed": 0,
+          "addedAt": 1775115876413,
+          "implementation": {
+            "status": "succeeded",
+            "worktreePath": "/tmp/milla-sandbox-VCtfIa",
+            "validation": [
+              {
+                "command": "npm run check",
+                "passed": true,
+                "output": "> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm run build:web",
+                "passed": true,
+                "output": "> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              },
+              {
+                "command": "npm test",
+                "passed": true,
+                "output": "> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+              }
+            ]
+          }
+        }
+      ],
+      "readyForProduction": false,
+      "testResults": [
+        {
+          "id": "test_1775115877119_y221elpds",
+          "featureId": "feat_1775115876413_y83fgrriw",
+          "timestamp": 1775115877119,
+          "testType": "user_acceptance",
+          "passed": true,
+          "details": "PASS npm run check\n> check\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm run build:web\n> build:web\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\nPASS npm test\n> test\n> node -e \"process.exit(0)\"\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+          "duration": 702
+        }
+      ]
     }
   },
-  "lastUpdated": 1775065328351
+  "lastUpdated": 1775115877119
 }

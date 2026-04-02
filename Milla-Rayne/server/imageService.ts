@@ -5,6 +5,7 @@ import { config } from './config';
 import { generateImageWithXAI } from './xaiImageService';
 import { generateImageWithVenice } from './veniceImageService';
 import { generateImageWithPollinations } from './pollinationsImageService';
+import { generateImageWithGoogle } from './googleImageService';
 globalThis.fetch = nodeFetch as unknown as typeof fetch;
 
 export interface ImageGenerationResult {
@@ -63,6 +64,13 @@ export async function generateImage(
     const xaiResult = await generateImageWithXAI(prompt);
     if (xaiResult.success) return xaiResult;
     console.warn('[imageService] xAI Aurora failed:', xaiResult.error);
+  }
+
+  // 1.5. Google Imagen (when configured)
+  if (config.google?.genAiApiKey) {
+    const googleResult = await generateImageWithGoogle(prompt);
+    if (googleResult.success) return googleResult;
+    console.warn('[imageService] Google image failed:', googleResult.error);
   }
 
   // 2. HuggingFace (secondary)

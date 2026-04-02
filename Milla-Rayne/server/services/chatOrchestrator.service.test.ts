@@ -102,6 +102,10 @@ vi.mock('../mcpRuntimeService', () => ({
   listMcpTools: vi.fn(),
   invokeMcpTool: vi.fn(),
 }));
+vi.mock('./agentRouterService', () => ({
+  resolveIntent: vi.fn(() => 'fallback'),
+  dispatchToAgent: vi.fn(),
+}));
 
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { parseCommand } from '../commandParser';

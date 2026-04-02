@@ -3,8 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../storage', () => ({
   storage: {
     getMessages: vi.fn(),
+    getRecentMessages: vi.fn(),
     searchMemorySummaries: vi.fn(),
   },
+}));
+
+vi.mock('../replycaSocialBridgeService', () => ({
+  syncReplycaSharedHistory: vi.fn().mockResolvedValue({ synced: false, importedThisRun: 0 }),
+  getReplycaSocialStatus: vi.fn().mockResolvedValue({ sharedChatExists: false }),
+  appendToSharedChat: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../memoryService', () => ({
@@ -30,7 +37,7 @@ describe('memoryBrokerService', () => {
   });
 
   it('combines recent channel messages with cross-channel context', async () => {
-    vi.mocked(storage.getMessages).mockResolvedValue([
+    vi.mocked(storage.getRecentMessages).mockResolvedValue([
       {
         id: '1',
         role: 'user',

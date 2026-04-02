@@ -47,17 +47,23 @@ describe('Chat API', () => {
     app.use(cookieParser());
     registerModularRoutes(app);
     vi.spyOn(storage, 'getMessages').mockResolvedValue([]);
+    vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([]);
     vi.spyOn(storage, 'createMessage').mockResolvedValue({} as any);
+    vi.spyOn(authService, 'validateSession').mockResolvedValue({
+      valid: true,
+      user: { id: 'default-user', username: 'Danny Ray' } as any,
+    });
   });
 
   it('should return a successful response with a message from the AI', async () => {
     const response = await request(app)
       .post('/api/chat')
+      .set('Cookie', ['session_token=test-token'])
       .send({ message: 'hello' });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('response');
-    expect(storage.getMessages).toHaveBeenCalledWith('default-user');
+    expect(storage.getRecentMessages).toHaveBeenCalledWith('default-user', expect.any(Number), expect.any(String));
     expect(storage.createMessage).toHaveBeenCalledTimes(2);
   });
 
@@ -69,6 +75,7 @@ describe('Chat API', () => {
 
     const response = await request(app)
       .post('/api/chat')
+      .set('Cookie', ['session_token=test-token'])
       .send({ message: "what's new" });
 
     expect(response.status).toBe(200);

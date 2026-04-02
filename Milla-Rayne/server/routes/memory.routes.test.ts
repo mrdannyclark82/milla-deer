@@ -27,6 +27,11 @@ describe('Memory Routes', () => {
     app.use(cookieParser());
     registerMemoryRoutes(app);
     vi.clearAllMocks();
+    // Default: valid session so requireAuth passes
+    vi.spyOn(authService, 'validateSession').mockResolvedValue({
+      valid: true,
+      user: { id: 'default-user', username: 'Danny Ray' } as any,
+    });
     vi.spyOn(
       replycaSocialBridgeService,
       'syncReplycaSharedHistory'
@@ -47,10 +52,12 @@ describe('Memory Routes', () => {
 
   describe('GET /api/messages', () => {
     it('should return messages from storage', async () => {
-      vi.spyOn(storage, 'getMessages').mockResolvedValue([
+      vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([
         { id: '1', content: 'hello' } as any,
       ]);
-      const response = await request(app).get('/api/messages');
+      const response = await request(app)
+        .get('/api/messages')
+        .set('Cookie', ['session_token=test-token']);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -59,12 +66,13 @@ describe('Memory Routes', () => {
     });
 
     it('should filter messages by channel when requested', async () => {
-      vi.spyOn(storage, 'getMessages').mockResolvedValue([
-        { id: '1', content: 'web message', channel: 'web' } as any,
+      vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([
         { id: '2', content: 'gmail message', channel: 'gmail' } as any,
       ]);
 
-      const response = await request(app).get('/api/messages?channel=gmail');
+      const response = await request(app)
+        .get('/api/messages?channel=gmail')
+        .set('Cookie', ['session_token=test-token']);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -76,17 +84,17 @@ describe('Memory Routes', () => {
         valid: true,
         user: { id: 'mobile-user' } as any,
       });
-      vi.spyOn(storage, 'getMessages').mockResolvedValue([
+      vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([
         { id: '1', content: 'mobile hello', userId: 'mobile-user' } as any,
       ]);
 
       const response = await request(app)
         .get('/api/messages')
-        .set('Authorization', 'Bearer mobile-token');
+        .set('Cookie', ['session_token=mobile-token']);
 
       expect(response.status).toBe(200);
       expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
-      expect(storage.getMessages).toHaveBeenCalledWith('mobile-user');
+      expect(storage.getRecentMessages).toHaveBeenCalledWith('mobile-user', 50, undefined);
       expect(response.body[0].content).toBe('mobile hello');
     });
   });
@@ -96,7 +104,9 @@ describe('Memory Routes', () => {
       vi.spyOn(memoryService, 'searchKnowledge').mockResolvedValue([
         { topic: 'test' } as any,
       ]);
-      const response = await request(app).get('/api/knowledge');
+      const response = await request(app)
+        .get('/api/knowledge')
+        .set('Cookie', ['session_token=test-token']);
 
       expect(response.status).toBe(200);
       expect(response.body.items).toHaveLength(1);
