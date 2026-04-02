@@ -14,6 +14,17 @@ vi.mock('../services/chatOrchestrator.service');
 vi.mock('../voiceAnalysisService');
 vi.mock('../smartHomeService');
 vi.mock('../sceneDetectionService');
+vi.mock('../replycaSocialBridgeService', () => ({ appendToSharedChat: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../services/sessionPersistenceService', () => ({ recordTurn: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../services/ragAutoIndexer', () => ({ queueForIndexing: vi.fn() }));
+vi.mock('../services/contextMerchService', () => ({ scanForMerchSignals: vi.fn() }));
+vi.mock('../services/scene.service', () => ({
+  sceneService: {
+    getLocation: vi.fn().mockReturnValue('living room'),
+    getSceneContext: vi.fn().mockReturnValue({}),
+    updateScene: vi.fn(),
+  },
+}));
 
 describe('Chat Routes', () => {
   let app: express.Express;
@@ -23,6 +34,11 @@ describe('Chat Routes', () => {
     app.use(express.json());
     app.use(cookieParser());
     registerChatRoutes(app);
+    // Catch unhandled errors to expose 500 message in tests
+    app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      console.error('[test-app-error]', err?.message ?? err);
+      res.status(500).json({ error: err?.message ?? 'Internal error' });
+    });
     vi.clearAllMocks();
 
     // Default mocks
@@ -34,7 +50,10 @@ describe('Chat Routes', () => {
       timeOfDay: 'evening',
     } as any);
     vi.spyOn(storage, 'getMessages').mockResolvedValue([]);
+    vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([]);
     vi.spyOn(storage, 'createMessage').mockResolvedValue({} as any);
+    // Default: unauthenticated session (routes that need auth will add their own mock)
+    vi.spyOn(authService, 'validateSession').mockResolvedValue({ valid: false } as any);
     delete process.env.ADMIN_TOKEN;
   });
 
@@ -42,7 +61,7 @@ describe('Chat Routes', () => {
     it('should return default model if not authenticated', async () => {
       const response = await request(app).get('/api/ai-model/current');
       expect(response.status).toBe(200);
-      expect(response.body.model).toBe('gemini');
+      expect(response.body.model).toBe('xai');
     });
 
     it('should return user model if authenticated', async () => {
@@ -85,6 +104,10 @@ describe('Chat Routes', () => {
 
   describe('POST /api/chat', () => {
     it('should return AI response for a message', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'default-user', username: 'Danny Ray' } as any,
+      });
       vi.spyOn(
         chatOrchestrator,
         'validateAndSanitizePrompt'
@@ -95,11 +118,12 @@ describe('Chat Routes', () => {
 
       const response = await request(app)
         .post('/api/chat')
+        .set('Cookie', ['session_token=valid-token'])
         .send({ message: 'Hi Milla' });
 
       expect(response.status).toBe(200);
       expect(response.body.response).toBe('Hello Danny!');
-      expect(storage.getMessages).toHaveBeenCalledWith('default-user');
+      expect(storage.getRecentMessages).toHaveBeenCalledWith('default-user', expect.any(Number), expect.any(String));
       expect(chatOrchestrator.generateAIResponse).toHaveBeenCalledWith(
         'Hi Milla',
         [],
@@ -115,6 +139,10 @@ describe('Chat Routes', () => {
 
     it('passes shell admin capability when the admin token header is valid', async () => {
       process.env.ADMIN_TOKEN = 'test-admin-token';
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'default-user', username: 'Danny Ray' } as any,
+      });
       vi.spyOn(
         chatOrchestrator,
         'validateAndSanitizePrompt'
@@ -125,6 +153,7 @@ describe('Chat Routes', () => {
 
       const response = await request(app)
         .post('/api/chat')
+        .set('Cookie', ['session_token=valid-token'])
         .set('x-admin-token', 'test-admin-token')
         .send({ message: 'run workspace check' });
 
@@ -156,24 +185,33 @@ describe('Chat Routes', () => {
 
       const response = await request(app)
         .post('/api/chat')
-        .set('Authorization', 'Bearer mobile-token')
+        .set('Cookie', ['session_token=mobile-token'])
         .send({ message: 'Sync me up' });
 
       expect(response.status).toBe(200);
-      expect(storage.getMessages).toHaveBeenCalledWith('mobile-user');
+      expect(storage.getRecentMessages).toHaveBeenCalledWith('mobile-user', expect.any(Number), expect.any(String));
       expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
       expect(storage.createMessage).toHaveBeenCalledTimes(2);
     });
 
     it('should return 400 for empty message', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'default-user', username: 'Danny Ray' } as any,
+      });
       const response = await request(app)
         .post('/api/chat')
+        .set('Cookie', ['session_token=valid-token'])
         .send({ message: '' });
 
       expect(response.status).toBe(400);
     });
 
     it('should bound stored conversation history before orchestrating', async () => {
+      vi.spyOn(authService, 'validateSession').mockResolvedValue({
+        valid: true,
+        user: { id: 'default-user', username: 'Danny Ray' } as any,
+      });
       vi.spyOn(
         chatOrchestrator,
         'validateAndSanitizePrompt'
@@ -189,9 +227,18 @@ describe('Chat Routes', () => {
           content: `Message ${index} ${'x'.repeat(180)}`,
         })) as any
       );
+      vi.spyOn(storage, 'getRecentMessages').mockResolvedValue(
+        Array.from({ length: 12 }, (_, index) => ({
+          id: `m-${index}`,
+          userId: 'default-user',
+          role: index % 2 === 0 ? 'user' : 'assistant',
+          content: `Message ${index} ${'x'.repeat(180)}`,
+        })) as any
+      );
 
       const response = await request(app)
         .post('/api/chat')
+        .set('Cookie', ['session_token=valid-token'])
         .send({ message: 'Use recent context' });
 
       expect(response.status).toBe(200);

@@ -1070,7 +1070,7 @@ export async function generateAIResponse(
       const agentReply = await dispatchToAgent(intent, {
         message: userMessage,
         userId,
-        context: messages?.slice(-4) ?? [],
+        context: conversationHistory?.slice(-4) ?? [],
       });
       if (agentReply) {
         notifyDanny(`🤝 Milla → ${intent} agent\n${agentReply.slice(0, 200)}`).catch(() => {});
