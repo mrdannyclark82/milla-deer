@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <h1 className="text-lg font-semibold bg-gradient-to-r from-[#00f2ff] to-[#ff00aa] bg-clip-text text-transparent">
                 Milla Rayne
               </h1>
-              <p className="text-[10px] text-white/40">Your AI Companion</p>
+              <p className="text-[10px] text-white/40">Your Digital Liaison</p>
             </div>
           </div>
         </div>

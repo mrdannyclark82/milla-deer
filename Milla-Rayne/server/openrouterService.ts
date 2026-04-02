@@ -497,7 +497,7 @@ export async function generateGeminiResponse(
           Authorization: `Bearer ${openrouterKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://millarayne.com',
-          'X-Title': 'Milla Rayne - AI Companion',
+          'X-Title': 'Milla Rayne - Digital Liaison',
         },
         body: JSON.stringify({
           model: 'google/gemini-2.0-flash-exp:free',

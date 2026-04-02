@@ -2424,7 +2424,7 @@ console.log(message);
 }
 
 function getDefaultMarkdown() {
-  return `# Milla Rayne AI Companion
+  return `# Milla Rayne Digital Liaison
 
 ## Overview
 This is the sandbox development environment for Milla Rayne.
