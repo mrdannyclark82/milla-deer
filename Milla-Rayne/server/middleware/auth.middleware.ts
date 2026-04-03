@@ -21,8 +21,10 @@ export async function requireAuth(
   res: Response,
   next: NextFunction
 ) {
-  // Allow internal service calls from agentRouter
+  // Allow internal service calls — optionally carry a user identity via x-user-id
   if (INTERNAL_API_KEY && req.headers['x-internal-key'] === INTERNAL_API_KEY) {
+    const userId = (req.headers['x-user-id'] as string) || 'default-user';
+    req.user = { id: userId, username: userId, email: '' } as any;
     return next();
   }
 
