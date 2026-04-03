@@ -654,4 +654,15 @@ except Exception as e:
   app.get('/api/swarm/flags', requireAuth, asyncHandler(async (_req, res) => {
     return res.json({ ok: true, flags: readMemoryJson<unknown[]>('swarm_flags.json', []) });
   }));
+
+  // Stub routes for dashboard UI calls
+  app.get('/api/notifications', requireAuth, (_req, res) => res.json({ ok: true, items: [] }));
+  app.get('/api/nodes', requireAuth, (_req, res) => res.json({
+    ok: true,
+    nodes: { termux: false, google: false, swarm: false }
+  }));
+  app.get('/api/search', requireAuth, asyncHandler(async (req, res) => {
+    const q = String(req.query.q || '').toLowerCase();
+    return res.json({ ok: true, query: q, results: [] });
+  }));
 }
