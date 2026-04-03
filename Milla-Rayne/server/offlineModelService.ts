@@ -54,7 +54,11 @@ export class OfflineModelService {
     config.localModel?.model || DEFAULT_MODEL;
 
   constructor() {
-    this.initialize();
+    if (config.localModel?.enabled) {
+      this.initialize();
+    } else {
+      console.log('[OfflineModel] Disabled — set ENABLE_LOCAL_MODEL=true to enable');
+    }
   }
 
   private async initialize() {
