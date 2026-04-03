@@ -19,14 +19,18 @@ class SettingsRepository(private val context: Context) {
 
     companion object {
         private val SERVER_URL_KEY = stringPreferencesKey("server_url")
+        private val SESSION_TOKEN_KEY = stringPreferencesKey("session_token")
         private val OFFLINE_MODE_ENABLED_KEY = booleanPreferencesKey("offline_mode_enabled")
         private val AUTO_FALLBACK_KEY = booleanPreferencesKey("auto_fallback")
         private val SPOKEN_REPLIES_ENABLED_KEY = booleanPreferencesKey("spoken_replies_enabled")
+        private val NANO_ENABLED_KEY = booleanPreferencesKey("nano_enabled")
 
-        const val DEFAULT_SERVER_URL = "http://10.0.2.2:5000/"
+        const val DEFAULT_SERVER_URL = "https://milla-rayne.com/"
+        const val REMOTE_SERVER_URL = "https://milla-rayne.com/"
         const val DEFAULT_OFFLINE_MODE_ENABLED = false
         const val DEFAULT_AUTO_FALLBACK = true
         const val DEFAULT_SPOKEN_REPLIES_ENABLED = true
+        const val DEFAULT_NANO_ENABLED = true
 
         fun normalizeServerUrl(url: String): String {
             var normalized = url.trim()
@@ -50,6 +54,10 @@ class SettingsRepository(private val context: Context) {
         preferences[SERVER_URL_KEY] ?: DEFAULT_SERVER_URL
     }
 
+    val sessionToken: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[SESSION_TOKEN_KEY]?.trim().orEmpty()
+    }
+
     val offlineModeEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[OFFLINE_MODE_ENABLED_KEY] ?: DEFAULT_OFFLINE_MODE_ENABLED
     }
@@ -62,9 +70,24 @@ class SettingsRepository(private val context: Context) {
         preferences[SPOKEN_REPLIES_ENABLED_KEY] ?: DEFAULT_SPOKEN_REPLIES_ENABLED
     }
 
+    val nanoEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[NANO_ENABLED_KEY] ?: DEFAULT_NANO_ENABLED
+    }
+
     suspend fun setServerUrl(url: String) {
         context.dataStore.edit { preferences ->
             preferences[SERVER_URL_KEY] = normalizeServerUrl(url)
+        }
+    }
+
+    suspend fun setSessionToken(sessionToken: String) {
+        context.dataStore.edit { preferences ->
+            val normalizedToken = sessionToken.trim()
+            if (normalizedToken.isEmpty()) {
+                preferences.remove(SESSION_TOKEN_KEY)
+            } else {
+                preferences[SESSION_TOKEN_KEY] = normalizedToken
+            }
         }
     }
 
@@ -83,6 +106,12 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSpokenRepliesEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[SPOKEN_REPLIES_ENABLED_KEY] = enabled
+        }
+    }
+
+    suspend fun setNanoEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[NANO_ENABLED_KEY] = enabled
         }
     }
 }

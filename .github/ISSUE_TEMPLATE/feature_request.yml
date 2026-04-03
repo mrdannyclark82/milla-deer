@@ -1,0 +1,63 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for Milla-Rayne
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea? We'd love to hear it. Fill out the form below and we'll consider it for an upcoming release.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      description: What problem does this feature solve? What are you unable to do today?
+      placeholder: "I'm frustrated when I try to... / I wish Milla could..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you'd like to see. Be as specific as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you tried any workarounds or alternative approaches?
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Suggested tier
+      description: Which pricing tier do you think this feature belongs to?
+      options:
+        - Free (core functionality, available to all)
+        - Pro ($12/mo — power users)
+        - Enterprise ($49/mo — teams and advanced deployments)
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - Web
+        - Android
+        - CLI
+        - Browser Extension
+        - Server / API
+        - All platforms
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Mockups, diagrams, or references to similar implementations elsewhere.

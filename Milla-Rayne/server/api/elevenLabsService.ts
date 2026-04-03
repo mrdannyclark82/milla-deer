@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Default voice, can be changed
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 
 // Cache for generated speech files (500 files, ~50MB max, 7-day TTL)
 const speechCache = new LRUCache<string, string>({
@@ -31,7 +31,7 @@ export async function generateElevenLabsSpeech(
   // Create a hash of the text + voice settings to use as cache key
   const cacheKey = crypto
     .createHash('sha256')
-    .update(`${text}:${VOICE_ID}:eleven_monolingual_v1:0.5:0.5`)
+    .update(`${text}:${VOICE_ID}:eleven_turbo_v2_5:0.5:0.75`)
     .digest('hex');
 
   // Check cache first
@@ -68,10 +68,10 @@ export async function generateElevenLabsSpeech(
       },
       body: JSON.stringify({
         text: text,
-        model_id: 'eleven_monolingual_v1',
+        model_id: 'eleven_turbo_v2_5',
         voice_settings: {
           stability: 0.5,
-          similarity_boost: 0.5,
+          similarity_boost: 0.75,
         },
       }),
     }

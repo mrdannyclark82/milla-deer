@@ -89,6 +89,14 @@ export async function initProactiveServer() {
   });
 
   // Health check endpoint
+  app.get('/', (_req: Request, res: Response) => {
+    res.json({
+      status: 'ok',
+      service: 'proactive-features',
+      message: 'Use /health or /api/milla/* endpoints on this port.',
+    });
+  });
+
   app.get('/health', (req: Request, res: Response) => {
     res.json({
       status: 'ok',

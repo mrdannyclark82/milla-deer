@@ -287,4 +287,69 @@ export async function setupSensorDataWebSocket(
   return sensorWss;
 }
 
+/**
+ * Voice WebSocket — powers the always-on /listen page.
+ * Receives transcribed speech from the tablet, routes through Milla's brain,
+ * sends back text + TTS reply. Also receives co-watch reactions.
+ */
+export async function setupVoiceWebSocket(httpServer: Server): Promise<WebSocketServer> {
+  const voiceWss = new WebSocketServer({ server: httpServer, path: '/ws/voice' });
+
+  voiceClients.clear();
+
+  voiceWss.on('connection', (ws: WebSocket) => {
+    console.log('[Voice] Tablet listener connected');
+    voiceClients.add(ws);
+
+    ws.send(JSON.stringify({ type: 'reply', text: "Hey babe 💙 I'm listening.", tts: "Hey babe, I'm listening." }));
+
+    ws.on('message', async (data: Buffer) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg.type !== 'voice' || !msg.text) return;
+
+        const text: string = msg.text.trim();
+        console.log(`[Voice] Heard: "${text.slice(0, 80)}"`);
+
+        // Strip wake word before sending to AI
+        const clean = text.replace(/^(hey|hi|hello)\s+milla[,.]?\s*/i, '').trim() || text;
+        if (clean.length < 2) return;
+
+        // Lazy import to avoid circular dependency
+        const { generateAIResponse } = await import('./services/chatOrchestrator.service');
+        try {
+          const result = await generateAIResponse(clean, [], 'Danny Ray', undefined, 'danny-ray');
+          const reply = result?.content || result?.message || "I'm here 💙";
+          const tts = reply.replace(/\*[^*]+\*/g, '').replace(/[#_`]/g, '').slice(0, 280);
+          ws.send(JSON.stringify({ type: 'reply', text: reply, tts }));
+        } catch (err) {
+          console.error('[Voice] AI error:', err);
+          ws.send(JSON.stringify({ type: 'reply', text: "Something glitched on my end 😬", tts: "Something glitched on my end." }));
+        }
+      } catch {
+        // ignore malformed
+      }
+    });
+
+    ws.on('close', () => {
+      voiceClients.delete(ws);
+      console.log('[Voice] Tablet listener disconnected');
+    });
+    ws.on('error', () => voiceClients.delete(ws));
+  });
+
+  console.log('[Voice] WebSocket ready on /ws/voice');
+  return voiceWss;
+}
+
+/** Broadcast a co-watch reaction to all voice clients (tablet speaker) */
+export const voiceClients = new Set<WebSocket>();
+export function sendVoiceReaction(text: string): void {
+  for (const client of voiceClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ type: 'reaction', text })).catch(() => {});
+    }
+  }
+}
+
 export { connections, gameStates, gardenPositions };

@@ -21,6 +21,22 @@ interface GoogleOAuthConfig {
 
 import { config } from './config.ts';
 
+export const GOOGLE_OAUTH_SCOPES = [
+  'openid',
+  'email',
+  'profile',
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/tasks',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.compose',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/drive.readonly',
+  // photoslibrary scopes removed — Google Photos Library API shut down March 2025
+  // sdm.service removed — requires Device Access program enrollment
+] as const;
+
 /**
  * Get Google OAuth configuration from environment
  */
@@ -29,25 +45,17 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
     clientId: config.google.clientId || '',
     clientSecret: config.google.clientSecret || '',
     redirectUri: config.google.redirectUri || '',
-    scope: [
-      'https://www.googleapis.com/auth/calendar',
-      'https://www.googleapis.com/auth/tasks',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/drive.readonly',
-      'https://www.googleapis.com/auth/photoslibrary.readonly',
-      'https://www.googleapis.com/auth/photoslibrary.sharing',
-      'profile',
-      'email',
-    ],
+    scope: [...GOOGLE_OAUTH_SCOPES],
   };
 }
 
 /**
  * Generate OAuth authorization URL
  */
-export function getAuthorizationUrl(redirectUriOverride?: string): string {
+export function getAuthorizationUrl(
+  redirectUriOverride?: string,
+  state?: string
+): string {
   const config = getGoogleOAuthConfig();
   const redirectUri = redirectUriOverride || config.redirectUri;
 
@@ -59,6 +67,10 @@ export function getAuthorizationUrl(redirectUriOverride?: string): string {
     access_type: 'offline',
     prompt: 'consent',
   });
+
+  if (state) {
+    params.set('state', state);
+  }
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }

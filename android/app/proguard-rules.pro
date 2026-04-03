@@ -39,6 +39,12 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
+# MediaPipe AutoValue (missing from aar, suppress R8 warnings)
+-dontwarn com.google.auto.value.AutoValue
+-dontwarn com.google.auto.value.AutoValue$Builder
+-dontwarn com.google.mediapipe.**
+-keep class com.google.mediapipe.tasks.genai.** { *; }
+
 # Keep data models
 -keep class com.millarayne.data.** { *; }
 -keep class com.millarayne.api.** { *; }

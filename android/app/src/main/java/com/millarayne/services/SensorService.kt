@@ -76,7 +76,7 @@ class SensorService : Service(), SensorEventListener {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
     private var userId: String = "default-user"
-    private var serverUrl: String = "ws://localhost:3000/ws/sensor"
+    private var serverUrl: String = "wss://milla-rayne.com/ws/sensor"
     
     inner class LocalBinder : Binder() {
         fun getService(): SensorService = this@SensorService

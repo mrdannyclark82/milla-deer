@@ -20,7 +20,7 @@ export const users = pgTable('users', {
   password: text('password').notNull(),
   preferredAiModel: varchar('preferred_ai_model', {
     enum: ['minimax', 'venice', 'deepseek', 'xai', 'gemini', 'grok'],
-  }).default('gemini'),
+  }).default('xai'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastLoginAt: timestamp('last_login_at'),
 });
@@ -47,6 +47,13 @@ export const messages = pgTable('messages', {
     enum: ['coach', 'empathetic', 'strategic', 'creative', 'roleplay'],
   }),
   displayRole: text('display_role'),
+  channel: varchar('channel', {
+    enum: ['web', 'gmail', 'telegram', 'api', 'system', 'mobile'],
+  }).default('web'),
+  sourcePlatform: text('source_platform'),
+  channelThreadId: text('channel_thread_id'),
+  externalMessageId: text('external_message_id'),
+  metadata: jsonb('metadata'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   userId: varchar('user_id'),
 });
@@ -165,6 +172,11 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   role: true,
   personalityMode: true,
   displayRole: true,
+  channel: true,
+  sourcePlatform: true,
+  channelThreadId: true,
+  externalMessageId: true,
+  metadata: true,
   userId: true,
 });
 

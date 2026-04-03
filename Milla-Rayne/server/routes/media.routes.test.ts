@@ -62,6 +62,34 @@ describe('Media Routes', () => {
     });
   });
 
+  describe('GET /api/assets/contact-icon', () => {
+    it('should serve the configured contact icon when present', async () => {
+      const response = await request(app).get('/api/assets/contact-icon');
+
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe('GET /api/assets/avatar videos', () => {
+    it('should serve the loop avatar video when present', async () => {
+      const response = await request(app).get('/api/assets/loop-video');
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should serve the media avatar video when present', async () => {
+      const response = await request(app).get('/api/assets/media-video');
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should serve the studio avatar video when present', async () => {
+      const response = await request(app).get('/api/assets/studio-video');
+
+      expect(response.status).toBe(200);
+    });
+  });
+
   describe('POST /api/image/generate', () => {
     it('should use pollinations when a studio model is requested', async () => {
       vi.spyOn(
@@ -115,6 +143,59 @@ describe('Media Routes', () => {
         'cyberpunk milla portrait'
       );
       expect(response.body.imageUrl).toBe('data:image/png;base64,fallback');
+    });
+
+    it('should return a compact served image URL for android clients', async () => {
+      vi.spyOn(imageService, 'generateImage').mockResolvedValue({
+        success: true,
+        imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wn5mO4AAAAASUVORK5CYII=',
+      });
+
+      const response = await request(app)
+        .post('/api/image/generate')
+        .set('X-Milla-Platform', 'android')
+        .send({
+          prompt: 'android wallpaper',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.imageUrl).toMatch(
+        /^http:\/\/127\.0\.0\.1:\d+\/api\/generated-images\//
+      );
+      expect(response.body.response).toBe('Generated image for "android wallpaper".');
+    });
+
+    it('should fall back to pollinations when the default backend fails', async () => {
+      vi.spyOn(imageService, 'generateImage').mockResolvedValue({
+        success: false,
+        error: 'Hugging Face authentication failed',
+      });
+      vi.spyOn(
+        pollinationsImageService,
+        'generateImageWithPollinations'
+      ).mockResolvedValue({
+        success: true,
+        imageUrl: 'https://image.pollinations.ai/fallback.png',
+      });
+
+      const response = await request(app).post('/api/image/generate').send({
+        prompt: 'forest spirit portrait',
+      });
+
+      expect(response.status).toBe(200);
+      expect(imageService.generateImage).toHaveBeenCalledWith(
+        'forest spirit portrait'
+      );
+      expect(
+        pollinationsImageService.generateImageWithPollinations
+      ).toHaveBeenCalledWith('forest spirit portrait', {
+        width: 1024,
+        height: 1024,
+        model: 'flux',
+      });
+      expect(response.body.imageUrl).toBe(
+        'https://image.pollinations.ai/fallback.png'
+      );
     });
   });
 });

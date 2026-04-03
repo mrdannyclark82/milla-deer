@@ -67,7 +67,7 @@ export function ScoreSettings({
   };
 
   return (
-    <div className="backdrop-blur-xl bg-[#0c021a]/90 border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+    <div className="dashboard-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
         <h3 className="text-sm font-medium text-white">Score Settings</h3>
@@ -115,7 +115,7 @@ export function ScoreSettings({
       </div>
 
       {/* Status indicator */}
-      <div className="px-4 py-3 border-t border-white/5 bg-white/5">
+      <div className="px-4 py-3 border-t border-white/5 bg-white/[0.03]">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#00f2ff] animate-pulse" />
           <span className="text-xs text-white/50">System Active</span>

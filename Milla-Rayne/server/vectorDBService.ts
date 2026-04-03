@@ -617,6 +617,13 @@ class VectorDBService {
   async flush(): Promise<void> {
     await this.store.flush();
   }
+
+  /**
+   * Return total number of indexed entries
+   */
+  async getStoreSize(): Promise<number> {
+    return this.store.count();
+  }
 }
 
 // Export singleton instance

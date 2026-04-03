@@ -1,7 +1,9 @@
-import { Router, type Express } from 'express';
+import { Router, type Express, type Request } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
 import { insertMessageSchema } from '@shared/schema';
+import { validateSession, validateDemoSession } from '../authService';
+import { requireAuth } from '../middleware/auth.middleware';
 import {
   searchKnowledge,
   updateMemories,
@@ -31,6 +33,7 @@ import {
 import { shouldSurfaceDailySuggestion } from '../dailySuggestionsService';
 import { config } from '../config';
 import { asyncHandler } from '../utils/routeHelpers';
+import { syncReplycaSharedHistory } from '../replycaSocialBridgeService';
 
 /**
  * Memory and Messaging Routes
@@ -38,15 +41,58 @@ import { asyncHandler } from '../utils/routeHelpers';
 export function registerMemoryRoutes(app: Express) {
   const router = Router();
 
+  const getSessionToken = (req: Request) => {
+    const authHeader = req.get('authorization');
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      return token || undefined;
+    }
+
+    return req.cookies?.session_token;
+  };
+
+  const resolveUserId = async (sessionToken?: string) => {
+    if (!sessionToken) return 'default-user';
+    // Demo sessions get isolated — never load real user data
+    if (sessionToken.startsWith('demo_')) {
+      const demo = validateDemoSession(sessionToken);
+      return demo.valid ? 'demo-guest' : 'default-user';
+    }
+    const sessionResult = await validateSession(sessionToken);
+    if (sessionResult.valid && sessionResult.user?.id) {
+      return sessionResult.user.id as string;
+    }
+    return 'default-user';
+  };
+
   // Get all messages
   router.get(
     '/messages',
     asyncHandler(async (req, res) => {
       const limit = parseInt(req.query.limit as string) || 50;
-      const allMessages = await storage.getMessages();
+      const channel =
+        typeof req.query.channel === 'string' ? req.query.channel.trim() : '';
 
-      if (allMessages && allMessages.length > 0) {
-        return res.json(allMessages.slice(-limit));
+      // Demo sessions — return empty, never leak real user data
+      const sessionToken = getSessionToken(req);
+      if (sessionToken?.startsWith('demo_')) {
+        return res.json([]);
+      }
+
+      // Fire-and-forget — don't block message fetch on social sync
+      syncReplycaSharedHistory().catch((error: unknown) =>
+        console.warn('ReplycA social sync skipped during message fetch:', error)
+      );
+      const userId = await resolveUserId(sessionToken);
+      // Use getRecentMessages to avoid full-table decryption — only fetch what we need
+      const messages = await storage.getRecentMessages(
+        userId,
+        limit,
+        channel || undefined
+      );
+
+      if (messages && messages.length > 0) {
+        return res.json(messages);
       }
 
       try {
@@ -82,7 +128,14 @@ export function registerMemoryRoutes(app: Express) {
           : 'Danny Ray';
 
       const validatedData = insertMessageSchema.parse(messageData);
-      const message = await storage.createMessage(validatedData);
+      const resolvedUserId =
+        validatedData.userId || (await resolveUserId(getSessionToken(req)));
+      const message = await storage.createMessage({
+        ...validatedData,
+        channel: validatedData.channel || 'web',
+        sourcePlatform: validatedData.sourcePlatform || 'milla-hub',
+        userId: resolvedUserId,
+      });
 
       if (message.role === 'user') {
         await trackUserActivity();
@@ -104,6 +157,8 @@ export function registerMemoryRoutes(app: Express) {
 ${suggestion.suggestionText}`,
               role: 'assistant',
               userId: message.userId,
+              channel: message.channel || 'web',
+              sourcePlatform: 'milla-hub',
             });
             await markSuggestionDelivered(suggestion.date);
           }
@@ -118,6 +173,8 @@ ${suggestion.suggestionText}`,
               content: repoMessage,
               role: 'assistant',
               userId: message.userId,
+              channel: message.channel || 'web',
+              sourcePlatform: 'milla-hub',
             });
           }
         }
@@ -140,6 +197,8 @@ ${suggestion.suggestionText}`,
             content: aiResponse.content,
             role: 'assistant',
             userId: message.userId,
+            channel: message.channel || 'web',
+            sourcePlatform: 'milla-hub',
           });
 
           const followUp = await generateFollowUpMessages(
@@ -155,6 +214,8 @@ ${suggestion.suggestionText}`,
                 content,
                 role: 'assistant',
                 userId: message.userId,
+                channel: message.channel || 'web',
+                sourcePlatform: 'milla-hub',
               })
             );
           }
@@ -289,6 +350,15 @@ ${suggestion.suggestionText}`,
     })
   );
 
-  // Mount routes
-  app.use('/api', router);
+  // Mount routes — memory endpoints require authentication.
+  // Skip requireAuth for OAuth/auth initiation paths so login flow isn't blocked.
+  app.use(
+    '/api',
+    (req, res, next) => {
+      if (req.path.startsWith('/auth/') || req.path.startsWith('/oauth/'))
+        return next();
+      return requireAuth(req, res, next);
+    },
+    router
+  );
 }

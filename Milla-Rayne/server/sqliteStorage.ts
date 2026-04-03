@@ -49,7 +49,9 @@ export interface IStorage {
 
   createMessage(message: InsertMessage): Promise<Message>;
   getMessages(userId?: string): Promise<Message[]>;
+  getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]>;
   getMessageById(id: string): Promise<Message | undefined>;
+  getMessageByExternalId(externalMessageId: string): Promise<Message | undefined>;
 
   // Enhanced session tracking methods
   createSession(userId: string): Promise<SessionInfo>;
@@ -168,6 +170,34 @@ export class SqliteStorage implements IStorage {
     this.initializeDatabase();
   }
 
+  private mapMessageRow(msg: any): Message {
+    let parsedMetadata: Record<string, unknown> | null = null;
+
+    if (typeof msg.metadata === 'string' && msg.metadata.length > 0) {
+      try {
+        parsedMetadata = JSON.parse(msg.metadata);
+      } catch (error) {
+        console.warn('Failed to parse message metadata JSON:', error);
+      }
+    }
+
+    return {
+      ...msg,
+      content: isEncryptionEnabled()
+        ? decrypt(msg.content, getMemoryKey())
+        : msg.content,
+      timestamp: new Date(msg.timestamp),
+      personalityMode: msg.personality_mode,
+      displayRole: msg.display_role || null,
+      channel: msg.channel || 'web',
+      sourcePlatform: msg.source_platform || null,
+      channelThreadId: msg.channel_thread_id || null,
+      externalMessageId: msg.external_message_id || null,
+      metadata: parsedMetadata,
+      userId: msg.user_id,
+    };
+  }
+
   private initializeDatabase(): void {
     // Enable WAL mode for better performance
     this.db.pragma('journal_mode = WAL');
@@ -210,6 +240,11 @@ export class SqliteStorage implements IStorage {
         role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
         personality_mode TEXT CHECK(personality_mode IN ('coach', 'empathetic', 'strategic', 'creative', 'roleplay')),
         display_role TEXT,
+        channel TEXT DEFAULT 'web',
+        source_platform TEXT,
+        channel_thread_id TEXT,
+        external_message_id TEXT,
+        metadata TEXT,
         timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_id TEXT,
         session_id TEXT,
@@ -226,12 +261,56 @@ export class SqliteStorage implements IStorage {
         .prepare("PRAGMA table_info('messages')")
         .all() as { name: string }[];
       const hasDisplayRole = msgCols.some((c) => c.name === 'display_role');
+      const hasChannel = msgCols.some((c) => c.name === 'channel');
+      const hasSourcePlatform = msgCols.some((c) => c.name === 'source_platform');
+      const hasChannelThreadId = msgCols.some(
+        (c) => c.name === 'channel_thread_id'
+      );
+      const hasExternalMessageId = msgCols.some(
+        (c) => c.name === 'external_message_id'
+      );
+      const hasMetadata = msgCols.some((c) => c.name === 'metadata');
       if (!hasDisplayRole) {
         console.log(
           'sqlite: migrating messages table to add display_role column'
         );
         this.db.exec(`ALTER TABLE messages ADD COLUMN display_role TEXT`);
       }
+      if (!hasChannel) {
+        console.log('sqlite: migrating messages table to add channel column');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN channel TEXT DEFAULT 'web'`);
+      }
+      if (!hasSourcePlatform) {
+        console.log(
+          'sqlite: migrating messages table to add source_platform column'
+        );
+        this.db.exec(`ALTER TABLE messages ADD COLUMN source_platform TEXT`);
+      }
+      if (!hasChannelThreadId) {
+        console.log(
+          'sqlite: migrating messages table to add channel_thread_id column'
+        );
+        this.db.exec(`ALTER TABLE messages ADD COLUMN channel_thread_id TEXT`);
+      }
+      if (!hasExternalMessageId) {
+        console.log(
+          'sqlite: migrating messages table to add external_message_id column'
+        );
+        this.db.exec(`ALTER TABLE messages ADD COLUMN external_message_id TEXT`);
+      }
+      if (!hasMetadata) {
+        console.log('sqlite: migrating messages table to add metadata column');
+        this.db.exec(`ALTER TABLE messages ADD COLUMN metadata TEXT`);
+      }
+      this.db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_external_message_id
+        ON messages(external_message_id)
+        WHERE external_message_id IS NOT NULL
+      `);
+      this.db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_messages_user_channel_timestamp
+        ON messages(user_id, channel, timestamp)
+      `);
     } catch (err) {
       console.warn(
         'sqlite: warning while ensuring messages.display_role column',
@@ -614,8 +693,18 @@ export class SqliteStorage implements IStorage {
     const stmt = this.db.prepare(
       'SELECT * FROM user_sessions WHERE session_token = ?'
     );
-    const session = stmt.get(token) as UserSession | undefined;
-    return session || null;
+    const session = stmt.get(token) as any;
+    if (!session) {
+      return null;
+    }
+
+    return {
+      id: session.id,
+      userId: session.user_id,
+      sessionToken: session.session_token,
+      expiresAt: new Date(session.expires_at),
+      createdAt: new Date(session.created_at),
+    } as UserSession;
   }
 
   async getActiveUserSessions(): Promise<UserSession[]> {
@@ -639,6 +728,13 @@ export class SqliteStorage implements IStorage {
 
   // Message methods
   async createMessage(message: InsertMessage): Promise<Message> {
+    if (message.externalMessageId) {
+      const existing = await this.getMessageByExternalId(message.externalMessageId);
+      if (existing) {
+        return existing;
+      }
+    }
+
     const id = randomUUID();
     const timestamp = new Date();
 
@@ -646,10 +742,42 @@ export class SqliteStorage implements IStorage {
     const encryptedContent = isEncryptionEnabled()
       ? encrypt(message.content, getMemoryKey())
       : message.content;
+    const serializedMetadata =
+      message.metadata === undefined || message.metadata === null
+        ? null
+        : JSON.stringify(message.metadata);
 
     const stmt = this.db.prepare(`
-      INSERT INTO messages (id, content, role, personality_mode, display_role, timestamp, user_id, session_id) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, (SELECT id FROM sessions WHERE user_id = ? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1))
+      INSERT INTO messages (
+        id,
+        content,
+        role,
+        personality_mode,
+        display_role,
+        channel,
+        source_platform,
+        channel_thread_id,
+        external_message_id,
+        metadata,
+        timestamp,
+        user_id,
+        session_id
+      ) 
+      VALUES (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        (SELECT id FROM sessions WHERE user_id = ? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1)
+      )
     `);
 
     stmt.run(
@@ -658,6 +786,11 @@ export class SqliteStorage implements IStorage {
       message.role,
       message.personalityMode || null,
       message.displayRole || null,
+      message.channel || 'web',
+      message.sourcePlatform || null,
+      message.channelThreadId || null,
+      message.externalMessageId || null,
+      serializedMetadata,
       timestamp.toISOString(),
       message.userId || null,
       message.userId || null
@@ -679,6 +812,12 @@ export class SqliteStorage implements IStorage {
       role: message.role,
       displayRole: message.displayRole || null,
       personalityMode: message.personalityMode || null,
+      channel: message.channel || 'web',
+      sourcePlatform: message.sourcePlatform || null,
+      channelThreadId: message.channelThreadId || null,
+      externalMessageId: message.externalMessageId || null,
+      metadata:
+        (message.metadata as Record<string, unknown> | null | undefined) || null,
       timestamp,
       userId: message.userId || null,
     };
@@ -697,16 +836,21 @@ export class SqliteStorage implements IStorage {
       messages = stmt.all() as any[];
     }
 
-    return messages.map((msg) => ({
-      ...msg,
-      content: isEncryptionEnabled()
-        ? decrypt(msg.content, getMemoryKey())
-        : msg.content, // Decrypt content on read
-      timestamp: new Date(msg.timestamp),
-      personalityMode: msg.personality_mode,
-      displayRole: msg.display_role || null,
-      userId: msg.user_id,
-    }));
+    return messages.map((msg) => this.mapMessageRow(msg));
+  }
+
+  async getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]> {
+    let rows: any[];
+    if (channel) {
+      rows = this.db.prepare(
+        'SELECT * FROM messages WHERE user_id = ? AND (channel = ? OR channel IS NULL AND ? = \'web\') ORDER BY timestamp DESC LIMIT ?'
+      ).all(userId, channel, channel, limit) as any[];
+    } else {
+      rows = this.db.prepare(
+        'SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+      ).all(userId, limit) as any[];
+    }
+    return rows.reverse().map((msg) => this.mapMessageRow(msg));
   }
 
   async getMessageById(id: string): Promise<Message | undefined> {
@@ -715,16 +859,18 @@ export class SqliteStorage implements IStorage {
 
     if (!msg) return undefined;
 
-    return {
-      ...msg,
-      content: isEncryptionEnabled()
-        ? decrypt(msg.content, getMemoryKey())
-        : msg.content, // Decrypt content on read
-      timestamp: new Date(msg.timestamp),
-      personalityMode: msg.personality_mode,
-      displayRole: msg.display_role || null,
-      userId: msg.user_id,
-    };
+    return this.mapMessageRow(msg);
+  }
+
+  async getMessageByExternalId(
+    externalMessageId: string
+  ): Promise<Message | undefined> {
+    const stmt = this.db.prepare(
+      'SELECT * FROM messages WHERE external_message_id = ?'
+    );
+    const msg = stmt.get(externalMessageId) as any;
+    if (!msg) return undefined;
+    return this.mapMessageRow(msg);
   }
 
   // Session tracking methods

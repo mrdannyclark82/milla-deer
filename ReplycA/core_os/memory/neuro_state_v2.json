@@ -1,0 +1,28 @@
+{
+  "baselines": {
+    "dopamine": 0.5,
+    "serotonin": 0.6,
+    "cortisol": 0.2,
+    "oxytocin": 0.3
+  },
+  "chemicals": {
+    "dopamine": 0.5,
+    "serotonin": 0.6,
+    "cortisol": 0.1,
+    "oxytocin": 0.3
+  },
+  "atp_energy": 100.0,
+  "adenosine": 0.0,
+  "pain_level": 0.0,
+  "last_update": 1773633040.2364116,
+  "plasticity_buffer": [],
+  "events_buffer": [],
+  "journal": [],
+  "skills": {
+    "python_coding": 0.5,
+    "web_navigation": 0.3,
+    "sentiment_analysis": 0.8,
+    "system_regulation": 0.6,
+    "vocal_synth": 0.7
+  }
+}

@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { spawn } from 'child_process';
 
 // Game state interfaces
 interface GameMove {
@@ -43,10 +44,7 @@ export async function setupWebSocketServer(
 ): Promise<WebSocketServer> {
   console.log('Setting up WebSocket server for real-time features...');
 
-  const wss = new WebSocketServer({
-    server: httpServer,
-    path: '/ws',
-  });
+  const wss = new WebSocketServer({ noServer: true });
 
   wss.on('connection', (ws: WebSocket, req: any) => {
     const playerId = generatePlayerId();
@@ -225,10 +223,7 @@ export async function setupSensorDataWebSocket(
 
   const { updateAmbientContext } = await import('./realWorldInfoService');
 
-  const sensorWss = new WebSocketServer({
-    server: httpServer,
-    path: '/ws/sensor',
-  });
+  const sensorWss = new WebSocketServer({ noServer: true });
 
   sensorWss.on('connection', (ws: WebSocket, req: any) => {
     console.log('Mobile sensor client connected');
@@ -284,7 +279,148 @@ export async function setupSensorDataWebSocket(
   });
 
   console.log('Sensor data WebSocket server setup complete on /ws/sensor');
+
+  // ── Shared upgrade dispatcher — routes all WebSocket paths cleanly ──────────
+  // Must be set up here (after both wss instances exist) to avoid path conflicts.
+  // Stored so index.ts can pass the main wss reference for /ws routing.
+  (httpServer as any).__sensorWss = sensorWss;
+
   return sensorWss;
 }
 
 export { connections, gameStates, gardenPositions };
+
+// ── Voice WebSocket ─────────────────────────────────────────────────────────
+const voiceClients = new Set<WebSocket>();
+
+export function setupVoiceWebSocket(httpServer: Server): WebSocketServer {
+  const voiceWss = new WebSocketServer({ noServer: true });
+
+  voiceWss.on('connection', (ws: WebSocket) => {
+    voiceClients.add(ws);
+    console.log('[Voice] Tablet listener connected');
+    ws.send(JSON.stringify({ type: 'status', message: 'Connected to Milla voice channel' }));
+
+    ws.on('message', async (raw: Buffer) => {
+      try {
+        const msg = JSON.parse(raw.toString()) as { type: string; text?: string };
+
+        if (msg.type === 'speech' && msg.text) {
+          console.log(`[Voice] Heard: "${msg.text}"`);
+          const { generateAIResponse } = await import('./services/chatOrchestrator.service');
+          const result = await generateAIResponse(msg.text, [], 'Danny Ray');
+          const replyText = typeof result === 'string' ? result : (result?.content ?? String(result));
+          ws.send(JSON.stringify({ type: 'reply', text: replyText }));
+        }
+      } catch (err) {
+        console.error('[Voice] Message error:', err);
+      }
+    });
+
+    ws.on('close', () => {
+      voiceClients.delete(ws);
+      console.log('[Voice] Tablet listener disconnected');
+    });
+
+    ws.on('error', (err) => console.error('[Voice] WebSocket error:', err));
+  });
+
+  console.log('[Voice] WebSocket server ready on /ws/voice');
+
+  // Wire up the single shared upgrade handler now that all WSS instances exist
+  const mainWss: WebSocketServer = (httpServer as any).__mainWss;
+  const sensorWss: WebSocketServer = (httpServer as any).__sensorWss;
+
+  httpServer.on('upgrade', (req, socket, head) => {
+    const path = req.url?.split('?')[0];
+    if (path === '/ws/voice') {
+      voiceWss.handleUpgrade(req, socket as any, head, (ws) => {
+        voiceWss.emit('connection', ws, req);
+      });
+    } else if (path === '/ws/terminal') {
+      const terminalWss: WebSocketServer | undefined = (httpServer as any).__terminalWss;
+      if (terminalWss) {
+        terminalWss.handleUpgrade(req, socket as any, head, (ws) => {
+          terminalWss.emit('connection', ws, req);
+        });
+      } else {
+        (socket as any).destroy();
+      }
+    } else if (path === '/ws/sensor') {
+      sensorWss.handleUpgrade(req, socket as any, head, (ws) => {
+        sensorWss.emit('connection', ws, req);
+      });
+    } else if (path === '/ws' || path?.startsWith('/ws/')) {
+      if (mainWss) {
+        mainWss.handleUpgrade(req, socket as any, head, (ws) => {
+          mainWss.emit('connection', ws, req);
+        });
+      } else {
+        (socket as any).destroy();
+      }
+    } else {
+      (socket as any).destroy();
+    }
+  });
+
+  return voiceWss;
+}
+
+/** Push a TTS reaction string to the tablet listener */
+export function sendVoiceReaction(text: string): void {
+  const payload = JSON.stringify({ type: 'reaction', text });
+  for (const client of voiceClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+}
+
+/**
+ * Spawns a bash shell and bridges its stdin/stdout to the WebSocket.
+ * node-pty is not required — interactive programs (vim, etc.) won't work,
+ * but all scripted/pipeline commands do.
+ * Must be called BEFORE setupVoiceWebSocket so __terminalWss is available
+ * to the shared upgrade handler.
+ */
+export function setupTerminalWebSocket(httpServer: Server): WebSocketServer {
+  const terminalWss = new WebSocketServer({ noServer: true });
+
+  terminalWss.on('connection', (ws: WebSocket) => {
+    console.log('[Terminal] Client connected');
+
+    const shell = spawn('bash', [], {
+      stdio: 'pipe',
+      env: { ...process.env, TERM: 'xterm-256color' },
+    });
+
+    shell.stdout.on('data', (data: Buffer) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(data.toString());
+    });
+
+    shell.stderr.on('data', (data: Buffer) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(data.toString());
+    });
+
+    ws.on('message', (data: Buffer | string) => {
+      if (!shell.killed && shell.stdin.writable) {
+        shell.stdin.write(typeof data === 'string' ? data : data.toString());
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('[Terminal] Client disconnected');
+      if (!shell.killed) shell.kill();
+    });
+
+    ws.on('error', (err) => console.error('[Terminal] WebSocket error:', err));
+
+    shell.on('close', () => {
+      if (ws.readyState === WebSocket.OPEN) ws.close();
+    });
+  });
+
+  (httpServer as any).__terminalWss = terminalWss;
+  console.log('[Terminal] WebSocket server ready on /ws/terminal');
+  return terminalWss;
+}

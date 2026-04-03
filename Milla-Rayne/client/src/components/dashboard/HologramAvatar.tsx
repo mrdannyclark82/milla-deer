@@ -14,20 +14,13 @@ export function HologramAvatar({
   mediaUrl,
   mediaType,
 }: HologramAvatarProps) {
-  const [breathScale, setBreathScale] = useState(1);
-  const [glowIntensity, setGlowIntensity] = useState(1);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [videoFailed, setVideoFailed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const breathInterval = setInterval(() => {
-      const time = Date.now() / 1000;
-      setBreathScale(1 + Math.sin(time * 0.8) * 0.02);
-      setGlowIntensity(0.8 + Math.sin(time * 1.2) * 0.2);
-    }, 50);
-
-    return () => clearInterval(breathInterval);
-  }, []);
+    setVideoFailed(false);
+  }, [mediaType, mediaUrl]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -44,24 +37,28 @@ export function HologramAvatar({
           borderColor: 'border-[#00f2ff]',
           glowColor: 'rgba(0, 242, 255, 0.6)',
           pulseSpeed: '1.5s',
+          breathDuration: '1.5s',
         };
       case 'thinking':
         return {
           borderColor: 'border-[#ff00aa]',
           glowColor: 'rgba(255, 0, 170, 0.6)',
           pulseSpeed: '0.8s',
+          breathDuration: '0.8s',
         };
       case 'speaking':
         return {
           borderColor: 'border-[#7c3aed]',
           glowColor: 'rgba(124, 58, 237, 0.6)',
           pulseSpeed: '0.5s',
+          breathDuration: '0.5s',
         };
       default:
         return {
           borderColor: 'border-white/20',
           glowColor: 'rgba(0, 242, 255, 0.3)',
           pulseSpeed: '3s',
+          breathDuration: '3.2s',
         };
     }
   };
@@ -75,13 +72,12 @@ export function HologramAvatar({
       onMouseMove={handleMouseMove}
       onClick={() => onInteraction?.('click')}
     >
-      {/* Outer glow rings */}
+      {/* Outer glow rings — pure CSS, no JS state */}
       <div
         className="absolute w-[400px] h-[400px] rounded-full opacity-30"
         style={{
           background: `radial-gradient(circle, ${stateStyles.glowColor} 0%, transparent 70%)`,
           animation: `pulse ${stateStyles.pulseSpeed} ease-in-out infinite`,
-          transform: `scale(${glowIntensity})`,
         }}
       />
       <div
@@ -108,11 +104,12 @@ export function HologramAvatar({
         />
       </div>
 
-      {/* Avatar container */}
+      {/* Avatar container — breathing via CSS keyframes only */}
       <div
-        className={`relative w-72 h-72 rounded-full overflow-hidden border-2 ${stateStyles.borderColor} transition-all duration-500`}
+        className={`relative w-72 h-72 rounded-full overflow-hidden border-2 ${stateStyles.borderColor} transition-colors duration-500`}
         style={{
-          transform: `scale(${breathScale}) perspective(1000px) rotateX(${(mousePos.y - 0.5) * 5}deg) rotateY(${(mousePos.x - 0.5) * 5}deg)`,
+          animation: `avatarBreathe ${stateStyles.breathDuration} ease-in-out infinite`,
+          transform: `perspective(1000px) rotateX(${(mousePos.y - 0.5) * 5}deg) rotateY(${(mousePos.x - 0.5) * 5}deg)`,
           boxShadow: `
             0 0 30px ${stateStyles.glowColor},
             0 0 60px ${stateStyles.glowColor.replace('0.6', '0.3')},
@@ -134,18 +131,23 @@ export function HologramAvatar({
         />
 
         {mediaUrl ? (
-          mediaType === 'video' ? (
+          mediaType === 'video' && !videoFailed ? (
             <video
               src={mediaUrl}
               autoPlay
-              loop
               muted
               playsInline
+              preload="metadata"
+              poster="/api/assets/contact-icon"
               className="absolute inset-0 h-full w-full object-cover"
+              onEnded={(event) => {
+                event.currentTarget.pause();
+              }}
+              onError={() => setVideoFailed(true)}
             />
           ) : (
             <img
-              src={mediaUrl}
+              src={mediaType === 'image' ? mediaUrl : '/api/assets/contact-icon'}
               alt="Milla avatar media"
               className="absolute inset-0 h-full w-full object-cover"
             />

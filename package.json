@@ -4,33 +4,52 @@
   "version": "1.0.0",
   "description": "Workspace entrypoint for the Milla-Deer repository. The root scripts coordinate the actively supported JavaScript applications while legacy and embedded projects remain preserved in place.",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "workspaces": [
     "Milla-Rayne",
-    "Elara2.0"
+    "Deer-Milla",
+    "Elara2.0",
+    "client",
+    "server"
   ],
   "scripts": {
     "prepare": "husky install",
-    "dev": "npm run dev --workspace Milla-Rayne",
-    "dev:all": "npm run dev:all --workspace Milla-Rayne",
-    "dev:proactive": "npm run dev:proactive --workspace Milla-Rayne",
-    "dev:elara": "npm run dev --workspace Elara2.0",
-    "cli": "npm run cli --workspace Milla-Rayne",
-    "check": "npm run check --workspace Milla-Rayne",
-    "check:full": "npm run check:full --workspace Milla-Rayne",
-    "lint": "npm run lint --workspace Milla-Rayne",
-    "test": "npm run test --workspace Milla-Rayne",
-    "build": "npm run build --workspace Milla-Rayne",
-    "build:web": "npm run build:web --workspace Milla-Rayne && npm run build --workspace Elara2.0",
-    "build:milla": "npm run build --workspace Milla-Rayne",
-    "build:elara": "npm run build --workspace Elara2.0",
-    "format": "npm run format --workspace Milla-Rayne",
-    "db:push": "npm run db:push --workspace Milla-Rayne",
+    "dev": "pnpm --filter rest-express run dev",
+    "dev:all": "pnpm --filter rest-express run dev:all",
+    "dev:proactive": "pnpm --filter rest-express run dev:proactive",
+    "dev:elara": "pnpm --filter Elara2.0 run dev",
+    "cli": "pnpm --filter rest-express run cli",
+    "check": "pnpm --filter rest-express run check",
+    "check:full": "pnpm --filter rest-express run check:full",
+    "lint": "pnpm --filter rest-express run lint",
+    "test": "pnpm --filter rest-express run test",
+    "build": "pnpm --filter rest-express run build",
+    "build:web": "pnpm --filter rest-express run build:web && pnpm --filter Elara2.0 run build",
+    "build:milla": "pnpm --filter rest-express run build",
+    "build:elara": "pnpm --filter Elara2.0 run build",
+    "format": "pnpm --filter rest-express run format",
+    "db:push": "pnpm --filter rest-express run db:push",
     "lint-staged": "npx --yes lint-staged",
-    "ci": "npm run check && npm run lint && npm run test && npm run build"
+    "ci": "pnpm run check && pnpm run lint && pnpm run test && pnpm run build",
+    "grok": "tsx scripts/grok-cli.ts",
+    "dev:grok": "concurrently \"pnpm dev\" \"pnpm run grok\""
   },
   "devDependencies": {
+    "@types/react": "^18.3.28",
+    "@types/uuid": "^10.0.0",
+    "@vibe-kit/grok-cli": "latest",
     "husky": "^8.0.3",
-    "lint-staged": "^16.4.0"
+    "lint-staged": "^16.4.0",
+    "tsx": "^4.21.0"
+  },
+  "dependencies": {
+    "@langchain/openai": "^1.3.1",
+    "@playwright/mcp": "^0.0.68",
+    "langchain": "^1.2.37",
+    "n8n-mcp": "^2.41.3",
+    "neo4j-driver": "^6.0.1",
+    "playwright": "^1.58.2",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
   }
 }

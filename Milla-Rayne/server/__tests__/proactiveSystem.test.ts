@@ -5,6 +5,9 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
 import {
   initializeUserAnalytics,
   trackUserInteraction,
@@ -19,6 +22,7 @@ import {
   testFeature,
   evaluateSandboxReadiness,
   getAllSandboxes,
+  updateSandboxFeature,
 } from '../sandboxEnvironmentService';
 import {
   initializeFeatureDiscovery,
@@ -137,6 +141,58 @@ describe('Proactive Repository Ownership System', () => {
         expect(readiness).toHaveProperty('reasons');
         expect(readiness).toHaveProperty('featuresApproved');
       }
+    });
+
+    it('should run real validation commands when a sandbox feature has a worktree', async () => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'milla-sandbox-'));
+      await fs.writeFile(
+        path.join(tempDir, 'package.json'),
+        JSON.stringify({
+          name: 'sandbox-test-fixture',
+          private: true,
+          scripts: {
+            test: "node -e \"process.exit(0)\"",
+            check: "node -e \"process.exit(0)\"",
+            'build:web': "node -e \"process.exit(0)\"",
+          },
+        })
+      );
+
+      const sandbox = await createSandbox({
+        name: 'Validation Sandbox',
+        description: 'Sandbox for real validation test',
+        createdBy: 'user',
+        createGitBranch: false,
+      });
+
+      const feature = await addFeatureToSandbox(sandbox.id, {
+        name: 'Validated Feature',
+        description: 'Feature with a real test workspace',
+        files: [],
+      });
+
+      expect(feature).not.toBeNull();
+      if (!feature) {
+        return;
+      }
+
+      await updateSandboxFeature(sandbox.id, feature.id, {
+        implementation: {
+          status: 'succeeded',
+          worktreePath: tempDir,
+        },
+      });
+
+      const result = await testFeature(sandbox.id, feature.id, 'user_acceptance');
+      const updatedSandbox = getAllSandboxes().find((candidate) => candidate.id === sandbox.id);
+      const updatedFeature = updatedSandbox?.features.find(
+        (candidate) => candidate.id === feature.id
+      );
+
+      expect(result.passed).toBe(true);
+      expect(result.details).toContain('npm run check');
+      expect(updatedFeature?.implementation?.validation).toHaveLength(3);
+      expect(updatedFeature?.status).toBe('approved');
     });
   });
 

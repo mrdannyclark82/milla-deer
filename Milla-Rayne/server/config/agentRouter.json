@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "AgentRouter — maps intent categories to agent endpoints. Milla delegates aggressively: coding/research/QA always go to specialists. Google/media tool results get synthesized by agents.",
+  "defaultIntent": "fallback",
+  "routingTable": {
+    "coding": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/agents/gpt-120b",
+      "timeoutSec": 120,
+      "description": "Code generation, refactoring, debugging, architecture, scripts, functions",
+      "triggers": [
+        "write code", "write a", "write me", "fix bug", "fix this", "refactor", "implement",
+        "create function", "build", "debug", "error in code", "how do i code", "script",
+        "typescript", "javascript", "python", "function", "class", "component", "api route",
+        "make it work", "broken", "not working", "syntax", "compile", "module", "import",
+        "help me build", "code this", "code for", "generate code", "create a component",
+        "create a function", "create an api", "update the code", "show me how to"
+      ]
+    },
+    "research": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/agents/deer-flow",
+      "timeoutSec": 90,
+      "description": "Research, analysis, planning, summarization, explanation of topics",
+      "triggers": [
+        "research", "find information", "analyze", "analyse", "roadmap", "plan",
+        "summarize", "summarise", "what is", "what are", "how does", "explain",
+        "tell me about", "who is", "why does", "when did", "give me a breakdown",
+        "compare", "difference between", "pros and cons", "overview", "deep dive",
+        "look into", "find out", "investigate", "report on", "thoughts on",
+        "what do you know about", "search for", "look up"
+      ]
+    },
+    "memory": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/agents/deer-flow",
+      "timeoutSec": 60,
+      "description": "Memory recall, past conversations, personal history synthesis",
+      "triggers": [
+        "remember", "recall", "what did we", "what have we", "from memory",
+        "do you remember", "last time", "previously", "history", "earlier you said",
+        "what was that", "look in memory", "search memory", "from our conversation",
+        "we talked about", "we discussed", "you mentioned"
+      ]
+    },
+    "code_review": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/copilot/review",
+      "timeoutSec": 60,
+      "description": "Code review, security audit, architecture review",
+      "triggers": [
+        "review", "check code", "audit", "before shipping", "security",
+        "is this safe", "approve", "look over this", "check this code",
+        "review my code", "code review", "peer review"
+      ]
+    },
+    "qa_testing": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/agents/gpt-20b",
+      "timeoutSec": 90,
+      "description": "Testing, edge cases, regression, QA",
+      "triggers": [
+        "test", "edge case", "regression", "qa", "does this break", "validate",
+        "verify", "unit test", "write tests", "test coverage", "check if",
+        "what could go wrong", "test this", "quality check"
+      ]
+    },
+    "ux_impact": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/ux/review",
+      "timeoutSec": 60,
+      "description": "User-facing flows, UI, notifications, display, interface",
+      "triggers": [
+        "user sees", "show user", "notification", "ui", "screen", "display",
+        "feedback", "interface", "button", "form", "design", "layout",
+        "how should it look", "what should the user", "user experience",
+        "user flow", "ux", "styling", "modal", "dialog", "page"
+      ]
+    },
+    "fallback": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/chat",
+      "timeoutSec": 30,
+      "description": "Default — Milla handles it herself"
+    }
+  }
+}

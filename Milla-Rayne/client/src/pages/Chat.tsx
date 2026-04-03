@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '../hooks/useTheme';
 import {
   MessageCircle,
   Send,
@@ -19,6 +20,7 @@ import {
   Image,
 } from 'lucide-react';
 import { YoutubePlayerCyberpunk } from '../components/YoutubePlayerCyberpunk';
+import { YouTubeFYP } from '../components/YouTubeFYP';
 import { SandboxManager } from '../components/SandboxManager';
 import { Sandbox } from '../components/Sandbox';
 
@@ -29,6 +31,7 @@ interface ChatMessage {
 }
 
 export default function Chat() {
+  const { theme, setTheme } = useTheme();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -162,7 +165,7 @@ export default function Chat() {
   const handleNavClick = (id: string) => {
     setActiveNav(id);
     if (id === 'youtube') {
-      setShowYoutubePlayer(true);
+      // FYP panel renders inline — no floating overlay
     } else if (id === 'memory') {
       setShowMemoryPanel(true);
     } else if (id === 'knowledge') {
@@ -333,6 +336,20 @@ export default function Chat() {
           </header>
 
           <div className="chat-area">
+            {activeNav === 'youtube' ? (
+              <YouTubeFYP
+                className="h-full"
+                onPlayVideo={(id) => {
+                  setCurrentVideoId(id);
+                  setShowYoutubePlayer(true);
+                }}
+                onAnalyzeVideo={(id) => {
+                  setActiveNav('chat');
+                  const url = `https://youtube.com/watch?v=${id}`;
+                  setMessage(`Analyze this video: ${url}`);
+                }}
+              />
+            ) : (
             <div className="chat-container">
               {messages.map((msg) => (
                 <div
@@ -382,6 +399,7 @@ export default function Chat() {
               )}
               <div ref={chatEndRef} />
             </div>
+            )}
           </div>
 
           <div className="input-area">
@@ -488,6 +506,40 @@ export default function Chat() {
               >
                 <X style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
+            </div>
+
+            {/* Theme Selector */}
+            <div className="settings-section">
+              <h3 className="section-title">
+                <span style={{ fontSize: '1rem' }}>🎨</span> Theme
+              </h3>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {(
+                  [
+                    { id: 'cyberpunk', label: '⚡ Cyberpunk', color: '#00f5ff' },
+                    { id: 'dark', label: '🌙 Dark', color: '#6b7280' },
+                    { id: 'light', label: '☀️ Light', color: '#f3f4f6' },
+                  ] as const
+                ).map(({ id, label, color }) => (
+                  <button
+                    key={id}
+                    onClick={() => setTheme(id)}
+                    style={{
+                      padding: '0.35rem 0.9rem',
+                      borderRadius: '0.375rem',
+                      border: `1px solid ${theme === id ? color : 'rgba(255,255,255,0.2)'}`,
+                      background: theme === id ? `${color}22` : 'rgba(255,255,255,0.05)',
+                      color: theme === id ? color : 'rgba(255,255,255,0.7)',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      boxShadow: theme === id ? `0 0 8px ${color}55` : 'none',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="settings-section">

@@ -6,12 +6,77 @@
  */
 
 import { getValidAccessToken } from './oauthService';
+import { storage } from './storage';
 
 export interface GmailAPIResult {
   success: boolean;
   message: string;
   data?: any;
   error?: string;
+}
+
+function getHeaderValue(message: any, headerName: string): string {
+  const headers = Array.isArray(message?.payload?.headers)
+    ? message.payload.headers
+    : [];
+  const header = headers.find(
+    (item: any) => String(item.name || '').toLowerCase() === headerName.toLowerCase()
+  );
+  return typeof header?.value === 'string' ? header.value : '';
+}
+
+async function syncInboundGmailMessages(
+  userId: string,
+  messages: any[]
+): Promise<void> {
+  await Promise.all(
+    messages.map(async (message) => {
+      const from = getHeaderValue(message, 'From') || 'Gmail';
+      const subject = getHeaderValue(message, 'Subject') || '(no subject)';
+      const snippet =
+        typeof message?.snippet === 'string' ? message.snippet.trim() : '';
+      const content = `Email from ${from} with subject "${subject}".${snippet ? ` Snippet: ${snippet}` : ''}`;
+
+      await storage.createMessage({
+        userId,
+        role: 'user',
+        content,
+        displayRole: from,
+        channel: 'gmail',
+        sourcePlatform: 'google',
+        channelThreadId:
+          typeof message?.threadId === 'string' ? message.threadId : null,
+        externalMessageId: typeof message?.id === 'string' ? message.id : null,
+        metadata: {
+          direction: 'inbound',
+          subject,
+          snippet,
+          gmailThreadId: message?.threadId || null,
+        },
+      });
+    })
+  );
+}
+
+async function syncSentGmailMessage(
+  userId: string,
+  payload: { to: string; subject: string; body: string; id?: string; threadId?: string }
+): Promise<void> {
+  await storage.createMessage({
+    userId,
+    role: 'assistant',
+    content: `Sent email to ${payload.to} with subject "${payload.subject}". Body: ${payload.body}`,
+    displayRole: 'Milla Rayne',
+    channel: 'gmail',
+    sourcePlatform: 'google',
+    channelThreadId: payload.threadId || null,
+    externalMessageId: payload.id || null,
+    metadata: {
+      direction: 'outbound',
+      to: payload.to,
+      subject: payload.subject,
+    },
+  });
 }
 
 /**
@@ -59,10 +124,11 @@ export async function getRecentEmails(
     }
 
     const data = await response.json();
+    const messageRefs = Array.isArray(data.messages) ? data.messages : [];
 
     // Fetch the full message details for each message ID
     const messages = await Promise.all(
-      data.messages.map(async (message: any) => {
+      messageRefs.map(async (message: any) => {
         const msgResponse = await fetch(
           `https://www.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
           {
@@ -75,6 +141,8 @@ export async function getRecentEmails(
         return msgResponse.json();
       })
     );
+
+    await syncInboundGmailMessages(userId, messages);
 
     return {
       success: true,
@@ -138,6 +206,7 @@ export async function getEmailContent(
     }
 
     const message = await response.json();
+    await syncInboundGmailMessages(userId, [message]);
 
     return {
       success: true,
@@ -214,6 +283,13 @@ export async function sendEmail(
     }
 
     const sentMessage = await response.json();
+    await syncSentGmailMessage(userId, {
+      to,
+      subject,
+      body,
+      id: sentMessage?.id,
+      threadId: sentMessage?.threadId,
+    });
 
     return {
       success: true,

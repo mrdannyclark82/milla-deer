@@ -7,6 +7,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+*.env
 
 # Build outputs
 dist/
@@ -45,3 +46,4 @@ home/
 memory/*.db
 memory/*.db-shm
 memory/*.db-wal
+browser_extension/milla-rayne.pem

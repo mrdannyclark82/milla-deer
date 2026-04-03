@@ -3,17 +3,18 @@ import org.gradle.api.tasks.compile.JavaCompile
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
 
 android {
     namespace = "com.millarayne"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.millarayne"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
@@ -26,10 +27,12 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             isMinifyEnabled = false
@@ -48,10 +51,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
     }
 
     packaging {
@@ -94,6 +93,7 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -109,6 +109,13 @@ dependencies {
 
     // Preferences DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // MediaPipe Tasks GenAI — on-device LLM inference (Gemma-3 1B 4-bit + Gemma-4 preview)
+    implementation("com.google.mediapipe:tasks-genai:0.10.33")
+
+    // MLC LLM — loaded via reflection at runtime (not available in standard Maven repos;
+    // install the AAR manually or build from source: https://github.com/mlc-ai/mlc-llm)
+    // implementation("ai.mlc:mlc-llm-android:0.1.0")
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")

@@ -8,6 +8,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getGitHubToken } from './config';
 
 const execAsync = promisify(exec);
 
@@ -86,7 +87,7 @@ class AutomatedPRService {
 
     try {
       // Check if GitHub token is available
-      const githubToken = process.env.GITHUB_TOKEN;
+      const githubToken = getGitHubToken();
       if (!githubToken) {
         throw new Error('GitHub token not configured');
       }
@@ -205,7 +206,7 @@ class AutomatedPRService {
     head: string;
     base: string;
   }): Promise<{ url: string; number: number }> {
-    const githubToken = process.env.GITHUB_TOKEN;
+    const githubToken = getGitHubToken();
     if (!githubToken) {
       throw new Error('GitHub token not configured');
     }

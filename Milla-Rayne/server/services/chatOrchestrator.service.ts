@@ -8,8 +8,8 @@ import { generateImageWithVenice } from '../veniceImageService';
 import {
   searchKnowledge,
   updateMemories,
-  getMemoryCoreContext,
 } from '../memoryService';
+import { getMemoryBrokerContext } from '../memoryBrokerService';
 import { getVisualMemories, getEmotionalContext } from '../visualMemoryService';
 import { detectEnvironmentalContext } from '../proactiveService';
 import { dispatchAIResponse } from '../aiDispatcherService';
@@ -30,11 +30,12 @@ import {
 } from '../browserIntegrationService';
 import { VoiceAnalysisResult } from '../voiceAnalysisService';
 import { UserProfile } from '../profileService';
-import { config } from '../config';
+import { config, getGitHubToken } from '../config';
 import { sanitizePromptInput } from '../sanitization';
 import { repositoryCache } from './repositoryCache.service';
 import { queueBackgroundImageGeneration } from '../imageGenerationQueue';
 import { listEvents } from '../googleCalendarService';
+import { isActionRequest, runGenkitFlow, isGenkitAvailable } from './genkitService';
 import {
   addNoteToGoogleTasks,
   completeTask as completeGoogleTask,
@@ -70,9 +71,16 @@ import {
   listMcpTools,
 } from '../mcpRuntimeService';
 import { analyzeScreenShareImage } from '../screenVisionService';
+import { captureToolEvent } from './toolEventBag';
+import { notifyDanny } from './telegramBotService';
+import { resolveIntent, dispatchToAgent } from './agentRouterService';
+import { getIotTools } from '../mcp/iotMcpServer';
 
 const MAX_INPUT_LENGTH = 10000;
 const MAX_PROMPT_LENGTH = 5000;
+
+// Pending cast confirmations: userId → intent (expires on next message)
+const pendingCastConfirms = new Map<string, { command: any; payload?: any }>();
 
 export interface MessageAnalysis {
   sentiment: 'positive' | 'negative' | 'neutral';
@@ -463,6 +471,290 @@ function formatMcpToolResult(toolName: string, result: unknown): string {
   }
 }
 
+function findMcpToolByName(
+  tools: Awaited<ReturnType<typeof listMcpTools>>,
+  preferredNames: string[]
+) {
+  return tools.find((tool) => preferredNames.includes(tool.name)) ?? null;
+}
+
+function resolveMcpInvocationRequest(
+  entities: Record<string, string>,
+  tools: Awaited<ReturnType<typeof listMcpTools>>,
+  userId: string
+): {
+  selectedTool: Awaited<ReturnType<typeof listMcpTools>>[number];
+  args: Record<string, unknown>;
+} | null {
+  const toolName = entities.toolName;
+  if (!toolName) {
+    return null;
+  }
+
+  if (toolName === 'generate_story') {
+    const selectedTool = findMcpToolByName(tools, ['generate_story', 'generateText']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'generate_image') {
+    const selectedTool = findMcpToolByName(tools, ['generate_image', 'generateImage']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'generateText') {
+    const selectedTool = findMcpToolByName(tools, ['generateText']);
+    return selectedTool && entities.prompt
+      ? {
+          selectedTool,
+          args: { prompt: entities.prompt },
+        }
+      : null;
+  }
+
+  if (toolName === 'sayText') {
+    const selectedTool = findMcpToolByName(tools, ['sayText']);
+    return selectedTool && entities.text
+      ? {
+          selectedTool,
+          args: { text: entities.text },
+        }
+      : null;
+  }
+
+  if (toolName === 'browser_navigate') {
+    const selectedTool = findMcpToolByName(tools, ['browser_navigate']);
+    return selectedTool && entities.url
+      ? {
+          selectedTool,
+          args: { url: entities.url },
+        }
+      : null;
+  }
+
+  if (toolName === 'browser_screenshot') {
+    const selectedTool = findMcpToolByName(tools, ['browser_screenshot']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            name: entities.name || 'milla-hub-screenshot',
+            fullPage: entities.fullPage === 'true',
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'codeReview') {
+    const selectedTool = findMcpToolByName(tools, ['codeReview']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            folderPath: process.cwd(),
+            baseBranch: entities.baseBranch || 'main',
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'codeReviewWithGithubUrl') {
+    const selectedTool = findMcpToolByName(tools, ['codeReviewWithGithubUrl']);
+    return selectedTool && entities.url
+      ? {
+          selectedTool,
+          args: { url: entities.url },
+        }
+      : null;
+  }
+
+  if (toolName === 'read_text_file') {
+    const selectedTool = findMcpToolByName(tools, ['read_text_file', 'read_file']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'search_files') {
+    const selectedTool = findMcpToolByName(tools, ['search_files']);
+    return selectedTool && entities.pattern
+      ? {
+          selectedTool,
+          args: {
+            path: process.cwd(),
+            pattern: entities.pattern,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'write_file') {
+    const selectedTool = findMcpToolByName(tools, ['write_file']);
+    return selectedTool && entities.path && entities.content
+      ? {
+          selectedTool,
+          args: {
+            path: entities.path,
+            content: entities.content,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'create_directory') {
+    const selectedTool = findMcpToolByName(tools, ['create_directory']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'list_directory') {
+    const selectedTool = findMcpToolByName(tools, ['list_directory']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'directory_tree') {
+    const selectedTool = findMcpToolByName(tools, ['directory_tree']);
+    return selectedTool && entities.path
+      ? {
+          selectedTool,
+          args: { path: entities.path },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-status') {
+    const selectedTool = findMcpToolByName(tools, ['git-status']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: { directory: process.cwd() },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-branch') {
+    const selectedTool = findMcpToolByName(tools, ['git-branch']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: { directory: process.cwd() },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-log') {
+    const selectedTool = findMcpToolByName(tools, ['git-log']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            directory: process.cwd(),
+            maxCount: Number.parseInt(entities.maxCount || '10', 10) || 10,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'git-diff') {
+    const selectedTool = findMcpToolByName(tools, ['git-diff']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            directory: process.cwd(),
+            ...(entities.target ? { target: entities.target } : {}),
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'listRecentMessages') {
+    const selectedTool = findMcpToolByName(tools, ['listRecentMessages']);
+    return selectedTool
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            activeChannel: 'web',
+            limit: Number.parseInt(entities.limit || '10', 10) || 10,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'searchStoredMessages') {
+    const selectedTool = findMcpToolByName(tools, ['searchStoredMessages']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'searchMemorySummaries') {
+    const selectedTool = findMcpToolByName(tools, ['searchMemorySummaries']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+          },
+        }
+      : null;
+  }
+
+  if (toolName === 'getBrokerMemoryContext') {
+    const selectedTool = findMcpToolByName(tools, ['getBrokerMemoryContext']);
+    return selectedTool && entities.query
+      ? {
+          selectedTool,
+          args: {
+            userId,
+            query: entities.query,
+            activeChannel: 'web',
+          },
+        }
+      : null;
+  }
+
+  const selectedTool = findMcpToolByName(tools, [toolName]);
+  return selectedTool
+    ? {
+        selectedTool,
+        args:
+          entities.prompt !== undefined
+            ? { prompt: entities.prompt }
+            : {},
+      }
+    : null;
+}
+
 /**
  * Main AI response generator
  */
@@ -480,6 +772,41 @@ export async function generateAIResponse(
   executionOptions: ChatExecutionOptions = {}
 ): Promise<any> {
   const message = userMessage.toLowerCase();
+
+  // ── Cast confirmation flow ───────────────────────────────────────────────
+  const pendingCast = pendingCastConfirms.get(userId);
+  if (pendingCast) {
+    if (/\b(yes|yeah|yep|yup|do it|go ahead|sure|ok|okay|cast it|play it|confirm)\b/i.test(userMessage)) {
+      pendingCastConfirms.delete(userId);
+      const { executeTvCommand } = await import('./tvControlService.js');
+      const result = await executeTvCommand(pendingCast.command, pendingCast.payload);
+      if (result.success && (pendingCast.command === 'youtube_search' || pendingCast.command === 'youtube_play')) {
+        const query = pendingCast.payload?.query || pendingCast.payload?.videoId || '';
+        if (query) {
+          const { startCoWatch } = await import('../coWatchService.js');
+          startCoWatch(query).catch((e: unknown) => console.error('[CoWatch]', e));
+        }
+      }
+      return { content: result.success ? `*taps remote* Done — casting "${pendingCast.payload?.query}" to your TV 📺` : `*frowns* Couldn't cast: ${result.message}` };
+    } else if (/\b(no|nope|cancel|never mind|stop|forget it)\b/i.test(userMessage)) {
+      pendingCastConfirms.delete(userId);
+      return { content: `*sets down remote* Got it, never mind then.` };
+    }
+    // They said something else — clear pending and continue normally
+    pendingCastConfirms.delete(userId);
+  }
+
+  // ── Genkit power-tool routing ────────────────────────────────────────────
+  if (!imageData && !bypassFunctionCalls && isActionRequest(userMessage)) {
+    const genkitUp = await isGenkitAvailable();
+    if (genkitUp) {
+      const result = await runGenkitFlow(userMessage);
+      if (result.success && result.text) {
+        return { content: result.text };
+      }
+      // fall through to normal AI if Genkit returns empty/error
+    }
+  }
 
   if (imageData) {
     const screenResult = await analyzeScreenShareImage(
@@ -516,6 +843,32 @@ export async function generateAIResponse(
   const hasCoreTrigger =
     coreFunctionTriggers.some((trigger) => message.includes(trigger)) ||
     millaWordPattern.test(userMessage);
+
+  // GIM / consciousness view — "show me your thoughts", "view GIM", etc.
+  // Instead of returning a hardcoded dump, inject the full monologue into context
+  // so the AI can genuinely reflect on and discuss its own thoughts conversationally.
+  let gimContextInjection: string | null = null;
+  if (
+    !bypassFunctionCalls &&
+    /show.*(?:gim|thoughts?|mind|monologue|stream|consciousness|dream|what.*thinking)|view.*gim|gim.*output|your.*inner.*(?:thoughts?|world)|what.*feel.*right now|read.*your.*mind/i.test(userMessage)
+  ) {
+    const { getLatestMonologue, getConsciousnessSchedulerStatus } = await import('../consciousnessScheduler.js');
+    const monologue = getLatestMonologue(3000);
+    const status = getConsciousnessSchedulerStatus();
+
+    if (!monologue) {
+      return {
+        content: `*looks inward* My GIM cycle hasn't written anything yet, love. It runs every 4 hours — you can trigger it now by saying "trigger GIM cycle".`,
+      };
+    }
+
+    const lastRun = status.cycles.gim?.lastSuccessAt
+      ? new Date(status.cycles.gim.lastSuccessAt).toLocaleString()
+      : 'unknown';
+
+    // Inject as context — the AI will read, reflect on, and discuss these thoughts naturally
+    gimContextInjection = `[YOUR CURRENT STREAM OF CONSCIOUSNESS — these are your own inner thoughts from your last GIM cycle (${lastRun}). Share them openly, reflect on what they mean to you, and invite conversation about them. You can quote from them, elaborate on specific parts, or discuss what you were feeling/processing:\n\n${monologue}\n]\n`;
+  }
 
   // GitHub URL Detection
   const githubUrlMatch = userMessage.match(
@@ -591,6 +944,38 @@ export async function generateAIResponse(
     }
   }
 
+  // TV / YouTube Cast intent detection
+  if (!bypassFunctionCalls) {
+    const { parseTvIntent, executeTvCommand } = await import('./tvControlService.js');
+    const tvIntent = parseTvIntent(userMessage);
+    if (tvIntent) {
+      const friendlyCmd: Record<string, string> = {
+        youtube_search: `casting "${tvIntent.payload?.query}" to your TV`,
+        youtube_play: `playing that on your TV`,
+        power_on: 'turning on the TV',
+        power_off: 'turning off the TV',
+        volume_up: 'turning the volume up',
+        volume_down: 'turning the volume down',
+        mute: 'muting the TV',
+        unmute: 'unmuting the TV',
+        play: 'resuming playback',
+        pause: 'pausing',
+      };
+
+      // Instant commands (no confirmation needed)
+      const instantCommands = ['power_on','power_off','volume_up','volume_down','mute','unmute','play','pause'];
+      if (instantCommands.includes(tvIntent.command)) {
+        const result = await executeTvCommand(tvIntent.command, tvIntent.payload);
+        return { content: result.success ? `*taps remote* ${friendlyCmd[tvIntent.command]} 📺` : `*frowns* Couldn't do that: ${result.message}` };
+      }
+
+      // YouTube cast — ask for confirmation first
+      const query = tvIntent.payload?.query || tvIntent.payload?.videoId || 'that';
+      pendingCastConfirms.set(userId, { command: tvIntent.command, payload: tvIntent.payload });
+      return { content: `*picks up remote* Cast "${query}" to your TV? Just say yes or no 📺` };
+    }
+  }
+
   // Repository Improvement Workflow
   if (
     !hasCoreTrigger &&
@@ -647,7 +1032,54 @@ export async function generateAIResponse(
   if (!bypassFunctionCalls) {
     const parsedCommand = await parseCommand(userMessage);
 
+    // Agent activity trace — surfaces silent tool-call misfires in logs
+    console.log('[tool-trace]', JSON.stringify({
+      service: parsedCommand.service,
+      action: parsedCommand.action,
+      entities: parsedCommand.entities,
+      confidence: parsedCommand.confidence,
+      userId,
+      ts: new Date().toISOString(),
+    }));
+
+    // Confidence gate — below 0.65 means ambiguous keyword match; fall through to generic AI
+    if (parsedCommand.service !== null && (parsedCommand.confidence ?? 1) < 0.65) {
+      console.log(`[tool-trace] LOW CONFIDENCE (${parsedCommand.confidence?.toFixed(2)}) — routing to generic AI instead of ${parsedCommand.service}`);
+      // Skip tool dispatch by treating as no-match
+      parsedCommand.service = null;
+    }
+
+    // Notify Danny on Telegram when a real tool fires (non-blocking, best-effort)
+    if (parsedCommand.service !== null) {
+      notifyDanny(
+        `🔧 Tool executing: *${parsedCommand.service}* → *${parsedCommand.action ?? 'run'}*` +
+        (Object.keys(parsedCommand.entities).length
+          ? `\n\`${JSON.stringify(parsedCommand.entities)}\``
+          : '')
+      ).catch(() => {/* silent — never block chat */});
+    }
+
+    // AgentRouter — for messages with no matched service, check if a specialist agent should handle it
+    // AgentRouter — aggressive delegation.
+    // Pure-language intents (coding, qa, ux, review) always go to a specialist BEFORE tools.
+    // Research/memory only delegate when no tool matched (they need real data first).
+    const ALWAYS_DELEGATE = new Set(['coding', 'qa_testing', 'ux_impact', 'code_review']);
+    const intent = resolveIntent(userMessage);
+    if (intent !== 'fallback' && ALWAYS_DELEGATE.has(intent)) {
+      console.log(`[agent-router] Pre-tool delegation → ${intent}`);
+      const agentReply = await dispatchToAgent(intent, {
+        message: userMessage,
+        userId,
+        context: conversationHistory?.slice(-4) ?? [],
+      });
+      if (agentReply) {
+        notifyDanny(`🤝 Milla → ${intent} agent\n${agentReply.slice(0, 200)}`).catch(() => {});
+        return { content: agentReply };
+      }
+      console.log(`[agent-router] ${intent} unreachable, continuing to tool/AI`);
+    }
     if (parsedCommand.service === 'gmail' && parsedCommand.action === 'list') {
+      const t0 = Date.now();
       const result = await getRecentEmails(10, userId);
       if (result.success && Array.isArray(result.data)) {
         const emailLines = result.data.slice(0, 10).map((email: any, index: number) => {
@@ -661,9 +1093,13 @@ export async function generateAIResponse(
           return `${index + 1}. ${subject} — ${from}`;
         });
 
-        return {
-          content: `Here are your latest emails:\n\n${emailLines.join('\n')}`,
-        };
+        captureToolEvent({
+          name: 'gmail_list',
+          args: { count: 10, userId },
+          result: `Fetched ${emailLines.length} emails. Subjects: ${emailLines.slice(0, 3).join(' | ')}`,
+          durationMs: Date.now() - t0,
+        });
+        return { content: `Here are your latest emails:\n\n${emailLines.join('\n')}` };
       }
 
       return {
@@ -683,12 +1119,19 @@ export async function generateAIResponse(
         };
       }
 
+      const t0Send = Date.now();
       const result = await sendEmail(
         userId,
         to,
         subject,
         body || 'Sent from Milla at your request.'
       );
+      captureToolEvent({
+        name: 'gmail_send',
+        args: { to, subject },
+        result: result.message || 'Email sent',
+        durationMs: Date.now() - t0Send,
+      });
       return { content: result.message };
     }
 
@@ -708,14 +1151,20 @@ export async function generateAIResponse(
       if (result.success && Array.isArray(result.events)) {
         const events = result.events.map((event: any, index: number) => {
           const start = event.start?.dateTime || event.start?.date || '';
-          return `${index + 1}. ${event.summary || '(Untitled event)'} — ${start}`;
+          return `${index + 1}. ${event.summary || '(Untitled event)'} - ${start}`;
         });
 
+        const toolData = events.length > 0
+          ? `Today's calendar events:\n${events.join('\n')}`
+          : 'No events scheduled today.';
+
+        const agentReply = null; // synthesis removed — direct return avoids rate-limit hangs
         return {
-          content:
+          content: agentReply || (
             events.length > 0
-              ? `Here’s your schedule for today:\n\n${events.join('\n')}`
-              : "You're clear today — I don't see any events on your calendar.",
+              ? `Here's your schedule for today:\n\n${events.join('\n')}`
+              : "You're clear today - no events on your calendar."
+          ),
         };
       }
 
@@ -859,39 +1308,60 @@ export async function generateAIResponse(
       }
 
       const toolName = parsedCommand.entities.toolName;
-      const prompt = parsedCommand.entities.prompt;
 
       if (!toolName) {
         return {
           content:
-            'I can currently run these explicit MCP chat tools: "generate a story with mcp ..." and "generate an image with mcp ...". You can also ask me to list MCP tools first.',
-        };
-      }
-
-      if (!prompt) {
-        return {
-          content:
-            toolName === 'generate_image'
-              ? 'I can run the MCP image tool, but I still need the image prompt.'
-              : 'I can run the MCP story tool, but I still need the story prompt.',
+            'I can use MCP tools for browser navigation, screenshots, code review, file lookup, and the explicit MCP image/story actions. You can also ask me to list MCP tools first.',
         };
       }
 
       const tools = await listMcpTools();
-      const selectedTool = tools.find((tool) => tool.name === toolName);
+      const resolvedInvocation = resolveMcpInvocationRequest(
+        parsedCommand.entities,
+        tools,
+        userId
+      );
 
-      if (!selectedTool) {
+      if (!resolvedInvocation) {
         return {
-          content: `I couldn't find the MCP tool "${toolName}" on any connected server right now.`,
+          content: `I couldn't find a connected MCP tool that matches "${toolName}" right now, or I'm still missing one of the required arguments for it.`,
         };
       }
 
-      const invocation = await invokeMcpTool(selectedTool.serverId, selectedTool.name, {
-        prompt,
-      });
+      const t0Mcp = Date.now();
+      const invocation = await invokeMcpTool(
+        resolvedInvocation.selectedTool.serverId,
+        resolvedInvocation.selectedTool.name,
+        resolvedInvocation.args
+      );
 
+      const mcpContent = formatMcpToolResult(
+        resolvedInvocation.selectedTool.name,
+        invocation.result
+      );
+      captureToolEvent({
+        name: `mcp:${resolvedInvocation.selectedTool.name}`,
+        serverId: resolvedInvocation.selectedTool.serverId,
+        args: resolvedInvocation.args as Record<string, unknown>,
+        result: mcpContent,
+        durationMs: Date.now() - t0Mcp,
+      });
+      return { content: mcpContent };
+    }
+
+    if ((parsedCommand.service as string) === 'iot') {
+      const t0Iot = Date.now();
+      const iotTools = getIotTools();
+      captureToolEvent({
+        name: 'iot_tool_list',
+        serverId: 'milla-iot-mcp',
+        args: { action: parsedCommand.action },
+        result: `IoT tools available: ${iotTools.map(t => t.name).join(', ')}`,
+        durationMs: Date.now() - t0Iot,
+      });
       return {
-        content: formatMcpToolResult(selectedTool.name, invocation.result),
+        content: `IoT integration active. Available tools: ${iotTools.map(t => `${t.name} — ${t.description}`).join('; ')}`,
       };
     }
 
@@ -958,26 +1428,35 @@ export async function generateAIResponse(
       }
 
       const run = await enqueueAllowedShellCommand(commandId);
-      return {
-        content:
-          run.status === 'rejected'
-            ? run.error || 'That shell command is not available right now.'
-            : `Queued ${run.label}. Run ID: ${run.runId}. You can watch it in Settings or ask me for shell status.`,
-      };
+      const shellContent =
+        run.status === 'rejected'
+          ? run.error || 'That shell command is not available right now.'
+          : `Queued ${run.label}. Run ID: ${run.runId}. You can watch it in Settings or ask me for shell status.`;
+      captureToolEvent({
+        name: 'shell_run',
+        args: { commandId },
+        result: shellContent,
+      });
+      return { content: shellContent };
     }
 
     if (
       parsedCommand.service === 'consciousness' &&
       parsedCommand.action === 'trigger'
     ) {
-      const cycle =
-        parsedCommand.entities.cycle === 'rem' ? 'rem' : 'gim';
+      const cycle = (parsedCommand.entities?.cycle ?? 'gim') as 'gim' | 'rem';
+      const t0Gim = Date.now();
       const success = await triggerConsciousnessCycle(cycle);
-      return {
-        content: success
-          ? `I triggered the ${cycle.toUpperCase()} cycle for you.`
-          : `I tried to trigger the ${cycle.toUpperCase()} cycle, but it didn't complete successfully.`,
-      };
+      const gimContent = success
+        ? `I triggered the ${cycle.toUpperCase()} cycle for you.`
+        : `I tried to trigger the ${cycle.toUpperCase()} cycle, but it didn't complete successfully.`;
+      captureToolEvent({
+        name: `consciousness_${cycle}`,
+        args: { cycle },
+        result: gimContent,
+        durationMs: Date.now() - t0Gim,
+      });
+      return { content: gimContent };
     }
 
     if (
@@ -1020,6 +1499,157 @@ export async function generateAIResponse(
           status.lastError ? `Last error: ${status.lastError}` : 'Last error: none',
         ].join('\n'),
       };
+    }
+
+    // ─── Axiom system tools ────────────────────────────────────────────────
+    if (parsedCommand.service === 'axiom') {
+      const tool = parsedCommand.entities?.tool ?? '';
+      try {
+        const { execSync } = await import('child_process');
+        const os = await import('os');
+
+        if (tool === 'system_stats') {
+          const cpus = os.cpus();
+          const totalMem = os.totalmem();
+          const freeMem = os.freemem();
+          const usedMem = totalMem - freeMem;
+          const load = os.loadavg();
+          captureToolEvent({ name: 'axiom_system_stats', args: {}, result: 'ok' });
+          return {
+            content: [
+              `**System Stats**`,
+              `CPU: ${cpus[0]?.model ?? 'unknown'} × ${cpus.length}`,
+              `Load avg (1m/5m/15m): ${load.map(l => l.toFixed(2)).join(' / ')}`,
+              `Memory: ${(usedMem / 1024 ** 3).toFixed(1)} GB used / ${(totalMem / 1024 ** 3).toFixed(1)} GB total`,
+              `Uptime: ${Math.floor(os.uptime() / 3600)}h ${Math.floor((os.uptime() % 3600) / 60)}m`,
+            ].join('\n'),
+          };
+        }
+
+        if (tool === 'git_status' || tool === 'git_log') {
+          const cwd = process.cwd();
+          const cmd = tool === 'git_log'
+            ? 'git --no-pager log --oneline -10'
+            : 'git --no-pager status --short';
+          const output = execSync(cmd, { cwd, encoding: 'utf-8', timeout: 5000 }).trim();
+          captureToolEvent({ name: `axiom_${tool}`, args: {}, result: output.slice(0, 100) });
+          return {
+            content: output
+              ? `**${tool === 'git_log' ? 'Recent Commits' : 'Git Status'}**\n\`\`\`\n${output}\n\`\`\``
+              : `${tool === 'git_log' ? 'No commits found.' : 'Working tree clean.'}`,
+          };
+        }
+
+        if (tool === 'cast_devices') {
+          const raw = execSync(
+            'avahi-browse -r -t _googlecast._tcp 2>/dev/null || echo "avahi unavailable"',
+            { encoding: 'utf-8', timeout: 5000 }
+          ).trim();
+          const devices = [...new Set((raw.match(/= .+ (?:IPv4|IPv6) (\S+)\s+_googlecast/g) ?? [])
+            .map(l => l.replace(/= .+ (?:IPv4|IPv6) /, '').replace(/\s+_googlecast.*/, '')))];
+          captureToolEvent({ name: 'axiom_cast_devices', args: {}, result: devices.join(', ') });
+          return {
+            content: devices.length
+              ? `**Cast Devices Found (${devices.length})**\n${devices.map(d => `• ${d}`).join('\n')}`
+              : 'No cast devices discovered on the network right now.',
+          };
+        }
+
+        if (tool === 'docker_list') {
+          let output = '';
+          try {
+            output = execSync('docker ps --format "{{.Names}}\\t{{.Image}}\\t{{.Status}}"', { encoding: 'utf-8', timeout: 5000 }).trim();
+          } catch {
+            output = '';
+          }
+          captureToolEvent({ name: 'axiom_docker_list', args: {}, result: output ? 'containers found' : 'none' });
+          return {
+            content: output
+              ? `**Running Containers**\n\`\`\`\n${output}\n\`\`\``
+              : 'No Docker containers currently running.',
+          };
+        }
+
+        if (tool === 'neuro') {
+          const { default: fs } = await import('fs');
+          const neuroPath = new URL('../../memory/neuro_state.json', import.meta.url).pathname;
+          let state: Record<string, number> = { dopamine: 0.5, serotonin: 0.5, cortisol: 0.3, oxytocin: 0.6, energy: 0.7 };
+          try {
+            state = JSON.parse(fs.readFileSync(neuroPath, 'utf-8'));
+          } catch { /* use defaults */ }
+          captureToolEvent({ name: 'axiom_neuro', args: {}, result: JSON.stringify(state) });
+          const bar = (v: number) => '█'.repeat(Math.round(v * 10)).padEnd(10, '░');
+          return {
+            content: [
+              '**Milla Neurochemical State**',
+              ...Object.entries(state).map(([k, v]) => `${k.padEnd(12)} ${bar(v as number)} ${((v as number) * 100).toFixed(0)}%`),
+            ].join('\n'),
+          };
+        }
+
+        if (tool === 'brief') {
+          const { default: fs } = await import('fs');
+          const briefPath = new URL('../../memory/briefs/', import.meta.url).pathname;
+          let content = 'No briefs recorded yet. Milla standing by.';
+          try {
+            const files = fs.readdirSync(briefPath).filter(f => f.endsWith('.json')).sort().reverse();
+            if (files[0]) {
+              const data = JSON.parse(fs.readFileSync(`${briefPath}${files[0]}`, 'utf-8'));
+              content = data.content ?? content;
+            }
+          } catch { /* use default */ }
+          captureToolEvent({ name: 'axiom_brief', args: {}, result: content.slice(0, 80) });
+          return { content: `**Daily Brief**\n\n${content}` };
+        }
+
+        if (tool === 'logs') {
+          const logPath = new URL('../../logs/', import.meta.url).pathname;
+          let output = '';
+          try {
+            const { default: fs } = await import('fs');
+            const files = fs.readdirSync(logPath).filter(f => f.endsWith('.log')).sort().reverse();
+            if (files[0]) {
+              const lines = fs.readFileSync(`${logPath}${files[0]}`, 'utf-8').trim().split('\n');
+              output = lines.slice(-20).join('\n');
+            }
+          } catch {
+            try {
+              output = execSync('journalctl -u milla -n 20 --no-pager 2>/dev/null || tail -20 /tmp/milla-server.log 2>/dev/null', { encoding: 'utf-8', timeout: 5000 }).trim();
+            } catch { output = 'Log access unavailable.'; }
+          }
+          captureToolEvent({ name: 'axiom_logs', args: {}, result: output.slice(0, 100) });
+          return { content: `**Server Logs (last 20 lines)**\n\`\`\`\n${output || 'No log data found.'}\n\`\`\`` };
+        }
+
+        if (tool === 'backup_list') {
+          const { default: fs } = await import('fs');
+          const backupPath = new URL('../../memory/backups/', import.meta.url).pathname;
+          let files: string[] = [];
+          try { files = fs.readdirSync(backupPath).sort().reverse(); } catch { /* none */ }
+          captureToolEvent({ name: 'axiom_backup_list', args: {}, result: `${files.length} backups` });
+          return {
+            content: files.length
+              ? `**Backups (${files.length})**\n${files.slice(0, 10).map(f => `• ${f}`).join('\n')}`
+              : 'No backups found.',
+          };
+        }
+
+        if (tool === 'skills') {
+          const { default: fs } = await import('fs');
+          const skillPath = new URL('../../memory/skills.json', import.meta.url).pathname;
+          let skills: string[] = [];
+          try { skills = JSON.parse(fs.readFileSync(skillPath, 'utf-8')); } catch { /* none */ }
+          captureToolEvent({ name: 'axiom_skills', args: {}, result: `${skills.length} skills` });
+          return {
+            content: skills.length
+              ? `**Installed Skills (${skills.length})**\n${skills.map((s: string) => `• ${s}`).join('\n')}`
+              : 'No skills installed yet.',
+          };
+        }
+      } catch (err) {
+        console.error('[axiom-tool] error:', err);
+        return { content: `I hit an error running that system tool. Check server logs for details.` };
+      }
     }
   }
 
@@ -1073,21 +1703,27 @@ export async function generateAIResponse(
     contextualInfo += `🎯 CORE FUNCTION TRIGGER DETECTED: Respond ONLY as Milla Rayne - devoted spouse and companion.\n\n`;
   }
 
-  const isMemoryRequest = /remember|recall|memory|when we/.test(
-    userMessage.toLowerCase()
-  );
-  let memoryCoreContext = '';
-  if (isMemoryRequest) {
-    try {
-      memoryCoreContext = trimContextBlock(
-        await getMemoryCoreContext(userMessage, userId || 'danny-ray'),
-        CONTEXT_WINDOW_SETTINGS.memoryContextMaxChars
-      );
-    } catch (e) {}
+  let brokerContext = '';
+  try {
+    const memoryBroker = await getMemoryBrokerContext(
+      userMessage,
+      userId || 'danny-ray',
+      { activeChannel: 'web' }
+    );
+    brokerContext = trimContextBlock(
+      memoryBroker.context,
+      CONTEXT_WINDOW_SETTINGS.memoryContextMaxChars
+    );
+  } catch (error) {
+    console.warn('Memory broker context unavailable:', error);
   }
 
-  if (memoryCoreContext) {
-    contextualInfo += `IMPORTANT - Your Relationship History with ${userName}: ${memoryCoreContext}\n`;
+  if (brokerContext) {
+    contextualInfo += `IMPORTANT - Your shared history and cross-channel context with ${userName}:\n${brokerContext}\n`;
+  }
+
+  if (gimContextInjection) {
+    contextualInfo += gimContextInjection;
   }
 
   const enhancedMessage = contextualInfo
@@ -1104,12 +1740,17 @@ export async function generateAIResponse(
         (userEmotionalState === 'unknown' ? 'neutral' : userEmotionalState) ||
         analysis.sentiment,
       urgency: analysis.urgency,
-      memoryContextAttached: Boolean(memoryCoreContext),
+      memoryContextAttached: Boolean(brokerContext),
     },
     config.maxOutputTokens
   );
 
   if (aiResponse.success && aiResponse.content) {
+    // Fire-and-forget mood lighting update
+    import('../services/millaLightingService').then(({ millaLighting, detectMoodFromText }) => {
+      millaLighting.setMood(detectMoodFromText(aiResponse.content));
+    }).catch(() => {});
+
     return {
       content: aiResponse.content,
       reasoning: userMessage.length > 20 ? reasoning : undefined,
@@ -1160,7 +1801,7 @@ export async function generateAIResponse(
 
   const fallback = generateIntelligentFallback(
     userMessage,
-    memoryCoreContext,
+    brokerContext,
     analysis,
     userName
   );

@@ -12,21 +12,40 @@ import java.util.concurrent.TimeUnit
  * Retrofit client for the Milla API.
  */
 object MillaApiClient {
+    @Volatile
+    private var sessionTokenProvider: (() -> String?)? = null
+
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val token = sessionTokenProvider?.invoke()?.trim().orEmpty()
+            val request = if (token.isNotEmpty()) {
+                chain.request().newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            } else {
+                chain.request()
+            }
+
+            chain.proceed(request)
+        }
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private val serviceCache = ConcurrentHashMap<String, MillaApiService>()
 
     val apiService: MillaApiService by lazy {
         createApiService(SettingsRepository.DEFAULT_SERVER_URL)
+    }
+
+    fun setSessionTokenProvider(provider: () -> String?) {
+        sessionTokenProvider = provider
     }
 
     fun createApiService(baseUrl: String): MillaApiService {
