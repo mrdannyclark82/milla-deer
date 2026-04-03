@@ -15,13 +15,7 @@ const REPO_ROOT = '/home/nexus/ogdray/Milla-Deer';
 const MEMORY_DIR = path.join(REPO_ROOT, 'memory');
 const LOGS_DIR = path.join(REPO_ROOT, 'Milla-Rayne', 'logs');
 const BACKUPS_DIR = '/home/nexus/backups';
-const NEURO_STATE_PATH = path.join(
-  REPO_ROOT,
-  'ReplycA',
-  'core_os',
-  'memory',
-  'neuro_state.json'
-);
+const NEURO_STATE_PATH = '/home/nexus/ogdray/neuro_state.json';
 
 const COMMAND_ALLOWLIST = new Set([
   'ls', 'pwd', 'df', 'free', 'uptime', 'whoami', 'ps', 'cat', 'echo',

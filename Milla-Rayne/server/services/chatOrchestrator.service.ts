@@ -1572,7 +1572,7 @@ export async function generateAIResponse(
 
         if (tool === 'neuro') {
           const { default: fs } = await import('fs');
-          const neuroPath = new URL('../../memory/neuro_state.json', import.meta.url).pathname;
+          const neuroPath = '/home/nexus/ogdray/neuro_state.json';
           let state: Record<string, number> = { dopamine: 0.5, serotonin: 0.5, cortisol: 0.3, oxytocin: 0.6, energy: 0.7 };
           try {
             state = JSON.parse(fs.readFileSync(neuroPath, 'utf-8'));

@@ -439,10 +439,7 @@ export async function setupTerminalWebSocket(httpServer: Server): Promise<WebSoc
   const { fileURLToPath } = await import('url');
 
   const neuroWss = new WebSocketServer({ noServer: true });
-  const NEURO_PATH = resolve(
-    fileURLToPath(import.meta.url),
-    '../../memory/neuro_state.json'
-  );
+  const NEURO_PATH = '/home/nexus/ogdray/neuro_state.json';
 
   const broadcastNeuro = () => {
     if (neuroWss.clients.size === 0) return;
