@@ -294,18 +294,24 @@ function resolveRoomIP(text?: string): string {
 
 const CHROMECAST_IP = process.env.CHROMECAST_IP || BEDROOM_IP;
 
+const CATT_BIN = [
+  '/home/nexus/.local/bin/catt',
+  '/usr/local/bin/catt',
+  '/usr/bin/catt',
+].find(p => { try { require('fs').accessSync(p); return true; } catch { return false; } }) ?? 'catt';
+
 async function cattCast(url: string, deviceIp?: string): Promise<TvCommandResult> {
   const ip = deviceIp || BEDROOM_IP;
   try {
     const { stdout, stderr } = await execAsync(
-      `catt -d ${ip} cast -y "-f bestvideo[height<=1080]+bestaudio/best[height<=1080]" "${url}"`,
+      `${CATT_BIN} -d ${ip} cast -y "-f bestvideo[height<=1080]+bestaudio/best[height<=1080]" "${url}"`,
       { timeout: 30000 }
     );
     return { success: true, message: (stdout + stderr).trim() || 'Casting' };
   } catch (err: any) {
     // fallback: no quality arg
     try {
-      const { stdout, stderr } = await execAsync(`catt -d ${ip} cast "${url}"`, { timeout: 30000 });
+      const { stdout, stderr } = await execAsync(`${CATT_BIN} -d ${ip} cast "${url}"`, { timeout: 30000 });
       return { success: true, message: (stdout + stderr).trim() || 'Casting' };
     } catch (e2: any) {
       return { success: false, message: e2?.stderr?.trim() || e2?.message || 'catt error' };
