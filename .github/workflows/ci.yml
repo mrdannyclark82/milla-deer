@@ -43,7 +43,7 @@ jobs:
     needs: lint
     env:
       MEMORY_KEY: ${{ secrets.MEMORY_KEY || 'ci-test-key-32-chars-padded-here' }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-placeholder' }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY || 'ci-placeholder' }}
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
