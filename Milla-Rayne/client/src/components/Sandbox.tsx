@@ -29,7 +29,11 @@ import {
   Smartphone,
   Network,
   Square,
+  Monitor,
+  MousePointerClick,
+  Layers,
 } from 'lucide-react';
+import { SandboxChatPanel } from './SandboxChatPanel';
 
 interface SandboxProps {
   initialCode?: string;
@@ -334,6 +338,19 @@ export const Sandbox: React.FC<SandboxProps> = ({
   const [isWorkspaceActionSubmitting, setIsWorkspaceActionSubmitting] = useState(false);
   const [showMcpWorkspace, setShowMcpWorkspace] = useState(false);
   const [isMcpRegistryCollapsed, setIsMcpRegistryCollapsed] = useState(true);
+
+  // Inline Milla chat panel
+  const [showChatPanel, setShowChatPanel] = useState(false);
+
+  // Server-side execution (Python, Node.js, bash)
+  const [serverExecOutput, setServerExecOutput] = useState('');
+  const [serverExecError, setServerExecError] = useState<string | null>(null);
+  const [isServerExecRunning, setIsServerExecRunning] = useState(false);
+
+  // Computer use — screenshot result
+  const [computerUseScreenshot, setComputerUseScreenshot] = useState<string | null>(null);
+  const [computerUseDescription, setComputerUseDescription] = useState('');
+  const [isComputerUseRunning, setIsComputerUseRunning] = useState(false);
 
   // GitHub repo browser
   const [repoUrl, setRepoUrl] = useState('');
@@ -918,6 +935,8 @@ export const Sandbox: React.FC<SandboxProps> = ({
     const extension = newFileName.split('.').pop()?.toLowerCase() || 'js';
     const languageMap: Record<string, string> = {
       js: 'javascript',
+      mjs: 'javascript',
+      cjs: 'javascript',
       ts: 'typescript',
       jsx: 'javascript',
       tsx: 'typescript',
@@ -1216,12 +1235,85 @@ export const Sandbox: React.FC<SandboxProps> = ({
     );
   };
 
-  // Discuss code with Milla
+  // Discuss code with Milla — open inline chat panel (preferred) or fall back to parent callback
   const handleDiscuss = () => {
-    if (onDiscuss && activeFile) {
+    setShowChatPanel(true);
+    if (onDiscuss && activeFile && !showChatPanel) {
       onDiscuss(activeFile.content);
     }
   };
+
+  /** Run current file server-side (Python, Node.js, or bash) */
+  const runServerSide = useCallback(async () => {
+    if (!activeFile || isServerExecRunning) return;
+    const { language, content } = activeFile;
+    const langMap: Record<string, string> = {
+      python: 'python',
+      javascript: 'node',
+      typescript: 'node',
+      bash: 'bash',
+      sh: 'bash',
+    };
+    const lang = langMap[language] ?? 'node';
+
+    setIsServerExecRunning(true);
+    setServerExecError(null);
+    setServerExecOutput('');
+    setConsoleTab('terminal');
+    setShowConsole(true);
+
+    try {
+      const res = await fetchAdminJson<{
+        success: boolean;
+        stdout: string;
+        stderr: string;
+        exitCode: number | null;
+        timedOut?: boolean;
+        error?: string;
+      }>('/api/sandbox/execute', {
+        method: 'POST',
+        body: JSON.stringify({ code: content, lang }),
+      });
+
+      const combined = [res.stdout, res.stderr].filter(Boolean).join('\n');
+      setServerExecOutput(combined || `Exit code: ${res.exitCode ?? 'n/a'}`);
+      if (!res.success) {
+        setServerExecError(res.timedOut ? 'Execution timed out' : res.error ?? `Exit ${res.exitCode}`);
+      }
+    } catch (err) {
+      setServerExecError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsServerExecRunning(false);
+    }
+  }, [activeFile, isServerExecRunning, fetchAdminJson]);
+
+  /** Capture + analyze the current browser page via the computer use service */
+  const runComputerUseAnalyze = useCallback(async () => {
+    if (isComputerUseRunning) return;
+    setIsComputerUseRunning(true);
+    setComputerUseScreenshot(null);
+    setComputerUseDescription('');
+    setConsoleTab('mcp');
+    setShowConsole(true);
+
+    try {
+      const res = await fetchAdminJson<{
+        success: boolean;
+        description?: string;
+        screenshot?: string;
+        error?: string;
+      }>('/api/computer-use/analyze', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      if (res.screenshot) setComputerUseScreenshot(res.screenshot);
+      setComputerUseDescription(res.description ?? res.error ?? 'No result');
+    } catch (err) {
+      setComputerUseDescription(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsComputerUseRunning(false);
+    }
+  }, [isComputerUseRunning, fetchAdminJson]);
 
   if (!isOpen) return null;
 
@@ -1678,9 +1770,20 @@ export const Sandbox: React.FC<SandboxProps> = ({
             size="icon"
             onClick={runCode}
             className="text-green-400 hover:bg-green-500/20"
-            title="Run code"
+            title="Run code (browser preview)"
           >
             <Play className="w-5 h-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => void runServerSide()}
+            disabled={isServerExecRunning}
+            className={`${isServerExecRunning ? 'text-yellow-400' : 'text-cyan-400'} hover:bg-cyan-500/20`}
+            title="Run server-side (Python / Node.js / bash)"
+          >
+            <Layers className="w-5 h-5" />
           </Button>
 
           <Button
@@ -1696,9 +1799,20 @@ export const Sandbox: React.FC<SandboxProps> = ({
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => void runComputerUseAnalyze()}
+            disabled={isComputerUseRunning}
+            className={`${isComputerUseRunning ? 'text-yellow-400' : 'text-orange-400'} hover:bg-orange-500/20`}
+            title="Computer Use — capture + analyze screen"
+          >
+            <Monitor className="w-5 h-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleDiscuss}
-            className="text-purple-400 hover:bg-purple-500/20"
-            title="Discuss with Milla"
+            className={`${showChatPanel ? 'bg-purple-500/20 text-purple-400' : 'text-purple-400'} hover:bg-purple-500/20`}
+            title="Chat with Milla"
           >
             <MessageSquare className="w-5 h-5" />
           </Button>
@@ -2284,6 +2398,22 @@ export const Sandbox: React.FC<SandboxProps> = ({
                       {shellError}
                     </div>
                   ) : null}
+                  {/* Server-side execution output */}
+                  {(serverExecOutput || serverExecError || isServerExecRunning) && (
+                    <div className="rounded-md border border-cyan-400/20 bg-cyan-900/20 p-2">
+                      <div className="mb-1 flex items-center gap-2 text-[11px] text-cyan-200 font-semibold">
+                        <Layers className="h-3 w-3" />
+                        Server-side execution
+                        {isServerExecRunning && <span className="text-yellow-300 animate-pulse">running…</span>}
+                        {serverExecError && <span className="text-red-300">{serverExecError}</span>}
+                      </div>
+                      {serverExecOutput && (
+                        <pre className="whitespace-pre-wrap break-words font-mono text-xs text-cyan-50">
+                          {serverExecOutput}
+                        </pre>
+                      )}
+                    </div>
+                  )}
                   <ScrollArea className="flex-1 rounded-md border border-white/10 bg-[#050816] p-2">
                     <pre className="whitespace-pre-wrap break-words font-mono text-xs text-[#b8f8ff]">
                       {latestTerminalOutput || 'Run a shell, ADB, or network command to watch output here.'}
@@ -2309,6 +2439,22 @@ export const Sandbox: React.FC<SandboxProps> = ({
       >
         <div className="mb-1 mr-1 h-3 w-3 rounded-sm border-b-2 border-r-2 border-current" />
       </div>
+
+      {/* Inline Milla Chat Panel */}
+      <SandboxChatPanel
+        isOpen={showChatPanel}
+        onClose={() => setShowChatPanel(false)}
+        activeFile={activeFile ?? null}
+        onApplyCode={(code) => {
+          if (activeFile) {
+            setFiles((prev) =>
+              prev.map((f, i) =>
+                i === activeFileIndex ? { ...f, content: code } : f
+              )
+            );
+          }
+        }}
+      />
     </div>
   );
 };
