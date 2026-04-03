@@ -58,11 +58,11 @@ export async function initApp() {
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://static.cloudflareinsights.com'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             imgSrc: ["'self'", 'data:', 'https:'],
             connectSrc: ["'self'", 'https:', 'wss:'],
-            fontSrc: ["'self'", 'data:'],
+            fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: [
@@ -378,11 +378,16 @@ export async function initApp() {
     setupWebSocketServer,
     setupSensorDataWebSocket,
     setupVoiceWebSocket,
+    setupTerminalWebSocket,
   } = await import('./websocketService');
   const mainWss = await setupWebSocketServer(httpServer);
   (httpServer as any).__mainWss = mainWss;
   await setupSensorDataWebSocket(httpServer);
   console.log('✅ Mobile sensor data WebSocket initialized');
+
+  // Setup terminal + neuro WebSockets (must be before voice — sets __terminalWss / __neuroWss)
+  await setupTerminalWebSocket(httpServer);
+  console.log('✅ Terminal/Neuro WebSockets initialized on /ws/terminal /ws/neuro');
 
   // Setup always-on voice WebSocket + shared upgrade dispatcher
   setupVoiceWebSocket(httpServer);

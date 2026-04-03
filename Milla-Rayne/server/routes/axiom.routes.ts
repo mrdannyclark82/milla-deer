@@ -220,22 +220,86 @@ export function registerAxiomRoutes(app: Express): void {
   // ── SYSTEM ────────────────────────────────────────────────────────────────
 
   app.get('/api/system/stats', requireAuth, asyncHandler(async (_req, res) => {
-    const mem = process.memoryUsage();
+    const cpuList = os.cpus();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const loadavg = os.loadavg();
+    // CPU percent: use 1-min load avg / cpu count, capped at 100
+    const cpuPercent = Math.min(100, (loadavg[0] / cpuList.length) * 100);
+
+    // Disk usage via df
+    let diskTotalGb = 0, diskUsedGb = 0, diskPercent = 0;
+    const df = shellExec("df -BG / | tail -1 | awk '{print $2,$3,$5}'", undefined, 5000);
+    if (df.ok) {
+      const parts = df.stdout.trim().split(/\s+/);
+      diskTotalGb = parseInt(parts[0] ?? '0', 10);
+      diskUsedGb  = parseInt(parts[1] ?? '0', 10);
+      diskPercent = parseInt((parts[2] ?? '0').replace('%',''), 10);
+    }
+
+    // Network counters from /proc/net/dev
+    let netSentMb = 0, netRecvMb = 0;
+    const netR = shellExec("awk '/eth0|ens|enp|wlan/{print $2,$10}' /proc/net/dev | head -1", undefined, 3000);
+    if (netR.ok && netR.stdout.trim()) {
+      const np = netR.stdout.trim().split(/\s+/);
+      netRecvMb = Math.round(parseInt(np[0] ?? '0', 10) / (1024 * 1024));
+      netSentMb = Math.round(parseInt(np[1] ?? '0', 10) / (1024 * 1024));
+    }
+
+    // Temperatures
+    const temps: Record<string, number> = {};
+    const tempR = shellExec(
+      "paste <(cat /sys/class/thermal/thermal_zone*/type 2>/dev/null) <(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null) | awk '{print $1, $2/1000}'",
+      undefined, 3000
+    );
+    if (tempR.ok) {
+      tempR.stdout.trim().split('\n').filter(Boolean).forEach(line => {
+        const [k, v] = line.split(' ');
+        if (k && v) temps[k] = parseFloat(v);
+      });
+    }
+
+    // Top processes
+    const psR = shellExec(
+      "ps aux --sort=-%cpu | awk 'NR>1&&NR<=7{print $2,$3,$4,$11}' | head -6",
+      undefined, 5000
+    );
+    const topProcs: Array<{pid:number;name:string;cpu_percent:number;memory_percent:number}> = [];
+    if (psR.ok) {
+      psR.stdout.trim().split('\n').filter(Boolean).forEach(line => {
+        const p = line.split(/\s+/);
+        topProcs.push({
+          pid: parseInt(p[0] ?? '0', 10),
+          cpu_percent: parseFloat(p[1] ?? '0'),
+          memory_percent: parseFloat(p[2] ?? '0'),
+          name: (p[3] ?? 'unknown').split('/').pop() ?? 'unknown',
+        });
+      });
+    }
+
     return res.json({
       ok: true,
-      cpus: os.cpus(),
-      freemem: os.freemem(),
-      totalmem: os.totalmem(),
-      uptime: os.uptime(),
-      loadavg: os.loadavg(),
+      cpu_percent: Math.round(cpuPercent * 10) / 10,
+      cpu_count: cpuList.length,
+      mem_total_gb: Math.round(totalMem / 1e9 * 100) / 100,
+      mem_used_gb:  Math.round(usedMem  / 1e9 * 100) / 100,
+      mem_percent:  Math.round((usedMem / totalMem) * 100),
+      disk_total_gb: diskTotalGb,
+      disk_used_gb:  diskUsedGb,
+      disk_percent:  diskPercent,
+      net_sent_mb: netSentMb,
+      net_recv_mb: netRecvMb,
+      uptime_secs: Math.round(os.uptime()),
+      temperatures: temps,
+      top_procs: topProcs,
+      // legacy fields kept for compatibility
+      cpus: cpuList,
+      freemem: freeMem,
+      totalmem: totalMem,
+      loadavg,
       platform: os.platform(),
       hostname: os.hostname(),
-      process: {
-        rss: mem.rss,
-        heapUsed: mem.heapUsed,
-        heapTotal: mem.heapTotal,
-        external: mem.external,
-      },
     });
   }));
 
@@ -413,25 +477,46 @@ except Exception as e:
   // ── AGENT FEED ────────────────────────────────────────────────────────────
 
   app.get('/api/agent/feed', requireAuth, asyncHandler(async (_req, res) => {
+    const feedItems: Array<{source:string;content:string}> = [];
+
+    // Read agent activity log
     const logPath = path.join(LOGS_DIR, 'agent-activity.log');
     if (fs.existsSync(logPath)) {
       const result = shellExec(`tail -n 50 "${logPath}"`);
-      if (result.ok) {
-        return res.json({
-          ok: true,
-          source: 'log',
-          lines: result.stdout.split('\n').filter(Boolean),
-        });
+      if (result.ok && result.stdout.trim()) {
+        feedItems.push({ source: 'cron:agent-activity', content: result.stdout.trim() });
       }
     }
-    return res.json({
-      ok: true,
-      source: 'stub',
-      lines: [
-        `[${new Date().toISOString()}] Milla-Rayne agent system active`,
-        `[${new Date().toISOString()}] No activity log found — awaiting first agent run`,
-      ],
-    });
+
+    // Read main server log for recent errors
+    const serverLogPath = '/tmp/milla-server.log';
+    if (fs.existsSync(serverLogPath)) {
+      const errR = shellExec(`tail -20 "${serverLogPath}" | grep -i "error\\|warn" | tail -5`);
+      if (errR.ok && errR.stdout.trim()) {
+        feedItems.push({ source: 'Last Error', content: errR.stdout.trim() });
+      }
+    }
+
+    // Stream context
+    const streamPath = path.join(LOGS_DIR, 'stream.log');
+    if (fs.existsSync(streamPath)) {
+      const sR = shellExec(`tail -n 10 "${streamPath}"`);
+      if (sR.ok && sR.stdout.trim()) {
+        feedItems.push({ source: 'Stream', content: sR.stdout.trim() });
+      }
+    }
+
+    if (feedItems.length === 0) {
+      feedItems.push({
+        source: 'Milla-Rayne',
+        content: [
+          `[${new Date().toISOString()}] Agent system active`,
+          `[${new Date().toISOString()}] No activity logs found — awaiting first agent run`,
+        ].join('\n'),
+      });
+    }
+
+    return res.json({ ok: true, feed: feedItems });
   }));
 
   // ── NEURO ─────────────────────────────────────────────────────────────────

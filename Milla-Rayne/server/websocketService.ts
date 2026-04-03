@@ -346,6 +346,15 @@ export function setupVoiceWebSocket(httpServer: Server): WebSocketServer {
       } else {
         (socket as any).destroy();
       }
+    } else if (path === '/ws/neuro') {
+      const neuroWss: WebSocketServer | undefined = (httpServer as any).__neuroWss;
+      if (neuroWss) {
+        neuroWss.handleUpgrade(req, socket as any, head, (ws) => {
+          neuroWss.emit('connection', ws, req);
+        });
+      } else {
+        (socket as any).destroy();
+      }
     } else if (path === '/ws/sensor') {
       sensorWss.handleUpgrade(req, socket as any, head, (ws) => {
         sensorWss.emit('connection', ws, req);
@@ -383,7 +392,7 @@ export function sendVoiceReaction(text: string): void {
  * Must be called BEFORE setupVoiceWebSocket so __terminalWss is available
  * to the shared upgrade handler.
  */
-export function setupTerminalWebSocket(httpServer: Server): WebSocketServer {
+export async function setupTerminalWebSocket(httpServer: Server): Promise<WebSocketServer> {
   const terminalWss = new WebSocketServer({ noServer: true });
 
   terminalWss.on('connection', (ws: WebSocket) => {
@@ -420,7 +429,46 @@ export function setupTerminalWebSocket(httpServer: Server): WebSocketServer {
     });
   });
 
+
   (httpServer as any).__terminalWss = terminalWss;
   console.log('[Terminal] WebSocket server ready on /ws/terminal');
+
+  // ── /ws/neuro — live neuro state push ─────────────────────────────────────
+  const { readFileSync, existsSync } = await import('fs');
+  const { resolve } = await import('path');
+  const { fileURLToPath } = await import('url');
+
+  const neuroWss = new WebSocketServer({ noServer: true });
+  const NEURO_PATH = resolve(
+    fileURLToPath(import.meta.url),
+    '../../memory/neuro_state.json'
+  );
+
+  const broadcastNeuro = () => {
+    if (neuroWss.clients.size === 0) return;
+    try {
+      const raw = existsSync(NEURO_PATH)
+        ? readFileSync(NEURO_PATH, 'utf8')
+        : JSON.stringify({ dopamine: 0.5, serotonin: 0.5, cortisol: 0.3, oxytocin: 0.6, atp_energy: 70 });
+      const payload = JSON.stringify(JSON.parse(raw));
+      for (const client of neuroWss.clients) {
+        if (client.readyState === WebSocket.OPEN) client.send(payload);
+      }
+    } catch { /* ignore parse errors */ }
+  };
+
+  setInterval(broadcastNeuro, 5000);
+
+  neuroWss.on('connection', (ws: WebSocket) => {
+    console.log('[Neuro] Client connected');
+    // push current state immediately on connect
+    broadcastNeuro();
+    ws.on('close', () => console.log('[Neuro] Client disconnected'));
+    ws.on('error', (err) => console.error('[Neuro] WS error:', err));
+  });
+
+  (httpServer as any).__neuroWss = neuroWss;
+  console.log('[Neuro] WebSocket server ready on /ws/neuro');
+
   return terminalWss;
 }
