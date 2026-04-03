@@ -4,7 +4,7 @@
  * POST /api/sandbox/execute   – run a snippet in Python, Node.js, or bash
  * POST /api/sandbox/execute/python – run Python code
  * POST /api/sandbox/execute/node   – run Node.js code
- * POST /api/sandbox/execute/bash   – run a bash command/script
+ * POST /api/sandbox/execute/bash   – run a bash script
  *
  * POST /api/computer-use/screenshot   – take a browser screenshot
  * POST /api/computer-use/navigate     – navigate browser to URL
@@ -17,6 +17,9 @@
  * POST /api/computer-use/analyze      – screenshot + AI analysis
  * GET  /api/computer-use/page-info    – current page URL + title
  * POST /api/computer-use/close        – close the managed browser
+ *
+ * All code-execution and computer-use routes require an authenticated session
+ * (requireAuth middleware) to prevent unauthorized server-side code execution.
  */
 
 import { type Express } from 'express';
@@ -26,6 +29,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { asyncHandler } from '../utils/routeHelpers';
+import { requireAuth } from '../middleware/auth.middleware';
 import {
   screenshot,
   navigate,
@@ -42,8 +46,19 @@ import {
 
 // ─── Code Execution ──────────────────────────────────────────────────────────
 
-const EXEC_TIMEOUT_MS = 30_000;
-const MAX_OUTPUT_BYTES = 128 * 1024; // 128 KB
+/**
+ * EXEC_TIMEOUT_MS: 30 seconds — provides a reasonable window for most code snippets
+ * while preventing runaway processes from holding server resources indefinitely.
+ * Override via SANDBOX_EXEC_TIMEOUT_MS environment variable.
+ */
+const EXEC_TIMEOUT_MS = Number(process.env.SANDBOX_EXEC_TIMEOUT_MS ?? 30_000);
+
+/**
+ * MAX_OUTPUT_BYTES: 128 KB — sufficient for typical console output while preventing
+ * memory exhaustion from programs that produce extremely large output streams.
+ * Override via SANDBOX_MAX_OUTPUT_BYTES environment variable.
+ */
+const MAX_OUTPUT_BYTES = Number(process.env.SANDBOX_MAX_OUTPUT_BYTES ?? 128 * 1024);
 
 interface ExecResult {
   success: boolean;
@@ -165,6 +180,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Generic execute endpoint — detects language from `lang` field */
   app.post(
     '/api/sandbox/execute',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const body = req.body as { code?: unknown; lang?: unknown };
       if (typeof body.code !== 'string' || !body.code.trim()) {
@@ -189,6 +205,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Execute Python code */
   app.post(
     '/api/sandbox/execute/python',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const body = req.body as { code?: unknown };
       if (typeof body.code !== 'string' || !body.code.trim()) {
@@ -202,6 +219,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Execute Node.js code */
   app.post(
     '/api/sandbox/execute/node',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const body = req.body as { code?: unknown };
       if (typeof body.code !== 'string' || !body.code.trim()) {
@@ -215,14 +233,14 @@ export function registerExecutionRoutes(app: Express) {
   /** Execute bash/shell script */
   app.post(
     '/api/sandbox/execute/bash',
+    requireAuth,
     asyncHandler(async (req, res) => {
-      const body = req.body as { script?: unknown; code?: unknown };
-      const script = body.script ?? body.code;
-      if (typeof script !== 'string' || !script.trim()) {
-        res.status(400).json({ success: false, error: 'script is required' });
+      const body = req.body as { code?: unknown };
+      if (typeof body.code !== 'string' || !body.code.trim()) {
+        res.status(400).json({ success: false, error: 'code is required' });
         return;
       }
-      res.json(await executeBash(script));
+      res.json(await executeBash(body.code));
     })
   );
 
@@ -231,6 +249,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Take a screenshot of the current (or a given) URL */
   app.post(
     '/api/computer-use/screenshot',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { url } = req.body as { url?: string };
       res.json(await screenshot(url));
@@ -240,6 +259,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Navigate the managed browser to a URL */
   app.post(
     '/api/computer-use/navigate',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { url } = req.body as { url?: string };
       if (typeof url !== 'string' || !url) {
@@ -253,6 +273,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Click at a coordinate or CSS selector */
   app.post(
     '/api/computer-use/click',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { x, y, selector, button } = req.body as {
         x?: number;
@@ -273,6 +294,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Type text into focused element or a selector */
   app.post(
     '/api/computer-use/type',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { text, selector, clearFirst } = req.body as {
         text?: string;
@@ -290,6 +312,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Press a keyboard key */
   app.post(
     '/api/computer-use/press-key',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { key } = req.body as { key?: string };
       if (typeof key !== 'string') {
@@ -303,6 +326,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Scroll the page */
   app.post(
     '/api/computer-use/scroll',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { direction, amount, selector } = req.body as {
         direction?: 'up' | 'down' | 'left' | 'right';
@@ -316,6 +340,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Move the mouse cursor */
   app.post(
     '/api/computer-use/move-mouse',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { x, y } = req.body as { x?: number; y?: number };
       if (typeof x !== 'number' || typeof y !== 'number') {
@@ -329,6 +354,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Find an element by selector */
   app.post(
     '/api/computer-use/find-element',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { selector } = req.body as { selector?: string };
       if (typeof selector !== 'string') {
@@ -342,6 +368,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Take a screenshot and analyze with AI vision */
   app.post(
     '/api/computer-use/analyze',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const { url } = req.body as { url?: string };
       res.json(await analyzeScreen(url));
@@ -351,6 +378,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Get current page URL and title */
   app.get(
     '/api/computer-use/page-info',
+    requireAuth,
     asyncHandler(async (_req, res) => {
       res.json(await getPageInfo());
     })
@@ -359,6 +387,7 @@ export function registerExecutionRoutes(app: Express) {
   /** Close the managed browser session */
   app.post(
     '/api/computer-use/close',
+    requireAuth,
     asyncHandler(async (_req, res) => {
       await closeBrowser();
       res.json({ success: true });

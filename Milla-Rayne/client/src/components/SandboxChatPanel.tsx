@@ -47,16 +47,19 @@ export interface SandboxChatPanelProps {
   onApplyCode?: (code: string) => void;
 }
 
-let _chatIdSeq = 0;
+/** Generate a unique message ID using the Web Crypto API */
 function nextId() {
-  return `msg-${++_chatIdSeq}-${Date.now()}`;
+  return `msg-${crypto.randomUUID()}`;
 }
 
 /** Try to extract a fenced code block from Milla's response */
 function extractCodeBlock(text: string): string | null {
-  const fenced = text.match(/```(?:\w+\n)?([\s\S]+?)```/);
+  const fenced = text.match(/```(?:\w+\s*\n)?([\s\S]+?)```/);
   return fenced ? fenced[1].trim() : null;
 }
+
+/** Maximum file content characters sent as context per message */
+const MAX_FILE_CONTEXT_CHARS = 8_000;
 
 export const SandboxChatPanel: React.FC<SandboxChatPanelProps> = ({
   isOpen,
@@ -99,9 +102,12 @@ export const SandboxChatPanel: React.FC<SandboxChatPanelProps> = ({
     // Build the message content — optionally prefix with file context
     let fullContent = trimmed;
     if (includeFile && activeFile) {
+      const fileContent = activeFile.content.length > MAX_FILE_CONTEXT_CHARS
+        ? activeFile.content.slice(0, MAX_FILE_CONTEXT_CHARS) + `\n… [truncated — ${activeFile.content.length} chars total]`
+        : activeFile.content;
       fullContent =
         `[Context: ${activeFile.name} (${activeFile.language})]\n` +
-        `\`\`\`${activeFile.language}\n${activeFile.content}\n\`\`\`\n\n` +
+        `\`\`\`${activeFile.language}\n${fileContent}\n\`\`\`\n\n` +
         trimmed;
     }
 

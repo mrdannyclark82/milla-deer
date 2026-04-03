@@ -1237,8 +1237,9 @@ export const Sandbox: React.FC<SandboxProps> = ({
 
   // Discuss code with Milla — open inline chat panel (preferred) or fall back to parent callback
   const handleDiscuss = () => {
+    const wasAlreadyOpen = showChatPanel;
     setShowChatPanel(true);
-    if (onDiscuss && activeFile && !showChatPanel) {
+    if (onDiscuss && activeFile && !wasAlreadyOpen) {
       onDiscuss(activeFile.content);
     }
   };
