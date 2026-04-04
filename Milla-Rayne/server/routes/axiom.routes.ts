@@ -596,14 +596,19 @@ except Exception as e:
   // ── SKILLS ────────────────────────────────────────────────────────────────
 
   app.get('/api/skills', requireAuth, asyncHandler(async (_req, res) => {
-    // Built-in skills from skillsRegistryService (computer-use, frontend-dev, etc.)
+    // Built-in skills from skillsRegistryService — normalize to SkillMeta shape
     const builtinSkills = listSkills().map(s => ({
-      name: s.name,
+      name: s.id,
       description: s.description,
-      category: s.category,
+      version: '1.0.0',
+      author: 'M.I.L.L.A.',
+      commands: [] as string[],
+      requires: [] as string[],
+      origin: `builtin:${s.id}`,
       enabled: true,
+      loaded: true,
+      category: s.category,
       source: 'builtin',
-      id: s.id,
     }));
     // Python skills from skills_registry.json (root workspace)
     const pyRegistryPath = '/home/nexus/ogdray/skills_registry.json';
@@ -612,12 +617,16 @@ except Exception as e:
       : {};
     const pySkills = Object.values(pyRegistry).map((s: any) => ({
       name: s.name,
-      description: s.description,
-      category: s.category || 'python',
+      description: s.description || '',
+      version: s.version || '1.0.0',
+      author: s.author || 'M.I.L.L.A.',
+      commands: Array.isArray(s.commands) ? s.commands : [],
+      requires: Array.isArray(s.requires) ? s.requires : [],
+      origin: s.origin || '',
       enabled: s.enabled !== false,
+      loaded: true,
+      category: s.category || 'python',
       source: 'python',
-      id: s.name,
-      commands: s.commands || [],
     }));
     return res.json({ ok: true, skills: [...builtinSkills, ...pySkills] });
   }));
