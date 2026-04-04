@@ -248,6 +248,29 @@ function createServerStates(): ManagedServerRuntime[] {
       missingCommandMessage:
         'Memory/RAG MCP local server could not be resolved. Ensure tsx is installed or build the server bundle first.',
     },
+    {
+      id: 'computer-use',
+      name: 'Computer Use MCP',
+      binaryCandidates: [],
+      resolveCommand: () => {
+        // Built distribution path
+        const builtServerPath = path.resolve(process.cwd(), 'dist', 'computerUseMcpServer.js');
+        if (existsSync(builtServerPath)) {
+          return { command: process.execPath, args: [builtServerPath] };
+        }
+
+        // Development path via tsx
+        const tsxBinary = resolveLocalBinary('tsx');
+        const sourceServerPath = path.resolve(MODULE_DIR, 'mcp', 'custom', 'computerUse-server.ts');
+        if (tsxBinary && existsSync(sourceServerPath)) {
+          return { command: tsxBinary, args: [sourceServerPath] };
+        }
+
+        return { command: null, args: [] };
+      },
+      missingCommandMessage:
+        'Computer Use MCP server not found. Build dist/computerUseMcpServer.js or ensure server/mcp/custom/computerUse-server.ts exists with tsx available.',
+    },
   ];
 
   return definitions.map((definition) => {

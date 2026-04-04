@@ -17,6 +17,8 @@ import { registerVisionRoutes } from './vision.routes';
 import { registerPrivacyRoutes } from './privacy.routes';
 import { registerLAMRoutes } from './lam.routes';
 import { registerAxiomRoutes } from './axiom.routes';
+import { registerSkillsRoutes } from './skills.routes';
+import { registerExecutionRoutes } from './execution.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
@@ -73,6 +75,12 @@ export async function registerModularRoutes(app: Express) {
 
   // Axiom dashboard — git, files, system, logs, cast, cron, briefs, swarm, model
   registerAxiomRoutes(app);
+
+  // Skills registry — list, get, build prompt/tools for FE dev, BE dev, computer use, MCP creator, file access
+  registerSkillsRoutes(app);
+
+  // Code execution (Python, Node.js, bash) + Computer Use (screenshot, click, type, scroll, …)
+  registerExecutionRoutes(app);
 
   // TV control routes (Vizio SmartCast + Google Cast + YouTube)
   const { registerTvRoutes } = await import('./tv.routes');
