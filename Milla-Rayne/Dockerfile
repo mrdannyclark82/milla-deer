@@ -12,8 +12,8 @@
      # Clean up any previous node_modules                                                                        
      RUN rm -rf node_modules                                                                                     
                                                                                                                  
-     # Install all dependencies (including devDependencies)                                                      
-     RUN npm ci && npm cache clean --force                                                                       
+     # Install all dependencies (including devDependencies)
+     RUN npm install && npm cache clean --force
                                                                                                                  
      # Copy source code                                                                                          
      COPY . .                                                                                                    
@@ -47,8 +47,8 @@
      # Copy package files                                                                                        
      COPY package*.json ./                                                                                       
                                                                                                                  
-     # Install only production dependencies                                                                      
-     RUN npm ci && npm cache clean --force                                                     
+     # Install only production dependencies
+     RUN npm install --omit=dev && npm cache clean --force
                                                                                                                  
      # Copy built application from builder                                                                       
      COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist                                                  
