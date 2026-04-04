@@ -4,6 +4,8 @@ import {
   MessageSquare,
   Mic,
   MicOff,
+  Copy,
+  Check,
   RefreshCw,
   Send,
   Volume2,
@@ -166,6 +168,13 @@ export function ChatThreadPanel({
   const lastSpokenIdRef = useRef<string | null>(null);
 
   const voice = useVoice();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyToClipboard = useCallback((text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }, []);
 
   const isNearBottom = () => {
     const container = messagesContainerRef.current;
@@ -560,17 +569,31 @@ export function ChatThreadPanel({
 
                     <div>{msg.content}</div>
 
+                    {/* Action buttons */}
+                    <div className="mt-2 flex items-center gap-3">
                     {/* Speak button for Milla messages */}
                     {msg.role === 'assistant' && (
                       <button
                         onClick={() => voice.speak(msg.content)}
                         title="Read aloud"
-                        className="mt-2 flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
+                        className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
                       >
                         <Volume2 className="h-3 w-3" />
                         <span>speak</span>
                       </button>
                     )}
+                    {/* Copy button for all messages */}
+                    <button
+                      onClick={() => copyToClipboard(msg.content, msg.id ?? msg.content.slice(0, 20))}
+                      title="Copy to clipboard"
+                      className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
+                    >
+                      {copiedId === (msg.id ?? msg.content.slice(0, 20))
+                        ? <><Check className="h-3 w-3 text-green-400" /><span className="text-green-400">copied</span></>
+                        : <><Copy className="h-3 w-3" /><span>copy</span></>
+                      }
+                    </button>
+                    </div>
 
                     {msg.image && (
                       <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
