@@ -1,0 +1,53 @@
+nohup: ignoring input
+sqlite: creating users table
+sqlite: creating user_sessions table
+sqlite: creating messages table
+sqlite: creating sessions table
+sqlite: creating usage_patterns table
+sqlite: creating ai_updates table
+sqlite: creating suggestion_updates table
+sqlite: creating daily_suggestions table
+sqlite: creating voice_consent table
+sqlite: creating oauth_tokens table
+sqlite: creating memory_summaries table
+sqlite: creating sensitive_memories table
+sqlite: creating youtube_knowledge_base table
+sqlite: creating indexes
+SQLite database initialized at: /home/nexus/ogdray/Milla-Deer/Milla-Rayne/memory/milla.db (encryption: disabled)
+[dotenv@17.3.1] injecting env (17) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.3.1] injecting env (114) from ../.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+[OfflineModel] Disabled — set ENABLE_LOCAL_MODEL=true to enable
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.3.1] injecting env (0) from ../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[Security] Helmet middleware enabled
+Initializing Memory Core system...
+Loading Memory Core for user: danny-ray from memories.txt...
+✅ Loaded 63 vectors from disk
+Successfully loaded Memory Core for danny-ray: 20 entries
+Memory Core loaded for danny-ray latency: 12ms
+Memory Core initialized successfully
+[SessionPersistence] Hot context loaded: 40 turns, topics: [Really, Milla, Hello, Here, Increasing, Decreasing, Sine, Front, Axiom, Kingdom]
+✅ Session hot context loaded
+[RAG] Bootstrapping vector index from existing memory files...
+No existing mood background cache, starting fresh
+User tasks system initialized
+Personal task system initialized
+Initializing Server Self-Evolution Engine...
+Performance baseline established: {
+  responseTime: 1,
+  memoryUsage: 0.6109817130980163,
+  cpuUsage: 0.6089977055736975,
+  successRate: 0.95,
+  throughput: 100,
+  errorRate: 0.02
+}
+Server Self-Evolution Engine initialized successfully
+Enhancement task system initialized
+Daily suggestions scheduler: Enabled with schedule: 0 9 * * *
+Daily suggestions: Next run scheduled for 4/4/2026, 9:00:00 AM
+Scheduling AI updates with cron expression: 0 9 * * *
+AI updates scheduler initialized successfully
+[Consciousness Scheduler] Scheduling GIM cycle: 0 */4 * * *
+[Consciousness Scheduler] Scheduling REM cycle: 0 2 * * *
+[Repository Discovery Scheduler] Scheduling discovery: 0 */6 * * *

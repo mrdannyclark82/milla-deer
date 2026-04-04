@@ -8,7 +8,7 @@
  */
 
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
-import { analyzeScreenShareImage } from './screenVisionService';
+import { analyzeScreenShareImage } from '../screenVisionService';
 
 export interface ScreenshotResult {
   success: boolean;

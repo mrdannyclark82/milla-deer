@@ -118,6 +118,60 @@ const hasConfiguredProvider = (): boolean =>
 /**
  * Input validation and sanitization for user inputs
  */
+async function tryDispatchSkill(msg: string): Promise<any | null> {
+  const lower = msg.toLowerCase();
+
+  // Weather
+  const weatherMatch = lower.match(/weather (?:in |for )?(.+?)[\?\.\!]?$/);
+  if (weatherMatch) {
+    const location = weatherMatch[1].trim();
+    try {
+      const r = await fetch(`https://wttr.in/${encodeURIComponent(location)}?format=j1`);
+      const d = await r.json() as any;
+      const cur = d.current_condition?.[0];
+      return { skill: 'weather', location, temp_f: cur?.temp_F, condition: cur?.weatherDesc?.[0]?.value, humidity: cur?.humidity };
+    } catch { return null; }
+  }
+
+  // Web search
+  const searchMatch = lower.match(/(?:search for|look up|find|google|search)\s+(.+?)[\?\.\!]?$/);
+  if (searchMatch) {
+    const q = encodeURIComponent(searchMatch[1].trim());
+    try {
+      const r = await fetch(`https://api.duckduckgo.com/?q=${q}&format=json&no_html=1`);
+      const d = await r.json() as any;
+      return { skill: 'web-search', query: searchMatch[1], answer: d.AbstractText || d.Answer, related: (d.RelatedTopics || []).slice(0, 3).map((t: any) => t.Text).filter(Boolean) };
+    } catch { return null; }
+  }
+
+  // System health
+  if (lower.includes('system health') || lower.includes('server status') || lower.includes('check system')) {
+    const os = await import('os');
+    return { skill: 'system-health', uptime: `${Math.floor(os.uptime() / 3600)}h`, memory: `${Math.round((1 - os.freemem() / os.totalmem()) * 100)}% used` };
+  }
+
+  // Python skills by name
+  const pySkillNames = ['scout', 'daily_quote', 'milla_vision', 'skill_forge', 'audio_intelligence', 'code_analyze', 'computer_macro', 'docker_sandbox', 'grok_master', 'youtube_skill', 'sre_tools'];
+  for (const skillName of pySkillNames) {
+    const displayName = skillName.replace(/_/g, ' ');
+    if (lower.includes(displayName) || lower.includes(`run ${skillName}`) || lower.includes(`use ${skillName}`)) {
+      try {
+        const { execFile } = await import('child_process');
+        const { promisify } = await import('util');
+        const execFileAsync = promisify(execFile);
+        const script = `import sys,json\nsys.path.insert(0,'/home/nexus/ogdray')\nfrom core_os.skills.skill_manager import execute_skill\nresult=execute_skill(${JSON.stringify(skillName)},{})\nprint(json.dumps({'skill':${JSON.stringify(skillName)},'result':result if isinstance(result,(dict,list,str,int,float,bool)) else str(result)}))`;
+        const { stdout } = await execFileAsync('/home/nexus/ogdray/venv/bin/python3', ['-c', script], { timeout: 15000, cwd: '/home/nexus/ogdray' });
+        return JSON.parse(stdout.trim());
+      } catch { return null; }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Input validation and sanitization for user inputs
+ */
 export function validateAndSanitizePrompt(prompt: string): string {
   if (!prompt || typeof prompt !== 'string') {
     throw new Error('Prompt must be a non-empty string');
@@ -1729,6 +1783,14 @@ export async function generateAIResponse(
   if (gimContextInjection) {
     contextualInfo += gimContextInjection;
   }
+
+  // Skill auto-dispatch — detect skill invocation in user message
+  try {
+    const skillDispatchResult = await tryDispatchSkill(userMessage);
+    if (skillDispatchResult) {
+      contextualInfo += `\n[SKILL RESULT]\n${JSON.stringify(skillDispatchResult, null, 2)}\n`;
+    }
+  } catch { /* skill dispatch is best-effort */ }
 
   const enhancedMessage = contextualInfo
     ? `${contextualInfo}\nCurrent message: ${userMessage}`

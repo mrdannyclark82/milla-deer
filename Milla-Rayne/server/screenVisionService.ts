@@ -1,5 +1,6 @@
 import { config } from './config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { analyzeWithClip2 } from './vision/fg-clip2-bridge';
 
 export interface ScreenVisionResult {
   success: boolean;
@@ -155,18 +156,102 @@ async function analyzeWithOpenRouter(
     };
   }
 
-  const response = await fetch(
-    'https://openrouter.ai/api/v1/chat/completions',
-    {
+  try {
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'X-Title': 'Milla Rayne Screen Vision',
+        },
+        body: JSON.stringify({
+          model:
+            config.openrouter.geminiFlashModel || DEFAULT_OPENROUTER_VISION_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: buildSystemPrompt(userName),
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: buildUserPrompt(userMessage),
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: imageData,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 500,
+          temperature: 0.2,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `OpenRouter vision request failed (${response.status}): ${errorText || response.statusText}`,
+      };
+    }
+
+    const payload = await response.json();
+    const content = normalizeVisionTextContent(
+      payload?.choices?.[0]?.message?.content
+    );
+
+    if (!content) {
+      return {
+        success: false,
+        error: 'OpenRouter vision returned no usable content.',
+      };
+    }
+
+    return {
+      success: true,
+      content,
+      provider: 'openrouter',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error
+        ? `OpenRouter vision request failed: ${error.message}`
+        : 'OpenRouter vision request failed.',
+    };
+  }
+}
+
+async function analyzeWithXai(
+  userMessage: string,
+  imageData: string,
+  userName: string
+): Promise<ScreenVisionResult> {
+  if (!config.xai.apiKey) {
+    return {
+      success: false,
+      error: 'xAI vision is not configured.',
+    };
+  }
+
+  try {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.xai.apiKey}`,
         'Content-Type': 'application/json',
-        'X-Title': 'Milla Rayne Screen Vision',
       },
       body: JSON.stringify({
-        model:
-          config.openrouter.geminiFlashModel || DEFAULT_OPENROUTER_VISION_MODEL,
+        model: process.env.XAI_VISION_MODEL || DEFAULT_XAI_VISION_MODEL,
         messages: [
           {
             role: 'system',
@@ -191,107 +276,41 @@ async function analyzeWithOpenRouter(
         max_tokens: 500,
         temperature: 0.2,
       }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return {
+        success: false,
+        error: `xAI vision request failed (${response.status}): ${errorText || response.statusText}`,
+      };
     }
-  );
 
-  if (!response.ok) {
-    const errorText = await response.text();
+    const payload = await response.json();
+    const content = normalizeVisionTextContent(
+      payload?.choices?.[0]?.message?.content
+    );
+
+    if (!content) {
+      return {
+        success: false,
+        error: 'xAI vision returned no usable content.',
+      };
+    }
+
+    return {
+      success: true,
+      content,
+      provider: 'xai',
+    };
+  } catch (error) {
     return {
       success: false,
-      error: `OpenRouter vision request failed (${response.status}): ${errorText || response.statusText}`,
+      error: error instanceof Error
+        ? `xAI vision request failed: ${error.message}`
+        : 'xAI vision request failed.',
     };
   }
-
-  const payload = await response.json();
-  const content = normalizeVisionTextContent(
-    payload?.choices?.[0]?.message?.content
-  );
-
-  if (!content) {
-    return {
-      success: false,
-      error: 'OpenRouter vision returned no usable content.',
-    };
-  }
-
-  return {
-    success: true,
-    content,
-    provider: 'openrouter',
-  };
-}
-
-async function analyzeWithXai(
-  userMessage: string,
-  imageData: string,
-  userName: string
-): Promise<ScreenVisionResult> {
-  if (!config.xai.apiKey) {
-    return {
-      success: false,
-      error: 'xAI vision is not configured.',
-    };
-  }
-
-  const response = await fetch('https://api.x.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.xai.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: process.env.XAI_VISION_MODEL || DEFAULT_XAI_VISION_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: buildSystemPrompt(userName),
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: buildUserPrompt(userMessage),
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageData,
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.2,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    return {
-      success: false,
-      error: `xAI vision request failed (${response.status}): ${errorText || response.statusText}`,
-    };
-  }
-
-  const payload = await response.json();
-  const content = normalizeVisionTextContent(
-    payload?.choices?.[0]?.message?.content
-  );
-
-  if (!content) {
-    return {
-      success: false,
-      error: 'xAI vision returned no usable content.',
-    };
-  }
-
-  return {
-    success: true,
-    content,
-    provider: 'xai',
-  };
 }
 
 export async function analyzeScreenShareImage(
@@ -305,6 +324,12 @@ export async function analyzeScreenShareImage(
       success: false,
       error: 'Shared screen image must be a data URL.',
     };
+  }
+
+  // FG-CLIP2 / Ollama VLM — fastest, zero cloud dependency
+  const clip2Result = await analyzeWithClip2(userMessage, normalizedImageData, userName);
+  if (clip2Result.success) {
+    return clip2Result;
   }
 
   const geminiResult = await analyzeWithGemini(

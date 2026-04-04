@@ -8,6 +8,8 @@
  */
 
 import fetch from 'node-fetch';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 import { storage } from '../storage';
 import { generateAIResponse } from './chatOrchestrator.service';
 import { appendToSharedChat } from '../replycaSocialBridgeService';
@@ -19,6 +21,23 @@ const TELEGRAM_USER_ID = process.env.TELEGRAM_USER_ID?.trim() || 'danny-ray';
 const DANNY_CHAT_ID = process.env.TELEGRAM_CHAT_ID
   ? parseInt(process.env.TELEGRAM_CHAT_ID, 10)
   : null;
+
+// Persist offset across restarts so already-processed messages aren't replayed
+const OFFSET_FILE = join(process.cwd(), 'memory', 'telegram_offset.txt');
+
+function loadOffset(): number {
+  try {
+    if (existsSync(OFFSET_FILE)) return parseInt(readFileSync(OFFSET_FILE, 'utf8').trim(), 10) || 0;
+  } catch { /* ignore */ }
+  return 0;
+}
+
+function saveOffset(n: number): void {
+  try {
+    mkdirSync(join(process.cwd(), 'memory'), { recursive: true });
+    writeFileSync(OFFSET_FILE, String(n));
+  } catch { /* ignore */ }
+}
 
 interface TelegramMessage {
   message_id: number;
@@ -33,9 +52,30 @@ interface TelegramUpdate {
   message?: TelegramMessage;
 }
 
-let offset = 0;
+let offset = loadOffset();
 let polling = false;
 let pollHandle: ReturnType<typeof setTimeout> | null = null;
+
+// ── User bootstrap ────────────────────────────────────────────────────────────
+
+async function ensureTelegramUser(): Promise<void> {
+  try {
+    const existing = await storage.getUser(TELEGRAM_USER_ID);
+    if (!existing) {
+      await storage.createUser({
+        id: TELEGRAM_USER_ID,
+        username: TELEGRAM_USER_ID,
+        email: `${TELEGRAM_USER_ID}@telegram.local`,
+        name: 'D-Ray',
+        role: 'user',
+        password: 'telegram-no-login',
+      } as Parameters<typeof storage.createUser>[0]);
+      console.log(`[Telegram] Created user '${TELEGRAM_USER_ID}' in DB.`);
+    }
+  } catch (err) {
+    console.warn('[Telegram] ensureTelegramUser warning:', err);
+  }
+}
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
@@ -104,7 +144,15 @@ export function startTelegramPolling(): void {
   if (polling) return;
   polling = true;
   console.log('[Telegram] Long-polling started.');
-  schedulePoll();
+  // Delete any webhook to clear 409 conflicts, then ensure user + start polling
+  fetch(`${BASE}/deleteWebhook`, { method: 'POST' })
+    .catch(() => { /* ignore — best effort */ })
+    .finally(() => {
+      ensureTelegramUser().then(schedulePoll).catch((err) => {
+        console.error('[Telegram] User init error:', err);
+        schedulePoll();
+      });
+    });
 }
 
 export function stopTelegramPolling(): void {
@@ -144,6 +192,7 @@ async function pollOnce(): Promise<void> {
       offset = Math.max(offset, update.update_id);
       if (update.message) await handleMessage(update.message);
     }
+    if (data.result.length > 0) saveOffset(offset);
   } catch (err: any) {
     if (err?.name !== 'AbortError') {
       console.error('[Telegram] Poll error:', err?.message ?? err);

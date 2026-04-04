@@ -518,8 +518,200 @@
       "relatedIds": [
         "sandbox_1773890381364_b23g0zp9f"
       ]
+    },
+    {
+      "id": "action_1775189193427_i3uk441s8",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775111686259_k01324pfh"
+      ]
+    },
+    {
+      "id": "action_1775189193427_9rkit913d",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775111734595_y685s8bqv"
+      ]
+    },
+    {
+      "id": "action_1775189193427_tfr4os0di",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775111775540_cqw19d0a5"
+      ]
+    },
+    {
+      "id": "action_1775189193427_34a20ug20",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775112911942_zal9uj5su"
+      ]
+    },
+    {
+      "id": "action_1775189193427_7uql2p0qx",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775114403760_z9ehffoik"
+      ]
+    },
+    {
+      "id": "action_1775189193427_01e0ggaq6",
+      "timestamp": 1775189193427,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775114458164_97n3870l5"
+      ]
+    },
+    {
+      "id": "action_1775189193428_4zwgs76ka",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115426323_y3dys6dks"
+      ]
+    },
+    {
+      "id": "action_1775189193428_atulxwj71",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115463854_5im6f5ttv"
+      ]
+    },
+    {
+      "id": "action_1775189193428_x69fzovo5",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115620715_abxwd6a86"
+      ]
+    },
+    {
+      "id": "action_1775189193428_pxz18ls3y",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115689514_af6gxuff3"
+      ]
+    },
+    {
+      "id": "action_1775189193428_nm3zf6reb",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115721594_0e5r4sito"
+      ]
+    },
+    {
+      "id": "action_1775189193428_nalt5qmvw",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115752629_rissw95nm"
+      ]
+    },
+    {
+      "id": "action_1775189193428_g1pvyf7a2",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115784416_j0fa6119l"
+      ]
+    },
+    {
+      "id": "action_1775189193428_sw8xdpo5e",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115818835_f7fw6tmr8"
+      ]
+    },
+    {
+      "id": "action_1775189193428_j19fb6i85",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115851967_nsbvgapvk"
+      ]
+    },
+    {
+      "id": "action_1775189193428_n6zfi8lzr",
+      "timestamp": 1775189193428,
+      "type": "pr_preparation",
+      "description": "Prepare PR for sandbox: Validation Sandbox",
+      "status": "planned",
+      "priority": "high",
+      "estimatedImpact": 8,
+      "relatedIds": [
+        "sandbox_1775115876411_rz0kvlk13"
+      ]
     }
   ],
   "lastCheck": 1773618207795,
-  "lastUpdated": 1775108800981
+  "lastUpdated": 1775265441697
 }

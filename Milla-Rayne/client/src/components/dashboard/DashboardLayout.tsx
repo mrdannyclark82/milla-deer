@@ -200,7 +200,7 @@ export function DashboardLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [activeSection, setActiveSection] = useState('hub');
+  const [activeSection, setActiveSection] = useState('chat');
   const [developerMode, setDeveloperMode] = useState(false);
   const [showSettings, setShowSettings] = useState(true);
   const [showVideoPanel, setShowVideoPanel] = useState(true);
@@ -1087,6 +1087,7 @@ export function DashboardLayout() {
   };
 
   const sectionLabels: Record<string, string> = {
+    chat: 'Chat',
     hub: 'Milla Hub',
     knowledge: 'Knowledge Base',
     news: 'Daily News Digest',
@@ -1376,7 +1377,7 @@ export function DashboardLayout() {
       ? STUDIO_AVATAR_MEDIA
       : activeSection === 'news' || Boolean(activeVideoId) || youtubeVideos.length > 0
         ? MEDIA_AVATAR_MEDIA
-        : activeSection === 'hub'
+        : activeSection === 'hub' || activeSection === 'chat'
           ? HUB_AVATAR_MEDIA
           : TRANSITION_AVATAR_MEDIA);
 
@@ -1466,7 +1467,7 @@ export function DashboardLayout() {
         <div className="flex-1 w-full px-6 pb-12 pt-6">
           <div
             className={`grid gap-6 ${
-              activeSection === 'studio' ? 'xl:grid-cols-1' : 'xl:grid-cols-[2fr_1fr]'
+              activeSection === 'studio' || activeSection === 'chat' ? 'xl:grid-cols-1' : 'xl:grid-cols-[2fr_1fr]'
             }`}
           >
             <div className="space-y-6">
@@ -1516,14 +1517,15 @@ export function DashboardLayout() {
                 </div>
               </section>
 
-              {activeSection === 'hub' ? (
+              {activeSection === 'chat' ? (
+                <ChatThreadPanel
+                  onPlayVideo={(videoId) => {
+                    handlePlayVideo(videoId);
+                    handleAnalyzeComplete(`YouTube Video ${videoId}`);
+                  }}
+                />
+              ) : activeSection === 'hub' ? (
                 <div className="space-y-6">
-                  <ChatThreadPanel
-                    onPlayVideo={(videoId) => {
-                      handlePlayVideo(videoId);
-                      handleAnalyzeComplete(`YouTube Video ${videoId}`);
-                    }}
-                  />
                   <section className="rounded-2xl border border-cyan-400/20 bg-white/5 p-5 backdrop-blur-xl">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div>
@@ -1760,7 +1762,7 @@ export function DashboardLayout() {
             </div>
 
             {/* Right rail */}
-            {activeSection !== 'studio' && <div className="space-y-4">
+            {activeSection !== 'studio' && activeSection !== 'chat' && <div className="space-y-4">
               {showSettings && (
                 <ScoreSettings
                   values={scoreSettings}

@@ -733,18 +733,81 @@ print(result if isinstance(result, str) else str(result))
     const { name } = req.params;
     const { payload = {} } = req.body as { payload?: Record<string, unknown> };
 
-    // Builtin skills describe themselves rather than execute directly
-    const builtin = getSkill(name);
-    if (builtin) {
-      return res.json({
-        ok: true,
-        result: {
-          info: `'${builtin.name}' is a builtin AI skill. Activate it in chat by describing what you need.`,
-          description: builtin.description,
-          category: builtin.category,
-          tools: builtin.tools?.map((t: any) => t.id) ?? [],
+    // system-health
+    if (name === 'system-health') {
+      return res.json({ ok: true, result: {
+        uptime: `${Math.floor(os.uptime() / 3600)}h ${Math.floor((os.uptime() % 3600) / 60)}m`,
+        memory: `${Math.round((1 - os.freemem() / os.totalmem()) * 100)}% used (${Math.round(os.freemem() / 1024 / 1024)}MB free)`,
+        cpus: os.cpus().length,
+        platform: os.platform(),
+        hostname: os.hostname(),
+      }});
+    }
+
+    // model-status
+    if (name === 'model-status') {
+      const envContent = fs.existsSync('/home/nexus/ogdray/.env')
+        ? fs.readFileSync('/home/nexus/ogdray/.env', 'utf-8')
+        : '';
+      const models: Record<string, string> = {};
+      for (const line of envContent.split('\n')) {
+        if (line.match(/MODEL/i) && line.includes('=') && !line.startsWith('#')) {
+          const [k, v] = line.split('=');
+          models[k.trim()] = v.trim();
         }
-      });
+      }
+      return res.json({ ok: true, result: { configured_models: models } });
+    }
+
+    // file-browser
+    if (name === 'file-browser') {
+      const dir = (payload as any).path || '/home/nexus/ogdray';
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true })
+          .slice(0, 50)
+          .map(e => ({ name: e.name, type: e.isDirectory() ? 'dir' : 'file' }));
+        return res.json({ ok: true, result: { path: dir, entries } });
+      } catch (e: any) {
+        return res.status(500).json({ ok: false, error: e.message });
+      }
+    }
+
+    // weather
+    if (name === 'weather') {
+      const location = encodeURIComponent((payload as any).location || 'auto');
+      try {
+        const r = await fetch(`https://wttr.in/${location}?format=j1`);
+        const d = await r.json() as any;
+        const cur = d.current_condition?.[0];
+        return res.json({ ok: true, result: {
+          location: d.nearest_area?.[0]?.areaName?.[0]?.value || location,
+          temp_f: cur?.temp_F,
+          temp_c: cur?.temp_C,
+          condition: cur?.weatherDesc?.[0]?.value,
+          humidity: cur?.humidity,
+          wind_mph: cur?.windspeedMiles,
+        }});
+      } catch (e: any) {
+        return res.status(500).json({ ok: false, error: `Weather fetch failed: ${e.message}` });
+      }
+    }
+
+    // web-search
+    if (name === 'web-search') {
+      const q = encodeURIComponent((payload as any).query || '');
+      if (!q) return res.status(400).json({ ok: false, error: 'query required' });
+      try {
+        const r = await fetch(`https://api.duckduckgo.com/?q=${q}&format=json&no_html=1`);
+        const d = await r.json() as any;
+        return res.json({ ok: true, result: {
+          query: decodeURIComponent(q),
+          answer: d.AbstractText || d.Answer || 'No instant answer found',
+          source: d.AbstractURL || d.AnswerURL || '',
+          related: (d.RelatedTopics || []).slice(0, 5).map((t: any) => t.Text).filter(Boolean),
+        }});
+      } catch (e: any) {
+        return res.status(500).json({ ok: false, error: `Search failed: ${e.message}` });
+      }
     }
 
     // Python skill — execute via skill_manager

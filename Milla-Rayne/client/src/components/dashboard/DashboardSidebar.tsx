@@ -13,6 +13,7 @@ import {
   Sparkles,
   Code,
   Palette,
+  MessageSquare,
   Tv2,
 } from 'lucide-react';
 
@@ -54,6 +55,7 @@ export function DashboardSidebar({
   };
 
   const navItems: NavItem[] = [
+    { id: 'chat', label: 'Chat', icon: <MessageSquare className="w-4 h-4" /> },
     { id: 'hub', label: 'Milla Hub', icon: <Home className="w-4 h-4" /> },
     {
       id: 'knowledge',
