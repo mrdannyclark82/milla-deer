@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 import { asyncHandler } from '../utils/routeHelpers';
 import { requireAuth } from '../middleware/auth.middleware';
-import { listSkills } from '../services/skillsRegistryService';
+import { listSkills, getSkill } from '../services/skillsRegistryService';
 import {
   CANONICAL_AI_MODELS,
   DEFAULT_CHAT_MODEL,
@@ -675,6 +675,8 @@ print(result if isinstance(result, str) else str(result))
   // ── SKILL CRUD ────────────────────────────────────────────────────────────
 
   const PY_REGISTRY_PATH = '/home/nexus/ogdray/skills_registry.json';
+  const BUILTIN_STATE_PATH = '/home/nexus/ogdray/Milla-Deer/Milla-Rayne/memory/builtin_skills_state.json';
+
   function readPyRegistry(): Record<string, any> {
     if (!fs.existsSync(PY_REGISTRY_PATH)) return {};
     try { return JSON.parse(fs.readFileSync(PY_REGISTRY_PATH, 'utf-8')); } catch { return {}; }
@@ -682,19 +684,44 @@ print(result if isinstance(result, str) else str(result))
   function writePyRegistry(reg: Record<string, any>) {
     fs.writeFileSync(PY_REGISTRY_PATH, JSON.stringify(reg, null, 2), 'utf-8');
   }
+  function readBuiltinState(): Record<string, boolean> {
+    if (!fs.existsSync(BUILTIN_STATE_PATH)) return {};
+    try { return JSON.parse(fs.readFileSync(BUILTIN_STATE_PATH, 'utf-8')); } catch { return {}; }
+  }
+  function writeBuiltinState(state: Record<string, boolean>) {
+    fs.mkdirSync('/home/nexus/ogdray/Milla-Deer/Milla-Rayne/memory', { recursive: true });
+    fs.writeFileSync(BUILTIN_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8');
+  }
 
   app.put('/api/skills/:name/toggle', requireAuth, asyncHandler(async (req, res) => {
     const { name } = req.params;
     const { enabled } = req.body as { enabled?: boolean };
+
+    // Check Python registry first
     const reg = readPyRegistry();
-    if (!reg[name]) return res.status(404).json({ ok: false, error: `Skill '${name}' not found` });
-    reg[name].enabled = enabled !== undefined ? enabled : !reg[name].enabled;
-    writePyRegistry(reg);
-    return res.json({ ok: true, name, enabled: reg[name].enabled });
+    if (reg[name]) {
+      reg[name].enabled = enabled !== undefined ? enabled : !reg[name].enabled;
+      writePyRegistry(reg);
+      return res.json({ ok: true, name, enabled: reg[name].enabled });
+    }
+
+    // Fall back to builtin skills
+    const builtin = getSkill(name);
+    if (!builtin) return res.status(404).json({ ok: false, error: `Skill '${name}' not found` });
+    const state = readBuiltinState();
+    state[name] = enabled !== undefined ? enabled : !(state[name] ?? true);
+    writeBuiltinState(state);
+    return res.json({ ok: true, name, enabled: state[name] });
   }));
 
   app.delete('/api/skills/:name', requireAuth, asyncHandler(async (req, res) => {
     const { name } = req.params;
+
+    // Builtin skills cannot be deleted
+    if (getSkill(name)) {
+      return res.status(400).json({ ok: false, error: `'${name}' is a builtin skill and cannot be deleted` });
+    }
+
     const reg = readPyRegistry();
     if (!reg[name]) return res.status(404).json({ ok: false, error: `Skill '${name}' not found` });
     delete reg[name];
@@ -705,6 +732,22 @@ print(result if isinstance(result, str) else str(result))
   app.post('/api/skills/:name/run', requireAuth, asyncHandler(async (req, res) => {
     const { name } = req.params;
     const { payload = {} } = req.body as { payload?: Record<string, unknown> };
+
+    // Builtin skills describe themselves rather than execute directly
+    const builtin = getSkill(name);
+    if (builtin) {
+      return res.json({
+        ok: true,
+        result: {
+          info: `'${builtin.name}' is a builtin AI skill. Activate it in chat by describing what you need.`,
+          description: builtin.description,
+          category: builtin.category,
+          tools: builtin.tools?.map((t: any) => t.id) ?? [],
+        }
+      });
+    }
+
+    // Python skill — execute via skill_manager
     const { execFile } = await import('child_process');
     const { promisify } = await import('util');
     const execFileAsync = promisify(execFile);
