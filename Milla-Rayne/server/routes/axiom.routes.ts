@@ -5,11 +5,13 @@ import path from 'path';
 import os from 'os';
 import { asyncHandler } from '../utils/routeHelpers';
 import { requireAuth } from '../middleware/auth.middleware';
+import { listSkills } from '../services/skillsRegistryService';
 import {
   CANONICAL_AI_MODELS,
   DEFAULT_CHAT_MODEL,
   isSupportedAIModel,
 } from '../aiModelPreferences';
+import { encryptedMemory } from '../memory/encrypted-memory-store';
 
 const REPO_ROOT = '/home/nexus/ogdray/Milla-Deer';
 const MEMORY_DIR = path.join(REPO_ROOT, 'memory');
@@ -594,18 +596,71 @@ except Exception as e:
   // ── SKILLS ────────────────────────────────────────────────────────────────
 
   app.get('/api/skills', requireAuth, asyncHandler(async (_req, res) => {
-    return res.json({ ok: true, skills: readMemoryJson<unknown[]>('skills.json', []) });
+    // Built-in skills from skillsRegistryService (computer-use, frontend-dev, etc.)
+    const builtinSkills = listSkills().map(s => ({
+      name: s.name,
+      description: s.description,
+      category: s.category,
+      enabled: true,
+      source: 'builtin',
+      id: s.id,
+    }));
+    // Python skills from skills_registry.json (root workspace)
+    const pyRegistryPath = '/home/nexus/ogdray/skills_registry.json';
+    const pyRegistry: Record<string, any> = fs.existsSync(pyRegistryPath)
+      ? JSON.parse(fs.readFileSync(pyRegistryPath, 'utf-8'))
+      : {};
+    const pySkills = Object.values(pyRegistry).map((s: any) => ({
+      name: s.name,
+      description: s.description,
+      category: s.category || 'python',
+      enabled: s.enabled !== false,
+      source: 'python',
+      id: s.name,
+      commands: s.commands || [],
+    }));
+    return res.json({ ok: true, skills: [...builtinSkills, ...pySkills] });
   }));
 
   app.post('/api/skills/install', requireAuth, asyncHandler(async (req, res) => {
     const { url } = req.body as { url?: string };
     if (!url) return res.status(400).json({ ok: false, error: 'url required' });
-    // Stub — npm install integration TBD
     return res.json({
       ok: true,
       stub: true,
       message: `Skill install from ${url} queued (not yet implemented)`,
     });
+  }));
+
+  app.post('/api/skills/forge', requireAuth, asyncHandler(async (req, res) => {
+    const { description } = req.body as { description?: string };
+    if (!description?.trim()) {
+      return res.status(400).json({ ok: false, error: 'description required' });
+    }
+    // Run skill_forge via the Python runtime in a child process
+    const { execFile } = await import('child_process');
+    const { promisify } = await import('util');
+    const execFileAsync = promisify(execFile);
+    try {
+      const python = '/home/nexus/ogdray/venv/bin/python3';
+      const script = '/home/nexus/ogdray/src/core/nexus_server.py';
+      // Invoke skill_forge skill directly via Python
+      const forgeScript = `
+import sys
+sys.path.insert(0, '/home/nexus/ogdray')
+from core_os.skills.skill_manager import execute_skill
+result = execute_skill('skill_forge', {'description': ${JSON.stringify(description.trim())}})
+print(result if isinstance(result, str) else str(result))
+`;
+      const { stdout, stderr } = await execFileAsync(python, ['-c', forgeScript], {
+        timeout: 60000,
+        cwd: '/home/nexus/ogdray',
+      });
+      return res.json({ ok: true, output: stdout.trim(), type: 'forge' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ ok: false, error: `Forge failed: ${msg}` });
+    }
   }));
 
   // ── CRON ──────────────────────────────────────────────────────────────────
@@ -683,12 +738,77 @@ except Exception as e:
     return res.json({ ok: true, briefs: readMemoryJson<BriefEntry[]>('daily_briefs.json', []) });
   }));
 
+  // ── ENCRYPTED MEMORY ──────────────────────────────────────────────────────
+
+  app.get('/api/memory/stats', requireAuth, asyncHandler(async (_req, res) => {
+    return res.json({ ok: true, stats: encryptedMemory.stats() });
+  }));
+
+  app.get('/api/memory/recent', requireAuth, asyncHandler(async (req, res) => {
+    const n = Math.min(Number(req.query.n ?? 20), 100);
+    const source = req.query.source as string | undefined;
+    const entries = encryptedMemory.getRecent(n, source as Parameters<typeof encryptedMemory.getRecent>[1]);
+    return res.json({ ok: true, entries });
+  }));
+
+  app.post('/api/memory/add', requireAuth, asyncHandler(async (req, res) => {
+    const { text, tags, source, sessionId } = req.body as {
+      text?: string; tags?: string[]; source?: string; sessionId?: string;
+    };
+    if (!text?.trim()) return res.status(400).json({ ok: false, error: 'text required' });
+    const entry = encryptedMemory.add({
+      text: text.trim(),
+      tags: tags ?? [],
+      source: (source as Parameters<typeof encryptedMemory.add>[0]['source']) ?? 'manual',
+      sessionId,
+      embedding: null,
+    });
+    encryptedMemory.flush();
+    return res.json({ ok: true, entry });
+  }));
+
+  app.post('/api/memory/search', requireAuth, asyncHandler(async (req, res) => {
+    const { query, topK } = req.body as { query?: string; topK?: number };
+    if (!query?.trim()) return res.status(400).json({ ok: false, error: 'query required' });
+    const results = encryptedMemory.search(null, query.trim(), topK ?? 5);
+    return res.json({ ok: true, results });
+  }));
+
+  app.delete('/api/memory/:id', requireAuth, asyncHandler(async (req, res) => {
+    const deleted = encryptedMemory.deleteById(req.params.id);
+    if (deleted) encryptedMemory.flush();
+    return res.json({ ok: deleted });
+  }));
+
   // NOTE: POST /api/vision/analyze is already registered by vision.routes.ts — no duplication.
 
   // ── MODEL ─────────────────────────────────────────────────────────────────
 
   app.get('/api/model', requireAuth, asyncHandler(async (_req, res) => {
     return res.json({ ok: true, current: DEFAULT_CHAT_MODEL, available: CANONICAL_AI_MODELS });
+  }));
+
+  app.get('/api/model/cloud-models', requireAuth, asyncHandler(async (_req, res) => {
+    const cloudModels = CANONICAL_AI_MODELS.filter(m =>
+      m.includes('grok') || m.includes('gemini') || m.includes('gpt') ||
+      m.includes('claude') || m.includes('minimax') || m.includes('cloud')
+    ).map(id => ({ id, name: id }));
+    return res.json({ ok: true, models: cloudModels });
+  }));
+
+  app.get('/api/model/local-models', requireAuth, asyncHandler(async (_req, res) => {
+    try {
+      const { execSync: exec } = await import('child_process');
+      const out = exec('ollama list 2>/dev/null', { encoding: 'utf8', timeout: 5000 });
+      const lines = out.trim().split('\n').slice(1); // skip header
+      const models = lines
+        .map(l => l.trim().split(/\s+/)[0])
+        .filter(Boolean)
+        .map(id => ({ id, name: id }));
+      return res.json({ ok: true, models });
+    } catch {
+      return res.json({ ok: true, models: [{ id: 'milla-rayne-gemma:latest', name: 'Milla-Rayne (Gemma)' }] });
+    }
   }));
 
   app.post('/api/model/provider', requireAuth, asyncHandler(async (req, res) => {
@@ -724,14 +844,60 @@ except Exception as e:
   ];
 
   app.get('/api/swarm/status', requireAuth, asyncHandler(async (_req, res) => {
+    const agents = readMemoryJson<SwarmAgent[]>('swarm_agents.json', DEFAULT_AGENTS);
+    const flags = readMemoryJson<unknown[]>('swarm_flags.json', []);
     return res.json({
       ok: true,
-      agents: readMemoryJson<SwarmAgent[]>('swarm_agents.json', DEFAULT_AGENTS),
+      agents,
+      flags_count: flags.length,
+      flags_recent: flags.slice(-5),
     });
   }));
 
-  app.get('/api/swarm/flags', requireAuth, asyncHandler(async (_req, res) => {
-    return res.json({ ok: true, flags: readMemoryJson<unknown[]>('swarm_flags.json', []) });
+  app.get('/api/swarm/flags', requireAuth, asyncHandler(async (req, res) => {
+    const limit = parseInt(String(req.query.limit || '20'), 10);
+    const flags = readMemoryJson<unknown[]>('swarm_flags.json', []);
+    return res.json({ ok: true, flags: flags.slice(-limit) });
+  }));
+
+  app.delete('/api/swarm/flags', requireAuth, asyncHandler(async (_req, res) => {
+    const flagsPath = path.join(MEMORY_DIR, 'swarm_flags.json');
+    fs.writeFileSync(flagsPath, '[]', 'utf8');
+    return res.json({ ok: true });
+  }));
+
+  app.get('/api/swarm/log', requireAuth, asyncHandler(async (req, res) => {
+    const lines = parseInt(String(req.query.lines || '80'), 10);
+    const logPath = path.join(LOGS_DIR, 'swarm.log');
+    if (!fs.existsSync(logPath)) {
+      return res.json({ ok: true, log: '(no swarm log yet)' });
+    }
+    const content = fs.readFileSync(logPath, 'utf8');
+    const tail = content.split('\n').slice(-lines).join('\n');
+    return res.json({ ok: true, log: tail });
+  }));
+
+  app.post('/api/swarm/dispatch', requireAuth, asyncHandler(async (req, res) => {
+    const { agent_id, payload } = req.body as { agent_id?: string; payload?: unknown };
+    if (!agent_id) return res.status(400).json({ ok: false, error: 'agent_id required' });
+    const entry = { ts: new Date().toISOString(), agent_id, payload: payload ?? {}, status: 'dispatched' };
+    const flagsPath = path.join(MEMORY_DIR, 'swarm_flags.json');
+    const flags = readMemoryJson<unknown[]>('swarm_flags.json', []);
+    flags.push(entry);
+    fs.writeFileSync(flagsPath, JSON.stringify(flags, null, 2), 'utf8');
+    return res.json({ ok: true, dispatched: entry });
+  }));
+
+  app.post('/api/swarm/dispatch_all', requireAuth, asyncHandler(async (_req, res) => {
+    const agents = readMemoryJson<SwarmAgent[]>('swarm_agents.json', DEFAULT_AGENTS);
+    const flagsPath = path.join(MEMORY_DIR, 'swarm_flags.json');
+    const flags = readMemoryJson<unknown[]>('swarm_flags.json', []);
+    const ts = new Date().toISOString();
+    for (const agent of agents) {
+      flags.push({ ts, agent_id: agent.id, payload: {}, status: 'dispatched' });
+    }
+    fs.writeFileSync(flagsPath, JSON.stringify(flags, null, 2), 'utf8');
+    return res.json({ ok: true, dispatched: agents.map(a => a.id) });
   }));
 
   // Stub routes for dashboard UI calls
