@@ -25,6 +25,7 @@ import {
 } from '../services/telegramBotService';
 import { discoverNewSounds, listSounds, pickSoundForContext } from '../services/soundEffectsService';
 import { registerCopilotRoutes } from './copilot.routes';
+import { registerFilesRoutes } from './files.routes';
 import { registerAgentIntakeRoutes } from './agents.intake.routes';
 import { listRoutes, reloadAgentRouter } from '../services/agentRouterService';
 
@@ -101,6 +102,9 @@ export async function registerModularRoutes(app: Express) {
 
   // Copilot review intake — Milla can POST here to get code/arch review
   registerCopilotRoutes(app);
+
+  // Local file system access — browse, read, write, delete (workspace-sandboxed)
+  registerFilesRoutes(app);
 
   // Agent intake routes — real endpoints agentRouter.json dispatches to
   registerAgentIntakeRoutes(app);
