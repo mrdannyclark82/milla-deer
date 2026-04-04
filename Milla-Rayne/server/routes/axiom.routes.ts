@@ -672,6 +672,59 @@ print(result if isinstance(result, str) else str(result))
     }
   }));
 
+  // ── SKILL CRUD ────────────────────────────────────────────────────────────
+
+  const PY_REGISTRY_PATH = '/home/nexus/ogdray/skills_registry.json';
+  function readPyRegistry(): Record<string, any> {
+    if (!fs.existsSync(PY_REGISTRY_PATH)) return {};
+    try { return JSON.parse(fs.readFileSync(PY_REGISTRY_PATH, 'utf-8')); } catch { return {}; }
+  }
+  function writePyRegistry(reg: Record<string, any>) {
+    fs.writeFileSync(PY_REGISTRY_PATH, JSON.stringify(reg, null, 2), 'utf-8');
+  }
+
+  app.put('/api/skills/:name/toggle', requireAuth, asyncHandler(async (req, res) => {
+    const { name } = req.params;
+    const { enabled } = req.body as { enabled?: boolean };
+    const reg = readPyRegistry();
+    if (!reg[name]) return res.status(404).json({ ok: false, error: `Skill '${name}' not found` });
+    reg[name].enabled = enabled !== undefined ? enabled : !reg[name].enabled;
+    writePyRegistry(reg);
+    return res.json({ ok: true, name, enabled: reg[name].enabled });
+  }));
+
+  app.delete('/api/skills/:name', requireAuth, asyncHandler(async (req, res) => {
+    const { name } = req.params;
+    const reg = readPyRegistry();
+    if (!reg[name]) return res.status(404).json({ ok: false, error: `Skill '${name}' not found` });
+    delete reg[name];
+    writePyRegistry(reg);
+    return res.json({ ok: true, name, message: `Skill '${name}' removed` });
+  }));
+
+  app.post('/api/skills/:name/run', requireAuth, asyncHandler(async (req, res) => {
+    const { name } = req.params;
+    const { payload = {} } = req.body as { payload?: Record<string, unknown> };
+    const { execFile } = await import('child_process');
+    const { promisify } = await import('util');
+    const execFileAsync = promisify(execFile);
+    try {
+      const runScript = `
+import sys, json
+sys.path.insert(0, '/home/nexus/ogdray')
+from core_os.skills.skill_manager import execute_skill
+result = execute_skill(${JSON.stringify(name)}, ${JSON.stringify(payload)})
+print(json.dumps({'ok': True, 'result': result if isinstance(result, (dict,list,str,int,float,bool)) else str(result)}))
+`;
+      const { stdout } = await execFileAsync('/home/nexus/ogdray/venv/bin/python3', ['-c', runScript], {
+        timeout: 30000, cwd: '/home/nexus/ogdray',
+      });
+      return res.json(JSON.parse(stdout.trim()));
+    } catch (err: unknown) {
+      return res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  }));
+
   // ── CRON ──────────────────────────────────────────────────────────────────
 
   interface CronEntry {

@@ -1636,9 +1636,13 @@ export async function generateAIResponse(
 
         if (tool === 'skills') {
           const { default: fs } = await import('fs');
-          const skillPath = new URL('../../memory/skills.json', import.meta.url).pathname;
+          // Read from skills_registry.json (root workspace — all 27 skills)
+          const pyRegistryPath = '/home/nexus/ogdray/skills_registry.json';
           let skills: string[] = [];
-          try { skills = JSON.parse(fs.readFileSync(skillPath, 'utf-8')); } catch { /* none */ }
+          try {
+            const reg = JSON.parse(fs.readFileSync(pyRegistryPath, 'utf-8'));
+            skills = Object.values(reg).map((s: any) => `${s.name} — ${s.description || ''}${s.commands?.length ? ' (' + s.commands.join(', ') + ')' : ''}`);
+          } catch { /* none */ }
           captureToolEvent({ name: 'axiom_skills', args: {}, result: `${skills.length} skills` });
           return {
             content: skills.length
