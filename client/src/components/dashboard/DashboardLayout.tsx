@@ -13,7 +13,12 @@ import { DailyNewsDigest } from '@/components/DailyNewsDigest';
 import { GmailTasksView } from '@/components/GmailTasksView';
 import { DatabaseView } from '@/components/DatabaseView';
 import AIModelSelector from '@/components/AIModelSelector';
+import { CreativeStudio } from '@/components/CreativeStudio';
+import { PersonalTasksPanel } from '@/components/PersonalTasksPanel';
+import { YoutubePlayerCyberpunk } from '@/components/YoutubePlayerCyberpunk';
+import { VoicePage } from '@/components/VoicePage';
 import type { DailyNewsDigest as DailyNewsDigestType } from '@/types/millalyzer';
+import { resolveIntent, getNavigationAck } from '@/lib/intentRouter';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -28,6 +33,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [showVideoPanel, setShowVideoPanel] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [navAck, setNavAck] = useState<string | null>(null);
   const [activityLog, setActivityLog] = useState<string[]>([
     `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Session initialized`,
   ]);
@@ -62,6 +68,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleSendMessage = (message: string) => {
     logActivity(`Command sent: ${message}`);
     setIsProcessing(true);
+
+    // Intent routing — Milla auto-navigates based on what the user asked
+    const targetSection = resolveIntent(message);
+    if (targetSection && targetSection !== activeSection) {
+      setActiveSection(targetSection);
+      const ack = getNavigationAck(targetSection);
+      setNavAck(ack);
+      setTimeout(() => setNavAck(null), 3000);
+    }
+
     setTimeout(() => setIsProcessing(false), 900);
   };
 
@@ -99,6 +115,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     models: 'AI Models',
     settings: 'Settings',
     ide: 'IDE Sandbox',
+    studio: 'Creative Studio',
+    youtube: 'YouTube',
+    voice: 'Voice',
+    tasks: 'Tasks',
   };
 
   const emptyDigest: DailyNewsDigestType = {
@@ -503,9 +523,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       onChange={handleScoreChange}
                       onClose={() => {}}
                     />
-                    {/* Add more settings components here if available */}
                   </div>
                 </div>
+              ) : activeSection === 'studio' ? (
+                <CreativeStudio />
+              ) : activeSection === 'youtube' ? (
+                <div className="min-h-[500px]">
+                  <YoutubePlayerCyberpunk
+                    videoId={activeVideoId ?? undefined}
+                    onClose={() => setActiveSection('hub')}
+                  />
+                </div>
+              ) : activeSection === 'voice' ? (
+                <VoicePage />
+              ) : activeSection === 'tasks' ? (
+                <PersonalTasksPanel />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-center min-h-[400px]">
                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
@@ -607,6 +639,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
         </div>
+
+        {/* Milla navigation acknowledgment toast */}
+        {navAck && (
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-[#120428]/90 border border-[#00f2ff]/30 backdrop-blur-xl shadow-[0_0_30px_rgba(0,242,255,0.2)] flex items-center gap-3 text-sm text-white/90 animate-fade-in">
+            <Sparkles className="w-4 h-4 text-[#00f2ff] flex-shrink-0" />
+            {navAck}
+          </div>
+        )}
 
         {/* Command bar */}
         <CommandBar

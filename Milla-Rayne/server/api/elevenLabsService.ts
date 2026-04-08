@@ -21,8 +21,10 @@ const speechCache = new LRUCache<string, string>({
  * @returns The public URL of the generated audio file.
  */
 export async function generateElevenLabsSpeech(
-  text: string
+  text: string,
+  voiceId?: string
 ): Promise<string | null> {
+  const resolvedVoiceId = voiceId ?? VOICE_ID;
   if (!ELEVENLABS_API_KEY) {
     console.error('ElevenLabs API key is not configured.');
     return null;
@@ -31,7 +33,7 @@ export async function generateElevenLabsSpeech(
   // Create a hash of the text + voice settings to use as cache key
   const cacheKey = crypto
     .createHash('sha256')
-    .update(`${text}:${VOICE_ID}:eleven_turbo_v2_5:0.5:0.75`)
+    .update(`${text}:${resolvedVoiceId}:eleven_turbo_v2_5:0.5:0.75`)
     .digest('hex');
 
   // Check cache first
@@ -58,7 +60,7 @@ export async function generateElevenLabsSpeech(
   console.log(`Voice cache miss for text: "${text.substring(0, 50)}..."`);
 
   const response = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}`,
     {
       method: 'POST',
       headers: {

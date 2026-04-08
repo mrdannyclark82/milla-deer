@@ -1,4 +1,5 @@
 packages:
+  - '.'
   - 'Milla-Rayne'
   - 'Deer-Milla'
   - 'Elara2.0'

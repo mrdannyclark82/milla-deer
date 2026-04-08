@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   MessageCircle,
   Send,
@@ -17,6 +17,7 @@ import {
   Code,
   Loader2,
   Image,
+  Paperclip,
 } from 'lucide-react';
 import { YoutubePlayerCyberpunk } from '../components/YoutubePlayerCyberpunk';
 import { SandboxManager } from '../components/SandboxManager';
@@ -55,6 +56,9 @@ export default function Chat() {
     Array<{ id: string; title: string; channel: string; thumbnail?: string }>
   >([]);
   const [isLoadingFeed, setIsLoadingFeed] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const sampleVideos = [
@@ -201,29 +205,66 @@ export default function Chat() {
     }
   };
 
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAttachedFile(file);
+    if (file.type.startsWith('image/')) {
+      setFilePreviewUrl(URL.createObjectURL(file));
+    } else {
+      setFilePreviewUrl(null);
+    }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  }, []);
+
+  const clearAttachedFile = useCallback(() => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+    setAttachedFile(null);
+    setFilePreviewUrl(null);
+  }, [filePreviewUrl]);
+
   const sendMessage = async () => {
-    if (!message.trim() || isLoading) return;
+    if ((!message.trim() && !attachedFile) || isLoading) return;
 
     const trimmedMessage = message.trim();
+    const userMessageContent = attachedFile
+      ? `📎 ${attachedFile.name}${trimmedMessage ? `\n${trimmedMessage}` : ''}`
+      : trimmedMessage;
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: trimmedMessage,
+      content: userMessageContent,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setMessage('');
+    const fileToSend = attachedFile;
+    clearAttachedFile();
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: trimmedMessage,
-          userId: 'default-user',
-        }),
-      });
+      let response: Response;
+
+      if (fileToSend) {
+        const formData = new FormData();
+        formData.append('file', fileToSend);
+        if (trimmedMessage) formData.append('message', trimmedMessage);
+        response = await fetch('/api/chat/upload', {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: trimmedMessage,
+            userId: 'default-user',
+          }),
+        });
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -386,8 +427,38 @@ export default function Chat() {
 
           <div className="input-area">
             <div className="input-container">
+              {/* File preview badge */}
+              {attachedFile && (
+                <div className="file-preview-badge">
+                  <span className="file-preview-name">{attachedFile.name}</span>
+                  <button
+                    onClick={clearAttachedFile}
+                    className="file-preview-clear"
+                    aria-label="Remove attachment"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               <div className="input-wrapper">
                 <div className="input-bg" />
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.ts,.tsx,.jsx,.py,.sh,.yaml,.yml"
+                  onChange={handleFileSelect}
+                  className="hidden-file-input"
+                  aria-label="Attach file"
+                />
+                {/* Paperclip button */}
+                <button
+                  className="input-btn attach-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Attach file"
+                >
+                  <Paperclip style={{ width: '1.125rem', height: '1.125rem' }} />
+                </button>
                 <input
                   type="text"
                   placeholder="Message Milla..."
@@ -403,7 +474,7 @@ export default function Chat() {
                 <button
                   className="input-btn send-btn"
                   onClick={sendMessage}
-                  disabled={isLoading || !message.trim()}
+                  disabled={isLoading || (!message.trim() && !attachedFile)}
                   aria-label="Send message"
                 >
                   {isLoading ? (
@@ -1112,6 +1183,56 @@ export default function Chat() {
         .mic-btn {
           background: transparent;
           color: #9ca3af;
+        }
+        
+        .attach-btn {
+          background: transparent;
+          color: #9ca3af;
+          transition: color 0.15s;
+        }
+        
+        .attach-btn:hover {
+          color: #22d3ee;
+        }
+        
+        .hidden-file-input {
+          display: none;
+        }
+        
+        .file-preview-badge {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: rgba(34, 211, 238, 0.1);
+          border: 1px solid rgba(34, 211, 238, 0.25);
+          border-radius: 0.5rem;
+          padding: 0.35rem 0.75rem;
+          margin-bottom: 0.4rem;
+          max-width: 100%;
+        }
+        
+        .file-preview-name {
+          font-size: 0.8rem;
+          color: #22d3ee;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+        }
+        
+        .file-preview-clear {
+          background: transparent;
+          border: none;
+          color: #9ca3af;
+          cursor: pointer;
+          font-size: 0.75rem;
+          padding: 0;
+          line-height: 1;
+          flex-shrink: 0;
+        }
+        
+        .file-preview-clear:hover {
+          color: #f87171;
         }
         
         .send-btn {

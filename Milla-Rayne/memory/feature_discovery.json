@@ -28570,7 +28570,3010 @@
       "features": [],
       "interestingPatterns": [],
       "scannedAt": 1775265481511
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 347268,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290075
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87622,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290076
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42867,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290077
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39258,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290077
+    },
+    {
+      "repositoryUrl": "https://github.com/HKUDS/nanobot",
+      "repositoryName": "nanobot",
+      "stars": 37705,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775189251611
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 89918,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290508
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79775,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290508
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65970,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290508
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59894,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290508
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51497,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290508
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21114,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290924
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4632,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290924
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 2998,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290924
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2734,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290924
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2733,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266290924
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 347276,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266834538
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87622,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775266834538
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42867,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266834538
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39258,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775266834538
+    },
+    {
+      "repositoryUrl": "https://github.com/HKUDS/nanobot",
+      "repositoryName": "nanobot",
+      "stars": 37705,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775189251611
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 89918,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835004
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79775,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835004
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65970,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835004
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59894,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835004
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51497,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835004
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21114,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835473
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4632,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835473
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 2998,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835473
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2734,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835473
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2733,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775266835473
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 347866,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243107
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87618,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243107
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42900,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243107
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39265,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243107
+    },
+    {
+      "repositoryUrl": "https://github.com/HKUDS/nanobot",
+      "repositoryName": "nanobot",
+      "stars": 37705,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775189251611
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 89949,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243572
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79783,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243572
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65973,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243572
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59921,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243572
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51522,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317243572
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21115,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317244087
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4632,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317244087
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3000,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317244088
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317244088
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2733,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775317244088
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 347924,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322000732
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87618,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775322000732
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42900,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322000732
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39266,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775322000732
+    },
+    {
+      "repositoryUrl": "https://github.com/HKUDS/nanobot",
+      "repositoryName": "nanobot",
+      "stars": 37705,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775189251611
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 89952,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001158
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79784,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001158
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65973,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001158
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59922,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001158
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51526,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001158
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21115,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001550
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4632,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001550
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3000,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001550
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001550
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2733,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775322001550
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 348919,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120750
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87615,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120750
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42972,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120751
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39279,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120751
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90042,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121279
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79786,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121279
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121279
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59956,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121279
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51576,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121279
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21115,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121713
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4636,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121713
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3000,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121713
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2738,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121713
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421121713
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 348999,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430000678
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87615,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775430000678
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42975,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430000679
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39280,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775430000679
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90051,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001191
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79786,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001191
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001191
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59955,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001191
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51577,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001191
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21115,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001622
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4636,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001622
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3000,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001622
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2738,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001622
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775430001622
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 349198,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451600682
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87620,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775451600682
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 42984,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451600682
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39286,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775451600682
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90073,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601148
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79788,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601148
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65978,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601148
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59959,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601148
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51582,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601148
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21115,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601626
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4637,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601626
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3000,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601626
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2738,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601626
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775451601626
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 350022,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516403883
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87628,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775516403883
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43032,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516403883
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39302,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775516403883
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90151,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404426
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79804,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404426
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65977,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404426
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59959,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404426
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51610,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404426
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21114,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404946
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4638,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404947
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3001,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404947
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2740,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404947
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775516404947
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 350809,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565904948
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87634,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775565904949
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43074,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565904950
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39316,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775565904950
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90216,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565905737
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79820,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565905737
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65973,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565905737
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59966,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565905737
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51621,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565905737
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565906181
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4637,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565906181
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3001,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565906181
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2740,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565906181
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775565906181
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 350821,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566801552
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87634,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775566801552
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43076,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566801552
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39316,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775566801552
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90218,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566802396
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79820,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566802396
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65974,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566802396
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59966,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566802396
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51621,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566802396
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566803188
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4637,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566803188
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3001,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566803188
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2740,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566803188
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775566803188
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 350968,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736348
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87635,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736349
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43084,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736349
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39322,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736349
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90229,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736942
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79826,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736942
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65975,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736942
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59961,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736942
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51623,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576736942
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576737451
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4636,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576737451
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3001,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576737452
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2741,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576737452
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775576737452
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 351033,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581200723
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87635,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775581200723
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43088,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581200723
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39323,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775581200723
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90232,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201448
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79827,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201448
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201448
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59961,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201448
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51625,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201448
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201969
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4636,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201969
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3001,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201969
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2742,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201969
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775581201969
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 351388,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055015
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87641,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055015
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43100,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055016
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39328,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055016
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90264,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055451
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79836,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055451
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65974,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055451
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59957,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055451
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51638,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055451
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21119,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055931
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055931
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3002,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055931
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055931
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775620055931
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 351436,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624400620
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87642,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775624400620
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43107,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624400620
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39331,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775624400620
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90267,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401148
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79840,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401148
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65975,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401148
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59957,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401148
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401148
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21118,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401656
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401656
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3002,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401656
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401656
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775624401656
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352086,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667600820
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87648,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775667600820
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43149,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667600820
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39342,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775667600820
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90305,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667601475
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79856,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667601475
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65977,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667601475
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59967,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667601475
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51658,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667601475
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21117,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667602060
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667602060
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667602060
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667602060
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775667602060
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352143,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673513801
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87649,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775673513801
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43155,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673513802
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775673513802
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514489
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79856,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514489
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65977,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514489
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59978,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514489
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51658,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514489
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21117,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514990
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514990
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514990
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514990
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775673514990
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352148,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674294637
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87649,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775674294637
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43155,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674294638
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775674294638
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295033
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79856,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295033
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65978,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295033
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59978,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295033
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51659,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295033
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21117,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295512
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295512
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295512
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295512
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775674295512
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352160,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785110
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87649,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785110
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43156,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785110
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785110
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785630
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79857,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785630
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65978,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785630
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785630
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51661,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675785630
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21117,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675786225
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675786225
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675786225
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675786225
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775675786225
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352191,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679948897
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87648,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775679948897
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43158,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679948897
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775679948897
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949374
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79857,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949374
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65979,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949374
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949374
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51660,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949374
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949808
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949808
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949808
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949808
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775679949808
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352192,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182118
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87648,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182118
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43158,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182119
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182119
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182592
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79857,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182592
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65979,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182592
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182592
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51660,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680182592
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680183092
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680183093
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680183093
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680183093
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680183093
+    },
+    {
+      "repositoryUrl": "https://github.com/openclaw/openclaw",
+      "repositoryName": "openclaw",
+      "stars": 352192,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680452633
+    },
+    {
+      "repositoryUrl": "https://github.com/ChatGPTNextWeb/NextChat",
+      "repositoryName": "NextChat",
+      "stars": 87648,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775680452633
+    },
+    {
+      "repositoryUrl": "https://github.com/CherryHQ/cherry-studio",
+      "repositoryName": "cherry-studio",
+      "stars": 43158,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680452633
+    },
+    {
+      "repositoryUrl": "https://github.com/chatboxai/chatbox",
+      "repositoryName": "chatbox",
+      "stars": 39344,
+      "language": "TypeScript",
+      "features": [
+        "Real-time Chat",
+        "Message History",
+        "Chat Analytics"
+      ],
+      "interestingPatterns": [],
+      "scannedAt": 1775680452633
+    },
+    {
+      "repositoryUrl": "https://github.com/Fission-AI/OpenSpec",
+      "repositoryName": "OpenSpec",
+      "stars": 37431,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775421120752
+    },
+    {
+      "repositoryUrl": "https://github.com/rasbt/LLMs-from-scratch",
+      "repositoryName": "LLMs-from-scratch",
+      "stars": 90310,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453107
+    },
+    {
+      "repositoryUrl": "https://github.com/fighting41love/funNLP",
+      "repositoryName": "funNLP",
+      "stars": 79857,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453107
+    },
+    {
+      "repositoryUrl": "https://github.com/xtekky/gpt4free",
+      "repositoryName": "gpt4free",
+      "stars": 65979,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453107
+    },
+    {
+      "repositoryUrl": "https://github.com/pathwaycom/llm-app",
+      "repositoryName": "llm-app",
+      "stars": 59976,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453107
+    },
+    {
+      "repositoryUrl": "https://github.com/FlowiseAI/Flowise",
+      "repositoryName": "Flowise",
+      "stars": 51660,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453107
+    },
+    {
+      "repositoryUrl": "https://github.com/RasaHQ/rasa",
+      "repositoryName": "rasa",
+      "stars": 21116,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453587
+    },
+    {
+      "repositoryUrl": "https://github.com/huggingface/speech-to-speech",
+      "repositoryName": "speech-to-speech",
+      "stars": 4640,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453587
+    },
+    {
+      "repositoryUrl": "https://github.com/HeyWillow/willow",
+      "repositoryName": "willow",
+      "stars": 3003,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453587
+    },
+    {
+      "repositoryUrl": "https://github.com/Priler/jarvis",
+      "repositoryName": "jarvis",
+      "stars": 2745,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453587
+    },
+    {
+      "repositoryUrl": "https://github.com/rhasspy/rhasspy",
+      "repositoryName": "rhasspy",
+      "stars": 2735,
+      "language": "TypeScript",
+      "features": [],
+      "interestingPatterns": [],
+      "scannedAt": 1775680453587
     }
   ],
-  "lastUpdated": 1775265481523
+  "lastUpdated": 1775680453597
 }

@@ -4,7 +4,7 @@ import { Ollama } from 'ollama';
 
 // Configuration for local model
 const MODEL_PATH = path.join(process.cwd(), 'locallm', 'gemma.tflite');
-const DEFAULT_MODEL = 'gemma3:1b'; // Smallest Gemma model (815MB)
+const DEFAULT_MODEL = 'milla-rayne-gemma:latest'; // Milla-Rayne fine-tuned local model
 
 interface LocalModelResponse {
   content: string;

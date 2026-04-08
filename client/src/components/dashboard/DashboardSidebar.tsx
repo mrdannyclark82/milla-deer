@@ -12,6 +12,10 @@ import {
   Cpu,
   Sparkles,
   Code,
+  Image,
+  Youtube,
+  Mic,
+  ListTodo,
 } from 'lucide-react';
 
 interface NavItem {
@@ -54,6 +58,11 @@ export function DashboardSidebar({
   const navItems: NavItem[] = [
     { id: 'hub', label: 'Milla Hub', icon: <Home className="w-4 h-4" /> },
     {
+      id: 'studio',
+      label: 'Creative Studio',
+      icon: <Image className="w-4 h-4" />,
+    },
+    {
       id: 'knowledge',
       label: 'Knowledge Base',
       icon: <BookOpen className="w-4 h-4" />,
@@ -68,6 +77,21 @@ export function DashboardSidebar({
       label: 'Gmail & Tasks',
       icon: <Mail className="w-4 h-4" />,
       badge: 'Connected',
+    },
+    {
+      id: 'youtube',
+      label: 'YouTube',
+      icon: <Youtube className="w-4 h-4" />,
+    },
+    {
+      id: 'voice',
+      label: 'Voice',
+      icon: <Mic className="w-4 h-4" />,
+    },
+    {
+      id: 'tasks',
+      label: 'Tasks',
+      icon: <ListTodo className="w-4 h-4" />,
     },
   ];
 

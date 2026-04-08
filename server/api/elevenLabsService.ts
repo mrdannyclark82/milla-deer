@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { LRUCache } from 'lru-cache';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Default voice, can be changed
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? '21m00Tcm4TlvDq8ikWAM';
 
 // Cache for generated speech files (500 files, ~50MB max, 7-day TTL)
 const speechCache = new LRUCache<string, string>({

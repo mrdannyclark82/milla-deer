@@ -3,6 +3,8 @@ import { Directory, EncodingType, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import { generateOfflineCompanionResponse } from '@/services/offline-companion';
+import { gemma4Bridge } from '@/services/gemma4-bridge';
+import { liteRTLMService } from '@/services/litert-lm-service';
 import {
   getLocalModelEnabled,
   getLocalModelProfile,
@@ -466,6 +468,55 @@ export function useChat() {
       setUsingLocalModelFallback(false);
       return assistantMessage;
     } catch (sendError) {
+        // ── Fallback 1: Gemma 4 on-device (E2B NPU or E4B CPU) ──────────────
+        // Tried before localModelService because Gemma 4 is the newer capable
+        // runtime; localModelService covers the legacy MediaPipe bundled asset.
+        try {
+          const gemma4Result = await gemma4Bridge.generate(
+            outboundContent,
+            options?.imageData
+          );
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: gemma4Result.text,
+          };
+          setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+          setUsingLocalModelFallback(true);
+          setUsingOfflineFallback(false);
+          setLocalModelError(null);
+          setError(
+            `Cloud unavailable at ${apiBaseUrl}. Running on-device via Gemma 4 (${gemma4Result.variant}).`
+          );
+          return assistantMessage;
+        } catch {
+          // Gemma 4 native module not present in this build — try LiteRT-LM.
+        }
+
+        // ── Fallback 2: LiteRT-LM (react-native-litert-lm, Gemma 3n E2B) ─────
+        // Newer Google LiteRT runtime with GPU/NPU acceleration and streaming.
+        // Downloads Gemma 3n E2B INT4 (~650 MB) on first use.
+        try {
+          const liteRTResult = await liteRTLMService.generate(
+            outboundContent,
+            options?.imageData ? undefined : undefined // image path support added when we have a local path
+          );
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: liteRTResult.text,
+          };
+          setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+          setUsingLocalModelFallback(true);
+          setUsingOfflineFallback(false);
+          setLocalModelError(null);
+          setError(
+            `Cloud unavailable. Running on-device via LiteRT-LM (${liteRTResult.backend.toUpperCase()}, ${liteRTResult.modelId}).`
+          );
+          return assistantMessage;
+        } catch {
+          // LiteRT-LM unavailable (model not downloaded yet or not supported) — try legacy.
+        }
+
+        // ── Fallback 3: Legacy MediaPipe / LocalModelModule ──────────────────
         if (localModelEnabled && !options?.imageData) {
           try {
             setLocalModelStatus('initializing');
@@ -509,8 +560,9 @@ export function useChat() {
         }
       }
 
+        // ── Fallback 4: Offline companion text ───────────────────────────────
       setUsingOfflineFallback(true);
-      setError(`Remote link unavailable at ${apiBaseUrl}. Switched to offline fallback.`);
+      setError(`Remote link unavailable at ${apiBaseUrl}. All on-device runtimes unavailable. Switched to offline fallback.`);
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: options?.imageData

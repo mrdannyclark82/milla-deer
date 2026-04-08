@@ -27,6 +27,12 @@ export interface SoundEffect {
 
 const SOUND_LIBRARY: SoundEffect[] = [
   {
+    id: 'millagiggle',
+    file: 'millagiggle.mp3',
+    label: 'Milla Giggle',
+    triggers: ['giggle', 'hehe', 'tee hee', 'cheeky', 'silly', 'naughty', 'mischievous'],
+  },
+  {
     id: 'giggle_3',
     file: 'giggle_3.mp3',
     label: 'Giggle (soft)',
@@ -36,7 +42,7 @@ const SOUND_LIBRARY: SoundEffect[] = [
     id: 'giggle_4',
     file: 'giggle_4.mp3',
     label: 'Giggle (bright)',
-    triggers: ['excited', 'happy', 'delight', 'playful', 'cute', 'giggle'],
+    triggers: ['excited', 'happy', 'delight', 'playful', 'cute'],
   },
   {
     id: 'heartbeat',

@@ -16,7 +16,7 @@ import { analyzeVoiceInput } from '../voiceAnalysisService';
 import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
 import { sceneService } from '../services/scene.service';
-import { upload } from '../middleware/upload.middleware';
+import { upload, fileUpload } from '../middleware/upload.middleware';
 import { asyncHandler } from '../utils/routeHelpers';
 
 /**
@@ -226,6 +226,63 @@ export function registerChatRoutes(app: Express) {
         response: aiResponse.content,
         ...aiResponse, // Include imageUrl, youtube_play, etc.
         sceneContext: sceneService.getSceneContext(),
+      });
+    })
+  );
+
+  // File upload + chat — accepts a file and optional message, extracts content, sends to AI
+  router.post(
+    '/chat/upload',
+    fileUpload.single('file'),
+    asyncHandler(async (req, res) => {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const { message: userMessage = '' } = req.body as { message?: string };
+      const { originalname, mimetype, buffer } = req.file;
+      const isImage = mimetype.startsWith('image/');
+
+      let fileContext: string;
+
+      if (isImage) {
+        const base64 = buffer.toString('base64');
+        fileContext = `[Image attached: "${originalname}"]\nThe user has shared an image. Base64 data URI: data:${mimetype};base64,${base64}\nPlease describe and analyze this image.`;
+      } else {
+        // Text-based files: read as UTF-8 (PDF fallback: raw text attempt)
+        const textContent = buffer.toString('utf-8').slice(0, 20000); // cap at 20k chars
+        fileContext = `[File attached: "${originalname}" (${mimetype})]\n\`\`\`\n${textContent}\n\`\`\``;
+      }
+
+      const combinedMessage = userMessage.trim()
+        ? `${fileContext}\n\nUser message: ${userMessage.trim()}`
+        : fileContext;
+
+      const sanitized = validateAndSanitizePrompt(combinedMessage);
+
+      const sessionToken = req.cookies.session_token;
+      let userId = 'default-user';
+      if (sessionToken) {
+        const sessionResult = await validateSession(sessionToken);
+        if (sessionResult.valid && sessionResult.user) {
+          userId = sessionResult.user.id || 'default-user';
+        }
+      }
+
+      const aiResponse = await generateAIResponse(
+        sanitized,
+        [],
+        'Danny Ray',
+        undefined,
+        userId,
+        undefined,
+        false
+      );
+
+      res.json({
+        response: aiResponse.content,
+        ...aiResponse,
+        uploadedFile: { name: originalname, type: mimetype, isImage },
       });
     })
   );

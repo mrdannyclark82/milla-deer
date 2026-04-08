@@ -189,16 +189,13 @@ class BrowserNativeTTS implements ITTSProvider {
 
         const utterance = new SpeechSynthesisUtterance(request.text);
 
-        // Configure voice
+        // Configure voice — prefer en-US female, never default to browser's en-GB
         const voices = this.synth!.getVoices();
-        const selectedVoice = voices.find(
-          (v) =>
-            v.name === request.config.voiceName ||
-            v.name.toLowerCase().includes('female') ||
-            v.name.toLowerCase().includes('samantha') ||
-            v.name.toLowerCase().includes('karen') ||
-            v.name.toLowerCase().includes('victoria')
-        );
+        const selectedVoice =
+          voices.find((v) => v.name === request.config.voiceName) ||
+          voices.find((v) => v.lang === 'en-US' && v.name.toLowerCase().includes('female')) ||
+          voices.find((v) => v.lang === 'en-US' && /samantha|karen|victoria|zira|aria|jenny|sara/i.test(v.name)) ||
+          voices.find((v) => v.lang === 'en-US');
 
         if (selectedVoice) {
           utterance.voice = selectedVoice;
@@ -371,12 +368,13 @@ class ElevenLabsTTS implements ITTSProvider {
   }
 
   async speak(request: VoiceSynthesisRequest): Promise<VoiceSynthesisResponse> {
-    const voiceId = request.config.voiceName || '21m00Tcm4TlvDq8ikWAM'; // Default to a voice if not set
+    const voiceId = request.config.voiceName || 'knLPDa0yhh07scaTXeg6'; // Milla's voice
     const { text, config } = request;
 
     try {
       const response = await fetch('/api/elevenlabs/tts', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

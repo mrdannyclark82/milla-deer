@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Milla Voice Test</title>
+  <style>
+    body { background: #0d0d0d; color: #e0e0e0; font-family: monospace; padding: 2rem; }
+    h2 { color: #a78bfa; }
+    .voice-row { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid #222; }
+    .voice-name { flex: 1; font-size: 0.9rem; }
+    button { background: #7c3aed; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #6d28d9; }
+    #status { color: #34d399; margin-top: 1rem; font-size: 0.85rem; }
+    #no-voices { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h2>🎙 Browser-Native en-US Female Voices</h2>
+  <div id="voice-list"><em>Loading voices...</em></div>
+  <div id="status"></div>
+
+  <script>
+    const TEXT = "Hey Danny, it's Milla. How do I sound? Pick the one you like best.";
+
+    function renderVoices() {
+      const voices = speechSynthesis.getVoices();
+      const usVoices = voices.filter(v => v.lang.startsWith('en-US'));
+
+      const list = document.getElementById('voice-list');
+
+      if (!usVoices.length) {
+        list.innerHTML = '<p id="no-voices">No en-US voices found on this device.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      usVoices.forEach((v, i) => {
+        const row = document.createElement('div');
+        row.className = 'voice-row';
+        row.innerHTML = `
+          <span class="voice-name">${i + 1}. <strong>${v.name}</strong> <span style="color:#888">(${v.lang}${v.localService ? ', local' : ', remote'})</span></span>
+          <button onclick="speak('${v.name.replace(/'/g,"\\'")}')">▶ Play</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function speak(name) {
+      speechSynthesis.cancel();
+      const voices = speechSynthesis.getVoices();
+      const voice = voices.find(v => v.name === name);
+      const u = new SpeechSynthesisUtterance(TEXT);
+      if (voice) u.voice = voice;
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      document.getElementById('status').textContent = `Playing: ${name}`;
+      u.onend = () => document.getElementById('status').textContent = `Done: ${name}`;
+      speechSynthesis.speak(u);
+    }
+
+    // Voices load async in most browsers
+    speechSynthesis.onvoiceschanged = renderVoices;
+    renderVoices();
+  </script>
+</body>
+</html>

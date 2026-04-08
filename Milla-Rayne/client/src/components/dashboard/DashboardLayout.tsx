@@ -47,6 +47,11 @@ import { YoutubePlayerCyberpunk } from '@/components/YoutubePlayerCyberpunk';
 import { CreativeStudio } from '@/components/CreativeStudio';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { YouTubeFYP } from '@/components/YouTubeFYP';
+import { AgentsPanel } from '@/components/AgentsPanel';
+import { ComputerUsePanel } from '@/components/ComputerUsePanel';
+import DreamDashboard from '@/components/DreamDashboard';
+import SwarmPanel from '@/components/SwarmPanel';
+import DeerFlowPanel from '@/components/DeerFlowPanel';
 import { proactiveGet, proactivePost } from '@/lib/proactiveApi';
 import {
   loadSceneSettings,
@@ -1739,6 +1744,16 @@ export function DashboardLayout() {
                     />
                   </div>
                 </div>
+              ) : activeSection === 'agents-hub' ? (
+                <AgentsPanel />
+              ) : activeSection === 'computer-use' ? (
+                <ComputerUsePanel />
+              ) : activeSection === 'dream' ? (
+                <DreamDashboard />
+              ) : activeSection === 'swarm' ? (
+                <SwarmPanel />
+              ) : activeSection === 'deerflow' ? (
+                <DeerFlowPanel />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-center min-h-[400px]">
                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">

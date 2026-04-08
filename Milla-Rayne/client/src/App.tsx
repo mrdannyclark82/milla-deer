@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { Switch, Route, Redirect } from 'wouter';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
+import AxiomRayne from './pages/AxiomRayne';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
 import { ComputerUsePanel } from './components/ComputerUsePanel';
@@ -62,6 +63,9 @@ function AuthGate() {
       </Route>
       <Route path="/agents-hub">
         {isAuthenticated ? <AgentsPanel /> : <Redirect to="/" />}
+      </Route>
+      <Route path="/axiom-rayne">
+        {isAuthenticated ? <AxiomRayne /> : <Redirect to="/" />}
       </Route>
       <Route>
         {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}

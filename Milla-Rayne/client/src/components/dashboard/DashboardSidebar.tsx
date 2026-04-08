@@ -15,6 +15,11 @@ import {
   Palette,
   MessageSquare,
   Tv2,
+  Bot,
+  MonitorCog,
+  Brain,
+  Network,
+  FlaskConical,
 } from 'lucide-react';
 
 interface NavItem {
@@ -83,6 +88,14 @@ export function DashboardSidebar({
       label: 'For You',
       icon: <Tv2 className="w-4 h-4" />,
     },
+  ];
+
+  const aiOpsItems: NavItem[] = [
+    { id: 'agents-hub', label: 'Agents Hub', icon: <Bot className="w-4 h-4" /> },
+    { id: 'computer-use', label: 'Computer Use', icon: <MonitorCog className="w-4 h-4" /> },
+    { id: 'dream', label: 'Dream / REM', icon: <Brain className="w-4 h-4" /> },
+    { id: 'swarm', label: 'Swarm', icon: <Network className="w-4 h-4" /> },
+    { id: 'deerflow', label: 'DeerFlow Research', icon: <FlaskConical className="w-4 h-4" /> },
   ];
 
   const systemItems: NavItem[] = [
@@ -179,6 +192,51 @@ export function DashboardSidebar({
                         {item.badge}
                       </span>
                     )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* AI Ops Section */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection('aiops')}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-white/50 uppercase tracking-wider hover:text-white/70 transition-colors"
+            >
+              <span>AI Ops</span>
+              {expandedSections.includes('aiops') ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
+            </button>
+
+            {expandedSections.includes('aiops') && (
+              <div className="mt-2 space-y-1">
+                {aiOpsItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onSectionChange(item.id);
+                      if (isMobile) onClose();
+                    }}
+                    className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${
+                      activeSection === item.id
+                        ? 'bg-gradient-to-r from-[#00f2ff]/20 to-[#ff00aa]/10 text-white border border-[#00f2ff]/30 shadow-[0_0_20px_rgba(0,242,255,0.2)]'
+                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span
+                      className={`transition-all duration-300 ${
+                        activeSection === item.id
+                          ? 'text-[#00f2ff]'
+                          : 'group-hover:text-[#00f2ff]'
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 text-left">{item.label}</span>
                   </button>
                 ))}
               </div>

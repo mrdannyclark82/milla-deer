@@ -20,6 +20,7 @@ import { registerAxiomRoutes } from './axiom.routes';
 import { registerSkillsRoutes } from './skills.routes';
 import { registerExecutionRoutes } from './execution.routes';
 import { registerAgentsHubRoutes } from './agentsHub.routes';
+import deerflowRouter from './deerflow.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
@@ -128,6 +129,9 @@ export async function registerModularRoutes(app: Express) {
 
   // Python skill execution bridge + agents hub (proxies to milla_agent_server.py at :7788)
   registerAgentsHubRoutes(app);
+
+  // DeerFlow LangGraph research agent proxy (proxies to :8001)
+  app.use('/api/deerflow', deerflowRouter);
 
   // AgentRouter — list available routes, hot-reload config
   app.get('/api/agents/routes', (_req, res) => res.json({ routes: listRoutes() }));
