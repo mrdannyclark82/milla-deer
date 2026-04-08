@@ -4,6 +4,10 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
+import { ComputerUsePanel } from './components/ComputerUsePanel';
+import DreamDashboard from './components/DreamDashboard';
+import SwarmPanel from './components/SwarmPanel';
+import { AgentsPanel } from './components/AgentsPanel';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +50,18 @@ function AuthGate() {
       </Route>
       <Route path="/chat">
         {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}
+      </Route>
+      <Route path="/computer-use">
+        {isAuthenticated ? <ComputerUsePanel /> : <Redirect to="/" />}
+      </Route>
+      <Route path="/dream">
+        {isAuthenticated ? <DreamDashboard /> : <Redirect to="/" />}
+      </Route>
+      <Route path="/swarm">
+        {isAuthenticated ? <SwarmPanel /> : <Redirect to="/" />}
+      </Route>
+      <Route path="/agents-hub">
+        {isAuthenticated ? <AgentsPanel /> : <Redirect to="/" />}
       </Route>
       <Route>
         {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}

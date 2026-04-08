@@ -1,10 +1,26 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default {
   root: 'client',
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'public',
+      filename: 'sw.js',
+      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'milla_new.jpg'],
+      manifest: false,
+      injectManifest: {
+        swSrc: 'client/public/sw.js',
+        swDest: 'dist/sw.js',
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
+    }),
+  ],
   server: {
     host: '0.0.0.0',
     proxy: {

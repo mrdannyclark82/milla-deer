@@ -40,9 +40,7 @@ export function registerCopilotRoutes(app: Express) {
     ].filter(Boolean).join('\n');
 
     try {
-      const raw = await generateAIResponse(prompt, 'copilot-reviewer', {
-        bypassFunctionCalls: true,
-      });
+      const raw = await generateAIResponse(prompt, [], 'copilot-reviewer', undefined, undefined, undefined, true);
 
       // Parse JSON from response
       const jsonMatch = raw.content.match(/\{[\s\S]*\}/);

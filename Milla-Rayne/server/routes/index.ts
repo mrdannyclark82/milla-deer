@@ -19,14 +19,19 @@ import { registerLAMRoutes } from './lam.routes';
 import { registerAxiomRoutes } from './axiom.routes';
 import { registerSkillsRoutes } from './skills.routes';
 import { registerExecutionRoutes } from './execution.routes';
+import { registerAgentsHubRoutes } from './agentsHub.routes';
 import {
   startTelegramPolling,
   isTelegramConfigured,
 } from '../services/telegramBotService';
 import { discoverNewSounds, listSounds, pickSoundForContext } from '../services/soundEffectsService';
+import { registerElevenLabsRoutes } from './elevenlabs.routes';
 import { registerCopilotRoutes } from './copilot.routes';
 import { registerFilesRoutes } from './files.routes';
 import { registerAgentIntakeRoutes } from './agents.intake.routes';
+import { registerComputerUseRoutes } from './computerUse.routes';
+import { registerDreamRoutes } from './dream.routes';
+import { registerPushRoutes } from './push.routes';
 import { listRoutes, reloadAgentRouter } from '../services/agentRouterService';
 
 /**
@@ -100,6 +105,9 @@ export async function registerModularRoutes(app: Express) {
     startTelegramPolling();
   }
 
+  // ElevenLabs TTS — Milla's voice (knLPDa0yhh07scaTXeg6)
+  registerElevenLabsRoutes(app);
+
   // Copilot review intake — Milla can POST here to get code/arch review
   registerCopilotRoutes(app);
 
@@ -108,6 +116,18 @@ export async function registerModularRoutes(app: Express) {
 
   // Agent intake routes — real endpoints agentRouter.json dispatches to
   registerAgentIntakeRoutes(app);
+
+  // Computer use — OCR, screen-size, mouse-position (supplement to execution.routes.ts)
+  registerComputerUseRoutes(app);
+
+  // REM / Dream cycle — neuro state, GIM journal, stream of consciousness, dream log
+  registerDreamRoutes(app);
+
+  // PWA push notifications — VAPID key, subscribe, unsubscribe, test
+  registerPushRoutes(app);
+
+  // Python skill execution bridge + agents hub (proxies to milla_agent_server.py at :7788)
+  registerAgentsHubRoutes(app);
 
   // AgentRouter — list available routes, hot-reload config
   app.get('/api/agents/routes', (_req, res) => res.json({ routes: listRoutes() }));

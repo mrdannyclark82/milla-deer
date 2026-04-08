@@ -199,7 +199,7 @@ export async function scroll(
       direction === 'up' ? -amount : direction === 'down' ? amount : 0;
 
     if (selector) {
-      await page.locator(selector).scroll({ deltaX, deltaY });
+      await page.locator(selector).evaluate((el, d: {x: number; y: number}) => el.scrollBy(d.x, d.y), { x: deltaX, y: deltaY });
     } else {
       await page.mouse.wheel(deltaX, deltaY);
     }
@@ -271,7 +271,7 @@ export async function analyzeScreen(url?: string): Promise<ScreenAnalysisResult>
       return { success: false, error: snap.error ?? 'Screenshot failed' };
     }
 
-    const analysis = await analyzeScreenShareImage(snap.dataUrl);
+    const analysis = await analyzeScreenShareImage('Analyze the current screen', snap.dataUrl, 'Danny Ray');
     return {
       success: true,
       description: analysis.success ? analysis.content : undefined,

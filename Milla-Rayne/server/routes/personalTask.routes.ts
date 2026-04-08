@@ -6,6 +6,7 @@ import {
   getTaskSummary,
 } from '../personalTaskService';
 import { asyncHandler } from '../utils/routeHelpers';
+import { requireAuth } from '../middleware/auth.middleware';
 
 /**
  * Personal Task and Self-Improvement Task Routes
@@ -15,6 +16,7 @@ export function registerPersonalTaskRoutes(app: Express) {
 
   router.get(
     '/personal-tasks',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const tasks = getPersonalTasks();
       res.json(tasks);
@@ -23,6 +25,7 @@ export function registerPersonalTaskRoutes(app: Express) {
 
   router.get(
     '/task-summary',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const summary = getTaskSummary();
       res.json({ summary });
@@ -31,6 +34,7 @@ export function registerPersonalTaskRoutes(app: Express) {
 
   router.post(
     '/personal-tasks/:taskId/start',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const task = await startTask(req.params.taskId as string);
       res.json({ success: !!task, task });
@@ -39,6 +43,7 @@ export function registerPersonalTaskRoutes(app: Express) {
 
   router.post(
     '/personal-tasks/:taskId/complete',
+    requireAuth,
     asyncHandler(async (req, res) => {
       const insights = req.body.insights || "Task completed manually.";
       const task = await completeTask(req.params.taskId as string, insights);

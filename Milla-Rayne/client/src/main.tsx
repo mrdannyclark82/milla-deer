@@ -66,3 +66,21 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>
 );
+
+// Register service worker for PWA (production only)
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  try {
+    const { Workbox } = await import('workbox-window');
+    const wb = new Workbox('/sw.js');
+    wb.addEventListener('installed', (event) => {
+      if (event.isUpdate) {
+        // New content available — reload to pick it up
+        window.location.reload();
+      }
+    });
+    wb.register();
+  } catch {
+    // Fallback: bare navigator registration
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  }
+}

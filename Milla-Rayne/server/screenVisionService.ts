@@ -12,6 +12,38 @@ export interface ScreenVisionResult {
 const DEFAULT_OPENROUTER_VISION_MODEL = 'google/gemini-2.0-flash-001';
 const DEFAULT_XAI_VISION_MODEL = 'grok-2-vision-1212';
 const DEFAULT_GEMINI_VISION_MODEL = 'gemini-2.5-flash';
+const GEMINI_VISION_MODEL_FALLBACKS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+];
+
+// Multi-key rotation — ported from aetherboot-ai geminiService.ts
+let currentGeminiKeyIndex = 0;
+
+function getGeminiApiKeys(): string[] {
+  const keys = [
+    config.gemini.apiKey,
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+    process.env.GEMINI_API_KEY_4,
+  ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0);
+  return [...new Set(keys)];
+}
+
+function rotateGeminiKey(): void {
+  const keys = getGeminiApiKeys();
+  if (keys.length > 1) {
+    currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % keys.length;
+    console.log(`[screenVision] Rotated to Gemini key index ${currentGeminiKeyIndex}`);
+  }
+}
+
+function isQuotaOrAuthError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return /401|403|429|quota|rate.?limit/i.test(error.message);
+}
 
 function buildSystemPrompt(userName: string): string {
   return [
@@ -85,7 +117,8 @@ async function analyzeWithGemini(
   imageData: string,
   userName: string
 ): Promise<ScreenVisionResult> {
-  if (!config.gemini.apiKey) {
+  const keys = getGeminiApiKeys();
+  if (keys.length === 0) {
     return {
       success: false,
       error: 'Gemini vision is not configured.',
@@ -100,45 +133,51 @@ async function analyzeWithGemini(
     };
   }
 
-  try {
-    const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_VISION_MODEL || DEFAULT_GEMINI_VISION_MODEL,
-    });
-    const result = await model.generateContent([
-      {
-        text: `${buildSystemPrompt(userName)}\n\n${buildUserPrompt(userMessage)}`,
-      },
-      {
-        inlineData: {
-          mimeType: parsedImage.mimeType,
-          data: parsedImage.data,
+  const requestedModel = process.env.GEMINI_VISION_MODEL || DEFAULT_GEMINI_VISION_MODEL;
+  const models = [...new Set([requestedModel, ...GEMINI_VISION_MODEL_FALLBACKS])];
+  const maxAttempts = models.length * keys.length;
+  let lastError: string = 'Gemini vision request failed.';
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const apiKey = keys[currentGeminiKeyIndex % keys.length];
+    const model = models[attempt % models.length];
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const generativeModel = genAI.getGenerativeModel({ model });
+      const result = await generativeModel.generateContent([
+        {
+          text: `${buildSystemPrompt(userName)}\n\n${buildUserPrompt(userMessage)}`,
         },
-      },
-    ]);
+        {
+          inlineData: {
+            mimeType: parsedImage.mimeType,
+            data: parsedImage.data,
+          },
+        },
+      ]);
 
-    const content = result.response.text()?.trim();
-    if (!content) {
-      return {
-        success: false,
-        error: 'Gemini vision returned no usable content.',
-      };
-    }
+      const content = result.response.text()?.trim();
+      if (!content) {
+        return {
+          success: false,
+          error: 'Gemini vision returned no usable content.',
+        };
+      }
 
-    return {
-      success: true,
-      content,
-      provider: 'gemini',
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error:
+      return { success: true, content, provider: 'gemini' };
+    } catch (error) {
+      lastError =
         error instanceof Error
           ? `Gemini vision request failed: ${error.message}`
-          : 'Gemini vision request failed.',
-    };
+          : 'Gemini vision request failed.';
+      console.warn(`[screenVision] Gemini attempt ${attempt + 1}/${maxAttempts} failed (key=${currentGeminiKeyIndex}, model=${model}):`, lastError);
+      if (isQuotaOrAuthError(error)) {
+        rotateGeminiKey();
+      }
+    }
   }
+
+  return { success: false, error: lastError };
 }
 
 async function analyzeWithOpenRouter(

@@ -694,7 +694,7 @@ print(result if isinstance(result, str) else str(result))
   }
 
   app.put('/api/skills/:name/toggle', requireAuth, asyncHandler(async (req, res) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
     const { enabled } = req.body as { enabled?: boolean };
 
     // Check Python registry first
@@ -715,7 +715,7 @@ print(result if isinstance(result, str) else str(result))
   }));
 
   app.delete('/api/skills/:name', requireAuth, asyncHandler(async (req, res) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
 
     // Builtin skills cannot be deleted
     if (getSkill(name)) {
@@ -730,7 +730,7 @@ print(result if isinstance(result, str) else str(result))
   }));
 
   app.post('/api/skills/:name/run', requireAuth, asyncHandler(async (req, res) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
     const { payload = {} } = req.body as { payload?: Record<string, unknown> };
 
     // system-health
@@ -943,7 +943,7 @@ print(json.dumps({'ok': True, 'result': result if isinstance(result, (dict,list,
   }));
 
   app.delete('/api/memory/:id', requireAuth, asyncHandler(async (req, res) => {
-    const deleted = encryptedMemory.deleteById(req.params.id);
+    const deleted = encryptedMemory.deleteById(req.params.id as string);
     if (deleted) encryptedMemory.flush();
     return res.json({ ok: deleted });
   }));

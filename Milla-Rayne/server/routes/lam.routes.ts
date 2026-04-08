@@ -109,7 +109,7 @@ export function registerLAMRoutes(app: Express): void {
 
   /** GET /api/slm/export/:clusterId — export fine-tuning JSONL for a cluster */
   app.get('/api/slm/export/:clusterId', async (req: Request, res: Response) => {
-    const { clusterId } = req.params;
+    const clusterId = req.params.clusterId as string;
     const valid = CLUSTER_DEFINITIONS.find((c) => c.id === clusterId);
     if (!valid) {
       return res.status(404).json({ error: `Unknown cluster: ${clusterId}` });

@@ -10,6 +10,7 @@
 
 import { type Express } from 'express';
 import { asyncHandler } from '../utils/routeHelpers';
+import { requireAuth } from '../middleware/auth.middleware';
 import {
   listSkills,
   listSkillsByCategory,
@@ -33,9 +34,9 @@ export function registerSkillsRoutes(app: Express) {
   app.get(
     '/api/skills/:id',
     asyncHandler(async (req, res) => {
-      const skill = getSkill(req.params.id);
+      const skill = getSkill(req.params.id as string);
       if (!skill) {
-        res.status(404).json({ success: false, error: `Skill "${req.params.id}" not found.` });
+        res.status(404).json({ success: false, error: `Skill "${req.params.id as string}" not found.` });
         return;
       }
       res.json({ success: true, skill });
@@ -98,4 +99,28 @@ export function registerSkillsRoutes(app: Express) {
       res.json({ success: true, tools });
     })
   );
+
+  // Execute a Python skill via the agent server bridge
+  app.post('/api/skills/execute', requireAuth, asyncHandler(async (req, res) => {
+    const { skillId, action = '', params = {} } = req.body as { skillId: string; action?: string; params?: Record<string, unknown> };
+    if (!skillId) {
+      res.status(400).json({ error: 'skillId is required' });
+      return;
+    }
+    const response = await fetch('http://localhost:7788/skill/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skillId, action, params }),
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await response.json();
+    res.json(data);
+  }));
+
+  // List Python skills
+  app.get('/api/skills/python', requireAuth, asyncHandler(async (_req, res) => {
+    const response = await fetch('http://localhost:7788/skill/list', { signal: AbortSignal.timeout(5000) });
+    const data = await response.json();
+    res.json(data);
+  }));
 }
