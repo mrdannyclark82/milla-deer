@@ -30,6 +30,31 @@ export function registerSkillsRoutes(app: Express) {
     })
   );
 
+  // Execute a Python skill via the agent server bridge (must be before /:id)
+  app.post('/api/skills/execute', requireAuth, asyncHandler(async (req, res) => {
+    const body = (req.body ?? {}) as { skillId?: string; action?: string; params?: Record<string, unknown> };
+    const { skillId, action = '', params = {} } = body;
+    if (!skillId) {
+      res.status(400).json({ error: 'skillId is required' });
+      return;
+    }
+    const response = await fetch('http://localhost:7788/skill/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skillId, action, params }),
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await response.json();
+    res.json(data);
+  }));
+
+  // List Python skills (must be before /:id)
+  app.get('/api/skills/python', requireAuth, asyncHandler(async (_req, res) => {
+    const response = await fetch('http://localhost:7788/skill/list', { signal: AbortSignal.timeout(5000) });
+    const data = await response.json();
+    res.json(data);
+  }));
+
   /** Get skill by ID */
   app.get(
     '/api/skills/:id',
@@ -100,27 +125,4 @@ export function registerSkillsRoutes(app: Express) {
     })
   );
 
-  // Execute a Python skill via the agent server bridge
-  app.post('/api/skills/execute', requireAuth, asyncHandler(async (req, res) => {
-    const { skillId, action = '', params = {} } = req.body as { skillId: string; action?: string; params?: Record<string, unknown> };
-    if (!skillId) {
-      res.status(400).json({ error: 'skillId is required' });
-      return;
-    }
-    const response = await fetch('http://localhost:7788/skill/execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ skillId, action, params }),
-      signal: AbortSignal.timeout(30000),
-    });
-    const data = await response.json();
-    res.json(data);
-  }));
-
-  // List Python skills
-  app.get('/api/skills/python', requireAuth, asyncHandler(async (_req, res) => {
-    const response = await fetch('http://localhost:7788/skill/list', { signal: AbortSignal.timeout(5000) });
-    const data = await response.json();
-    res.json(data);
-  }));
 }
