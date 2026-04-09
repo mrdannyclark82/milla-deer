@@ -4,44 +4,9 @@ import {
   getCoquiSpeechCacheStats,
 } from '../api/coquiService';
 import { generateElevenLabsSpeech } from '../api/elevenLabsService';
+import { generatePiperSpeech, isPiperAvailable } from '../api/kokoroService';
 import { cacheMiddleware } from '../middleware/caching';
 import { asyncHandler } from '../utils/routeHelpers';
-import OpenAI from 'openai';
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-
-// OpenAI TTS client — only initialised when OPENAI_API_KEY is set
-let openaiTTS: OpenAI | null = null;
-function getOpenAITTS() {
-  if (!openaiTTS && process.env.OPENAI_API_KEY) {
-    openaiTTS = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return openaiTTS;
-}
-
-async function generateOpenAISpeech(text: string): Promise<string | null> {
-  const client = getOpenAITTS();
-  if (!client) return null;
-  try {
-    const audioDir = path.resolve(process.cwd(), 'client', 'public', 'audio');
-    if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
-    const hash = crypto.createHash('sha256').update(`openai:nova:${text}`).digest('hex');
-    const filePath = path.join(audioDir, `${hash}.mp3`);
-    if (!fs.existsSync(filePath)) {
-      const mp3 = await client.audio.speech.create({
-        model: 'tts-1',
-        voice: 'nova',
-        input: text,
-      });
-      const buffer = Buffer.from(await mp3.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-    }
-    return `/audio/${hash}.mp3`;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Text-to-Speech Routes
@@ -64,10 +29,10 @@ export function registerTTSRoutes(app: Express) {
 
       const truncated = text.slice(0, 4096); // hard cap
 
-      // Priority chain
+      // Priority chain: Piper (local Milla voice) → ElevenLabs → Coqui → browser fallback
       const audioUrl =
+        (await generatePiperSpeech(truncated)) ??
         (await generateElevenLabsSpeech(truncated)) ??
-        (await generateOpenAISpeech(truncated)) ??
         (await generateCoquiSpeech(truncated));
 
       if (!audioUrl) {
@@ -91,6 +56,27 @@ export function registerTTSRoutes(app: Express) {
       res.json({
         success: true,
         stats,
+      });
+    })
+  );
+
+  /**
+   * GET /api/tts/status
+   * Returns which TTS providers are currently available.
+   */
+  router.get(
+    '/tts/status',
+    asyncHandler(async (_req: Request, res: Response) => {
+      const piperOnline = await isPiperAvailable();
+      const elevenLabsConfigured = !!process.env.ELEVENLABS_API_KEY;
+      const active = piperOnline ? 'piper' : elevenLabsConfigured ? 'elevenlabs' : 'browser';
+      res.json({
+        active,
+        providers: {
+          piper: piperOnline,
+          elevenlabs: elevenLabsConfigured,
+          browser: true,
+        },
       });
     })
   );
