@@ -15,8 +15,6 @@ export default {
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'milla_new.jpg'],
       manifest: false,
       injectManifest: {
-        swSrc: 'client/public/sw.js',
-        swDest: 'dist/sw.js',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
     }),
