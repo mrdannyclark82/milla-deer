@@ -6,7 +6,7 @@
 const CACHE_NAME = 'milla-rayne-v1';
 const OFFLINE_URL = '/offline.html';
 
-const PRECACHE_ASSETS = [
+const PRECACHE_ASSETS = self.__WB_MANIFEST ?? [
   '/',
   '/offline.html',
   '/icon.svg',

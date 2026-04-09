@@ -16,6 +16,7 @@ import {
 } from '../selfEvolutionService';
 import { getMillaMoodData } from '../moodService';
 import { asyncHandler } from '../utils/routeHelpers';
+import { requireAuth } from '../middleware/auth.middleware';
 import { getConfigDiagnostics, getGitHubToken } from '../config';
 import { validateGitHubToken } from '../githubApiService';
 import {
@@ -805,4 +806,16 @@ export function registerSystemRoutes(app: Express) {
 
   // Mount routes
   app.use('/api', router);
+
+  // Ollama local models
+  app.get('/api/ollama/models', requireAuth, asyncHandler(async (_req, res) => {
+    try {
+      const upstream = await fetch('http://localhost:11434/api/tags');
+      if (!upstream.ok) { res.json({ models: [] }); return; }
+      const data = await upstream.json() as { models?: { name: string; size: number; modified_at: string }[] };
+      res.json({ models: (data.models ?? []).map(m => ({ name: m.name, size: m.size, modified_at: m.modified_at })) });
+    } catch {
+      res.json({ models: [] });
+    }
+  }));
 }

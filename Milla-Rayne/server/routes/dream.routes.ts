@@ -43,6 +43,16 @@ export function registerDreamRoutes(app: Express): void {
     }
   }));
 
+  // Full GIM journal text (for TTS / read-aloud)
+  app.get('/api/dream/gim/full', requireAuth, asyncHandler(async (_req, res) => {
+    try {
+      const content = fs.readFileSync(GIM_JOURNAL, 'utf8');
+      res.json({ content, length: content.length });
+    } catch {
+      res.json({ content: '', length: 0 });
+    }
+  }));
+
   // Dream log
   app.get('/api/dream/log', requireAuth, asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 10;

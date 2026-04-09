@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import JSZip from 'jszip';
 import Editor from 'react-simple-code-editor';
 import { Highlight, themes } from 'prism-react-renderer';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
   FileCode,
   Trash2,
   Plus,
+  Upload,
   RefreshCw,
   Sparkles,
   MessageSquare,
@@ -32,6 +34,7 @@ import {
   Monitor,
   MousePointerClick,
   Layers,
+  Cpu,
 } from 'lucide-react';
 import { SandboxChatPanel } from './SandboxChatPanel';
 
@@ -367,6 +370,12 @@ export const Sandbox: React.FC<SandboxProps> = ({
   // New file modal state
   const [showNewFileInput, setShowNewFileInput] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+
+  // File upload + Ollama models
+  const fileUploadRef = useRef<HTMLInputElement>(null);
+  const [ollamaModels, setOllamaModels] = useState<{ name: string; size: number }[]>([]);
+  const [selectedOllamaModel, setSelectedOllamaModel] = useState('milla-rayne:latest');
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Refs
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -974,9 +983,73 @@ export const Sandbox: React.FC<SandboxProps> = ({
     setNewFileName('');
   };
 
+  // Language detection from extension
+  const extToLang = (ext: string): string => {
+    const map: Record<string, string> = {
+      js: 'javascript', mjs: 'javascript', cjs: 'javascript', jsx: 'javascript',
+      ts: 'typescript', tsx: 'typescript', html: 'html', css: 'css', json: 'json',
+      py: 'python', md: 'markdown', sh: 'bash', bash: 'bash', yaml: 'yaml',
+      yml: 'yaml', sql: 'sql', go: 'go', rs: 'rust', rb: 'ruby', php: 'php',
+      java: 'java', c: 'c', cpp: 'cpp', h: 'c', hpp: 'cpp', txt: 'text',
+    };
+    return map[ext] ?? 'text';
+  };
+
+  // Handle local file upload with auto-unzip
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFiles = e.target.files;
+    if (!uploadedFiles?.length) return;
+    setUploadError(null);
+    const newVFiles: VirtualFile[] = [];
+
+    for (const uploadedFile of Array.from(uploadedFiles)) {
+      if (uploadedFile.name.endsWith('.zip')) {
+        try {
+          const zip = new JSZip();
+          const loaded = await zip.loadAsync(uploadedFile);
+          for (const [relativePath, zipEntry] of Object.entries(loaded.files)) {
+            if (zipEntry.dir) continue;
+            const text = await zipEntry.async('text').catch(() => null);
+            if (text === null) continue; // skip binary
+            const ext = relativePath.split('.').pop()?.toLowerCase() ?? '';
+            newVFiles.push({ name: relativePath, content: text, language: extToLang(ext) });
+          }
+        } catch {
+          setUploadError(`Failed to unzip ${uploadedFile.name}`);
+        }
+      } else {
+        try {
+          const text = await uploadedFile.text();
+          const ext = uploadedFile.name.split('.').pop()?.toLowerCase() ?? '';
+          newVFiles.push({ name: uploadedFile.name, content: text, language: extToLang(ext) });
+        } catch {
+          setUploadError(`Could not read ${uploadedFile.name}`);
+        }
+      }
+    }
+
+    if (newVFiles.length > 0) {
+      setFiles(prev => [...prev, ...newVFiles]);
+      setActiveFileIndex(files.length); // focus first uploaded
+    }
+    if (fileUploadRef.current) fileUploadRef.current.value = '';
+  }, [files.length]);
+
+  // Fetch local Ollama models on mount
+  useEffect(() => {
+    fetch('/api/ollama/models')
+      .then(r => r.json())
+      .then((d: { models: { name: string; size: number }[] }) => {
+        if (d.models?.length) {
+          setOllamaModels(d.models);
+          setSelectedOllamaModel(d.models[0].name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Delete file
-  const deleteFile = (index: number) => {
-    if (files.length <= 1) return;
+  const deleteFile = (index: number) => {    if (files.length <= 1) return;
     setFiles((prev) => prev.filter((_, i) => i !== index));
     if (activeFileIndex >= index && activeFileIndex > 0) {
       setActiveFileIndex(activeFileIndex - 1);
@@ -1838,14 +1911,34 @@ export const Sandbox: React.FC<SandboxProps> = ({
               <span className="text-xs text-white/60 uppercase tracking-wider">
                 Files
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={addNewFile}
-                className="w-6 h-6 text-white/60 hover:text-white"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {/* Hidden file input */}
+                <input
+                  ref={fileUploadRef}
+                  type="file"
+                  multiple
+                  accept="*/*"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileUploadRef.current?.click()}
+                  className="w-6 h-6 text-white/60 hover:text-white"
+                  title="Upload files (zip auto-extracts)"
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={addNewFile}
+                  className="w-6 h-6 text-white/60 hover:text-white"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <ScrollArea className="h-32">
@@ -1897,6 +1990,10 @@ export const Sandbox: React.FC<SandboxProps> = ({
                 </div>
               )}
             </ScrollArea>
+            {/* Upload error */}
+            {uploadError && (
+              <p className="text-[10px] text-red-400 mt-1 px-1">{uploadError}</p>
+            )}
           </div>
 
           {/* GitHub Repo Browser */}
@@ -1973,6 +2070,21 @@ export const Sandbox: React.FC<SandboxProps> = ({
                 AI Generate
               </span>
             </div>
+            {/* Ollama model selector */}
+            {ollamaModels.length > 0 && (
+              <div className="flex items-center gap-1 mb-1.5">
+                <Cpu className="w-3 h-3 text-white/40" />
+                <select
+                  value={selectedOllamaModel}
+                  onChange={e => setSelectedOllamaModel(e.target.value)}
+                  className="flex-1 text-[10px] bg-black/40 border border-white/10 rounded px-1.5 py-0.5 text-white/70 focus:outline-none focus:border-purple-500/50"
+                >
+                  {ollamaModels.map(m => (
+                    <option key={m.name} value={m.name}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex gap-1">
               <Input
                 placeholder="Describe code to generate..."
