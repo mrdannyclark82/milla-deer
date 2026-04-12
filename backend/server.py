@@ -2,17 +2,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-import secrets
+import json
 import bcrypt
 import jwt
 import uuid
+import asyncio
 from datetime import datetime, timezone, timedelta
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Config
@@ -31,6 +33,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Type"],
 )
 
 client = AsyncIOMotorClient(MONGO_URL)
@@ -111,6 +114,12 @@ class ThemeBody(BaseModel):
 class PersonaBody(BaseModel):
     persona: str
 
+class HologramBody(BaseModel):
+    prompt: str
+
+class YouTubeSearchBody(BaseModel):
+    query: str
+
 
 # ─── Startup ─────────────────────────────────────────────────────────────────
 
@@ -130,8 +139,7 @@ async def seed_admin():
         await db.users.insert_one({
             "email": admin_email, "password_hash": hashed, "name": "Admin",
             "role": "admin", "created_at": datetime.now(timezone.utc),
-            "persona": "Professional",
-            "theme": "midnight",
+            "persona": "Professional", "theme": "midnight",
             "metrics": {"accuracy": 85, "empathy": 80, "speed": 90, "creativity": 75, "relevance": 88, "humor": 60, "proactivity": 70, "clarity": 92, "engagement": 85, "ethicalAlignment": 100, "memoryUsage": 45, "anticipation": 65},
         })
     elif not verify_password(admin_password, existing["password_hash"]):
@@ -239,7 +247,7 @@ async def refresh_token(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-# ─── Chat Routes ─────────────────────────────────────────────────────────────
+# ─── Persona Prompts ─────────────────────────────────────────────────────────
 
 PERSONA_PROMPTS = {
     "Professional": "You are Elara, an advanced AI assistant. Respond in a professional, precise, and knowledgeable manner. Use clear structure and be thorough.",
@@ -249,24 +257,115 @@ PERSONA_PROMPTS = {
     "Motivational": "You are Elara, an inspiring AI coach. Be encouraging, positive, and help users see their potential. Use empowering language.",
 }
 
-@app.post("/api/chat")
-async def chat(body: ChatBody, user: dict = Depends(get_current_user)):
-    user_id = user["_id"]
-    session_id = body.session_id or f"{user_id}_default"
-
-    # Get knowledge base for user
-    kb_entries = []
-    async for entry in db.knowledge_base.find({"user_id": user_id}, {"_id": 0, "content": 1}).limit(20):
-        kb_entries.append(entry["content"])
-
+def build_system_message(persona, kb_entries):
     kb_str = "\n- ".join(kb_entries) if kb_entries else "No custom knowledge yet."
-    persona_prompt = PERSONA_PROMPTS.get(body.persona, PERSONA_PROMPTS["Professional"])
-    system_msg = f"""{persona_prompt}
+    persona_prompt = PERSONA_PROMPTS.get(persona, PERSONA_PROMPTS["Professional"])
+    return f"""{persona_prompt}
 
 User's Knowledge Base:
 - {kb_str}
 
 Respond in markdown format when appropriate. Be helpful and contextually aware."""
+
+
+# ─── Streaming Chat (SSE) ────────────────────────────────────────────────────
+
+@app.post("/api/chat/stream")
+async def chat_stream(body: ChatBody, request: Request):
+    # Auth from cookies manually for SSE
+    token = request.cookies.get("access_token")
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        user_id = str(user["_id"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    session_id = body.session_id or f"{user_id}_default"
+
+    kb_entries = []
+    async for entry in db.knowledge_base.find({"user_id": user_id}, {"_id": 0, "content": 1}).limit(20):
+        kb_entries.append(entry["content"])
+
+    system_msg = build_system_message(body.persona, kb_entries)
+
+    async def event_generator():
+        try:
+            chat_instance = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=session_id,
+                system_message=system_msg
+            )
+            chat_instance.with_model("openai", "gpt-5.2")
+            user_message = UserMessage(text=body.message)
+            response_text = await chat_instance.send_message(user_message)
+        except Exception as e:
+            response_text = f"I encountered an error. Please try again. ({str(e)[:80]})"
+
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Save user message
+        await db.chat_history.insert_one({
+            "user_id": user_id, "session_id": session_id,
+            "role": "user", "content": body.message, "persona": body.persona,
+            "timestamp": timestamp
+        })
+
+        # Stream response word-by-word
+        words = response_text.split(' ')
+        streamed = []
+        for i, word in enumerate(words):
+            streamed.append(word)
+            chunk = ' '.join(streamed)
+            data = json.dumps({"type": "chunk", "content": chunk, "done": False})
+            yield f"data: {data}\n\n"
+            # Fast streaming: 15-30ms per word
+            await asyncio.sleep(0.02)
+
+        # Final event
+        data = json.dumps({"type": "done", "content": response_text, "timestamp": timestamp, "done": True})
+        yield f"data: {data}\n\n"
+
+        # Save assistant message
+        await db.chat_history.insert_one({
+            "user_id": user_id, "session_id": session_id,
+            "role": "assistant", "content": response_text, "persona": body.persona,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+
+        # Auto-learn: extract knowledge from conversation
+        asyncio.create_task(auto_learn_knowledge(user_id, body.message, response_text))
+
+        # Evaluate metrics in background
+        asyncio.create_task(evaluate_and_update_metrics(user_id, body.message, response_text))
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+    )
+
+
+# ─── Non-streaming Chat (kept for compatibility) ────────────────────────────
+
+@app.post("/api/chat")
+async def chat(body: ChatBody, user: dict = Depends(get_current_user)):
+    user_id = user["_id"]
+    session_id = body.session_id or f"{user_id}_default"
+
+    kb_entries = []
+    async for entry in db.knowledge_base.find({"user_id": user_id}, {"_id": 0, "content": 1}).limit(20):
+        kb_entries.append(entry["content"])
+
+    system_msg = build_system_message(body.persona, kb_entries)
 
     chat_instance = LlmChat(
         api_key=EMERGENT_LLM_KEY,
@@ -274,7 +373,6 @@ Respond in markdown format when appropriate. Be helpful and contextually aware."
         system_message=system_msg
     )
     chat_instance.with_model("openai", "gpt-5.2")
-
     user_message = UserMessage(text=body.message)
 
     try:
@@ -282,7 +380,6 @@ Respond in markdown format when appropriate. Be helpful and contextually aware."
     except Exception as e:
         response_text = f"I encountered an error processing your request. Please try again. ({str(e)[:100]})"
 
-    # Save to DB
     timestamp = datetime.now(timezone.utc).isoformat()
     await db.chat_history.insert_one({
         "user_id": user_id, "session_id": session_id,
@@ -295,7 +392,55 @@ Respond in markdown format when appropriate. Be helpful and contextually aware."
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
 
-    # Evaluate and update metrics
+    # Auto-learn in background
+    asyncio.create_task(auto_learn_knowledge(user_id, body.message, response_text))
+    asyncio.create_task(evaluate_and_update_metrics(user_id, body.message, response_text))
+
+    return {"role": "assistant", "content": response_text, "timestamp": timestamp}
+
+
+# ─── Auto-Learning Knowledge Extraction ──────────────────────────────────────
+
+async def auto_learn_knowledge(user_id: str, user_msg: str, ai_response: str):
+    """Extract key facts from conversation and add to knowledge base."""
+    try:
+        extractor = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"learn_{uuid.uuid4().hex[:8]}",
+            system_message="""You extract key learnable facts from conversations. 
+Return a JSON array of strings, each being a concise factual insight worth remembering.
+Only include genuinely useful knowledge, not pleasantries or meta-conversation.
+Return an empty array [] if nothing worth learning. Max 3 items.
+Return ONLY valid JSON array, no other text."""
+        )
+        extractor.with_model("openai", "gpt-5.2")
+        msg = UserMessage(text=f'User asked: "{user_msg[:200]}"\nAI responded: "{ai_response[:500]}"')
+        result = await extractor.send_message(msg)
+        learnings = json.loads(result)
+        if isinstance(learnings, list) and len(learnings) > 0:
+            for item in learnings[:3]:
+                if isinstance(item, str) and len(item) > 10:
+                    existing = await db.knowledge_base.find_one({"user_id": user_id, "content": item})
+                    if not existing:
+                        await db.knowledge_base.insert_one({
+                            "user_id": user_id,
+                            "content": item,
+                            "source": "auto_learned",
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        })
+                        await db.growth_log.insert_one({
+                            "user_id": user_id,
+                            "type": "learning",
+                            "title": "Knowledge Acquired",
+                            "details": item[:100],
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        })
+    except Exception:
+        pass
+
+
+async def evaluate_and_update_metrics(user_id: str, user_msg: str, ai_response: str):
+    """Evaluate interaction quality and update neural metrics."""
     try:
         eval_chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
@@ -303,17 +448,116 @@ Respond in markdown format when appropriate. Be helpful and contextually aware."
             system_message="You evaluate AI responses. Return ONLY a JSON object with 12 numeric scores (0-100): accuracy, empathy, speed, creativity, relevance, humor, proactivity, clarity, engagement, ethicalAlignment, memoryUsage, anticipation. No other text."
         )
         eval_chat.with_model("openai", "gpt-5.2")
-        eval_msg = UserMessage(text=f'User: "{body.message[:100]}"\nAI: "{response_text[:200]}"')
+        eval_msg = UserMessage(text=f'User: "{user_msg[:100]}"\nAI: "{ai_response[:200]}"')
         eval_resp = await eval_chat.send_message(eval_msg)
-        import json
         new_metrics = json.loads(eval_resp)
         if isinstance(new_metrics, dict) and "accuracy" in new_metrics:
             await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"metrics": new_metrics}})
     except Exception:
         pass
 
-    return {"role": "assistant", "content": response_text, "timestamp": timestamp}
 
+# ─── Hologram Generation ─────────────────────────────────────────────────────
+
+@app.post("/api/hologram")
+async def generate_hologram(body: HologramBody, user: dict = Depends(get_current_user)):
+    try:
+        holo_chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"holo_{uuid.uuid4().hex[:8]}",
+            system_message="""You create abstract holographic 3D scene descriptions. 
+Return ONLY a valid JSON object with this exact structure:
+{
+  "title": "Scene Name",
+  "description": "Short description of the scene",
+  "elements": [
+    {
+      "type": "box|sphere|cylinder|torus|icosahedron|cone|ring",
+      "position": [x, y, z],
+      "rotation": [x, y, z],
+      "scale": [sx, sy, sz],
+      "color": "#hexcolor",
+      "wireframe": true/false,
+      "opacity": 0.1-1.0,
+      "animation": "spin|float|pulse|wobble|scan",
+      "label": "Optional label text"
+    }
+  ]
+}
+Create 4-8 elements. Keep positions within [-4, 4]. Use vibrant neon colors. 
+Make visually interesting abstract representations. No other text outside the JSON."""
+        )
+        holo_chat.with_model("openai", "gpt-5.2")
+        msg = UserMessage(text=f"Create an abstract cyberpunk holographic representation of: {body.prompt}")
+        result = await holo_chat.send_message(msg)
+        
+        # Parse JSON from response (handle markdown code blocks)
+        json_str = result.strip()
+        if json_str.startswith("```"):
+            json_str = json_str.split("\n", 1)[1] if "\n" in json_str else json_str[3:]
+            if json_str.endswith("```"):
+                json_str = json_str[:-3]
+        
+        scene = json.loads(json_str)
+        
+        # Log hologram generation
+        await db.growth_log.insert_one({
+            "user_id": user["_id"],
+            "type": "proposal",
+            "title": f"Hologram: {scene.get('title', body.prompt[:30])}",
+            "details": scene.get("description", "Holographic projection generated"),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return scene
+    except json.JSONDecodeError:
+        return {
+            "title": "Generation Error",
+            "description": "Could not parse hologram scene. Generating fallback.",
+            "elements": [
+                {"type": "icosahedron", "position": [0, 0, 0], "scale": [1.5, 1.5, 1.5], "color": "#00f3ff", "wireframe": True, "opacity": 0.6, "animation": "spin"},
+                {"type": "torus", "position": [0, -1.5, 0], "rotation": [1.57, 0, 0], "scale": [2, 2, 0.3], "color": "#d946ef", "wireframe": True, "opacity": 0.4, "animation": "spin"},
+                {"type": "sphere", "position": [2, 1, 0], "scale": [0.5, 0.5, 0.5], "color": "#f59e0b", "wireframe": False, "opacity": 0.7, "animation": "float"},
+                {"type": "sphere", "position": [-2, 1, 0], "scale": [0.5, 0.5, 0.5], "color": "#10b981", "wireframe": False, "opacity": 0.7, "animation": "pulse"},
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Hologram generation failed: {str(e)[:100]}")
+
+
+# ─── YouTube Search ──────────────────────────────────────────────────────────
+
+@app.post("/api/youtube/search")
+async def youtube_search(body: YouTubeSearchBody, user: dict = Depends(get_current_user)):
+    try:
+        yt_chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"yt_{uuid.uuid4().hex[:8]}",
+            system_message="""You are a YouTube video recommendation engine.
+Given a search query, return ONLY a valid JSON array of 3-5 YouTube video recommendations.
+Each item must have: "id" (a real YouTube video ID), "title" (video title), "channel" (channel name), "description" (1-line description).
+Use real, well-known YouTube video IDs that match the query. For example, for "machine learning basics", use actual popular ML tutorial video IDs.
+Return ONLY the JSON array, no other text."""
+        )
+        yt_chat.with_model("openai", "gpt-5.2")
+        msg = UserMessage(text=f"Find YouTube videos about: {body.query}")
+        result = await yt_chat.send_message(msg)
+        
+        json_str = result.strip()
+        if json_str.startswith("```"):
+            json_str = json_str.split("\n", 1)[1] if "\n" in json_str else json_str[3:]
+            if json_str.endswith("```"):
+                json_str = json_str[:-3]
+        
+        videos = json.loads(json_str)
+        if isinstance(videos, list):
+            return {"videos": videos[:5]}
+        return {"videos": []}
+    except Exception:
+        return {"videos": []}
+
+
+# ─── Chat History ────────────────────────────────────────────────────────────
 
 @app.get("/api/chat/history")
 async def get_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)):
@@ -327,7 +571,6 @@ async def get_chat_history(session_id: Optional[str] = None, user: dict = Depend
         messages.append(msg)
     return messages
 
-
 @app.delete("/api/chat/history")
 async def clear_chat_history(user: dict = Depends(get_current_user)):
     user_id = user["_id"]
@@ -340,7 +583,10 @@ async def clear_chat_history(user: dict = Depends(get_current_user)):
 @app.get("/api/knowledge")
 async def get_knowledge(user: dict = Depends(get_current_user)):
     entries = []
-    async for entry in db.knowledge_base.find({"user_id": user["_id"]}, {"_id": 0, "content": 1, "created_at": 1}):
+    async for entry in db.knowledge_base.find(
+        {"user_id": user["_id"]},
+        {"_id": 0, "content": 1, "created_at": 1, "source": 1}
+    ).sort("created_at", -1).limit(50):
         entries.append(entry)
     return entries
 
@@ -348,6 +594,7 @@ async def get_knowledge(user: dict = Depends(get_current_user)):
 async def add_knowledge(body: KBEntry, user: dict = Depends(get_current_user)):
     await db.knowledge_base.insert_one({
         "user_id": user["_id"], "content": body.content,
+        "source": "manual",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     return {"message": "Knowledge added"}
@@ -406,4 +653,4 @@ async def get_metrics(user: dict = Depends(get_current_user)):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "Elara AI Backend"}
+    return {"status": "ok", "service": "Elara AI Backend", "features": ["streaming", "hologram", "youtube", "auto_learn"]}

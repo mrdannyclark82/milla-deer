@@ -217,6 +217,167 @@ class ElaraAPITester:
         """Test logout functionality"""
         return self.run_test("Logout", "POST", "/api/auth/logout", 200)
 
+    def test_streaming_chat(self):
+        """Test SSE streaming chat endpoint"""
+        self.log("Testing SSE streaming chat endpoint...")
+        url = f"{self.base_url}/api/chat/stream"
+        
+        chat_data = {
+            "message": "Hello Elara, please respond with a short greeting.",
+            "persona": "Professional",
+            "tool_mode": "chat"
+        }
+        
+        try:
+            response = self.session.post(url, json=chat_data, stream=True)
+            
+            if response.status_code == 200:
+                # Check if it's SSE format
+                content_type = response.headers.get('content-type', '')
+                if 'text/event-stream' in content_type:
+                    self.tests_run += 1
+                    self.tests_passed += 1
+                    self.log("✅ PASS - SSE Streaming Chat - Status: 200, Content-Type: text/event-stream", "PASS")
+                    return True, {}
+                else:
+                    self.tests_run += 1
+                    self.failed_tests.append({
+                        "test": "SSE Streaming Chat",
+                        "endpoint": "/api/chat/stream",
+                        "error": f"Wrong content-type: {content_type}"
+                    })
+                    self.log(f"❌ FAIL - SSE Streaming Chat - Wrong content-type: {content_type}", "FAIL")
+                    return False, {}
+            else:
+                self.tests_run += 1
+                self.failed_tests.append({
+                    "test": "SSE Streaming Chat",
+                    "endpoint": "/api/chat/stream",
+                    "expected": 200,
+                    "actual": response.status_code
+                })
+                self.log(f"❌ FAIL - SSE Streaming Chat - Expected 200, got {response.status_code}", "FAIL")
+                return False, {}
+                
+        except Exception as e:
+            self.tests_run += 1
+            self.failed_tests.append({
+                "test": "SSE Streaming Chat",
+                "endpoint": "/api/chat/stream",
+                "error": str(e)
+            })
+            self.log(f"❌ ERROR - SSE Streaming Chat - {str(e)}", "ERROR")
+            return False, {}
+
+    def test_hologram_generation(self):
+        """Test hologram generation endpoint"""
+        holo_data = {
+            "prompt": "A futuristic city with neon lights"
+        }
+        
+        self.log("Testing hologram generation - this may take a few seconds...")
+        success, response = self.run_test(
+            "Hologram Generation",
+            "POST",
+            "/api/hologram",
+            200,
+            data=holo_data
+        )
+        
+        if success and 'elements' in response:
+            elements_count = len(response.get('elements', []))
+            self.log(f"Hologram generated with {elements_count} elements")
+            if 'title' in response:
+                self.log(f"Hologram title: {response['title']}")
+            return True, response
+        return False, {}
+
+    def test_youtube_search(self):
+        """Test YouTube search endpoint"""
+        youtube_data = {
+            "query": "machine learning tutorial"
+        }
+        
+        self.log("Testing YouTube search - this may take a few seconds...")
+        success, response = self.run_test(
+            "YouTube Search",
+            "POST",
+            "/api/youtube/search",
+            200,
+            data=youtube_data
+        )
+        
+        if success and 'videos' in response:
+            videos_count = len(response.get('videos', []))
+            self.log(f"YouTube search returned {videos_count} videos")
+            return True, response
+        return False, {}
+
+    def test_auto_learning_feature(self):
+        """Test auto-learning by checking knowledge base after chat"""
+        # First, clear knowledge base
+        self.run_test("Clear Knowledge for Auto-Learn Test", "DELETE", "/api/knowledge", 200)
+        
+        # Send a chat message that should trigger auto-learning
+        chat_data = {
+            "message": "The capital of France is Paris and it has a population of about 2.1 million people.",
+            "persona": "Professional",
+            "tool_mode": "chat"
+        }
+        
+        self.log("Testing auto-learning feature - sending factual message...")
+        chat_success, _ = self.run_test(
+            "Chat for Auto-Learning",
+            "POST",
+            "/api/chat",
+            200,
+            data=chat_data
+        )
+        
+        if not chat_success:
+            return False, {}
+        
+        # Wait a moment for auto-learning to process
+        self.log("Waiting 3 seconds for auto-learning to process...")
+        time.sleep(3)
+        
+        # Check if knowledge was auto-learned
+        kb_success, kb_response = self.run_test(
+            "Check Auto-Learned Knowledge",
+            "GET",
+            "/api/knowledge",
+            200
+        )
+        
+        if kb_success and isinstance(kb_response, list):
+            auto_learned = [entry for entry in kb_response if entry.get('source') == 'auto_learned']
+            if auto_learned:
+                self.log(f"✅ Auto-learning working - Found {len(auto_learned)} auto-learned entries")
+                return True, {"auto_learned_count": len(auto_learned)}
+            else:
+                self.log("⚠️ No auto-learned entries found - auto-learning may be slow or not working")
+                return False, {}
+        
+        return False, {}
+
+    def test_health_with_new_features(self):
+        """Test health endpoint shows new features"""
+        success, response = self.run_test("Health Check with Features", "GET", "/api/health", 200)
+        
+        if success and 'features' in response:
+            features = response.get('features', [])
+            expected_features = ['streaming', 'hologram', 'youtube', 'auto_learn']
+            
+            missing_features = [f for f in expected_features if f not in features]
+            if not missing_features:
+                self.log(f"✅ All new features listed in health endpoint: {features}")
+                return True, response
+            else:
+                self.log(f"⚠️ Missing features in health endpoint: {missing_features}")
+                return False, {}
+        
+        return success, response
+
     def run_all_tests(self):
         """Run complete test suite"""
         self.log("🚀 Starting Elara AI Backend API Test Suite")
@@ -270,6 +431,31 @@ class ElaraAPITester:
         # Test 11: Logout
         self.log("\n=== Testing Logout ===")
         self.test_logout()
+        
+        # NEW FEATURES TESTING
+        # Re-login for new feature tests
+        self.log("\n=== Testing New Features (Iteration 2) ===")
+        self.test_admin_login()
+        
+        # Test 12: Health endpoint with new features
+        self.log("\n=== Testing Health with New Features ===")
+        self.test_health_with_new_features()
+        
+        # Test 13: SSE Streaming Chat
+        self.log("\n=== Testing SSE Streaming Chat ===")
+        self.test_streaming_chat()
+        
+        # Test 14: Hologram Generation
+        self.log("\n=== Testing Hologram Generation ===")
+        self.test_hologram_generation()
+        
+        # Test 15: YouTube Search
+        self.log("\n=== Testing YouTube Search ===")
+        self.test_youtube_search()
+        
+        # Test 16: Auto-Learning Feature
+        self.log("\n=== Testing Auto-Learning Feature ===")
+        self.test_auto_learning_feature()
         
         return self.generate_report()
 
