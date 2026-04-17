@@ -19,7 +19,7 @@
     "react-dom": "^19.2.1",
     "react-simple-code-editor": "^0.14.1",
     "recharts": "^3.5.1",
-    "three": "^0.181.2"
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
