@@ -64,6 +64,36 @@ export interface DailyNewsDigest {
   topStories: NewsItem[];
   totalVideos: number;
   analysisCount: number;
+  inboxSummary?: {
+    unreadCount: number;
+    emails: Array<{
+      id: string;
+      from: string;
+      subject: string;
+      preview: string;
+      date: string;
+      isRead: boolean;
+      isStarred?: boolean;
+    }>;
+  };
+  dailySchedule?: {
+    count: number;
+    events: Array<{
+      id: string;
+      summary: string;
+      description?: string;
+      location?: string;
+      start: string;
+      end?: string;
+      htmlLink?: string;
+      status?: string;
+    }>;
+  };
+  personalization?: {
+    focusAreas: string[];
+    reasons: string[];
+    highlightedVideoIds: string[];
+  };
 }
 
 export interface YoutubeKnowledge {

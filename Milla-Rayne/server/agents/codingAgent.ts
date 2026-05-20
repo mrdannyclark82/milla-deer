@@ -6,8 +6,11 @@ import {
   testFeature,
   evaluateSandboxReadiness,
   markSandboxForMerge,
+  getSandbox,
+  updateSandboxFeature,
   type SandboxEnvironment,
   type SandboxFeature,
+  type ValidationCommandResult,
 } from '../sandboxEnvironmentService';
 import { createPRForSandbox } from '../automatedPRService';
 import {
@@ -19,6 +22,13 @@ import {
 import * as fs from 'fs/promises';
 import { applyPatch } from 'diff';
 import { config } from '../config';
+import path from 'path';
+import os from 'os';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import type { DiscoveredFeature } from '../featureDiscoveryService';
+
+const execFileAsync = promisify(execFile);
 
 export interface IssueIdentification {
   issueType: 'bug' | 'enhancement' | 'security' | 'performance';
@@ -31,6 +41,121 @@ export interface CodeFix {
   description: string;
   files: string[];
   changes: string;
+}
+
+interface ParsedCodingModelResponse {
+  description?: string;
+  reasoning?: string;
+  changes?: string;
+}
+
+const FENCED_BLOCK_PATTERN = /```(?:(\w+)[^\n]*)?\n([\s\S]*?)\n```/g;
+
+function extractFencedBlock(
+  input: string,
+  languages?: readonly string[]
+): string | null {
+  const normalizedLanguages = languages?.map((language) => language.toLowerCase()) ?? null;
+  FENCED_BLOCK_PATTERN.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = FENCED_BLOCK_PATTERN.exec(input)) !== null) {
+    const language = (match[1] || '').toLowerCase();
+    if (!normalizedLanguages || normalizedLanguages.length === 0) {
+      return match[2];
+    }
+
+    if (
+      normalizedLanguages.includes(language) ||
+      (language.length === 0 && normalizedLanguages.includes(''))
+    ) {
+      return match[2];
+    }
+  }
+
+  return null;
+}
+
+export function normalizeGeneratedPatch(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const fencedDiff = extractFencedBlock(trimmed, ['diff', 'patch']);
+  if (fencedDiff) {
+    return fencedDiff.trim();
+  }
+
+  const fullFence = extractFencedBlock(trimmed);
+  if (fullFence && fullFence.trim() !== trimmed) {
+    return normalizeGeneratedPatch(fullFence);
+  }
+
+  const diffStart = trimmed.search(/(^|\n)(diff --git |--- )/m);
+  if (diffStart >= 0) {
+    const normalizedStart =
+      trimmed[diffStart] === '\n' ? diffStart + 1 : diffStart;
+    return trimmed.slice(normalizedStart).trim();
+  }
+
+  return trimmed;
+}
+
+export function isLikelyUnifiedDiff(input: string): boolean {
+  const normalized = input.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  return (
+    /(^|\n)diff --git [^\n]+/m.test(normalized) ||
+    /(^|\n)--- [^\n]+\n\+\+\+ [^\n]+/m.test(normalized)
+  );
+}
+
+export function parseCodingModelResponse(
+  rawResponse: string,
+  fallbackDescription?: string
+): ParsedCodingModelResponse {
+  const parseCandidate = (candidate: string): ParsedCodingModelResponse | null => {
+    try {
+      const parsed = JSON.parse(candidate) as ParsedCodingModelResponse | null;
+      if (!parsed || typeof parsed !== 'object') {
+        return null;
+      }
+
+      return {
+        description: parsed.description,
+        reasoning: parsed.reasoning,
+        changes:
+          typeof parsed.changes === 'string'
+            ? normalizeGeneratedPatch(parsed.changes)
+            : undefined,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const trimmed = rawResponse.trim();
+  const jsonCandidates = [
+    trimmed,
+    extractFencedBlock(trimmed, ['json', 'javascript', 'js', '']),
+  ].filter((candidate): candidate is string => Boolean(candidate?.trim()));
+
+  for (const candidate of jsonCandidates) {
+    const parsed = parseCandidate(candidate);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return {
+    description: fallbackDescription || trimmed.slice(0, 200),
+    reasoning: 'The model did not return JSON. Raw output captured as patch.',
+    changes: normalizeGeneratedPatch(trimmed),
+  };
 }
 
 class CodingAgent extends BaseAgent {
@@ -216,6 +341,55 @@ class CodingAgent extends BaseAgent {
   /**
    * Generate a code fix for an identified issue using AI
    */
+  private async runCodingModelPrompt(
+    prompt: string,
+    maxTokens: number = 4096
+  ): Promise<string> {
+    const hasApiKey = (value: string | null | undefined): value is string =>
+      Boolean(value?.trim());
+
+    const codingContext = {
+      conversationHistory: [],
+      userName: 'CodingAgent',
+    };
+
+    let result:
+      | { success: boolean; content: string; error?: string }
+      | undefined;
+
+    if (hasApiKey(config.gemini?.apiKey)) {
+      const { generateGeminiResponse } = await import('../geminiService');
+      result = await generateGeminiResponse(prompt);
+    }
+
+    if (!result?.success && hasApiKey(config.xai.apiKey)) {
+      const { generateXAIResponse } = await import('../xaiService');
+      result = await generateXAIResponse(prompt, codingContext, maxTokens);
+    }
+
+    if (!result?.success && hasApiKey(config.openai.apiKey)) {
+      const { generateOpenAIResponse } = await import('../openaiChatService');
+      result = await generateOpenAIResponse(prompt, codingContext, maxTokens);
+    }
+
+    if (!result?.success && hasApiKey(config.minimax.apiKey)) {
+      const { generateMinimaxResponse } = await import('../minimaxService');
+      result = await generateMinimaxResponse(prompt, codingContext, maxTokens);
+    }
+
+    if (!result) {
+      throw new Error(
+        'No coding model configured. Set GEMINI_API_KEY, XAI_API_KEY, OPENAI_API_KEY, or MINIMAX_API_KEY.'
+      );
+    }
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to generate fix');
+    }
+
+    return result.content;
+  }
+
   private async generateCodeFix(issue: IssueIdentification): Promise<CodeFix> {
     try {
       // Use AI to generate a code fix based on the issue
@@ -231,60 +405,11 @@ Please provide:
 
 Format your response as JSON with keys: description, changes, reasoning.
 IMPORTANT: 'changes' must be a valid unified diff string string that can be applied using patch.`;
-
-      const hasApiKey = (value: string | null | undefined): value is string =>
-        Boolean(value?.trim());
-
-      const codingContext = {
-        conversationHistory: [],
-        userName: 'CodingAgent',
-      };
-
-      let result:
-        | { success: boolean; content: string; error?: string }
-        | undefined;
-
-      if (hasApiKey(config.gemini?.apiKey)) {
-        const { generateGeminiResponse } = await import('../geminiService');
-        result = await generateGeminiResponse(prompt);
-      }
-
-      if (!result?.success && hasApiKey(config.xai.apiKey)) {
-        const { generateXAIResponse } = await import('../xaiService');
-        result = await generateXAIResponse(prompt, codingContext, 4096);
-      }
-
-      if (!result?.success && hasApiKey(config.openai.apiKey)) {
-        const { generateOpenAIResponse } = await import('../openaiChatService');
-        result = await generateOpenAIResponse(prompt, codingContext, 4096);
-      }
-
-      if (!result?.success && hasApiKey(config.minimax.apiKey)) {
-        const { generateMinimaxResponse } = await import('../minimaxService');
-        result = await generateMinimaxResponse(prompt, codingContext, 4096);
-      }
-
-      if (!result) {
-        throw new Error(
-          'No coding model configured. Set GEMINI_API_KEY, XAI_API_KEY, OPENAI_API_KEY, or MINIMAX_API_KEY.'
-        );
-      }
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to generate fix');
-      }
-
-      let aiResponse;
-      try {
-        aiResponse = JSON.parse(result.content);
-      } catch {
-        // Fallback if AI doesn't return valid JSON
-        aiResponse = {
-          description: result.content.slice(0, 200),
-          changes: result.content,
-          reasoning: 'AI-generated fix',
-        };
-      }
+      const modelResponse = await this.runCodingModelPrompt(prompt);
+      const aiResponse = parseCodingModelResponse(
+        modelResponse,
+        modelResponse.slice(0, 200)
+      );
 
       return {
         description:
@@ -302,6 +427,389 @@ IMPORTANT: 'changes' must be a valid unified diff string string that can be appl
         description: `Fix for ${issue.issueType}: ${issue.description}`,
         files: issue.affectedFiles,
         changes: `Automated fix applied to address ${issue.severity} severity ${issue.issueType} issue. Severity: ${issue.severity}. Requires manual review.`,
+      };
+    }
+  }
+
+  private async resolveGitRoot(startPath: string): Promise<string> {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['-C', startPath, 'rev-parse', '--show-toplevel'],
+      { maxBuffer: 1024 * 1024 }
+    );
+
+    return stdout.trim();
+  }
+
+  private getFeatureKeywords(feature: DiscoveredFeature): string[] {
+    const keywordSource = `${feature.name} ${feature.description} ${feature.tags.join(' ')}`;
+
+    return Array.from(
+      new Set(
+        keywordSource
+          .toLowerCase()
+          .split(/[^a-z0-9]+/)
+          .filter((token) => token.length >= 4)
+      )
+    ).slice(0, 6);
+  }
+
+  private async selectRelevantContextFiles(params: {
+    gitRoot: string;
+    appRelativePath: string;
+    feature: DiscoveredFeature;
+  }): Promise<string[]> {
+    const { gitRoot, appRelativePath, feature } = params;
+    const searchRoot =
+      appRelativePath === '.'
+        ? ['client', 'server', 'shared']
+        : [
+            `${appRelativePath}/client`,
+            `${appRelativePath}/server`,
+            `${appRelativePath}/shared`,
+          ];
+
+    const keywords = this.getFeatureKeywords(feature);
+
+    if (keywords.length === 0) {
+      return [];
+    }
+
+    try {
+      const args = ['-C', gitRoot, 'grep', '-il'];
+      for (const keyword of keywords) {
+        args.push('-e', keyword);
+      }
+      args.push('--', ...searchRoot);
+
+      const { stdout } = await execFileAsync('git', args, {
+        maxBuffer: 1024 * 1024 * 4,
+      });
+
+      return stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 6);
+    } catch {
+      return [];
+    }
+  }
+
+  private async buildFeatureContext(params: {
+    gitRoot: string;
+    feature: DiscoveredFeature;
+    appRelativePath: string;
+  }): Promise<string> {
+    const relevantFiles = await this.selectRelevantContextFiles(params);
+
+    if (relevantFiles.length === 0) {
+      return 'No matching source files were found from keyword search. Use the existing Milla-Rayne client/server structure and keep the implementation minimal.';
+    }
+
+    const sections = await Promise.all(
+      relevantFiles.map(async (filePath) => {
+        try {
+          const content = await fs.readFile(path.join(params.gitRoot, filePath), 'utf-8');
+          return `File: ${filePath}\n${content.slice(0, 2500)}`;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return sections.filter(Boolean).join('\n\n---\n\n');
+  }
+
+  private buildImplementationPrompt(params: {
+    gitRoot: string;
+    appRelativePath: string;
+    feature: DiscoveredFeature;
+    featureContext: string;
+    previousError?: string;
+  }): string {
+    const retryGuidance = params.previousError
+      ? `
+
+Previous patch attempt failed with:
+${params.previousError}
+
+Correct the patch and return a new response. Focus on the smallest viable change.
+The "changes" value must be a syntactically valid unified diff with accurate hunk counts.
+Do not include markdown fences inside the "changes" string.`
+      : '';
+
+    return `You are implementing a real repository feature.
+
+Repository root: ${params.gitRoot}
+Primary application path: ${params.appRelativePath}
+
+Feature name: ${params.feature.name}
+Feature description: ${params.feature.description}
+Feature source: ${params.feature.source}
+Tags: ${params.feature.tags.join(', ') || 'none'}
+Repository example: ${params.feature.repositoryExample || 'none'}
+
+Requirements:
+- Make the smallest real end-to-end implementation that fits the existing architecture.
+- Only modify files inside ${params.appRelativePath === '.' ? 'the repository root' : `${params.appRelativePath}/`}.
+- Return a valid unified diff that can be applied with git apply from the repository root.
+- Keep changes tightly scoped to existing files unless a new file is strictly required.
+- Favor wiring into the existing dashboard/server flow over adding a parallel system.
+- Ensure every unified-diff hunk header count exactly matches the hunk body.
+- Use repository-root-relative file paths in the diff.${retryGuidance}
+
+Relevant repository context:
+${params.featureContext}
+
+Respond as JSON with:
+{
+  "description": "short summary",
+  "reasoning": "why these changes implement the feature",
+  "changes": "unified diff"
+}`;
+  }
+
+  private async requestImplementationPatch(params: {
+    gitRoot: string;
+    appRelativePath: string;
+    feature: DiscoveredFeature;
+    featureContext: string;
+    previousError?: string;
+  }): Promise<ParsedCodingModelResponse> {
+    const prompt = this.buildImplementationPrompt(params);
+    const rawResponse = await this.runCodingModelPrompt(
+      prompt,
+      params.previousError ? 12288 : 8192
+    );
+
+    return parseCodingModelResponse(rawResponse, params.feature.description);
+  }
+
+  private async ensureSandboxWorktree(params: {
+    gitRoot: string;
+    sandbox: SandboxEnvironment;
+  }): Promise<string> {
+    const worktreeRoot = path.join(
+      os.tmpdir(),
+      'milla-sandboxes',
+      params.sandbox.id
+    );
+
+    await fs.mkdir(path.dirname(worktreeRoot), { recursive: true });
+
+    try {
+      await fs.access(path.join(worktreeRoot, '.git'));
+    } catch {
+      await execFileAsync(
+        'git',
+        ['-C', params.gitRoot, 'worktree', 'add', '--force', worktreeRoot, 'HEAD'],
+        { maxBuffer: 1024 * 1024 * 4 }
+      );
+    }
+
+    await execFileAsync(
+      'git',
+      ['-C', worktreeRoot, 'checkout', '-B', params.sandbox.branchName],
+      {
+        maxBuffer: 1024 * 1024 * 4,
+      }
+    );
+
+    return worktreeRoot;
+  }
+
+  private async applyGeneratedPatch(params: {
+    worktreeRoot: string;
+    patchContent: string;
+  }): Promise<void> {
+    const normalizedPatch = normalizeGeneratedPatch(params.patchContent);
+    if (!isLikelyUnifiedDiff(normalizedPatch)) {
+      throw new Error(
+        'The coding model did not return a valid unified diff patch.'
+      );
+    }
+
+    const patchFilePath = path.join(
+      params.worktreeRoot,
+      `.milla-feature-${Date.now()}.patch`
+    );
+
+    await fs.writeFile(patchFilePath, normalizedPatch, 'utf-8');
+
+    try {
+      await execFileAsync(
+        'git',
+        ['-C', params.worktreeRoot, 'apply', '--check', patchFilePath],
+        { maxBuffer: 1024 * 1024 * 4 }
+      );
+
+      await execFileAsync(
+        'git',
+        ['-C', params.worktreeRoot, 'apply', '--reject', '--whitespace=nowarn', patchFilePath],
+        { maxBuffer: 1024 * 1024 * 4 }
+      );
+    } finally {
+      await fs.rm(patchFilePath, { force: true });
+    }
+  }
+
+  private async getChangedFiles(worktreeRoot: string): Promise<string[]> {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['-C', worktreeRoot, 'diff', '--name-only'],
+      { maxBuffer: 1024 * 1024 * 4 }
+    );
+
+    return stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  async implementDiscoveredFeature(params: {
+    sandboxId: string;
+    featureId: string;
+    feature: DiscoveredFeature;
+    repositoryPath?: string;
+  }): Promise<{
+    success: boolean;
+    summary: string;
+    files: string[];
+    validation?: ValidationCommandResult[];
+    error?: string;
+  }> {
+    const sandbox = getSandbox(params.sandboxId);
+    const sandboxFeature = sandbox?.features.find(
+      (candidate) => candidate.id === params.featureId
+    );
+
+    if (!sandbox || !sandboxFeature) {
+      return {
+        success: false,
+        summary: 'Sandbox feature not found',
+        files: [],
+        error: 'Sandbox feature not found',
+      };
+    }
+
+    const repositoryPath = params.repositoryPath || process.cwd();
+    const gitRoot = await this.resolveGitRoot(repositoryPath);
+    const appRootCandidate = path.basename(gitRoot) === 'Milla-Rayne'
+      ? gitRoot
+      : path.join(gitRoot, 'Milla-Rayne');
+    const appRelativePath = path.relative(gitRoot, appRootCandidate) || '.';
+
+    await updateSandboxFeature(params.sandboxId, params.featureId, {
+      status: 'testing',
+      implementation: {
+        status: 'running',
+        startedAt: Date.now(),
+        summary: `Generating code for ${params.feature.name}`,
+      },
+    });
+
+    try {
+      const worktreeRoot = await this.ensureSandboxWorktree({
+        gitRoot,
+        sandbox,
+      });
+      const featureContext = await this.buildFeatureContext({
+        gitRoot,
+        feature: params.feature,
+        appRelativePath,
+      });
+      let generated: ParsedCodingModelResponse | undefined;
+      let lastPatchError: Error | undefined;
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        generated = await this.requestImplementationPatch({
+          gitRoot,
+          appRelativePath,
+          feature: params.feature,
+          featureContext,
+          previousError: lastPatchError?.message,
+        });
+
+        if (!generated?.changes?.trim()) {
+          lastPatchError = new Error(
+            'The coding model did not return a patch to apply.'
+          );
+        } else {
+          try {
+            await this.applyGeneratedPatch({
+              worktreeRoot,
+              patchContent: generated.changes,
+            });
+            lastPatchError = undefined;
+            break;
+          } catch (error) {
+            lastPatchError =
+              error instanceof Error ? error : new Error(String(error));
+          }
+        }
+
+        if (attempt === 1 && lastPatchError) {
+          throw lastPatchError;
+        }
+      }
+
+      if (!generated || lastPatchError) {
+        throw lastPatchError || new Error('Failed to generate an implementation patch.');
+      }
+
+      const changedFiles = await this.getChangedFiles(worktreeRoot);
+      if (changedFiles.length === 0) {
+        throw new Error('The generated patch applied cleanly but produced no file changes.');
+      }
+
+      await updateSandboxFeature(params.sandboxId, params.featureId, {
+        files: changedFiles,
+        implementation: {
+          status: 'succeeded',
+          startedAt: sandboxFeature.implementation?.startedAt ?? Date.now(),
+          completedAt: Date.now(),
+          summary: generated.description || params.feature.description,
+          reasoning: generated.reasoning,
+          worktreePath:
+            appRelativePath === '.'
+              ? worktreeRoot
+              : path.join(worktreeRoot, appRelativePath),
+          changedFiles,
+        },
+      });
+
+      const validationResult = await testFeature(
+        params.sandboxId,
+        params.featureId,
+        'integration'
+      );
+      const refreshedFeature = getSandbox(params.sandboxId)?.features.find(
+        (candidate) => candidate.id === params.featureId
+      );
+
+      return {
+        success: validationResult.passed,
+        summary: generated.description || params.feature.description,
+        files: changedFiles,
+        validation: refreshedFeature?.implementation?.validation,
+        error: validationResult.passed ? undefined : validationResult.details,
+      };
+    } catch (error) {
+      await updateSandboxFeature(params.sandboxId, params.featureId, {
+        implementation: {
+          status: 'failed',
+          startedAt: sandboxFeature.implementation?.startedAt ?? Date.now(),
+          completedAt: Date.now(),
+          lastError: error instanceof Error ? error.message : String(error),
+        },
+      });
+
+      return {
+        success: false,
+        summary: `Implementation failed for ${params.feature.name}`,
+        files: [],
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -326,6 +834,14 @@ IMPORTANT: 'changes' must be a valid unified diff string string that can be appl
 
       case 'generate_fix':
         return await this.generateCodeFix(task.payload?.issue);
+
+      case 'implement_feature':
+        return await this.implementDiscoveredFeature({
+          sandboxId: task.payload?.sandboxId,
+          featureId: task.payload?.featureId,
+          feature: task.payload?.feature,
+          repositoryPath: task.payload?.repositoryPath || process.cwd(),
+        });
 
       default:
         return {

@@ -5,6 +5,7 @@ import com.elara.app.data.database.ElaraDatabase
 import com.elara.app.data.repository.ElaraRepository
 import com.elara.app.services.GeminiService
 import com.elara.app.services.GitHubService
+import com.elara.app.services.MillaApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,5 +43,11 @@ object AppModule {
     @Singleton
     fun provideGitHubService(): GitHubService {
         return GitHubService()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMillaApiService(): MillaApiService {
+        return MillaApiService()
     }
 }

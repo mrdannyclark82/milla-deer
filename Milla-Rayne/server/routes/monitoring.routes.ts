@@ -4,6 +4,11 @@ import { circuitBreaker, apiCache, rateLimiter } from '../apiResilience';
 import { getReasoningData } from '../xaiTracker';
 import { getFeatureFlags } from '../featureFlags';
 import { asyncHandler } from '../utils/routeHelpers';
+import {
+  createSwarmHandoffDecision,
+  getFusionMonitoringSnapshot,
+  registerDeviceProfile,
+} from '../swarmRuntimeService';
 
 /**
  * Advanced Monitoring and Feature Flag Routes
@@ -41,6 +46,33 @@ export function registerMonitoringRoutes(app: Express) {
         rateLimiter: rateLimiter.getStatus(),
         timestamp: Date.now(),
       });
+    })
+  );
+
+  router.get(
+    '/monitoring/fusion',
+    asyncHandler(async (req, res) => {
+      res.json({
+        success: true,
+        snapshot: getFusionMonitoringSnapshot(),
+        timestamp: Date.now(),
+      });
+    })
+  );
+
+  router.post(
+    '/swarm/devices/register',
+    asyncHandler(async (req, res) => {
+      const profile = await registerDeviceProfile(req.body);
+      res.json({ success: true, profile, timestamp: Date.now() });
+    })
+  );
+
+  router.post(
+    '/swarm/handoff',
+    asyncHandler(async (req, res) => {
+      const decision = createSwarmHandoffDecision(req.body);
+      res.json({ success: true, decision, timestamp: Date.now() });
     })
   );
 

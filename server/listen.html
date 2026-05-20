@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Hey Milla 🎙️</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f;
+    color: #e0e0ff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  #orb {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #7b5ea7, #1a1a3e);
+    box-shadow: 0 0 40px #7b5ea755, 0 0 80px #5533aa22;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #orb.listening {
+    animation: pulse 1.4s ease-in-out infinite;
+    box-shadow: 0 0 60px #9b6ec8aa, 0 0 120px #7b5ea755;
+    background: radial-gradient(circle at 40% 35%, #a07dd0, #2a1a5e);
+  }
+  #orb.speaking {
+    animation: speak 0.6s ease-in-out infinite alternate;
+    box-shadow: 0 0 60px #4fc3f7aa, 0 0 120px #29b6f655;
+    background: radial-gradient(circle at 40% 35%, #64b5f6, #0d2137);
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  @keyframes speak {
+    from { transform: scale(1); }
+    to { transform: scale(1.06); }
+  }
+
+  #status {
+    margin-top: 28px;
+    font-size: 15px;
+    color: #9988cc;
+    letter-spacing: 0.04em;
+    text-align: center;
+    min-height: 22px;
+    transition: color 0.3s;
+  }
+  #status.active { color: #c9b8f0; }
+  #status.speaking { color: #64b5f6; }
+
+  #transcript {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #6655aa;
+    text-align: center;
+    max-width: 300px;
+    min-height: 20px;
+    font-style: italic;
+  }
+
+  #reply-bubble {
+    margin-top: 20px;
+    background: #1a1a2e;
+    border: 1px solid #3d2b6e;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 18px;
+    max-width: 320px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #ddd0ff;
+    min-height: 52px;
+    width: 90vw;
+    max-height: 160px;
+    overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #reply-bubble.visible { opacity: 1; }
+
+  #wake-hint {
+    position: fixed;
+    bottom: 24px;
+    font-size: 12px;
+    color: #443366;
+    text-align: center;
+  }
+
+  #conn-dot {
+    position: fixed;
+    top: 16px; right: 16px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ff4444;
+    transition: background 0.3s;
+  }
+  #conn-dot.connected { background: #44ff88; }
+</style>
+</head>
+<body>
+
+<div id="conn-dot"></div>
+
+<div id="orb" onclick="toggleListen()">🎙️</div>
+<div id="status">Tap to wake me up</div>
+<div id="transcript"></div>
+<div id="reply-bubble"></div>
+<div id="wake-hint">Say "Hey Milla" or tap the orb</div>
+
+<script>
+const SERVER = `${location.protocol}//${location.hostname}:${location.port || (location.protocol === 'https:' ? 443 : 80)}`;
+const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:${location.port || 80}/ws/voice`;
+
+let ws = null;
+let recognition = null;
+let listening = false;
+let speaking = false;
+let reconnectTimer = null;
+
+const orb = document.getElementById('orb');
+const statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript');
+const replyBubble = document.getElementById('reply-bubble');
+const connDot = document.getElementById('conn-dot');
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+function connect() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    connDot.classList.add('connected');
+    setStatus('Connected — say "Hey Milla"', '');
+  };
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'reply') {
+      showReply(data.text);
+      if (data.tts) speakText(data.tts);
+    } else if (data.type === 'reaction') {
+      // Co-watch reaction — show briefly then fade
+      showReply(data.text, true);
+    }
+  };
+
+  ws.onclose = () => {
+    connDot.classList.remove('connected');
+    setStatus('Reconnecting...', '');
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+function send(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+// ── Speech Recognition ─────────────────────────────────────────────────────
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    setStatus('⚠️ Speech not supported in this browser', '');
+    return null;
+  }
+  const r = new SpeechRecognition();
+  r.continuous = true;
+  r.interimResults = true;
+  r.lang = 'en-US';
+  r.maxAlternatives = 1;
+
+  r.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    if (interim) transcriptEl.textContent = interim + '...';
+    if (final) {
+      transcriptEl.textContent = final;
+      handleSpeech(final.trim());
+    }
+  };
+
+  r.onerror = (e) => {
+    if (e.error !== 'no-speech') setStatus(`Mic error: ${e.error}`, '');
+  };
+
+  r.onend = () => {
+    if (listening) {
+      // auto-restart — keeps always-on
+      try { r.start(); } catch {}
+    }
+  };
+
+  return r;
+}
+
+function handleSpeech(text) {
+  if (!text) return;
+  const lower = text.toLowerCase();
+
+  // Wake word detection
+  const wakeWords = ['hey milla', 'hi milla', 'hello milla', 'milla'];
+  const hasWake = wakeWords.some(w => lower.includes(w));
+
+  // Ignore very short noise
+  if (text.length < 3) return;
+
+  // Always send if it mentions Milla, or if orb is in "active" mode
+  if (hasWake || orb.dataset.active === 'true') {
+    setStatus('Listening... 💙', 'active');
+    send({ type: 'voice', text, hasWake });
+    orb.dataset.active = 'true';
+    // Reset active mode after 30s of silence
+    clearTimeout(orb._resetTimer);
+    orb._resetTimer = setTimeout(() => {
+      orb.dataset.active = 'false';
+      setStatus('Say "Hey Milla" or tap the orb', '');
+      transcriptEl.textContent = '';
+    }, 30000);
+  }
+}
+
+// ── TTS ────────────────────────────────────────────────────────────────────
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  // Pick a female voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const femVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Samantha') || v.name.includes('Google US English') || v.name.includes('Zira'));
+  if (femVoice) utt.voice = femVoice;
+  utt.rate = 1.05;
+  utt.pitch = 1.1;
+  utt.onstart = () => { orb.classList.add('speaking'); orb.textContent = '💬'; setStatus('Milla is speaking...', 'speaking'); };
+  utt.onend = () => { orb.classList.remove('speaking'); orb.textContent = '🎙️'; setStatus('Listening...', 'active'); };
+  window.speechSynthesis.speak(utt);
+}
+
+// ── UI ─────────────────────────────────────────────────────────────────────
+function showReply(text, isReaction = false) {
+  replyBubble.textContent = text;
+  replyBubble.classList.add('visible');
+  if (isReaction) {
+    setTimeout(() => replyBubble.classList.remove('visible'), 6000);
+  }
+}
+
+function setStatus(text, cls) {
+  statusEl.textContent = text;
+  statusEl.className = cls || '';
+}
+
+function toggleListen() {
+  if (!recognition) {
+    recognition = initRecognition();
+    if (!recognition) return;
+  }
+  if (!listening) {
+    listening = true;
+    orb.dataset.active = 'true';
+    orb.classList.add('listening');
+    orb.textContent = '🎙️';
+    setStatus('Always listening... 💙', 'active');
+    try { recognition.start(); } catch {}
+  } else {
+    listening = false;
+    orb.dataset.active = 'false';
+    orb.classList.remove('listening');
+    orb.textContent = '🎙️';
+    setStatus('Tap to wake me up', '');
+    try { recognition.stop(); } catch {}
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+connect();
+
+// Auto-start listening on load (always-on mode)
+window.addEventListener('load', () => {
+  // Need user gesture first on mobile — show tap prompt
+  setStatus('Tap the orb to start always-on listening', '');
+});
+
+// Keep screen awake using wake lock API
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      await navigator.wakeLock.request('screen');
+      console.log('Screen wake lock active');
+    } catch (e) { console.log('Wake lock not available:', e.message); }
+  }
+}
+requestWakeLock();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+</script>
+</body>
+</html>

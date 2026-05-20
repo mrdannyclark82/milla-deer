@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Hey Milla</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #07070f;
+  color: #e0e0ff;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  height: 100dvh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden; touch-action: manipulation;
+}
+#orb {
+  width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #7b5ea7, #1a1a3e);
+  box-shadow: 0 0 40px #7b5ea755;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s;
+}
+#orb:active { transform: scale(0.93); }
+#orb.ready   { animation: pulse 2s ease-in-out infinite; box-shadow: 0 0 70px #9b6ec8bb; background: radial-gradient(circle at 40% 35%, #a07dd0, #2a1a5e); }
+#orb.active  { animation: pulse 0.8s ease-in-out infinite; box-shadow: 0 0 90px #c084fcaa; background: radial-gradient(circle at 40% 35%, #c084fc, #3d1a7e); }
+#orb.speaking { animation: speak 0.5s ease-in-out infinite alternate; box-shadow: 0 0 80px #4fc3f7bb; background: radial-gradient(circle at 40% 35%, #64b5f6, #0d2137); }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+@keyframes speak  { from{transform:scale(1)} to{transform:scale(1.1)} }
+
+#status { margin-top: 28px; font-size: 17px; color: #8877bb; text-align: center; min-height: 26px; padding: 0 20px; }
+#status.on   { color: #c9b8f0; }
+#status.hear { color: #a78bfa; }
+#status.talk { color: #60c8f5; }
+#status.err  { color: #f87171; }
+
+#tx { margin-top: 14px; font-size: 14px; color: #5544aa; text-align: center; max-width: 300px; min-height: 20px; font-style: italic; }
+
+#bubble {
+  margin-top: 22px; background: #12122a; border: 1px solid #3d2b6e;
+  border-radius: 20px 20px 20px 4px; padding: 14px 18px;
+  width: 88vw; max-width: 340px; font-size: 15px; line-height: 1.55;
+  color: #ddd0ff; min-height: 54px; max-height: 160px; overflow-y: auto;
+  opacity: 0; transition: opacity 0.35s;
+}
+#bubble.show { opacity: 1; }
+
+#dot { position:fixed; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background:#ff4455; transition:background 0.3s; }
+#dot.on { background:#44ff88; }
+
+#hint { position:fixed; bottom:22px; font-size:12px; color:#332255; text-align:center; padding: 0 20px; }
+
+#startbtn {
+  margin-top: 32px; padding: 16px 40px; border-radius: 50px;
+  border: 2px solid #7b5ea7; background: #1a1a3e;
+  color: #c9b8f0; font-size: 18px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; letter-spacing: 0.04em;
+  min-width: 260px; text-align: center;
+}
+#startbtn:active { background: #2d2060; transform: scale(0.97); }
+#startbtn.hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="dot"></div>
+<div id="orb">🎙️</div>
+<div id="status">Tap the button to start</div>
+<div id="tx"></div>
+<div id="bubble"></div>
+<button id="startbtn">🎙️ START LISTENING</button>
+<div id="hint">Say "Hey Milla" · tap orb to toggle · always-on</div>
+
+<script>
+const WS_URL = (location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/ws/voice';
+let ws, recognition, micActive = false, stream = null;
+
+const orb     = document.getElementById('orb');
+const status  = document.getElementById('status');
+const tx      = document.getElementById('tx');
+const bubble  = document.getElementById('bubble');
+const dot     = document.getElementById('dot');
+const startbtn= document.getElementById('startbtn');
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen  = () => { dot.classList.add('on'); setStatus('Tap button to start listening',''); };
+  ws.onclose = () => { dot.classList.remove('on'); setStatus('Reconnecting…',''); setTimeout(connect,3000); };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.type==='reply'||m.type==='reaction') { showBubble(m.text); speak(m.text); }
+  };
+}
+function send(o) { if(ws&&ws.readyState===1) ws.send(JSON.stringify(o)); }
+
+// ── Mic permission + recognition ───────────────────────────────────────────
+async function startListening() {
+  setStatus('Requesting mic permission…','on');
+  startbtn.textContent = '⏳ Waiting for permission…';
+  startbtn.disabled = true;
+
+  // getUserMedia forces the Android permission dialog every time after clear
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  } catch (err) {
+    setStatus('❌ Mic denied — tap Allow when Chrome asks','err');
+    startbtn.textContent = '��️ TRY AGAIN';
+    startbtn.disabled = false;
+    return;
+  }
+
+  // Permission granted — now start SpeechRecognition
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setStatus('⚠️ Use Chrome browser for voice','err');
+    return;
+  }
+
+  recognition = new SR();
+  recognition.continuous     = true;
+  recognition.interimResults = true;
+  recognition.lang           = 'en-US';
+
+  recognition.onresult = (e) => {
+    let interim='', final='';
+    for (let i=e.resultIndex; i<e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      e.results[i].isFinal ? (final+=t) : (interim+=t);
+    }
+    if (interim) tx.textContent = interim+'…';
+    if (final)   { tx.textContent=final; onFinal(final.trim()); }
+  };
+
+  recognition.onerror = (e) => {
+    console.log('SR error:', e.error);
+    if (e.error==='not-allowed') { setStatus('Mic blocked — check Chrome site settings','err'); stopListening(); }
+  };
+
+  recognition.onend = () => { if(micActive) { try{recognition.start();}catch{} } };
+
+  micActive = true;
+  recognition.start();
+  setOrbState('ready');
+  setStatus('Listening… say "Hey Milla" 💙','on');
+  startbtn.classList.add('hidden');
+}
+
+function stopListening() {
+  micActive = false;
+  if (recognition) try{ recognition.stop(); }catch{}
+  if (stream) { stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  setOrbState('');
+  setStatus('Tap button to start','');
+  startbtn.textContent = '🎙️ START LISTENING';
+  startbtn.disabled = false;
+  startbtn.classList.remove('hidden');
+}
+
+function onFinal(text) {
+  if (!text||text.length<3) return;
+  const lower = text.toLowerCase();
+  const wake = ['hey milla','hi milla','hello milla','milla'];
+  const hasWake = wake.some(w=>lower.includes(w));
+  if (hasWake || orb.dataset.active==='1') {
+    setOrbState('active');
+    setStatus('Sending to Milla…','hear');
+    send({ type:'speech', text });
+    orb.dataset.active='1';
+    clearTimeout(orb._t);
+    orb._t = setTimeout(()=>{ orb.dataset.active='0'; setOrbState('ready'); setStatus('Listening… say "Hey Milla"','on'); }, 30000);
+  }
+}
+
+// ── TTS ────────────────────────────────────────────────────────────────────
+function speak(text) {
+  if (!text||!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/\*[^*]+\*/g,'').replace(/[`#_]/g,'').trim();
+  if (!clean) return;
+  const utt = new SpeechSynthesisUtterance(clean);
+  const voices = window.speechSynthesis.getVoices();
+  const pick = voices.find(v=>v.name.includes('Samantha')||v.name.includes('Google US English')||v.name.includes('Zira')||v.name.includes('Victoria'))||(voices.find(v=>v.lang.startsWith('en')));
+  if (pick) utt.voice=pick;
+  utt.rate=1.05; utt.pitch=1.1; utt.volume=1;
+  utt.onstart=()=>{ setOrbState('speaking'); orb.textContent='💬'; setStatus('Milla is speaking…','talk'); };
+  utt.onend  =()=>{ orb.textContent='🎙️'; orb.dataset.active='0'; setOrbState(micActive?'ready':''); setStatus(micActive?'Listening… say "Hey Milla"':'Tap to start',micActive?'on':''); };
+  window.speechSynthesis.speak(utt);
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
+function setOrbState(s) { orb.className=s||''; }
+function setStatus(t,c) { status.textContent=t; status.className=c||''; }
+function showBubble(t)  { bubble.textContent=t; bubble.classList.add('show'); }
+
+orb.addEventListener('click', ()=>{ micActive ? stopListening() : startListening(); });
+startbtn.addEventListener('click', startListening);
+
+// wake lock
+(async()=>{ try{ if('wakeLock' in navigator) await navigator.wakeLock.request('screen'); }catch{} })();
+document.addEventListener('visibilitychange', async()=>{ if(document.visibilityState==='visible') try{ await navigator.wakeLock.request('screen'); }catch{} });
+window.speechSynthesis.onvoiceschanged = ()=>window.speechSynthesis.getVoices();
+
+connect();
+</script>
+</body>
+</html>

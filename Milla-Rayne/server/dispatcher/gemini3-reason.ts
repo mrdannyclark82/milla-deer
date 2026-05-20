@@ -10,7 +10,9 @@ export class Gemini3Reasoner {
 
   async reason(query: string): Promise<string> {
     // Using Gemini 1.5 Flash as upgrade path to Gemini 3 when available
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = this.genAI.getGenerativeModel({
+      model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
+    });
     const result = await model.generateContent(query);
     return result.response.text();
   }

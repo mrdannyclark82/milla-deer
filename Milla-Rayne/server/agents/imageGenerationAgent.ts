@@ -3,18 +3,23 @@ import { config } from '../config';
 import { InferenceClient } from '@huggingface/inference';
 
 class ImageGenerationAgent extends BaseAgent {
-  private hf: InferenceClient;
+  private hf: InferenceClient | null;
 
   constructor() {
     super('image', 'An agent that can generate images from a text prompt.');
-    this.hf = new InferenceClient(config.huggingface.apiKey);
+    this.hf = config.huggingface.apiKey
+      ? new InferenceClient(config.huggingface.apiKey)
+      : null;
   }
 
   protected async executeInternal(task: string): Promise<string> {
     this.log(`ImageGenerationAgent received task: ${task}`);
     try {
+      if (!this.hf) {
+        return 'I was unable to generate the image because Hugging Face is not configured.';
+      }
       const response = await this.hf.textToImage({
-        model: 'stabilityai/stable-diffusion-2',
+        model: config.huggingface.model || 'stabilityai/stable-diffusion-2-1',
         inputs: task,
       });
       // The response is a Blob, we need to convert it to a data URL

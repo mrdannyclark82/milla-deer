@@ -6,6 +6,7 @@ import com.elara.app.data.models.*
 import com.elara.app.data.repository.ElaraRepository
 import com.elara.app.services.GeminiResponse
 import com.elara.app.services.GeminiService
+import com.elara.app.services.MillaApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val geminiService: GeminiService,
-    private val repository: ElaraRepository
+    private val repository: ElaraRepository,
+    private val millaApiService: MillaApiService
 ) : ViewModel() {
 
     // UI State
@@ -53,6 +55,19 @@ class ChatViewModel @Inject constructor(
     private val _growthEntries = MutableStateFlow<List<GrowthEntry>>(emptyList())
     val growthEntries: StateFlow<List<GrowthEntry>> = _growthEntries.asStateFlow()
 
+    // Milla server mode
+    private val _useMillaServer = MutableStateFlow(true)
+    val useMillaServer: StateFlow<Boolean> = _useMillaServer.asStateFlow()
+
+    private val _millaServerUrl = MutableStateFlow(MillaApiService.DEFAULT_SERVER_URL)
+    val millaServerUrl: StateFlow<String> = _millaServerUrl.asStateFlow()
+
+    private val _isMillaDemo = MutableStateFlow(false)
+    val isMillaDemo: StateFlow<Boolean> = _isMillaDemo.asStateFlow()
+
+    private val _millaMessagesLeft = MutableStateFlow<Int?>(null)
+    val millaMessagesLeft: StateFlow<Int?> = _millaMessagesLeft.asStateFlow()
+
     init {
         loadPersistedData()
     }
@@ -82,6 +97,15 @@ class ChatViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun setUseMillaServer(enabled: Boolean) {
+        _useMillaServer.value = enabled
+    }
+
+    fun setMillaServerUrl(url: String) {
+        _millaServerUrl.value = url
+        millaApiService.setServerUrl(url)
     }
 
     fun setSelectedTool(tool: ToolMode) {
@@ -143,12 +167,49 @@ class ChatViewModel @Inject constructor(
                 source = "user-input"
             )
 
-            // Process with Gemini
+            // Process with Milla server (for chat) or Gemini (for image/video gen)
             _isThinking.value = true
             _thoughtProcess.value = "Analyzing request and context..."
 
             try {
-                // Simulate thought process updates
+                val useMillaForThisRequest = _useMillaServer.value &&
+                    _selectedTool.value == ToolMode.CHAT &&
+                    _attachments.value.isEmpty()
+
+                if (useMillaForThisRequest) {
+                    // Route through Milla-Rayne server
+                    _thoughtProcess.value = "Connecting to Milla-Rayne..."
+                    millaApiService.setServerUrl(_millaServerUrl.value)
+                    val millaResponse = millaApiService.chat(text)
+
+                    _isMillaDemo.value = millaResponse.isDemo
+                    millaResponse.demoMessagesLeft?.let { _millaMessagesLeft.value = it }
+
+                    val modelMessage = Message(
+                        role = MessageRole.MODEL,
+                        content = if (millaResponse.success) millaResponse.content
+                                  else "⚠️ ${millaResponse.content}\n\n_Falling back to local AI..._",
+                        timestamp = System.currentTimeMillis()
+                    )
+
+                    if (millaResponse.success) {
+                        _messages.value = _messages.value + modelMessage
+                        repository.saveMessage(modelMessage)
+                        repository.storeMemory(
+                            type = "conversation",
+                            content = millaResponse.content,
+                            importance = 6,
+                            tags = listOf("milla-response"),
+                            source = "milla-server"
+                        )
+                        return@launch
+                    } else {
+                        // Milla failed — fall through to Gemini
+                        _messages.value = _messages.value + modelMessage
+                    }
+                }
+
+                // Gemini path (image gen, video gen, or Milla fallback)
                 _thoughtProcess.value = "Selecting optimal model and tools..."
                 kotlinx.coroutines.delay(500)
                 _thoughtProcess.value = "Generating response with context awareness..."

@@ -464,7 +464,7 @@ function DesignB() {
                 Milla Rayne
               </h1>
               <p style={{ fontSize: '0.75rem', color: '#d97706' }}>
-                Your AI Companion
+                Your Digital Liaison
               </p>
             </div>
           </div>

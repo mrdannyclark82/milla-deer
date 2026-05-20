@@ -7,10 +7,11 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export interface SandboxEnvironment {
   id: string;
@@ -30,10 +31,12 @@ export interface SandboxFeature {
   name: string;
   description: string;
   files: string[];
+  sourceFeatureId?: string;
   status: 'draft' | 'testing' | 'approved' | 'rejected';
   testsPassed: number;
   testsFailed: number;
   addedAt: number;
+  implementation?: FeatureImplementationState;
 }
 
 export interface TestResult {
@@ -44,6 +47,24 @@ export interface TestResult {
   passed: boolean;
   details: string;
   duration: number;
+}
+
+export interface ValidationCommandResult {
+  command: string;
+  passed: boolean;
+  output: string;
+}
+
+export interface FeatureImplementationState {
+  status: 'idle' | 'running' | 'succeeded' | 'failed';
+  startedAt?: number;
+  completedAt?: number;
+  summary?: string;
+  reasoning?: string;
+  worktreePath?: string;
+  changedFiles?: string[];
+  validation?: ValidationCommandResult[];
+  lastError?: string;
 }
 
 class SandboxEnvironmentService {
@@ -108,26 +129,17 @@ class SandboxEnvironmentService {
    * Create a git branch for the sandbox
    */
   private async createGitBranch(branchName: string): Promise<void> {
-    const execAsync = promisify(exec);
-
     try {
-      // Get current branch
-      const { stdout: currentBranch } = await execAsync(
-        'git rev-parse --abbrev-ref HEAD'
-      );
-
-      // Create and checkout new branch
-      await execAsync(`git checkout -b ${branchName}`);
-
-      // Push to remote
-      await execAsync(`git push -u origin ${branchName}`);
-
-      // Switch back to original branch
-      await execAsync(`git checkout ${currentBranch.trim()}`);
+      await execFileAsync('git', ['rev-parse', '--verify', branchName]);
     } catch (error) {
-      throw new Error(
-        `Failed to create git branch: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      try {
+        await execFileAsync('git', ['branch', branchName, 'HEAD']);
+        return;
+      } catch (branchError) {
+        throw new Error(
+          `Failed to create git branch: ${branchError instanceof Error ? branchError.message : 'Unknown error'}`
+        );
+      }
     }
   }
 
@@ -140,6 +152,7 @@ class SandboxEnvironmentService {
       name: string;
       description: string;
       files: string[];
+      sourceFeatureId?: string;
     }
   ): Promise<SandboxFeature | null> {
     const sandbox = this.sandboxes.get(sandboxId);
@@ -152,6 +165,7 @@ class SandboxEnvironmentService {
       name: feature.name,
       description: feature.description,
       files: feature.files,
+      sourceFeatureId: feature.sourceFeatureId,
       status: 'draft',
       testsPassed: 0,
       testsFailed: 0,
@@ -164,9 +178,93 @@ class SandboxEnvironmentService {
     return newFeature;
   }
 
+  async updateSandboxFeature(
+    sandboxId: string,
+    featureId: string,
+    updates: Partial<SandboxFeature>
+  ): Promise<SandboxFeature | null> {
+    const sandbox = this.sandboxes.get(sandboxId);
+    if (!sandbox) {
+      return null;
+    }
+
+    const feature = sandbox.features.find((candidate) => candidate.id === featureId);
+    if (!feature) {
+      return null;
+    }
+
+    Object.assign(feature, updates);
+    await this.saveSandboxes();
+
+    return feature;
+  }
+
   /**
    * Run tests on a feature in sandbox
    */
+  private summarizeCommandOutput(output: string): string {
+    const lines = output
+      .split('\n')
+      .map((line) => line.trimEnd())
+      .filter(Boolean);
+
+    return lines.slice(-20).join('\n').slice(-4000);
+  }
+
+  private getValidationCommands(testType: TestResult['testType']): string[] {
+    switch (testType) {
+      case 'unit':
+        return ['npm test'];
+      case 'integration':
+        return ['npm run check', 'npm run build:web'];
+      case 'user_acceptance':
+        return ['npm run check', 'npm run build:web', 'npm test'];
+      default:
+        return ['npm test'];
+    }
+  }
+
+  private async runRealValidation(
+    worktreePath: string,
+    testType: TestResult['testType']
+  ): Promise<ValidationCommandResult[]> {
+    const commands = this.getValidationCommands(testType);
+    const results: ValidationCommandResult[] = [];
+
+    for (const command of commands) {
+      try {
+        const { stdout, stderr } = await execAsync(command, {
+          cwd: worktreePath,
+          maxBuffer: 1024 * 1024 * 10,
+        });
+
+        results.push({
+          command,
+          passed: true,
+          output: this.summarizeCommandOutput(
+            `${stdout}\n${stderr}`.trim() || `${command} passed`
+          ),
+        });
+      } catch (error) {
+        const stdout = error instanceof Error && 'stdout' in error ? error.stdout : '';
+        const stderr = error instanceof Error && 'stderr' in error ? error.stderr : '';
+
+        results.push({
+          command,
+          passed: false,
+          output: this.summarizeCommandOutput(
+            `${String(stdout ?? '')}\n${String(stderr ?? '')}\n${
+              error instanceof Error ? error.message : String(error)
+            }`.trim()
+          ),
+        });
+        break;
+      }
+    }
+
+    return results;
+  }
+
   async testFeature(
     sandboxId: string,
     featureId: string,
@@ -182,10 +280,28 @@ class SandboxEnvironmentService {
       throw new Error('Feature not found');
     }
 
-    // Simulate running tests
     const startTime = Date.now();
-    const passed = Math.random() > 0.3; // 70% success rate for simulation
-    const duration = Math.random() * 2000 + 500; // 500-2500ms
+    let passed = Math.random() > 0.3;
+    let details = passed
+      ? 'All tests passed successfully'
+      : 'Some tests failed - review needed';
+    let validationResults: ValidationCommandResult[] | undefined;
+
+    if (feature.implementation?.worktreePath) {
+      validationResults = await this.runRealValidation(
+        feature.implementation.worktreePath,
+        testType
+      );
+      passed = validationResults.every((result) => result.passed);
+      details = validationResults
+        .map(
+          (result) =>
+            `${result.passed ? 'PASS' : 'FAIL'} ${result.command}\n${result.output}`
+        )
+        .join('\n\n');
+    }
+
+    const duration = Date.now() - startTime;
 
     const testResult: TestResult = {
       id: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -193,9 +309,7 @@ class SandboxEnvironmentService {
       timestamp: Date.now(),
       testType,
       passed,
-      details: passed
-        ? 'All tests passed successfully'
-        : 'Some tests failed - review needed',
+      details,
       duration,
     };
 
@@ -206,7 +320,10 @@ class SandboxEnvironmentService {
 
     if (passed) {
       feature.testsPassed++;
-      if (feature.testsPassed > 2 && feature.testsFailed === 0) {
+      if (
+        (testType === 'user_acceptance' || feature.testsPassed > 1) &&
+        feature.testsFailed === 0
+      ) {
         feature.status = 'approved';
       } else {
         feature.status = 'testing';
@@ -214,6 +331,10 @@ class SandboxEnvironmentService {
     } else {
       feature.testsFailed++;
       feature.status = 'testing';
+    }
+
+    if (feature.implementation) {
+      feature.implementation.validation = validationResults;
     }
 
     await this.saveSandboxes();
@@ -260,6 +381,18 @@ class SandboxEnvironmentService {
 
     if (featuresRejected > 0) {
       reasons.push(`${featuresRejected} feature(s) rejected`);
+    }
+
+    const featuresWithoutImplementation = sandbox.features.filter(
+      (feature) =>
+        feature.status !== 'rejected' &&
+        feature.implementation?.status !== 'succeeded'
+    ).length;
+
+    if (featuresWithoutImplementation > 0) {
+      reasons.push(
+        `${featuresWithoutImplementation} feature(s) still need a successful implementation run`
+      );
     }
 
     const allTestResults = sandbox.testResults || [];
@@ -388,7 +521,17 @@ class SandboxEnvironmentService {
       const parsed = JSON.parse(data);
       this.sandboxes = new Map(Object.entries(parsed.sandboxes || {}));
     } catch (error) {
-      console.log('No existing sandboxes found, starting fresh');
+      const errorCode =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String(error.code)
+          : undefined;
+
+      if (errorCode === 'ENOENT') {
+        console.log('No existing sandboxes found, starting fresh');
+        return;
+      }
+
+      console.error('Error loading sandbox environments:', error);
     }
   }
 
@@ -419,6 +562,7 @@ export function createSandbox(params: {
   name: string;
   description: string;
   createdBy: 'milla' | 'user';
+  createGitBranch?: boolean;
 }): Promise<SandboxEnvironment> {
   return sandboxService.createSandbox(params);
 }
@@ -429,9 +573,18 @@ export function addFeatureToSandbox(
     name: string;
     description: string;
     files: string[];
+    sourceFeatureId?: string;
   }
 ): Promise<SandboxFeature | null> {
   return sandboxService.addFeatureToSandbox(sandboxId, feature);
+}
+
+export function updateSandboxFeature(
+  sandboxId: string,
+  featureId: string,
+  updates: Partial<SandboxFeature>
+): Promise<SandboxFeature | null> {
+  return sandboxService.updateSandboxFeature(sandboxId, featureId, updates);
 }
 
 export function testFeature(

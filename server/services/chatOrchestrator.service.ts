@@ -16,6 +16,7 @@ import { getVisualMemories, getEmotionalContext } from '../visualMemoryService';
 import { detectEnvironmentalContext } from '../proactiveService';
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { analyzeYouTubeVideo } from '../youtubeAnalysisService';
+import { detectCastIntent, castYouTube } from '../castService';
 import {
   parseGitHubUrl,
   fetchRepositoryData,
@@ -380,6 +381,22 @@ export async function generateAIResponse(
   const hasCoreTrigger =
     coreFunctionTriggers.some((trigger) => message.includes(trigger)) ||
     millaWordPattern.test(userMessage);
+
+  // Cast / TV Intent Detection — "play Accepted on YouTube in the bedroom"
+  const castIntent = detectCastIntent(userMessage);
+  if (castIntent) {
+    try {
+      await castYouTube(castIntent.query, castIntent.room);
+      return {
+        content: `📺 Done! I'm casting "${castIntent.query}" to the TV for you right now 🎵`,
+        cast: { query: castIntent.query, room: castIntent.room },
+      };
+    } catch (err: any) {
+      return {
+        content: `I tried to cast that but hit a snag, babe 😬 — ${err?.message ?? err}`,
+      };
+    }
+  }
 
   // GitHub URL Detection
   const githubUrlMatch = userMessage.match(

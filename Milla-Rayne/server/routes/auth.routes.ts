@@ -4,6 +4,9 @@ import {
   loginUser,
   logoutUser,
   validateSession,
+  createDemoSession,
+  validateDemoSession,
+  DEMO_MESSAGE_LIMIT,
 } from '../authService';
 
 /**
@@ -107,6 +110,21 @@ export function registerAuthRoutes(app: Express) {
         return res.json({ authenticated: false });
       }
 
+      // Demo session check
+      if (sessionToken.startsWith('demo_')) {
+        const demoValid = validateDemoSession(sessionToken);
+        if (!demoValid) {
+          res.clearCookie('session_token');
+          return res.json({ authenticated: false });
+        }
+        return res.json({
+          authenticated: true,
+          isDemo: true,
+          messageLimit: DEMO_MESSAGE_LIMIT,
+          user: { id: 'demo-guest', username: 'Guest', isDemo: true },
+        });
+      }
+
       const result = await validateSession(sessionToken);
 
       if (!result.valid) {
@@ -122,6 +140,21 @@ export function registerAuthRoutes(app: Express) {
       console.error('Auth status check error:', error);
       res.json({ authenticated: false });
     }
+  });
+
+  // Demo mode — create ephemeral guest session
+  router.post('/demo', (_req, res) => {
+    const token = createDemoSession();
+    res.cookie('session_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 2 * 60 * 60 * 1000, // 2 hours
+    });
+    res.json({
+      success: true,
+      isDemo: true,
+      messageLimit: DEMO_MESSAGE_LIMIT,
+    });
   });
 
   // Mount the router under /api/auth

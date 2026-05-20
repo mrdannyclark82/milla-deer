@@ -26,7 +26,9 @@ import {
 } from './sandboxEnvironmentService';
 import {
   getDiscoveredFeatures,
+  getFeatureById,
   getTopFeatureRecommendations,
+  refreshFeatureDiscoveryFromDisk,
   discoverFromGitHub,
   discoverFromWeb,
   discoverFromYouTube,
@@ -51,6 +53,7 @@ import {
   completeProactiveAction,
   runProactiveCycle,
 } from './proactiveRepositoryManagerService';
+import { codingAgent } from './agents/codingAgent';
 
 export function registerProactiveRoutes(router: Router): void {
   // User Analytics Routes
@@ -168,11 +171,12 @@ export function registerProactiveRoutes(router: Router): void {
 
   router.post('/api/milla/sandboxes', async (req, res) => {
     try {
-      const { name, description, createdBy } = req.body;
+      const { name, description, createdBy, createGitBranch } = req.body;
       const sandbox = await createSandbox({
         name,
         description,
         createdBy: createdBy || 'user',
+        createGitBranch,
       });
       res.json({ success: true, sandbox });
     } catch (error) {
@@ -186,11 +190,12 @@ export function registerProactiveRoutes(router: Router): void {
   router.post('/api/milla/sandboxes/:id/features', async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, description, files } = req.body;
+      const { name, description, files, sourceFeatureId } = req.body;
       const feature = await addFeatureToSandbox(id, {
         name,
         description,
         files: files || [],
+        sourceFeatureId,
       });
       if (feature) {
         res.json({ success: true, feature });
@@ -202,6 +207,58 @@ export function registerProactiveRoutes(router: Router): void {
       res.status(500).json({ success: false, error: 'Failed to add feature' });
     }
   });
+
+  router.post(
+    '/api/milla/sandboxes/:sandboxId/features/:featureId/implement',
+    async (req, res) => {
+      try {
+        const { sandboxId, featureId } = req.params;
+        const sandbox = getSandbox(sandboxId);
+        const sandboxFeature = sandbox?.features.find(
+          (feature) => feature.id === featureId
+        );
+
+        if (!sandbox || !sandboxFeature) {
+          res
+            .status(404)
+            .json({ success: false, error: 'Sandbox feature not found' });
+          return;
+        }
+
+        if (!sandboxFeature.sourceFeatureId) {
+          res.status(400).json({
+            success: false,
+            error: 'Sandbox feature is not linked to a discovered feature',
+          });
+          return;
+        }
+
+        await refreshFeatureDiscoveryFromDisk();
+        const discoveredFeature = getFeatureById(sandboxFeature.sourceFeatureId);
+        if (!discoveredFeature) {
+          res
+            .status(404)
+            .json({ success: false, error: 'Discovered feature not found' });
+          return;
+        }
+
+        const result = await codingAgent.implementDiscoveredFeature({
+          sandboxId,
+          featureId,
+          feature: discoveredFeature,
+          repositoryPath: process.cwd(),
+        });
+
+        res.json({ success: result.success, result });
+      } catch (error) {
+        console.error('Error implementing sandbox feature:', error);
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to implement feature',
+        });
+      }
+    }
+  );
 
   router.post(
     '/api/milla/sandboxes/:sandboxId/features/:featureId/test',
@@ -241,6 +298,19 @@ export function registerProactiveRoutes(router: Router): void {
     try {
       const { id } = req.params;
       const marked = await markSandboxForMerge(id);
+      if (marked) {
+        const sandbox = getSandbox(id);
+        const sourceFeatureIds =
+          sandbox?.features
+            .map((feature) => feature.sourceFeatureId)
+            .filter((value): value is string => Boolean(value)) ?? [];
+
+        await Promise.all(
+          sourceFeatureIds.map((featureId) =>
+            updateFeatureStatus(featureId, 'implemented')
+          )
+        );
+      }
       res.json({ success: marked });
     } catch (error) {
       console.error('Error marking for merge:', error);
@@ -251,8 +321,9 @@ export function registerProactiveRoutes(router: Router): void {
   });
 
   // Feature Discovery Routes
-  router.get('/api/milla/features/discovered', (req, res) => {
+  router.get('/api/milla/features/discovered', async (req, res) => {
     try {
+      await refreshFeatureDiscoveryFromDisk();
       const filters: any = {};
       if (req.query.status) filters.status = req.query.status;
       if (req.query.source) filters.source = req.query.source;
@@ -268,8 +339,9 @@ export function registerProactiveRoutes(router: Router): void {
     }
   });
 
-  router.get('/api/milla/features/recommendations', (req, res) => {
+  router.get('/api/milla/features/recommendations', async (req, res) => {
     try {
+      await refreshFeatureDiscoveryFromDisk();
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       const recommendations = getTopFeatureRecommendations(limit);
       res.json({ success: true, recommendations });

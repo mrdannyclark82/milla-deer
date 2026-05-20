@@ -1,249 +1,158 @@
-# Milla-Rayne 🚀
+# Milla-Rayne 🤍
+### The world's most personal AI — offline-first, smart-home aware, and built to know you.
 
-**The Context-Aware AI Assistant**
+[![Build](https://img.shields.io/github/actions/workflow/status/mrdannyclark82/Milla-Deer/ci.yml?branch=main&label=build&style=flat-square)](https://github.com/mrdannyclark82/Milla-Deer/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Web%20%7C%20CLI-brightgreen?style=flat-square)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4?style=flat-square)](CONTRIBUTING.md)
 
-## Workspace status
+> **Not a chatbot. A conscious, encrypted, home-controlling AI that runs on your hardware.**
 
-This repository is now treated as a multi-project workspace.
-
-- `Milla-Rayne/` is the primary full-stack application and the main target for root-level `dev`, `check`, `test`, `lint`, and `db:push` commands.
-- `Elara2.0/` remains a supported secondary Vite application and is included in the root build flow.
-- `ReplycA/` and `SARIi/` are preserved in-place, but they are not yet wired into the root validation scripts.
-- The root package now acts as a workspace entrypoint so contributors can start from the repository root instead of guessing which nested package is authoritative.
-
-Milla-Rayne is a pioneering digital intelligence platform designed as a devoted AI companion. It blends cutting-edge AI research with production-grade systems, offering a hybrid, decentralized, and edge-ready architecture for real-time, multimodal interaction.
+<!-- Live Demo link — update with your deployment URL -->
 
 ---
 
-## ✨ Key Features
+## Why Milla-Rayne is different
 
-- **Enhanced Web UI**: Modern "Futuristic Minimalist" interface featuring glassmorphism, neon accents (Cyan/Purple), and seamless 3D scene integration.
-- **Smart AI Orchestration**: Robust multi-provider dispatch system with strict priority (OpenAI → Anthropic → xAI → Mistral → OpenRouter) and automatic fallback.
-- **Poly-Model Synthesis**: Integrates Gemini, Mistral, OpenAI, xAI Grok, and more via secure dispatch.
-- **🔒 Local LLM Support**: Run models locally with Ollama for complete privacy (see [LOCAL_LLM_SETUP.md](LOCAL_LLM_SETUP.md))
-- **🤖 Agentic AI Patterns**: Advanced iterative reasoning with multi-step task decomposition and self-verification
-- **📱 On-Device AI**: Gemini Nano integration for offline text/image generation on Android with Gemma fallback
-- **🎥 Multimodal Processing**: MediaPipe GenAI for vision and audio understanding (image analysis, speech-to-text)
-- **Adaptive Multimodal Frontend**: React + Vite client with dynamic scenes, voice interaction, and visual recognition.
-- **Edge Processing**: Native Android agent for sub-millisecond local tasks.
-- **Enhanced Memory**: SQLite-based memory with encryption, session tracking, and usage analytics.
-- **Voice Interaction**: Multi-provider TTS/STT with low latency and automatic fallback.
-- **Repository Analysis**: Built-in tools to analyze GitHub repos, suggest improvements, and even create PRs.
-- **Predictive Updates**: Monitors AI industry news and recommends relevant features.
+- **📱 Runs fully offline on your phone** — Gemma-3 1B 4-bit GPU via MediaPipe Tasks-GenAI, sub-150ms voice response, zero cloud dependency
+- **🏠 Controls your physical environment** — native Home Assistant WebSocket + MQTT broker integration with autonomous thermal management
+- **🔐 Your memory stays yours** — AES-256-GCM encrypted SQLite + RAG vector search; no data leaves your hardware unless you opt in
+- **🌊 Has an inner life** — GIM (Global Integration Monitor) and REM thought cycles run continuously; Milla thinks when you're not watching
 
 ---
 
-## 📂 Project Structure
+## Feature Overview
 
-- `Milla-Rayne/` – Primary full-stack app with client, server, shared code, CLI, Android app, and tests
-- `Elara2.0/` – Secondary Vite-based app
-- `ReplycA/` – Preserved auxiliary project
-- `SARIi/` – Preserved voice-related project with binary assets
-- `docs/` – Project documentation
-- `scripts/` – Root-level helper scripts
+| Feature | Details |
+|---------|---------|
+| 🧠 **Multi-provider AI** | Gemini 2.5 Pro/Flash, GPT-4o, Claude 3.5, Grok, Ollama local models — hot-swappable |
+| 📱 **On-device inference** | MediaPipe Tasks-GenAI 0.10.32, Gemma-3 1B 4-bit GPU, Android hardware acceleration |
+| 🏠 **Smart home control** | Home Assistant WebSocket API, MQTT broker (EMQX), 7 chat-callable IoT MCP tools |
+| 🌡️ **Autonomous thermal** | Monitors CPU/GPU temps, auto-triggers HA cooling scripts at configurable threshold |
+| 🔐 **Encrypted memory** | AES-256-GCM at rest, SQLite local storage, RAG auto-indexing every conversation |
+| 📧 **Email + messaging** | Gmail OAuth2 read/send, Telegram bot polling, 10-minute background cycle |
+| 🌊 **Stream of consciousness** | GIM cycle (proactive reasoning), REM cycle (memory consolidation), internal monologue |
+| 🖥️ **Vision grounding** | Qwen-2.5-VL-7B pixel-level GUI actions, Phi-4-Multimodal, screen capture pipeline |
+| 🔌 **MCP tools** | IoT tools, memory tools, shell access, sandboxed Docker exec, Hugging Face models |
+| 🌐 **Browser extension** | Companion extension for Chrome/Firefox, active listening, YouTube analysis |
+| ⚡ **RDMA/RoCE v2 ready** | Dual-PC sub-microsecond inference link for high-throughput local deployments |
+| 🎙️ **Multi-provider TTS** | Google Cloud, Azure Cognitive, ElevenLabs, browser-native — switchable at runtime |
+| 📊 **Monitoring dashboard** | Real-time metrics, WebSocket performance, GIM/REM cycle status |
+| 🤖 **ReAct agent loop** | Gemini Flash + Deep Think, tool-call memory across conversations |
 
 ---
 
-## 🚀 Quick Start
+## Architecture
 
-### Web App
-
-```bash
-npm install
-cp .env.example .env   # Add your API keys
-npm run dev:all        # Start both main server (5000) and proactive server (5001)
+```mermaid
+graph TB
+    subgraph Client Layer
+        Web[React + Vite Web]
+        Android[Android App\nMediaPipe GPU]
+        CLI[TypeScript CLI]
+        Ext[Browser Extension]
+    end
+    subgraph Server Core
+        Orch[Chat Orchestrator\nReAct Loop]
+        Memory[Encrypted Memory\nAES-256-GCM + RAG]
+        GIM[Consciousness\nGIM + REM Cycles]
+    end
+    subgraph AI Providers
+        Gemini[Gemini 2.5 Pro]
+        GPT[GPT-4o]
+        Local[Local Ollama\nGemma-3]
+    end
+    subgraph Physical Layer
+        HA[Home Assistant\nWebSocket]
+        MQTT[MQTT Broker\nEMQX]
+        Thermal[Thermal Monitor\nAuto-cooling]
+    end
+    Client Layer --> Server Core
+    Server Core --> AI Providers
+    Server Core --> Physical Layer
 ```
 
-Open http://localhost:5000 to start chatting.
+---
 
-Useful root commands:
-
-```bash
-npm run check       # Run the smoke TypeScript check for the backend workspace
-npm run check:full  # Try a full Milla-Rayne type-check, including client code
-npm run test        # Run the smoke server test suite
-npm run lint        # Lint root/Milla-Rayne JS config and script files
-npm run build       # Build the Milla-Rayne backend bundles
-npm run build:web   # Attempt the optional Milla-Rayne + Elara2.0 web builds
-npm run dev:elara   # Start the Elara2.0 app
-```
-
-The default `check` and `test` commands are intentionally smoke-focused so they stay useful in constrained environments. Use the `:full` variants when the full dependency graph is installed locally.
-
-**Note**: The application now runs two servers:
-
-- **Main Server (Port 5000)**: Handles core application features, chat, API routes
-- **Proactive Server (Port 5001)**: Handles background proactive features to prevent rate limiting
-
-To run servers separately:
+## Quick Start
 
 ```bash
-npm run dev              # Main server only (port 5000)
-npm run dev:proactive    # Proactive server only (port 5001)
+git clone https://github.com/mrdannyclark82/Milla-Deer
+cd Milla-Deer
+cp .env.example .env  # Add your API keys
+pnpm install
+pnpm dev
 ```
 
-### 🔒 Local LLM (Optional - For Privacy)
+The web app will be live at **http://localhost:5000**.
 
-Want to run AI models locally for complete privacy?
+### Android
 
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Download a model
-ollama pull gemma3:1b
-
-# Enable in Milla
-echo "ENABLE_LOCAL_MODEL=true" >> .env
-echo "PREFER_LOCAL_MODEL=true" >> .env
-```
-
-See [LOCAL_LLM_SETUP.md](LOCAL_LLM_SETUP.md) for full instructions.
+Open `Deer-Milla/` in Android Studio, build the release APK. On-device Gemma-3 model is downloaded on first launch (~800 MB).
 
 ### CLI
 
 ```bash
-npm run dev   # Start server
-npm run cli   # Launch CLI
+pnpm dev        # Start server in terminal 1
+pnpm cli        # Start CLI in terminal 2
 ```
-
-### Android
-
-Open `android/` in Android Studio, configure server URL, and run on emulator/device.
 
 ### Docker
 
 ```bash
-cp .env.example .env
-docker-compose up
-```
-
-Or pull prebuilt image:
-
-```bash
-docker pull ghcr.io/mrdannyclark82/milla-rayne:latest
+docker-compose up   # Uses .env automatically
 ```
 
 ---
 
-## 🧠 Advanced AI Capabilities
+## Tech Stack
 
-### Agentic AI Patterns
-
-Milla-Rayne now includes advanced agentic AI dispatch for complex multi-step reasoning:
-
-```typescript
-// Server-side usage
-import { agenticDispatch } from './server/agentic-dispatch';
-
-const result = await agenticDispatch(
-  'Analyze this codebase and suggest improvements',
-  true, // Enable agentic mode
-  { maxIterations: 5, requiresVerification: true }
-);
-```
-
-Features:
-
-- Iterative task decomposition with feedback loops
-- Multi-step reasoning and planning
-- Self-correction and verification
-- Tool usage and external API integration
-
-### On-Device AI (Android)
-
-Gemini Nano integration enables offline AI capabilities on Android devices:
-
-```typescript
-// android/src/gemini-nano.ts
-import { nano } from './gemini-nano';
-
-await nano.init();
-const result = await nano.generate({
-  prompt: 'Explain quantum computing',
-  maxTokens: 2048,
-});
-```
-
-Features:
-
-- Offline text and image generation
-- Automatic fallback to Gemma for unsupported operations
-- Low-latency local inference
-- 30%+ improvement in Android offline capabilities
-
-### Multimodal Processing
-
-MediaPipe GenAI integration for vision and audio understanding:
-
-```typescript
-// client/src/mediapipe-genai.ts
-import { genai } from './mediapipe-genai';
-
-// Vision analysis
-const imageAnalysis = await genai.analyzeImage(
-  imageFile,
-  'Describe this scene'
-);
-
-// Audio transcription
-const transcript = await genai.audioToText(audioFile);
-```
-
-Features:
-
-- Real-time vision understanding (object detection, scene analysis)
-- Audio processing (speech-to-text, audio classification)
-- Cross-modal generation
-- Low-effort integration for vision/audio tasks
-
-🧪 Development
-Testing: npm test (Vitest)
-
-Linting: npm run lint
-
-Formatting: npm run format
-
-Database: npm run db:push (Drizzle ORM migrations)
-
-🔒 Security
-API keys managed via .env (never commit secrets).
-
-Optional AES-256-GCM encryption for memory data.
-
-See SECURITY.md for details.
-
-🤝 Contributing
-Contributions are welcome!
-
-Fork the repo
-
-Create a feature branch
-
-Submit a pull request
-
-See CODE_OF_CONDUCT.md for community guidelines.
-
-📜 License
-This project is licensed under the MIT License – see LICENSE for details.
-
-Code
+| Layer | Technologies |
+|-------|-------------|
+| **Backend** | Node.js 20, Express, TypeScript 5, Drizzle ORM |
+| **Frontend** | React 18, Vite 5, Tailwind CSS, Three.js |
+| **Database** | SQLite (dev) · PostgreSQL (prod) · Drizzle migrations |
+| **AI SDKs** | Vercel AI SDK, LangChain.js, MCP TypeScript SDK |
+| **Mobile** | Android (Kotlin), MediaPipe Tasks-GenAI, Gemma-3 1B |
+| **IoT / Home** | Home Assistant WebSocket, MQTT (EMQX), Node.js mqtt client |
+| **Memory** | AES-256-GCM crypto, SQLite vector search, RAG pipeline |
+| **Integrations** | Gmail OAuth2, Telegram Bot API, Google Cloud TTS, ElevenLabs |
+| **DevOps** | Docker, docker-compose, GitHub Actions, Dependabot |
 
 ---
 
-## 📜 LICENSE (MIT)
+## Hosted Pricing
 
-```text
-MIT License
+| Tier | Price | What you get |
+|------|-------|-------------|
+| **Free** | $0 | Local inference, full web UI, basic encrypted memory |
+| **Pro** | $12/mo | Gmail + Telegram integration, Home Assistant sync, cloud memory backup, priority AI models |
+| **Enterprise** | $49/mo | Multi-user, RDMA dual-PC setup, dedicated support, white-label, SLA |
 
-Copyright (c) 2025 Danny Clark
+[**→ See pricing details**](#pricing)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-[...standard MIT text...]
-```
+## Contributing
+
+We welcome contributions of all kinds — bug fixes, new AI provider integrations, Android improvements, or documentation.
+
+1. Fork the repo and create a feature branch: `git checkout -b feat/your-feature`
+2. Make your changes following our [TypeScript conventions](docs/)
+3. Run `pnpm test && pnpm lint` — all checks must pass
+4. Open a PR using the provided template
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for full guidelines.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2025 mrdannyclark82
+
+---
+
+<p align="center">
+  Built with 🤍 — AI that respects your hardware, your privacy, and your autonomy.
+</p>

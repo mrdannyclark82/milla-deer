@@ -6,6 +6,14 @@ Both servers are currently running and the application is accessible!
 
 ---
 
+## Canonical Apps
+
+- **Dashboard / Web**: `Milla-Rayne/`
+- **Mobile**: `Deer-Milla/`
+- **Legacy Native Android**: top-level `android/` (reference only)
+
+---
+
 ## Access Points
 
 - **Web Interface**: http://localhost:5000
@@ -54,6 +62,16 @@ npm test
 # Run tests with coverage
 npm run test:coverage
 ```
+
+### Mobile Development
+
+```bash
+cd Deer-Milla
+npm install
+npm run android
+```
+
+Use `Deer-Milla/` for active mobile work. The top-level `android/` app is legacy and should not be treated as the primary client.
 
 ### Database
 

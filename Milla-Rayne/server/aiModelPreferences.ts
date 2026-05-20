@@ -23,7 +23,7 @@ const MODEL_ALIASES: Record<string, CanonicalAIModel> = {
   grok: 'grok',
 };
 
-export const DEFAULT_CHAT_MODEL: CanonicalAIModel = 'gemini';
+export const DEFAULT_CHAT_MODEL: CanonicalAIModel = 'xai';
 
 export function normalizeAIModel(model: string | null | undefined) {
   if (!model) return null;

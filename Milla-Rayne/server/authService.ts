@@ -189,7 +189,10 @@ export async function updateUserAIModel(
       return { success: false, error: 'Unsupported AI model preference' };
     }
 
-    await storage.updateUserAIModel(userId, normalizedModel as CanonicalAIModel);
+    await storage.updateUserAIModel(
+      userId,
+      normalizedModel as CanonicalAIModel
+    );
     return { success: true };
   } catch (error) {
     console.error('Update AI model error:', error);
@@ -459,13 +462,13 @@ export async function refreshAccessTokenIfExpired(
     if (newToken) {
       return {
         success: true,
-        newAccessToken: newToken
+        newAccessToken: newToken,
       };
     }
 
     return {
       success: false,
-      error: 'Token refresh failed or not needed (no valid token found)'
+      error: 'Token refresh failed or not needed (no valid token found)',
     };
   } catch (error) {
     console.error('[Auth] Token refresh error:', error);
@@ -495,7 +498,9 @@ export async function scheduleTokenRotation(): Promise<void> {
       uniqueUserIds.add(session.userId);
     }
 
-    console.log(`[Auth] Checking tokens for ${uniqueUserIds.size} active users`);
+    console.log(
+      `[Auth] Checking tokens for ${uniqueUserIds.size} active users`
+    );
 
     // For each session's user, check if token needs refresh
     for (const userId of uniqueUserIds) {
@@ -510,7 +515,9 @@ export async function scheduleTokenRotation(): Promise<void> {
         const bufferMs = 10 * 60 * 1000; // 10 minutes
 
         if (expiresInMs < bufferMs) {
-          console.log(`[Auth] Refreshing token for user ${userId} (expires in ${Math.round(expiresInMs/1000)}s)`);
+          console.log(
+            `[Auth] Refreshing token for user ${userId} (expires in ${Math.round(expiresInMs / 1000)}s)`
+          );
 
           // Call refreshAccessTokenIfExpired for expiring tokens
           // We pass existing tokens (though the function will fetch fresh from DB)
@@ -525,4 +532,59 @@ export async function scheduleTokenRotation(): Promise<void> {
   } catch (error) {
     console.error('[Auth] Token rotation scheduler error:', error);
   }
+}
+
+// ── Demo Session Store (in-memory, no DB pollution) ─────────────────────────
+interface DemoSession {
+  messageCount: number;
+  createdAt: number;
+}
+
+const demoSessions = new Map<string, DemoSession>();
+const DEMO_SESSION_TTL = 2 * 60 * 60 * 1000; // 2 hours
+export const DEMO_MESSAGE_LIMIT = 10;
+
+// Clean up expired demo sessions periodically
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [token, session] of demoSessions.entries()) {
+      if (now - session.createdAt > DEMO_SESSION_TTL) {
+        demoSessions.delete(token);
+      }
+    }
+  },
+  30 * 60 * 1000
+);
+
+export function createDemoSession(): string {
+  const token = `demo_${crypto.randomBytes(24).toString('hex')}`;
+  demoSessions.set(token, { messageCount: 0, createdAt: Date.now() });
+  return token;
+}
+
+export function validateDemoSession(token: string): {
+  valid: boolean;
+  messageCount?: number;
+  limitReached?: boolean;
+} {
+  if (!token.startsWith('demo_')) return { valid: false };
+  const session = demoSessions.get(token);
+  if (!session) return { valid: false };
+  if (Date.now() - session.createdAt > DEMO_SESSION_TTL) {
+    demoSessions.delete(token);
+    return { valid: false };
+  }
+  return {
+    valid: true,
+    messageCount: session.messageCount,
+    limitReached: session.messageCount >= DEMO_MESSAGE_LIMIT,
+  };
+}
+
+export function incrementDemoMessageCount(token: string): number {
+  const session = demoSessions.get(token);
+  if (!session) return 0;
+  session.messageCount++;
+  return session.messageCount;
 }

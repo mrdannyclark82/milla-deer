@@ -1,4 +1,6 @@
 import { Router, type Express } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { analyzeVideo, generateVideoInsights } from '../gemini';
 import {
   analyzeYouTubeVideo,
@@ -20,6 +22,23 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerMediaRoutes(app: Express) {
   const router = Router();
+  const loopVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    'milla_loop.mp4'
+  );
+
+  router.get(
+    '/assets/loop-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(loopVideoPath)) {
+        return res.status(404).json({ error: 'Loop video not found' });
+      }
+
+      res.sendFile(loopVideoPath);
+    })
+  );
 
   // Video analysis from file upload
   router.post(

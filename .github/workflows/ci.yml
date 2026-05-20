@@ -1,28 +1,147 @@
-name: CI
-on: [push, pull_request]
+name: CI/CD
+
+on:
+  push:
+    branches: [main, master, "feature/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  # ── Lint & Type Check ──────────────────────────────────────────────────────
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v3
         with:
-          node-version: '18'
-          cache: 'npm'
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Run workspace check
-        run: npm run check
+      - name: Type check (smoke)
+        run: pnpm check
 
-      - name: Run workspace lint
-        run: npm run lint
+      - name: Lint
+        run: pnpm lint
 
-      - name: Run smoke tests
-        run: npm test
+  # ── Tests ──────────────────────────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      MEMORY_KEY: ${{ secrets.MEMORY_KEY || 'ci-test-key-32-chars-padded-here' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-placeholder' }}
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Build backend bundles
-        run: npm run build
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # ── Build ──────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build server + client
+        run: pnpm build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: milla-dist-${{ github.sha }}
+          path: Milla-Rayne/dist/
+          retention-days: 7
+
+  # ── Deploy to Production (main only) ──────────────────────────────────────
+  deploy:
+    name: Deploy → Production
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://milla-rayne.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy to nexus via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /home/nexus/ogdray/Milla-Deer
+            git pull origin main
+            pnpm install --frozen-lockfile
+            pnpm build
+            # Graceful restart — kill old, start new
+            OLD_PID=$(ss -tlnp | grep 5000 | grep -oP 'pid=\K[0-9]+' | head -1)
+            [ -n "$OLD_PID" ] && kill $OLD_PID && sleep 2
+            cd Milla-Rayne
+            nohup node dist/index.js >> /tmp/milla-server.log 2>&1 &
+            echo "Deployed at $(date)"
+

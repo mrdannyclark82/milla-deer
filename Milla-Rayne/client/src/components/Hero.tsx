@@ -34,7 +34,7 @@ const Hero: React.FC<HeroProps> = ({ className }) => {
             <span className="block glow-text text-cyber-pink mb-2">
               Welcome to the Future
             </span>
-            <span className="block text-white">of AI Companionship</span>
+            <span className="block text-white">of Digital Liaison</span>
           </h1>
 
           {/* Subheading */}

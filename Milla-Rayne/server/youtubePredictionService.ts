@@ -56,6 +56,20 @@ async function getPredictionData(): Promise<PredictionData> {
     }
   } catch (error) {
     console.error('[YouTube Prediction] Error getting prediction data:', error);
+    if (fs.existsSync(STORAGE_FILE)) {
+      try {
+        const corruptPath = `${STORAGE_FILE}.corrupt-${Date.now()}`;
+        fs.renameSync(STORAGE_FILE, corruptPath);
+        console.warn(
+          `[YouTube Prediction] Moved corrupted prediction data to ${corruptPath}`
+        );
+      } catch (moveError) {
+        console.error(
+          '[YouTube Prediction] Failed to move corrupted prediction data:',
+          moveError
+        );
+      }
+    }
   }
 
   return {
@@ -287,6 +301,24 @@ export async function getPersonalizedSuggestions(): Promise<string> {
     suggestion ||
     "I'm learning your preferences, babe! Keep watching and I'll get better at suggestions. 💜"
   );
+}
+
+export async function getRecentWatchQueries(limit: number = 5): Promise<string[]> {
+  const data = await getPredictionData();
+  const recentQueries: string[] = [];
+
+  for (const watch of data.watchHistory) {
+    if (!watch.query || recentQueries.includes(watch.query)) {
+      continue;
+    }
+
+    recentQueries.push(watch.query);
+    if (recentQueries.length >= limit) {
+      break;
+    }
+  }
+
+  return recentQueries;
 }
 
 /**

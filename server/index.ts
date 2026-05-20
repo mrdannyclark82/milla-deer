@@ -296,9 +296,23 @@ export async function initApp() {
   httpServer = createServer(app);
 
   // Setup sensor data WebSocket for mobile clients
-  const { setupSensorDataWebSocket } = await import('./websocketService');
+  const { setupSensorDataWebSocket, setupVoiceWebSocket } = await import('./websocketService');
   await setupSensorDataWebSocket(httpServer);
   console.log('✅ Mobile sensor data WebSocket initialized');
+
+  // Setup always-on voice WebSocket for tablet listener
+  await setupVoiceWebSocket(httpServer);
+  console.log('✅ Voice WebSocket initialized on /ws/voice');
+
+  // Serve the always-on listener page at /listen
+  app.get('/listen', (_req, res) => {
+    res.sendFile(import.meta.dirname + '/listen.html');
+  });
+  console.log('✅ Always-on listener page at /listen');
+
+  // Start Telegram bot polling
+  const { startTelegram } = await import('./telegramService');
+  startTelegram();
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

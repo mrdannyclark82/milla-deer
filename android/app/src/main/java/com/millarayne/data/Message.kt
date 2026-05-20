@@ -2,6 +2,7 @@ package com.millarayne.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.Instant
 
 /**
  * Message entity for Room database
@@ -14,6 +15,31 @@ data class Message(
     val role: String,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+data class RemoteMessage(
+    val id: String? = null,
+    val content: String,
+    val role: String,
+    val timestamp: String? = null
+) {
+    fun toLocalMessage(): Message {
+        return Message(
+            content = content,
+            role = role,
+            timestamp = parseTimestamp(timestamp)
+        )
+    }
+
+    private fun parseTimestamp(rawTimestamp: String?): Long {
+        if (rawTimestamp.isNullOrBlank()) {
+            return System.currentTimeMillis()
+        }
+
+        return rawTimestamp.toLongOrNull()
+            ?: runCatching { Instant.parse(rawTimestamp).toEpochMilli() }
+                .getOrElse { System.currentTimeMillis() }
+    }
+}
 
 /**
  * Scene context data

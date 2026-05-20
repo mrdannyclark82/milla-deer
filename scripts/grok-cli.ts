@@ -1,0 +1,1 @@
+#!/usr/bin/env tsx\nimport { spawn } from 'child_process';\nimport path from 'path';\n\nprocess.chdir(path.resolve(__dirname, '..'));\n\nconst args = process.argv.slice(2);\n\nspawn('npx', ['@vibe-kit/grok-cli', ...args], {\n  stdio: 'inherit',\n  cwd: process.cwd(),\n  env: { ...process.env, cwd: process.cwd() }\n});\n

@@ -13,6 +13,14 @@ export interface MerchItem {
   category?: string;
 }
 
+export interface CheckoutPricingContext {
+  adjustedPrice?: number;
+  pricingReason?: string;
+  recommendationId?: string;
+  sourceSessionId?: string;
+  userId?: string;
+}
+
 // Initialize Stripe if secret key is available
 const stripe = config.stripe.secretKey
   ? new Stripe(config.stripe.secretKey, {
@@ -87,7 +95,8 @@ export async function getMerchItem(itemId: string): Promise<MerchItem | null> {
  */
 export async function createCheckoutSession(
   itemId: string,
-  origin: string = 'http://localhost:5000'
+  origin: string = 'http://localhost:5000',
+  pricingContext?: CheckoutPricingContext
 ): Promise<string> {
   log(`Creating checkout session for item ${itemId}`);
 
@@ -96,6 +105,17 @@ export async function createCheckoutSession(
   if (!item) {
     throw new Error('Item not found');
   }
+
+  const boundedAdjustedPrice =
+    typeof pricingContext?.adjustedPrice === 'number' &&
+    Number.isFinite(pricingContext.adjustedPrice)
+      ? Number(
+          Math.max(
+            item.price * 0.75,
+            Math.min(item.price * 1.25, pricingContext.adjustedPrice)
+          ).toFixed(2)
+        )
+      : item.price;
 
   if (!stripe) {
     log('Stripe not configured, returning mock URL');
@@ -114,7 +134,7 @@ export async function createCheckoutSession(
               description: item.description,
               // images: item.imageUrl ? [item.imageUrl] : [],
             },
-            unit_amount: Math.round(item.price * 100), // Stripe expects cents
+            unit_amount: Math.round(boundedAdjustedPrice * 100), // Stripe expects cents
           },
           quantity: 1,
         },
@@ -124,6 +144,10 @@ export async function createCheckoutSession(
       cancel_url: `${origin}/merch?canceled=true`,
       metadata: {
         itemId: item.id,
+        pricingReason: pricingContext?.pricingReason || '',
+        recommendationId: pricingContext?.recommendationId || '',
+        sourceSessionId: pricingContext?.sourceSessionId || '',
+        userId: pricingContext?.userId || '',
       },
     });
 

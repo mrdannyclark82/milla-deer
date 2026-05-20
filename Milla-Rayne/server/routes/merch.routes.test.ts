@@ -51,6 +51,20 @@ vi.mock('../config', async (importOriginal) => {
   };
 });
 
+vi.mock('../swarmRuntimeService', () => ({
+  getDynamicMerchRecommendations: vi.fn().mockResolvedValue([
+    {
+      recommendationId: 'merch-1',
+      itemId: 'hoodie-001',
+      itemName: 'Milla-Rayne Empire Hoodie',
+      basePrice: 49.99,
+      adjustedPrice: 44.99,
+      pricingReason: 'Memory signals suggest a comfort discount.',
+      memorySignals: ['comfort'],
+    },
+  ]),
+}));
+
 // Import modules AFTER mocking
 import { registerMerchRoutes } from './merch.routes';
 import { config } from '../config';
@@ -71,6 +85,16 @@ describe('Merch Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
       expect(response.body[0].id).toBe('hoodie-001');
+    });
+  });
+
+  describe('GET /api/merch/recommendations', () => {
+    it('should return memory-driven merch recommendations', async () => {
+      const response = await request(app).get('/api/merch/recommendations');
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.recommendations[0].adjustedPrice).toBe(44.99);
     });
   });
 
@@ -116,6 +140,40 @@ describe('Merch Routes', () => {
               }),
             }),
           ]),
+        })
+      );
+    });
+
+    it('should forward adjusted pricing metadata into checkout', async () => {
+      mockStripeSessionsCreate.mockResolvedValue({
+        url: 'https://checkout.stripe.com/mock-session-adjusted',
+      });
+
+      const response = await request(app).post('/api/merch/checkout').send({
+        itemId: 'hoodie-001',
+        adjustedPrice: 44.99,
+        pricingReason: 'Memory signals suggest a comfort discount.',
+        recommendationId: 'merch-1',
+        sourceSessionId: 'mobile-session',
+        userId: 'default-user',
+      });
+
+      expect(response.status).toBe(200);
+      expect(mockStripeSessionsCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          line_items: expect.arrayContaining([
+            expect.objectContaining({
+              price_data: expect.objectContaining({
+                unit_amount: 4499,
+              }),
+            }),
+          ]),
+          metadata: expect.objectContaining({
+            pricingReason: 'Memory signals suggest a comfort discount.',
+            recommendationId: 'merch-1',
+            sourceSessionId: 'mobile-session',
+            userId: 'default-user',
+          }),
         })
       );
     });

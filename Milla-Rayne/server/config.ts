@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 
 const envPaths = [
   path.resolve(process.cwd(), '.env'),
@@ -9,8 +11,6 @@ const envPaths = [
 for (const envPath of envPaths) {
   dotenv.config({ path: envPath, override: false });
 }
-
-console.log('Loading config.ts');
 
 /**
  * Memoization helper for config values with key-based caching
@@ -46,10 +46,81 @@ const getIntConfig = memoize((key: string, defaultValue: number): number => {
   return value ? parseInt(value, 10) : defaultValue;
 });
 
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+
+function resolveReplycaPythonExecutable(): string {
+  const candidates = [
+    process.env.REPLYCA_PYTHON_BIN,
+    path.resolve(process.cwd(), 'venv', 'bin', 'python'),
+    path.resolve(process.cwd(), '..', 'venv', 'bin', 'python'),
+    path.resolve(MODULE_DIR, '..', 'venv', 'bin', 'python'),
+    path.resolve(MODULE_DIR, '..', '..', 'venv', 'bin', 'python'),
+    'python3',
+  ].filter(Boolean) as string[];
+
+  for (const candidate of candidates) {
+    if (candidate === 'python3' || existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return 'python3';
+}
+
+function resolveHuggingFaceApiKey(): string | undefined {
+  const candidates = [
+    process.env.HUGGINGFACE_API_KEY,
+    process.env.HUGGING_FACE_HUB_TOKEN,
+    process.env.HUGGINGFACEHUB_API_TOKEN,
+    process.env.HF_TOKEN,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = candidate?.trim();
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
+
+function resolveGoogleGenAIApiKey(): string | undefined {
+  const candidates = [
+    process.env.GOOGLE_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.GOOGLE_GEMINI_API_KEY,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = candidate?.trim();
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
+
+const RETIRED_HUGGINGFACE_MODELS = new Set([
+  'philipp-zettl/UnfilteredAI-NSFW-gen-v2',
+]);
+
+function resolveHuggingFaceModel(): string {
+  const requestedModel =
+    process.env.HUGGINGFACE_MODEL?.trim() || 'stabilityai/stable-diffusion-2-1';
+
+  if (RETIRED_HUGGINGFACE_MODELS.has(requestedModel)) {
+    return 'stabilityai/stable-diffusion-2-1';
+  }
+
+  return requestedModel;
+}
+
 export const config = {
   huggingface: {
-    apiKey: process.env.HUGGINGFACE_API_KEY,
-    model: process.env.HUGGINGFACE_MODEL,
+    apiKey: resolveHuggingFaceApiKey(),
+    model: resolveHuggingFaceModel(),
   },
   memory: {
     key: process.env.MEMORY_KEY,
@@ -71,7 +142,7 @@ export const config = {
   },
   xai: {
     apiKey: process.env.XAI_API_KEY,
-    model: process.env.XAI_MODEL,
+    model: process.env.XAI_MODEL || 'grok-4-fast-reasoning',
   },
   venice: {
     apiKey: process.env.VENICE_API_KEY,
@@ -107,6 +178,9 @@ export const config = {
     apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY,
   },
   google: {
+    genAiApiKey: resolveGoogleGenAIApiKey(),
+    imageModel:
+      process.env.GOOGLE_IMAGE_MODEL?.trim() || 'imagen-4.0-generate-001',
     mapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -114,6 +188,9 @@ export const config = {
     redirectUri:
       process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI,
     ttsApiKey: process.env.GOOGLE_CLOUD_TTS_API_KEY,
+  },
+  github: {
+    token: process.env.GITHUB_TOKEN || process.env.GITHUB_ACCESS_TOKEN,
   },
   smartHome: {
     enableIntegration: process.env.ENABLE_SMART_HOME === 'true',
@@ -134,7 +211,7 @@ export const config = {
     sendgridApiKey: process.env.SENDGRID_API_KEY,
     fromAddress: process.env.EMAIL_FROM || 'noreply@example.com',
     deliveryIntervalMs: parseInt(
-      process.env.EMAIL_DELIVERY_INTERVAL_MS || '60000',
+      process.env.EMAIL_DELIVERY_INTERVAL_MS || '600000',
       10
     ),
     maxAttempts: parseInt(process.env.EMAIL_MAX_ATTEMPTS || '3', 10),
@@ -195,14 +272,170 @@ export const config = {
       10
     ),
   },
+  repositoryDiscovery: {
+    enabled: process.env.ENABLE_REPOSITORY_DISCOVERY !== 'false',
+    cron: process.env.REPOSITORY_DISCOVERY_CRON || '0 */6 * * *',
+    maxReposPerCycle: parseInt(
+      process.env.REPOSITORY_DISCOVERY_MAX_REPOS || '10',
+      10
+    ),
+    initialRunDelayMs: parseInt(
+      process.env.REPOSITORY_DISCOVERY_INITIAL_DELAY_MS || '120000',
+      10
+    ),
+  },
+  consciousness: {
+    enableGimCycle: process.env.ENABLE_GIM_CYCLE !== 'false',
+    gimCron: process.env.GIM_CYCLE_CRON || '0 */4 * * *',
+    enableRemCycle: process.env.ENABLE_REM_CYCLE !== 'false',
+    remCron: process.env.REM_CYCLE_CRON || '0 2 * * *',
+    pythonExecutable: resolveReplycaPythonExecutable(),
+    replycaRoot:
+      process.env.REPLYCA_ROOT ||
+      path.resolve(process.cwd(), 'ReplycA') ||
+      path.resolve(process.cwd(), '../ReplycA') ||
+      path.resolve(MODULE_DIR, '../ReplycA') ||
+      path.resolve(MODULE_DIR, '../../ReplycA'),
+    executionTimeoutMs: parseInt(
+      process.env.CONSCIOUSNESS_CYCLE_TIMEOUT_MS || '300000',
+      10
+    ),
+  },
   // Local model configuration
   localModel: {
     enabled: process.env.ENABLE_LOCAL_MODEL === 'true',
-    modelPath: process.env.LOCAL_MODEL_PATH || 'locallm/gemma.tflite',
-    preferLocal: process.env.PREFER_LOCAL_MODEL === 'true', // If true, use local by default
+    host: process.env.OLLAMA_HOST || 'http://localhost:11434',
+    model:
+      process.env.OLLAMA_CHAT_MODEL ||
+      process.env.LOCAL_MODEL ||
+      process.env.LOCAL_MODEL_PATH ||
+      'gemma3:1b',
+    preferLocal: process.env.PREFER_LOCAL_MODEL === 'true', // If true, use Ollama before cloud providers
+  },
+  shell: {
+    enabled: process.env.ENABLE_SHELL_RUNNER === 'true',
+  },
+  mcp: {
+    enabled: process.env.ENABLE_MCP_SERVERS !== 'false',
   },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
   },
 };
+
+export interface ConfigDiagnosticSummary {
+  runtime: {
+    nodeVersion: string;
+    platform: string;
+  };
+  integrations: {
+    googleOAuthConfigured: boolean;
+    githubTokenConfigured: boolean;
+    huggingFaceConfigured: boolean;
+    xaiConfigured: boolean;
+    veniceConfigured: boolean;
+    proactiveBaseUrl: string;
+    localModelConfigured: boolean;
+    shellRunnerEnabled: boolean;
+    mcpEnabled: boolean;
+  };
+  warnings: string[];
+}
+
+export function getGitHubToken(): string | undefined {
+  return process.env.GITHUB_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
+}
+
+export function getConfigDiagnostics(): ConfigDiagnosticSummary {
+  const warnings: string[] = [];
+  const nodeMajor = Number.parseInt(process.versions.node.split('.')[0] || '0', 10);
+
+  if (nodeMajor >= 25) {
+    warnings.push(
+      'Node 25+ detected. Native modules like better-sqlite3 may need rebuilding and can be less stable than current LTS releases.'
+    );
+  }
+
+  if (
+    process.env.GOOGLE_API_KEY &&
+    process.env.GEMINI_API_KEY &&
+    process.env.GOOGLE_API_KEY !== process.env.GEMINI_API_KEY
+  ) {
+    warnings.push(
+      'Both GOOGLE_API_KEY and GEMINI_API_KEY are set with different values. Current config prefers GOOGLE_API_KEY.'
+    );
+  }
+
+  const githubToken = getGitHubToken();
+
+    if (!githubToken) {
+      warnings.push(
+        'GitHub token is not configured. IDE sandbox repo actions and proactive GitHub automation will stay limited.'
+      );
+    }
+
+  if (config.consciousness.enableGimCycle || config.consciousness.enableRemCycle) {
+    const replycaRootCandidates = [
+      config.consciousness.replycaRoot,
+      path.resolve(process.cwd(), 'ReplycA'),
+      path.resolve(process.cwd(), '../ReplycA'),
+      path.resolve(MODULE_DIR, '../ReplycA'),
+      path.resolve(MODULE_DIR, '../../ReplycA'),
+    ];
+    const hasReplycaRoot = replycaRootCandidates.some((candidate) =>
+      Boolean(candidate && existsSync(candidate))
+    );
+
+    if (!hasReplycaRoot) {
+      warnings.push(
+        'ReplycA root could not be resolved. GIM and REM cron cycles will not run until REPLYCA_ROOT points to a valid ReplycA directory.'
+      );
+    }
+  }
+
+  if (!config.huggingface.apiKey) {
+    warnings.push(
+      'Hugging Face API key is not configured. HF image generation will be unavailable.'
+    );
+  }
+
+  if (!config.google.clientId || !config.google.clientSecret || !config.google.redirectUri) {
+    warnings.push(
+      'Google OAuth is partially configured. Sign-in, Gmail, and Calendar integrations require client ID, secret, and redirect URI.'
+    );
+  }
+
+  if (config.mcp.enabled && !config.huggingface.apiKey) {
+    warnings.push(
+      'MCP runtime is enabled, but no Hugging Face key is configured for the installed Hugging Face MCP server.'
+    );
+  }
+
+  if (process.env.ENABLE_SHELL_RUNNER !== 'true') {
+    warnings.push(
+      'Shell runner is disabled. Set ENABLE_SHELL_RUNNER=true to allow dashboard shell commands.'
+    );
+  }
+
+  return {
+    runtime: {
+      nodeVersion: process.versions.node,
+      platform: `${process.platform}/${process.arch}`,
+    },
+    integrations: {
+      googleOAuthConfigured: Boolean(
+        config.google.clientId && config.google.clientSecret && config.google.redirectUri
+      ),
+      githubTokenConfigured: Boolean(githubToken),
+      huggingFaceConfigured: Boolean(config.huggingface.apiKey),
+      xaiConfigured: Boolean(config.xai.apiKey),
+      veniceConfigured: Boolean(config.venice.apiKey),
+      proactiveBaseUrl: process.env.PROACTIVE_BASE_URL || 'http://localhost:5001',
+      localModelConfigured: Boolean(config.localModel.host && config.localModel.model),
+      shellRunnerEnabled: config.shell.enabled,
+      mcpEnabled: config.mcp.enabled,
+    },
+    warnings,
+  };
+}

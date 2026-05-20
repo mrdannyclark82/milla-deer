@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milla Rayne</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 280px; min-height: 180px;
+      background: #0d0d1a; color: #e0d7ff;
+      font-family: 'Segoe UI', sans-serif; padding: 16px;
+    }
+    h1 { font-size: 15px; margin-bottom: 4px; color: #c090ff; }
+    .subtitle { font-size: 11px; color: #7060a0; margin-bottom: 14px; }
+    .status-row {
+      display: flex; align-items: center; gap: 8px;
+      background: #1a0d2e; border-radius: 8px; padding: 8px 12px;
+      margin-bottom: 10px; font-size: 12px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #404040; }
+    .dot.green { background: #40e080; }
+    .dot.red { background: #e04040; }
+    .dot.yellow { background: #e0c040; }
+    button {
+      width: 100%; padding: 9px; background: #3a1f6e; border: none;
+      color: #e0d7ff; border-radius: 8px; cursor: pointer; font-size: 13px;
+      margin-top: 6px; transition: background 0.2s;
+    }
+    button:hover { background: #5a3090; }
+    .server-url { font-size: 10px; color: #504070; margin-top: 10px; text-align: center; }
+    #status-text { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>🌙 Milla Rayne</h1>
+  <p class="subtitle">Digital Liaison Extension</p>
+
+  <div class="status-row">
+    <div class="dot" id="server-dot"></div>
+    <span id="status-text">Checking server…</span>
+  </div>
+
+  <button id="open-btn">Open Milla Sidebar</button>
+  <button id="settings-btn">⚙ Settings</button>
+
+  <p class="server-url" id="server-url-display">localhost:5000</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

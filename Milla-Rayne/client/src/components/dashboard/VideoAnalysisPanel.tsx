@@ -133,7 +133,7 @@ export function VideoAnalysisPanel({
   };
 
   return (
-    <div className="backdrop-blur-2xl bg-gradient-to-b from-[#120428]/90 via-[#0c021a]/85 to-[#1a0033]/90 border border-white/10 rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+    <div className="dashboard-card dashboard-card-pink rounded-3xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <div className="flex items-center gap-2">

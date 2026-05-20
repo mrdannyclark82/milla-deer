@@ -11,6 +11,7 @@ import {
 } from './openrouterService';
 import { generateAIResponse } from './openaiService';
 import { generateOpenAIResponse } from './openaiChatService';
+import { getGitHubToken } from './config';
 
 export interface RepositoryInfo {
   owner: string;
@@ -132,7 +133,7 @@ function getGitHubHeaders(): HeadersInit {
   };
 
   // Add authorization if GITHUB_TOKEN is available
-  const token = process.env.GITHUB_TOKEN;
+  const token = getGitHubToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -149,13 +150,13 @@ function createGitHubErrorMessage(
   repoInfo: RepositoryInfo
 ): string {
   if (status === 404) {
-    if (process.env.GITHUB_TOKEN) {
+    if (getGitHubToken()) {
       return `Repository not found: ${repoInfo.fullName}. The repository may not exist, or you may not have access to it.`;
     } else {
       return `Repository not found: ${repoInfo.fullName}. If this is a private repository, please set GITHUB_TOKEN in your environment variables.`;
     }
   } else if (status === 403) {
-    if (process.env.GITHUB_TOKEN) {
+    if (getGitHubToken()) {
       return `Access forbidden to ${repoInfo.fullName}. Please check that your GitHub token has the necessary permissions (repo:read for private repositories).`;
     } else {
       return `Access forbidden to ${repoInfo.fullName}. This may be a private repository. Please set GITHUB_TOKEN with appropriate permissions.`;

@@ -1,6 +1,17 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
+// Keep the process alive — never let a single error crash the server
+process.on('uncaughtException', (err) => {
+  console.error(
+    '[PROCESS] Uncaught exception (kept alive):',
+    err?.message || err
+  );
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[PROCESS] Unhandled rejection (kept alive):', reason);
+});
+
 for (const envPath of [
   path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), '../.env'),
@@ -10,6 +21,7 @@ for (const envPath of [
 import express, { type Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
+import { existsSync } from 'fs';
 import { registerModularRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initializeMemoryCore } from './memoryService';
@@ -55,6 +67,8 @@ export async function initApp() {
             mediaSrc: ["'self'"],
             frameSrc: [
               "'self'",
+              'http:',
+              'https:',
               'https://www.youtube.com',
               'https://youtube.com',
               'https://www.youtube-nocookie.com',
@@ -83,13 +97,14 @@ export async function initApp() {
   // Add rate limiting to prevent abuse
   const rateLimitModule = await import('express-rate-limit');
   const rateLimit = rateLimitModule.default;
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: isDevelopment ? 2000 : 300,
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   });
-  app.use(limiter);
+  app.use('/api', limiter);
 
   // CORS Policy - Allow all origins in development for Replit preview
   app.use((req, res, next) => {
@@ -171,6 +186,16 @@ export async function initApp() {
   // Initialize Memory Core system at startup
   await initializeMemoryCore();
 
+  // Load hot session context for zero-reload continuity (mem0-style)
+  const { loadHotContext } =
+    await import('./services/sessionPersistenceService');
+  await loadHotContext();
+  console.log('✅ Session hot context loaded');
+
+  // Bootstrap RAG vector index from existing memory files
+  const { bootstrapRagIndex } = await import('./services/ragAutoIndexer');
+  bootstrapRagIndex().catch((e) => console.warn('[RAG] Bootstrap error:', e));
+
   // Initialize Mood Background Service
   const { initializeMoodBackgroundService } =
     await import('./moodBackgroundService');
@@ -204,6 +229,21 @@ export async function initApp() {
   // Initialize AI Updates Scheduler
   const { initializeAIUpdatesScheduler } = await import('./aiUpdatesScheduler');
   initializeAIUpdatesScheduler();
+
+  const { initializeConsciousnessScheduler } =
+    await import('./consciousnessScheduler');
+  initializeConsciousnessScheduler();
+
+  const { initializeRepositoryDiscoveryScheduler } =
+    await import('./repositoryDiscoveryScheduler');
+  initializeRepositoryDiscoveryScheduler();
+
+  const { initializeCollaborationScheduler } =
+    await import('./collaborationScheduler');
+  await initializeCollaborationScheduler();
+
+  const { initializeMcpRuntime } = await import('./mcpRuntimeService');
+  await initializeMcpRuntime();
 
   // Initialize Proactive Repository Ownership System
   const { initializeUserAnalytics } =
@@ -270,6 +310,37 @@ export async function initApp() {
     await import('./agents/emailDeliveryWorker');
   startEmailDeliveryLoop();
 
+  // Gmail inbox poller — Milla reads + replies to incoming emails
+  try {
+    const { startGmailInboxPoller } =
+      await import('./services/gmailInboxPollerService');
+    startGmailInboxPoller();
+  } catch (err) {
+    console.warn('⚠️ Gmail inbox poller failed to start (non-fatal):', err);
+  }
+
+  // Initialize IoT services only if Home Assistant is configured
+  if (process.env.HA_URL || process.env.HA_TOKEN) {
+    try {
+      const { haService } = await import('./services/homeAssistantService');
+      const { mqttService } = await import('./services/mqttBrokerService');
+      const { thermalMonitor } =
+        await import('./services/thermalMonitorService');
+      const { reactLoop } = await import('./services/reactLoopService');
+
+      await haService.connect();
+      await mqttService.connect();
+      thermalMonitor.initialize();
+      reactLoop.startMonitoring(30000);
+      console.log('✅ IoT services initialized');
+    } catch (err) {
+      console.warn(
+        '⚠️ IoT services failed to initialize (non-fatal):',
+        (err as Error).message
+      );
+    }
+  }
+
   // Admin endpoints for email delivery (manual trigger)
   // We'll register a small route here rather than a separate file to keep changes minimal.
   app.post('/api/admin/email/deliver', async (req, res) => {
@@ -303,9 +374,32 @@ export async function initApp() {
   httpServer = createServer(app);
 
   // Setup sensor data WebSocket for mobile clients
-  const { setupSensorDataWebSocket } = await import('./websocketService');
+  const {
+    setupWebSocketServer,
+    setupSensorDataWebSocket,
+    setupVoiceWebSocket,
+  } = await import('./websocketService');
+  const mainWss = await setupWebSocketServer(httpServer);
+  (httpServer as any).__mainWss = mainWss;
   await setupSensorDataWebSocket(httpServer);
   console.log('✅ Mobile sensor data WebSocket initialized');
+
+  // Setup always-on voice WebSocket + shared upgrade dispatcher
+  setupVoiceWebSocket(httpServer);
+  console.log('✅ Voice WebSocket initialized on /ws/voice');
+
+  // Serve the tablet listener page — must be BEFORE setupVite to avoid catch-all
+  const { readFileSync } = await import('fs');
+  const listenHtmlPath = path.resolve(process.cwd(), 'server/listen.html');
+  app.get('/listen', (_req, res) => {
+    try {
+      const html = readFileSync(listenHtmlPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch {
+      res.status(404).send('Listener page not found');
+    }
+  });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -321,6 +415,16 @@ export async function initApp() {
     res.status(status).json({ message });
     throw err;
   });
+
+  // Serve Axiom-Rayne (Nexus dashboard) at /axiom-rayne
+  const axiomDist = path.resolve(process.cwd(), '..', '..', 'new-nexus-dashboard', 'dist');
+  if (existsSync(axiomDist)) {
+    app.use('/axiom-rayne', express.static(axiomDist));
+    app.use('/axiom-rayne', (_req, res) =>
+      res.sendFile(path.join(axiomDist, 'index.html'))
+    );
+    log('Axiom-Rayne served at /axiom-rayne');
+  }
 
   if (app.get('env') !== 'development') {
     serveStatic(app);

@@ -41,6 +41,20 @@ export interface RepositoryInsight {
   scannedAt: number;
 }
 
+export interface UpsertDiscoveredFeatureInput {
+  name: string;
+  description: string;
+  source: DiscoveredFeature['source'];
+  sourceUrl?: string;
+  repositoryExample?: string;
+  popularity: number;
+  relevance: number;
+  implementationComplexity: DiscoveredFeature['implementationComplexity'];
+  estimatedValue: number;
+  status?: DiscoveredFeature['status'];
+  tags?: string[];
+}
+
 class FeatureDiscoveryService {
   private discoveredFeatures: DiscoveredFeature[] = [];
   private scannedRepositories: RepositoryInsight[] = [];
@@ -662,6 +676,10 @@ class FeatureDiscoveryService {
     return this.getDiscoveredFeatures({ status: 'discovered' }).slice(0, limit);
   }
 
+  getFeatureById(featureId: string): DiscoveredFeature | undefined {
+    return this.discoveredFeatures.find((feature) => feature.id === featureId);
+  }
+
   /**
    * Update feature status
    */
@@ -676,6 +694,59 @@ class FeatureDiscoveryService {
       return true;
     }
     return false;
+  }
+
+  async upsertFeature(
+    input: UpsertDiscoveredFeatureInput
+  ): Promise<DiscoveredFeature> {
+    const normalizedName = input.name.trim().toLowerCase();
+    const existing = this.discoveredFeatures.find(
+      (feature) =>
+        feature.source === input.source &&
+        feature.name.trim().toLowerCase() === normalizedName
+    );
+
+    const tags = Array.from(
+      new Set(
+        (input.tags || [])
+          .map((tag) => tag.trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+
+    if (existing) {
+      existing.description = input.description;
+      existing.sourceUrl = input.sourceUrl;
+      existing.repositoryExample = input.repositoryExample;
+      existing.popularity = input.popularity;
+      existing.relevance = input.relevance;
+      existing.implementationComplexity = input.implementationComplexity;
+      existing.estimatedValue = input.estimatedValue;
+      existing.status = input.status || existing.status;
+      existing.tags = Array.from(new Set([...existing.tags, ...tags]));
+      await this.saveDiscoveryData();
+      return existing;
+    }
+
+    const feature: DiscoveredFeature = {
+      id: `feat_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+      name: input.name.trim(),
+      description: input.description,
+      source: input.source,
+      sourceUrl: input.sourceUrl,
+      repositoryExample: input.repositoryExample,
+      popularity: input.popularity,
+      relevance: input.relevance,
+      implementationComplexity: input.implementationComplexity,
+      estimatedValue: input.estimatedValue,
+      discoveredAt: Date.now(),
+      status: input.status || 'discovered',
+      tags,
+    };
+
+    this.discoveredFeatures.push(feature);
+    await this.saveDiscoveryData();
+    return feature;
   }
 
   /**
@@ -754,6 +825,10 @@ export async function initializeFeatureDiscovery(): Promise<void> {
   await discoveryService.initialize();
 }
 
+export async function refreshFeatureDiscoveryFromDisk(): Promise<void> {
+  await discoveryService.initialize();
+}
+
 export function discoverFromGitHub(
   limit?: number
 ): Promise<DiscoveredFeature[]> {
@@ -793,6 +868,12 @@ export function getTopFeatureRecommendations(
   return discoveryService.getTopRecommendations(limit);
 }
 
+export function getFeatureById(
+  featureId: string
+): DiscoveredFeature | undefined {
+  return discoveryService.getFeatureById(featureId);
+}
+
 export function updateFeatureStatus(
   featureId: string,
   status: DiscoveredFeature['status']
@@ -802,4 +883,10 @@ export function updateFeatureStatus(
 
 export function getDiscoveryStatistics() {
   return discoveryService.getDiscoveryStatistics();
+}
+
+export function upsertDiscoveredFeature(
+  input: UpsertDiscoveredFeatureInput
+): Promise<DiscoveredFeature> {
+  return discoveryService.upsertFeature(input);
 }

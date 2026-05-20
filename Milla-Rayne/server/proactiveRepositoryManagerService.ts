@@ -186,6 +186,7 @@ class ProactiveRepositoryManagerService {
   private async _discoverAndEvaluateFeatures(): Promise<ProactiveAction[]> {
     const newActions: ProactiveAction[] = [];
     if (
+      !config.repositoryDiscovery.enabled &&
       Date.now() - this.lastCheck >
       config.proactiveRepoManager.featureDiscoveryInterval
     ) {

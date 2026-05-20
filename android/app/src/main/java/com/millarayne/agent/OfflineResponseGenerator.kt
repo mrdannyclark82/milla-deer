@@ -2,14 +2,19 @@ package com.millarayne.agent
 
 import android.content.Context
 import android.util.Log
+import com.millarayne.ai.GpuSlmDispatcher
+import com.millarayne.ai.MediaPipeInferenceEngine
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Offline Response Generator
- * 
+ *
  * Provides intelligent responses when server is unavailable.
- * Uses pattern matching and local knowledge to respond to common queries.
+ * Priority chain:
+ *   1. LocalEdgeAgent — instant device command handling (< 10 ms)
+ *   2. GpuSlmDispatcher (MediaPipe → MLC-LLM fallback) — on-device LLM (< 150 ms)
+ *   3. Pattern-based response matching — regex/keyword fallback
  */
 class OfflineResponseGenerator(private val context: Context) {
     
@@ -18,21 +23,83 @@ class OfflineResponseGenerator(private val context: Context) {
     }
     
     private val localEdgeAgent = LocalEdgeAgent(context)
+
+    /** GPU SLM dispatcher — initialised lazily on first non-command query */
+    private val slmDispatcher = GpuSlmDispatcher(context)
+    private var slmReady = false
+
+    /** Last backend that produced a response — observable by ChatViewModel */
+    var lastBackend: String = "pattern"
+        private set
+
+    /**
+     * Pre-warm the GPU SLM engine in the background.
+     * [nanoEnabled] controls whether the Gemma Nano Tier 0 is attempted.
+     * Call from Application.onCreate for lowest first-response latency.
+     */
+    suspend fun warmUp(nanoEnabled: Boolean = true) {
+        try {
+            slmDispatcher.initialize(
+                mpConfig = MediaPipeInferenceEngine.Config(preferGpu = true),
+                slmConfig = GpuSlmDispatcher.Config(skipNano = !nanoEnabled),
+            )
+            slmReady = true
+            Log.i(TAG, "GPU SLM dispatcher warmed up (nano=${nanoEnabled})")
+        } catch (e: Exception) {
+            Log.w(TAG, "GPU SLM warm-up failed (model may not be downloaded yet): ${e.message}")
+        }
+    }
+
+    /**
+     * Re-initialise backends with updated settings (e.g. user toggled Nano in Settings).
+     * Existing engine is released first.
+     */
+    suspend fun reinitialize(nanoEnabled: Boolean) {
+        slmDispatcher.release()
+        slmReady = false
+        warmUp(nanoEnabled)
+    }
     
     /**
-     * Generate a response for the given user message
-     * Returns a response and whether it was handled locally
+     * Generate a response for the given user message.
+     * Returns Pair(responseText, handledLocally).
+     * Also updates [lastBackend] to reflect the tier that responded.
      */
     suspend fun generateResponse(userMessage: String): Pair<String, Boolean> {
         val lowercaseMessage = userMessage.lowercase().trim()
         
-        // First, try to handle as an edge command
+        // 1. Instant edge command (< 10 ms)
         val edgeResult = localEdgeAgent.processNaturalLanguage(userMessage)
         if (edgeResult.success && !edgeResult.requiresServer) {
+            lastBackend = "edge"
             return Pair(edgeResult.message, true)
         }
-        
-        // Pattern-based response matching
+
+        // 2. On-device LLM via tri-dispatch (Nano → Gemma-3 → MLC → pattern)
+        if (slmReady) {
+            return try {
+                val result = slmDispatcher.dispatch(userMessage)
+                if (result.text.isNotBlank()) {
+                    lastBackend = result.backend  // "gemma-nano" | "mediapipe" | "mlc-opencl"
+                    Log.d(TAG, "SLM response in ${result.latencyMs}ms via ${result.backend}")
+                    Pair(result.text.trim(), true)
+                } else {
+                    lastBackend = "pattern"
+                    patternResponse(lowercaseMessage)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "SLM dispatch failed: ${e.message}")
+                lastBackend = "pattern"
+                patternResponse(lowercaseMessage)
+            }
+        }
+
+        // 3. Pattern-based fallback
+        return patternResponse(lowercaseMessage)
+    }
+
+    /** Pattern-matching fallback used when SLM is unavailable */
+    private fun patternResponse(lowercaseMessage: String): Pair<String, Boolean> {
         val response = when {
             // Greetings
             isGreeting(lowercaseMessage) -> generateGreeting()
@@ -141,10 +208,6 @@ class OfflineResponseGenerator(private val context: Context) {
         
         return Pair(response, true)
     }
-    
-    /**
-     * Check if message is a greeting
-     */
     private fun isGreeting(message: String): Boolean {
         val greetings = listOf("hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening")
         return greetings.any { it in message }
@@ -285,10 +348,8 @@ class OfflineResponseGenerator(private val context: Context) {
         }
     }
     
-    /**
-     * Cleanup resources
-     */
     fun shutdown() {
         localEdgeAgent.shutdown()
+        slmDispatcher.release()
     }
 }

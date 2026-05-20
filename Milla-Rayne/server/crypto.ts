@@ -14,11 +14,25 @@ const KEY_LENGTH = 32; // 256 bits
 const ITERATIONS = 100000;
 const ENCODING_VERSION = 'v1';
 
+// Cache derived keys to avoid running PBKDF2 100k iterations per message per request
+const derivedKeyCache = new Map<string, Buffer>();
+const MAX_KEY_CACHE_SIZE = 2048;
+
 /**
- * Derive a key from the MEMORY_KEY using PBKDF2
+ * Derive a key from the MEMORY_KEY using PBKDF2, with an in-process cache.
+ * Each unique (memoryKey, salt) pair is derived once and reused.
  */
 function deriveKey(memoryKey: string, salt: Buffer): Buffer {
-  return crypto.pbkdf2Sync(memoryKey, salt, ITERATIONS, KEY_LENGTH, 'sha256');
+  const cacheKey = `${memoryKey}:${salt.toString('hex')}`;
+  const cached = derivedKeyCache.get(cacheKey);
+  if (cached) return cached;
+  const derived = crypto.pbkdf2Sync(memoryKey, salt, ITERATIONS, KEY_LENGTH, 'sha256');
+  if (derivedKeyCache.size >= MAX_KEY_CACHE_SIZE) {
+    // Evict oldest entry
+    derivedKeyCache.delete(derivedKeyCache.keys().next().value!);
+  }
+  derivedKeyCache.set(cacheKey, derived);
+  return derived;
 }
 
 /**

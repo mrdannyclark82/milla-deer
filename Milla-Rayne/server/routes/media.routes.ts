@@ -1,4 +1,9 @@
 import { Router, type Express } from 'express';
+import crypto from 'crypto';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { config } from '../config';
 import { analyzeVideo, generateVideoInsights } from '../gemini';
 import {
   analyzeYouTubeVideo,
@@ -10,7 +15,6 @@ import {
   pregenerateAllMoodBackgrounds,
 } from '../moodBackgroundService';
 import { generateImage, formatImageResponse } from '../imageService';
-import { generateImageWithVenice } from '../veniceImageService';
 import { generateImageWithPollinations } from '../pollinationsImageService';
 import { dispatchAIResponse } from '../aiDispatcherService';
 import { upload } from '../middleware/upload.middleware';
@@ -21,6 +25,7 @@ import { asyncHandler } from '../utils/routeHelpers';
  */
 export function registerMediaRoutes(app: Express) {
   const router = Router();
+  const generatedImageDirectory = path.join(os.tmpdir(), 'milla-generated-images');
   const aspectRatioToSize = (
     aspectRatio?: string
   ): { width: number; height: number } => {
@@ -36,8 +41,165 @@ export function registerMediaRoutes(app: Express) {
       case '1:1':
       default:
         return { width: 1024, height: 1024 };
+      }
+    };
+  const getGeneratedImageFileExtension = (mimeType: string) => {
+    switch (mimeType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/webp':
+        return 'webp';
+      case 'image/gif':
+        return 'gif';
+      case 'image/png':
+      default:
+        return 'png';
     }
   };
+  const persistGeneratedImageForAndroid = (
+    imageUrl?: string
+  ): string | undefined => {
+    if (!imageUrl?.startsWith('data:image/')) {
+      return imageUrl;
+    }
+
+    const match = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) {
+      return imageUrl;
+    }
+
+    const [, mimeType, base64Payload] = match;
+    fs.mkdirSync(generatedImageDirectory, { recursive: true });
+    const fileName = `${Date.now()}-${crypto.randomUUID()}.${getGeneratedImageFileExtension(mimeType)}`;
+    const absoluteFilePath = path.join(generatedImageDirectory, fileName);
+    fs.writeFileSync(absoluteFilePath, Buffer.from(base64Payload, 'base64'));
+    return fileName;
+  };
+  const buildGeneratedImageUrl = (req: Parameters<typeof router.get>[1] extends never ? never : any, fileName: string) => {
+    return `${req.protocol}://${req.get('host')}/api/generated-images/${fileName}`;
+  };
+  const contactIconPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_deer.jpg'
+  );
+  const welcomeVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'Welcome_Milla.mp4'
+  );
+  const workingVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'Milla_working.mp4'
+  );
+  const loopVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_loop.mp4'
+  );
+  const mediaVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_media.mp4'
+  );
+  const studioVideoPath = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'milla_studio.mp4'
+  );
+
+  router.get(
+    '/generated-images/:fileName',
+    asyncHandler(async (req, res) => {
+      const fileName = path.basename(String(req.params.fileName));
+      const filePath = path.join(generatedImageDirectory, fileName);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Generated image not found' });
+      }
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.sendFile(filePath);
+    })
+  );
+
+  router.get(
+    '/assets/contact-icon',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(contactIconPath)) {
+        return res.status(404).json({ error: 'Contact image not found' });
+      }
+
+      res.sendFile(contactIconPath);
+    })
+  );
+
+  router.get(
+    '/assets/welcome-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(welcomeVideoPath)) {
+        return res.status(404).json({ error: 'Welcome video not found' });
+      }
+
+      res.sendFile(welcomeVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/working-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(workingVideoPath)) {
+        return res.status(404).json({ error: 'Working video not found' });
+      }
+
+      res.sendFile(workingVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/loop-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(loopVideoPath)) {
+        return res.status(404).json({ error: 'Loop video not found' });
+      }
+
+      res.sendFile(loopVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/media-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(mediaVideoPath)) {
+        return res.status(404).json({ error: 'Media video not found' });
+      }
+
+      res.sendFile(mediaVideoPath);
+    })
+  );
+
+  router.get(
+    '/assets/studio-video',
+    asyncHandler(async (_req, res) => {
+      if (!fs.existsSync(studioVideoPath)) {
+        return res.status(404).json({ error: 'Studio video not found' });
+      }
+
+      res.sendFile(studioVideoPath);
+    })
+  );
 
   // Video analysis from file upload
   router.post(
@@ -137,6 +299,7 @@ export function registerMediaRoutes(app: Express) {
     '/image/generate',
     asyncHandler(async (req, res) => {
       const { prompt, aspectRatio, model } = req.body;
+      const compactAndroidResponse = req.get('x-milla-platform') === 'android';
       if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
@@ -155,26 +318,44 @@ export function registerMediaRoutes(app: Express) {
             'Studio image generation via Pollinations failed, falling back:',
             imageResult.error
           );
-          imageResult = process.env.VENICE_API_KEY
-            ? await generateImageWithVenice(prompt)
-            : await generateImage(prompt);
+          imageResult = await generateImage(prompt);
         }
-      } else if (process.env.VENICE_API_KEY) {
-        imageResult = await generateImageWithVenice(prompt);
       } else {
         imageResult = await generateImage(prompt);
+        if (!imageResult.success) {
+          console.warn(
+            'Default image backend failed, falling back to Pollinations:',
+            imageResult.error
+          );
+          imageResult = await generateImageWithPollinations(prompt, {
+            width: 1024,
+            height: 1024,
+            model: 'flux',
+          });
+        }
+      }
+
+      let responseImageUrl = imageResult.imageUrl;
+      if (compactAndroidResponse) {
+        const generatedImageFileName = persistGeneratedImageForAndroid(imageResult.imageUrl);
+        if (generatedImageFileName && generatedImageFileName !== imageResult.imageUrl) {
+          responseImageUrl = buildGeneratedImageUrl(req, generatedImageFileName);
+        }
       }
 
       res.json({
         success: imageResult.success,
-        imageUrl: imageResult.imageUrl,
+        imageUrl: responseImageUrl,
         error: imageResult.error,
-        response: formatImageResponse(
-          prompt,
-          imageResult.success,
-          imageResult.imageUrl,
-          imageResult.error
-        ),
+        response:
+          compactAndroidResponse && imageResult.success
+            ? `Generated image for "${prompt}".`
+            : formatImageResponse(
+                prompt,
+                imageResult.success,
+                responseImageUrl,
+                imageResult.error
+              ),
       });
     })
   );
