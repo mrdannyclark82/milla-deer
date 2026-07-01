@@ -450,7 +450,12 @@ async def evaluate_and_update_metrics(user_id: str, user_msg: str, ai_response: 
         eval_chat.with_model("openai", "gpt-5.2")
         eval_msg = UserMessage(text=f'User: "{user_msg[:100]}"\nAI: "{ai_response[:200]}"')
         eval_resp = await eval_chat.send_message(eval_msg)
-        new_metrics = json.loads(eval_resp)
+        json_str = eval_resp.strip()
+        if json_str.startswith("```"):
+            json_str = json_str.split("\n", 1)[1] if "\n" in json_str else json_str[3:]
+            if json_str.endswith("```"):
+                json_str = json_str[:-3]
+        new_metrics = json.loads(json_str.strip())
         if isinstance(new_metrics, dict) and "accuracy" in new_metrics:
             await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"metrics": new_metrics}})
     except Exception:
