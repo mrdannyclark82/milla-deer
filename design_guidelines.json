@@ -1,0 +1,103 @@
+{
+  "theme_and_archetype": {
+    "primary_theme": "Dark",
+    "primary_archetype": "5 (Jewel & Luxury)",
+    "serenity_mode_theme": "Light",
+    "serenity_mode_archetype": "1 (Organic & Earthy)"
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Manrope",
+    "mono_font": "JetBrains Mono",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-light",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-light",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "body": "text-base leading-relaxed",
+      "label": "text-xs tracking-[0.2em] uppercase"
+    },
+    "rules": "Never use Inter or Roboto for headings. Do not default to Bold for headers; use Light or Black for impact."
+  },
+  "colors": {
+    "midnight_cinematic_dark": {
+      "background": "#0B1021",
+      "foreground": "#FFFFFF",
+      "surface": "#121A33",
+      "border": "rgba(255, 255, 255, 0.1)",
+      "primary": "#F7E7CE",
+      "secondary": "#064E3B",
+      "accent": "#722F37"
+    },
+    "serenity_mode_light": {
+      "background": "#F5F5F0",
+      "foreground": "#2B2B2B",
+      "surface": "#FFFFFF",
+      "border": "rgba(0, 0, 0, 0.05)",
+      "primary": "#E07A5F",
+      "secondary": "#9CAF88",
+      "accent": "#8ECAE6"
+    }
+  },
+  "spacing_and_layout": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "widget_padding": "p-6 or p-8",
+    "glassmorphism_dark": "bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] saturate-150",
+    "glassmorphism_light": "bg-white/60 backdrop-blur-xl border border-black/5 rounded-xl shadow-sm saturate-150",
+    "rules": "Generous spacing. Containers with borders must have internal padding. Grid items must be direct children. Use the Control Room bento grid for the dashboard."
+  },
+  "component_rules": {
+    "files_extension": ".js",
+    "charts": "Use Shadcn chart components or Recharts with transparent backgrounds and brand colors. No solid white backgrounds in dark mode.",
+    "tables": "Shadcn UI table, go flat, rectangular, dense styles.",
+    "buttons": "Glass button for secondary, solid primary color for main CTA. Explicitly set text color on hover (e.g., hover:bg-white/10 hover:text-white).",
+    "forms": "Use Shadcn Input, Select, Form. Never use native input."
+  },
+  "animations_and_motion": {
+    "hover": "transition-transform duration-300 hover:-translate-y-1",
+    "reveal": "Use framer-motion staggered fade-in up for lists.",
+    "3d_scene": "Use React Three Fiber (R3F) + Drei for the 3D Holographic avatar. Must include <Environment> and <Float> for realistic lighting and movement. Set canvas background to transparent to blend with the UI."
+  },
+  "media": {
+    "image_urls": {
+      "midnight_cinematic_bg": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/69fc1105-f452-4afc-b9a3-fc4ed8c1d685/images/ae070e9b5907b6c9590bea83a88ae5683640ab4705844dffa71f560aeb80528f.png",
+        "description": "Deep midnight blue cinematic abstract background",
+        "category": "background",
+        "usage": "Use as the main global background image in dark mode."
+      },
+      "serenity_mode_bg": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/69fc1105-f452-4afc-b9a3-fc4ed8c1d685/images/2a597d41f22d009b269fd354ee86e61b72bea943a28d048feefed55764357c5e.png",
+        "description": "Warm earthy serene abstract background",
+        "category": "background",
+        "usage": "Use as the main global background image when Serenity Mode is active."
+      },
+      "user_avatar_1": {
+        "url": "https://images.unsplash.com/photo-1772987292949-4b1bdc01a612?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwzfHx1c2VyJTIwcHJvZmlsZSUyMHBvcnRyYWl0JTIwcHJvZmVzc2lvbmFsJTIwbW9kZXJufGVufDB8fHx8MTc3NTk3OTg0NHww&ixlib=rb-4.1.0&q=85",
+        "description": "A woman wearing glasses and a white blazer",
+        "category": "avatar",
+        "usage": "Default user profile picture"
+      },
+      "user_avatar_2": {
+        "url": "https://images.unsplash.com/photo-1737574821698-862e77f044c1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwyfHx1c2VyJTIwcHJvZmlsZSUyMHBvcnRyYWl0JTIwcHJvZmVzc2lvbmFsJTIwbW9kZXJufGVufDB8fHx8MTc3NTk3OTg0NHww&ixlib=rb-4.1.0&q=85",
+        "description": "A man in a suit sitting at a desk",
+        "category": "avatar",
+        "usage": "Alternative user profile picture or AI persona avatar"
+      },
+      "user_avatar_3": {
+        "url": "https://images.unsplash.com/photo-1762505465530-0584b9771329?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHx1c2VyJTIwcHJvZmlsZSUyMHBvcnRyYWl0JTIwcHJvZmVzc2lvbmFsJTIwbW9kZXJufGVufDB8fHx8MTc3NTk3OTg0NHww&ixlib=rb-4.1.0&q=85",
+        "description": "A woman in a black blazer and top",
+        "category": "avatar",
+        "usage": "Alternative AI persona avatar"
+      }
+    }
+  },
+  "icons": {
+    "library": "lucide-react",
+    "instructions": "Use lucide-react for all icons. Already installed."
+  },
+  "accessibility_and_testing": {
+    "data_testid": "MANDATORY: All interactive and key informational elements MUST include a data-testid attribute to facilitate robust automated testing. Use kebab-case, role-based, e.g., data-testid='chat-submit-button'.",
+    "contrast": "Ensure text over glassmorphism has text-shadow or adequate opacity for minimum 4.5:1 ratio."
+  },
+  "instructions_to_main_agent": "Implement customizable themes with 'Midnight Cinematic' as the default dark mode and 'Serenity Mode' as the light mode. Use the provided background images for the respective themes. Build the dashboard using the 'Control Room' Bento Grid layout (grid-cols-1 md:grid-cols-3 lg:grid-cols-4). For the 3D Holographic avatar, use React Three Fiber with `<Environment>` and `<Float>` for realistic lighting and movement. Ensure all interactive components have proper hover states, and EVERY interactive element MUST have a 'data-testid' attribute. Create all new component files as .js files, not .tsx."
+}

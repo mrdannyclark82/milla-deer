@@ -47,3 +47,12 @@ memory/*.db
 memory/*.db-shm
 memory/*.db-wal
 browser_extension/milla-rayne.pem
+-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
