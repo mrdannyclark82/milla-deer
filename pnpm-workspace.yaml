@@ -5,3 +5,15 @@ packages:
   - 'Elara2.0'
   - 'client'
   - 'server'
+allowBuilds:
+  better-sqlite3: set this to true or false
+  bufferutil: set this to true or false
+  canvas: set this to true or false
+  core-js: set this to true or false
+  esbuild: set this to true or false
+  node-pty: set this to true or false
+  protobufjs: set this to true or false
+  react-native-litert-lm: set this to true or false
+  sharp: set this to true or false
+  tree-sitter-bash: set this to true or false
+  unrs-resolver: set this to true or false

@@ -117,6 +117,94 @@ export interface SwarmHandoffRequest {
   requiresVision?: boolean;
 }
 
+export interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  status: 'idle' | 'active' | 'busy' | 'error';
+  capabilities: string[];
+  lastActive?: number;
+}
+
+export interface SkillExecutionResponse {
+  success: boolean;
+  toolUsed: string;
+  toolReason: string;
+  result: string;
+  error?: string;
+}
+
+export interface SwarmNode {
+  id: string;
+  label: string;
+  surface: SwarmSurface;
+  backend: SwarmBackend;
+  status: 'online' | 'offline' | 'degraded';
+  latencyMs: number;
+}
+
+export interface SwarmStatusResponse {
+  nodes: SwarmNode[];
+  activeRoutes: number;
+  totalRequests: number;
+}
+
+export interface SwarmAskResponse {
+  response: string;
+  routedVia: SwarmBackend;
+  handoffId: string;
+  latencyMs: number;
+}
+
+export interface MonologueSnapshot {
+  thoughts: string[];
+  currentFocus: string;
+  emotionalState: string;
+  timestamp: number;
+}
+
+export interface RemState {
+  phase: 'wake' | 'light' | 'deep' | 'rem';
+  cycleProgress: number;
+  lastConsolidated: number;
+  memoriesProcessed: number;
+  dreamContent?: string;
+}
+
+export interface MemoryNode {
+  id: string;
+  type: 'episodic' | 'semantic' | 'procedural' | 'working';
+  label: string;
+  strength: number;
+  connections: string[];
+  lastAccessed: number;
+}
+
+export interface MemoryGraph {
+  nodes: MemoryNode[];
+  totalMemories: number;
+  episodicCount: number;
+  semanticCount: number;
+  proceduralCount: number;
+  workingCount: number;
+}
+
+export interface MemoryUploadResponse {
+  success: boolean;
+  memoriesAdded: number;
+  message: string;
+}
+
+export interface AvailableModel {
+  id: string;
+  name: string;
+  type: 'cloud' | 'local';
+  provider: string;
+  description: string;
+  available: boolean;
+  current?: boolean;
+}
+
 const API_BASE_URL_STORAGE_KEY = 'milla-mobile-api-base-url';
 const SESSION_TOKEN_STORAGE_KEY = 'milla-mobile-session-token';
 const SWARM_SESSION_ID_STORAGE_KEY = 'milla-mobile-swarm-session-id';
@@ -151,7 +239,8 @@ function normalizeApiBaseUrl(rawValue: string): string {
 
   const withProtocol = /^https?:\/\//i.test(trimmedValue)
     ? trimmedValue
-    : trimmedValue === 'localhost' || /^\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?$/.test(trimmedValue)
+    : trimmedValue === 'localhost' ||
+        /^\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?$/.test(trimmedValue)
       ? `http://${trimmedValue}`
       : `https://${trimmedValue}`;
 
@@ -203,7 +292,10 @@ async function readJson<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers,
   });
-  const data = (await response.json()) as T & { error?: string; message?: string };
+  const data = (await response.json()) as T & {
+    error?: string;
+    message?: string;
+  };
 
   if (!response.ok) {
     throw new Error(data.message || data.error || 'Request failed');
@@ -275,7 +367,10 @@ export const millaApi = {
       body: JSON.stringify({ message, imageData: options?.imageData }),
     });
   },
-  generateImage(prompt: string, options?: { aspectRatio?: string; model?: string }) {
+  generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; model?: string }
+  ) {
     return readJson<ImageGenerationResponse>('/api/image/generate', {
       method: 'POST',
       headers: {
@@ -290,7 +385,9 @@ export const millaApi = {
     });
   },
   getTasks(maxResults = 10) {
-    return readJson<GoogleTasksResponse>(`/api/tasks/list?maxResults=${maxResults}`);
+    return readJson<GoogleTasksResponse>(
+      `/api/tasks/list?maxResults=${maxResults}`
+    );
   },
   addTask(title: string, notes?: string) {
     return readJson<AddGoogleTaskResponse>('/api/tasks/add', {
@@ -345,6 +442,64 @@ export const millaApi = {
           'X-Milla-Platform': Platform.OS,
         },
         body: JSON.stringify(request),
+      }
+    );
+  },
+  getAgents() {
+    return readJson<Agent[]>('/api/agents');
+  },
+  executeSkillNL(query: string, context?: string) {
+    return readJson<SkillExecutionResponse>('/api/tools/nl-execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, context }),
+    });
+  },
+  getSwarmStatus() {
+    return readJson<SwarmStatusResponse>('/api/swarm/status');
+  },
+  askSwarm(message: string) {
+    return readJson<SwarmAskResponse>('/api/swarm/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Milla-Platform': Platform.OS,
+      },
+      body: JSON.stringify({ message }),
+    });
+  },
+  getMonologue() {
+    return readJson<MonologueSnapshot>(
+      `/api/memory/monologue?nonce=${Date.now()}`
+    );
+  },
+  getRemState() {
+    return readJson<RemState>(`/api/memory/rem?nonce=${Date.now()}`);
+  },
+  getMemoryGraph() {
+    return readJson<MemoryGraph>('/api/memory/graph');
+  },
+  uploadMemory(
+    content: string,
+    source: string,
+    metadata?: Record<string, unknown>
+  ) {
+    return readJson<MemoryUploadResponse>('/api/memory/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, source, metadata }),
+    });
+  },
+  getAvailableModels() {
+    return readJson<AvailableModel[]>('/api/models/available');
+  },
+  setPreferredModel(modelId: string) {
+    return readJson<{ success: boolean; model: string }>(
+      '/api/settings/preferred-model',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelId }),
       }
     );
   },
