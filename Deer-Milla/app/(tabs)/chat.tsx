@@ -14,7 +14,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import type {
   ExpoSpeechRecognitionErrorEvent,
   ExpoSpeechRecognitionResultEvent,
@@ -25,7 +28,8 @@ import { useChat } from '@/hooks/use-chat';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 
-type SpeechModuleType = typeof import('expo-speech-recognition').ExpoSpeechRecognitionModule;
+type SpeechModuleType =
+  typeof import('expo-speech-recognition').ExpoSpeechRecognitionModule;
 type SpeechSubscription = { remove(): void };
 type SpeechOutputModuleType = typeof import('expo-speech');
 type LocationModuleType = typeof import('expo-location');
@@ -62,6 +66,7 @@ export default function ChatScreen() {
   const palette = Colors[colorScheme];
   const insets = useSafeAreaInsets();
   const {
+    apiBaseUrl,
     error,
     input,
     isLoading,
@@ -70,6 +75,9 @@ export default function ChatScreen() {
     refreshMessages,
     sendMessage,
     setInput,
+    latestSwarmDecision,
+    usingLocalModelFallback,
+    usingOfflineFallback,
   } = useChat();
   const listRef = useRef<FlatList<(typeof messages)[number]> | null>(null);
   const shouldAutoScrollRef = useRef(true);
@@ -78,7 +86,9 @@ export default function ChatScreen() {
   const speechSubscriptionsRef = useRef<SpeechSubscription[]>([]);
   const supportsOnDeviceRef = useRef(false);
   const locationModuleRef = useRef<LocationModuleType | null>(null);
-  const screenShareModuleRef = useRef<ScreenShareServiceModuleType | null>(null);
+  const screenShareModuleRef = useRef<ScreenShareServiceModuleType | null>(
+    null
+  );
   const [isSpeechAvailable, setIsSpeechAvailable] = useState(true);
   const [supportsOnDevice, setSupportsOnDevice] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -90,16 +100,21 @@ export default function ChatScreen() {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [locationSnapshot, setLocationSnapshot] = useState<LocationSnapshot | null>(null);
+  const [locationSnapshot, setLocationSnapshot] =
+    useState<LocationSnapshot | null>(null);
   const [isPreparingMic, setIsPreparingMic] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [, setSpeechStatus] = useState('Tap Mic to enable voice input.');
-  const [screenShareAvailable, setScreenShareAvailable] = useState(Platform.OS === 'android');
+  const [screenShareAvailable, setScreenShareAvailable] = useState(
+    Platform.OS === 'android'
+  );
   const [screenShareActive, setScreenShareActive] = useState(false);
   const [screenShareStatus, setScreenShareStatus] = useState<string | null>(
     Platform.OS === 'android' ? 'Screen share is ready when you need it.' : null
   );
-  const [screenSharePreview, setScreenSharePreview] = useState<string | null>(null);
+  const [screenSharePreview, setScreenSharePreview] = useState<string | null>(
+    null
+  );
   const [isStartingScreenShare, setIsStartingScreenShare] = useState(false);
   const [isCapturingScreenShare, setIsCapturingScreenShare] = useState(false);
 
@@ -109,7 +124,8 @@ export default function ChatScreen() {
 
   const handleListScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+      const { contentOffset, contentSize, layoutMeasurement } =
+        event.nativeEvent;
       const distanceFromBottom =
         contentSize.height - (contentOffset.y + layoutMeasurement.height);
       shouldAutoScrollRef.current = distanceFromBottom < 120;
@@ -137,7 +153,9 @@ export default function ChatScreen() {
 
   useEffect(() => {
     return () => {
-      speechSubscriptionsRef.current.forEach((subscription) => subscription.remove());
+      speechSubscriptionsRef.current.forEach((subscription) =>
+        subscription.remove()
+      );
       speechSubscriptionsRef.current = [];
       speechOutputModuleRef.current?.stop();
     };
@@ -150,7 +168,7 @@ export default function ChatScreen() {
         : Platform.OS === 'android'
           ? 'Voice ready. Download the offline pack for full on-device mode.'
           : 'Voice ready.'
-        );
+    );
   };
 
   const ensureScreenShareModule = useCallback(async () => {
@@ -231,7 +249,8 @@ export default function ChatScreen() {
       speechModuleRef.current = speechModule;
 
       const recognitionAvailable = speechModule.isRecognitionAvailable();
-      const supportsOnDeviceRecognition = speechModule.supportsOnDeviceRecognition();
+      const supportsOnDeviceRecognition =
+        speechModule.supportsOnDeviceRecognition();
       supportsOnDeviceRef.current = supportsOnDeviceRecognition;
 
       setIsSpeechAvailable(recognitionAvailable);
@@ -272,7 +291,9 @@ export default function ChatScreen() {
               return;
             }
 
-            setSpeechStatus(event.isFinal ? 'Transcript ready to send.' : 'Listening...');
+            setSpeechStatus(
+              event.isFinal ? 'Transcript ready to send.' : 'Listening...'
+            );
           }
         ),
         speechModule.addListener(
@@ -336,7 +357,8 @@ export default function ChatScreen() {
     setLocationError(null);
 
     try {
-      const permissions = await locationModule.requestForegroundPermissionsAsync();
+      const permissions =
+        await locationModule.requestForegroundPermissionsAsync();
       if (!permissions.granted) {
         setLocationEnabled(false);
         setLocationSnapshot(null);
@@ -362,8 +384,13 @@ export default function ChatScreen() {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy:
-          typeof position.coords.accuracy === 'number' ? position.coords.accuracy : null,
-        label: labelParts.length > 0 ? labelParts.join(', ') : 'Current location ready',
+          typeof position.coords.accuracy === 'number'
+            ? position.coords.accuracy
+            : null,
+        label:
+          labelParts.length > 0
+            ? labelParts.join(', ')
+            : 'Current location ready',
       };
 
       setLocationSnapshot(nextSnapshot);
@@ -371,7 +398,9 @@ export default function ChatScreen() {
       return nextSnapshot;
     } catch (error) {
       setLocationError(
-        error instanceof Error ? error.message : 'Unable to refresh your location.'
+        error instanceof Error
+          ? error.message
+          : 'Unable to refresh your location.'
       );
       return null;
     } finally {
@@ -379,12 +408,17 @@ export default function ChatScreen() {
     }
   };
 
-  const buildLocationAwareMessage = (message: string, snapshot: LocationSnapshot) =>
+  const buildLocationAwareMessage = (
+    message: string,
+    snapshot: LocationSnapshot
+  ) =>
     [
       'Use this optional live location context only if it helps:',
       `Location: ${snapshot.label}`,
       `Coordinates: ${snapshot.latitude.toFixed(5)}, ${snapshot.longitude.toFixed(5)}`,
-      snapshot.accuracy ? `Accuracy: about ${Math.round(snapshot.accuracy)} meters` : null,
+      snapshot.accuracy
+        ? `Accuracy: about ${Math.round(snapshot.accuracy)} meters`
+        : null,
       '',
       `User message: ${message}`,
     ]
@@ -448,7 +482,9 @@ export default function ChatScreen() {
     try {
       const permissions = await speechModule.requestPermissionsAsync();
       if (!permissions.granted) {
-        setSpeechError('Microphone and speech recognition permissions were not granted.');
+        setSpeechError(
+          'Microphone and speech recognition permissions were not granted.'
+        );
         return;
       }
 
@@ -588,16 +624,81 @@ export default function ChatScreen() {
       style={[
         styles.safeArea,
         { backgroundColor: colorScheme === 'dark' ? '#050816' : '#eef8ff' },
-      ]}>
+      ]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
-        style={styles.flex}>
+        style={styles.flex}
+      >
+        {/* Chat Hub status bar */}
+        <View
+          style={[
+            styles.chatHubBar,
+            {
+              backgroundColor:
+                colorScheme === 'dark'
+                  ? 'rgba(5,8,22,0.95)'
+                  : 'rgba(240,250,255,0.95)',
+              borderBottomColor:
+                colorScheme === 'dark'
+                  ? 'rgba(125,249,255,0.1)'
+                  : 'rgba(0,180,220,0.15)',
+            },
+          ]}
+        >
+          <View style={styles.chatHubLeft}>
+            <View
+              style={[
+                styles.connDot,
+                {
+                  backgroundColor: usingOfflineFallback
+                    ? '#f87171'
+                    : usingLocalModelFallback
+                      ? '#fbbf24'
+                      : '#34d399',
+                },
+              ]}
+            />
+            <ThemedText style={styles.chatHubLabel}>
+              {usingOfflineFallback
+                ? 'Offline mode'
+                : usingLocalModelFallback
+                  ? 'On-device'
+                  : 'Connected'}
+            </ThemedText>
+          </View>
+          {latestSwarmDecision ? (
+            <ThemedText style={styles.chatHubSwarm} numberOfLines={1}>
+              via {latestSwarmDecision.targetBackend} ·{' '}
+              {latestSwarmDecision.estimatedLatencyMs}ms
+            </ThemedText>
+          ) : (
+            <ThemedText style={styles.chatHubSwarm} numberOfLines={1}>
+              {apiBaseUrl}
+            </ThemedText>
+          )}
+          <Pressable
+            onPress={() => void refreshMessages()}
+            disabled={isRefreshing}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            style={({ pressed }) => ({
+              opacity: isRefreshing ? 0.4 : pressed ? 0.6 : 1,
+            })}
+          >
+            <ThemedText style={styles.chatHubRefresh}>
+              {isRefreshing ? '…' : '↻'}
+            </ThemedText>
+          </Pressable>
+        </View>
+
         <FlatList
           ref={listRef}
           style={styles.messageList}
           data={messages}
-          keyExtractor={(item, index) => `${item.role}-${index}-${item.content.slice(0, 24)}`}
+          keyExtractor={(item, index) =>
+            `${item.role}-${index}-${item.content.slice(0, 24)}`
+          }
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: 16 + Math.max(insets.bottom, 12) },
@@ -627,7 +728,8 @@ export default function ChatScreen() {
                 style={[
                   styles.messageRow,
                   isUser ? styles.userRow : styles.assistantRow,
-                ]}>
+                ]}
+              >
                 <View
                   style={[
                     styles.messageBubble,
@@ -636,19 +738,22 @@ export default function ChatScreen() {
                       : colorScheme === 'dark'
                         ? styles.assistantBubbleDark
                         : styles.assistantBubbleLight,
-                  ]}>
+                  ]}
+                >
                   <ThemedText
                     style={[
                       styles.messageRole,
                       { color: isUser ? '#082c38' : palette.icon },
-                    ]}>
+                    ]}
+                  >
                     {isUser ? 'You' : 'Milla'}
                   </ThemedText>
                   <ThemedText
                     style={[
                       styles.messageContent,
                       { color: isUser ? '#041821' : palette.text },
-                    ]}>
+                    ]}
+                  >
                     {parsedMessage.text}
                   </ThemedText>
                   {parsedMessage.imageUrl ? (
@@ -666,7 +771,9 @@ export default function ChatScreen() {
             isLoading ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator size="small" color={palette.tint} />
-                <ThemedText style={styles.loadingText}>Milla is responding...</ThemedText>
+                <ThemedText style={styles.loadingText}>
+                  Milla is responding...
+                </ThemedText>
               </View>
             ) : null
           }
@@ -678,17 +785,34 @@ export default function ChatScreen() {
             {
               marginBottom: Math.max(insets.bottom, 12),
               backgroundColor:
-                colorScheme === 'dark' ? 'rgba(14, 19, 35, 0.92)' : 'rgba(255, 255, 255, 0.95)',
+                colorScheme === 'dark'
+                  ? 'rgba(14, 19, 35, 0.92)'
+                  : 'rgba(255, 255, 255, 0.95)',
               borderColor: colorScheme === 'dark' ? '#17324a' : '#cfe9f6',
             },
-          ]}>
+          ]}
+        >
           {error ? (
-            <ThemedText style={styles.errorText}>
-              {error}
-            </ThemedText>
+            <View style={styles.errorRow}>
+              <ThemedText style={[styles.errorText, { flex: 1 }]}>
+                {error}
+              </ThemedText>
+              <Pressable
+                onPress={() => void refreshMessages()}
+                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                style={({ pressed }) => [
+                  styles.retryBtn,
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+              >
+                <ThemedText style={styles.retryBtnLabel}>Retry</ThemedText>
+              </Pressable>
+            </View>
           ) : null}
 
-          {speechError ? <ThemedText style={styles.errorText}>{speechError}</ThemedText> : null}
+          {speechError ? (
+            <ThemedText style={styles.errorText}>{speechError}</ThemedText>
+          ) : null}
           {locationError ? (
             <ThemedText style={styles.errorText}>{locationError}</ThemedText>
           ) : null}
@@ -698,14 +822,18 @@ export default function ChatScreen() {
             style={({ pressed }) => [
               styles.toolsToggle,
               { opacity: pressed ? 0.82 : 1 },
-            ]}>
+            ]}
+          >
             <ThemedText style={styles.toolsToggleLabel}>
-              {chatToolsExpanded ? 'Hide conversation tools' : 'Show conversation tools'}
+              {chatToolsExpanded
+                ? 'Hide conversation tools'
+                : 'Show conversation tools'}
             </ThemedText>
             <ThemedText style={styles.toolsSummary}>
               Voice replies {voiceRepliesEnabled ? 'on' : 'off'} · Auto-send{' '}
-              {autoSendVoiceInput ? 'on' : 'off'} · Location {locationEnabled ? 'on' : 'off'} ·
-              Screen {screenShareActive ? 'on' : 'off'}
+              {autoSendVoiceInput ? 'on' : 'off'} · Location{' '}
+              {locationEnabled ? 'on' : 'off'} · Screen{' '}
+              {screenShareActive ? 'on' : 'off'}
             </ThemedText>
           </Pressable>
 
@@ -715,17 +843,26 @@ export default function ChatScreen() {
               contentContainerStyle={styles.toolsPanelContent}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled
-              keyboardShouldPersistTaps="handled">
+              keyboardShouldPersistTaps="handled"
+            >
               <View style={styles.endpointCard}>
-                <ThemedText style={styles.endpointLabel}>Chat stays focused now</ThemedText>
+                <ThemedText style={styles.endpointLabel}>
+                  Chat Hub tools
+                </ThemedText>
                 <ThemedText style={styles.endpointHint}>
-                  Home now handles server setup, Google sync, task actions, image generation, and
-                  local model imports so this tab can stay centered on the actual conversation.
+                  Voice, location, and screen share controls live here. For
+                  server setup, model imports, or background generation head to
+                  Home.
                 </ThemedText>
               </View>
 
-              {Platform.OS === 'android' && isSpeechAvailable && !supportsOnDevice ? (
-                <Pressable onPress={() => void downloadOfflinePack()} style={styles.secondaryAction}>
+              {Platform.OS === 'android' &&
+              isSpeechAvailable &&
+              !supportsOnDevice ? (
+                <Pressable
+                  onPress={() => void downloadOfflinePack()}
+                  style={styles.secondaryAction}
+                >
                   <ThemedText style={styles.secondaryActionLabel}>
                     Download Android offline voice pack
                   </ThemedText>
@@ -741,18 +878,25 @@ export default function ChatScreen() {
                           ? void handleCaptureCurrentScreen()
                           : void handleStartScreenShare()
                       }
-                      disabled={isStartingScreenShare || isCapturingScreenShare || isLoading}
+                      disabled={
+                        isStartingScreenShare ||
+                        isCapturingScreenShare ||
+                        isLoading
+                      }
                       style={({ pressed }) => [
                         styles.secondaryAction,
                         {
                           opacity:
-                            isStartingScreenShare || isCapturingScreenShare || isLoading
+                            isStartingScreenShare ||
+                            isCapturingScreenShare ||
+                            isLoading
                               ? 0.5
                               : pressed
                                 ? 0.82
                                 : 1,
                         },
-                      ]}>
+                      ]}
+                    >
                       <ThemedText style={styles.secondaryActionLabel}>
                         {screenShareActive
                           ? isCapturingScreenShare
@@ -769,8 +913,11 @@ export default function ChatScreen() {
                         style={({ pressed }) => [
                           styles.ghostAction,
                           { opacity: pressed ? 0.82 : 1 },
-                        ]}>
-                        <ThemedText style={styles.ghostActionLabel}>Stop screen share</ThemedText>
+                        ]}
+                      >
+                        <ThemedText style={styles.ghostActionLabel}>
+                          Stop screen share
+                        </ThemedText>
                       </Pressable>
                     ) : null}
                   </View>
@@ -806,7 +953,8 @@ export default function ChatScreen() {
                   style={({ pressed }) => [
                     styles.secondaryAction,
                     { opacity: pressed ? 0.82 : 1 },
-                  ]}>
+                  ]}
+                >
                   <ThemedText style={styles.secondaryActionLabel}>
                     Location assist: {locationEnabled ? 'On' : 'Off'}
                   </ThemedText>
@@ -817,7 +965,8 @@ export default function ChatScreen() {
                   style={({ pressed }) => [
                     styles.ghostAction,
                     { opacity: isLocationLoading ? 0.5 : pressed ? 0.82 : 1 },
-                  ]}>
+                  ]}
+                >
                   <ThemedText style={styles.ghostActionLabel}>
                     {isLocationLoading ? 'Refreshing...' : 'Refresh location'}
                   </ThemedText>
@@ -832,7 +981,8 @@ export default function ChatScreen() {
                 </ThemedText>
               ) : (
                 <ThemedText style={styles.endpointHint}>
-                  Location assist stays off unless you enable it here. No background tracking.
+                  Location assist stays off unless you enable it here. No
+                  background tracking.
                 </ThemedText>
               )}
 
@@ -842,7 +992,8 @@ export default function ChatScreen() {
                   style={({ pressed }) => [
                     styles.secondaryAction,
                     { opacity: pressed ? 0.82 : 1 },
-                  ]}>
+                  ]}
+                >
                   <ThemedText style={styles.secondaryActionLabel}>
                     Auto-send voice: {autoSendVoiceInput ? 'On' : 'Off'}
                   </ThemedText>
@@ -850,13 +1001,18 @@ export default function ChatScreen() {
                 <Pressable
                   onPress={() =>
                     setVoiceRateMode((current) =>
-                      current === 'slow' ? 'normal' : current === 'normal' ? 'fast' : 'slow'
+                      current === 'slow'
+                        ? 'normal'
+                        : current === 'normal'
+                          ? 'fast'
+                          : 'slow'
                     )
                   }
                   style={({ pressed }) => [
                     styles.ghostAction,
                     { opacity: pressed ? 0.82 : 1 },
-                  ]}>
+                  ]}
+                >
                   <ThemedText style={styles.ghostActionLabel}>
                     Reply speed: {voiceRateMode}
                   </ThemedText>
@@ -864,8 +1020,8 @@ export default function ChatScreen() {
               </View>
 
               <ThemedText style={styles.endpointHint}>
-                Auto-send sends the final transcript immediately. Reply speed changes spoken output
-                pace only.
+                Auto-send sends the final transcript immediately. Reply speed
+                changes spoken output pace only.
               </ThemedText>
 
               <View style={styles.endpointActions}>
@@ -880,7 +1036,8 @@ export default function ChatScreen() {
                   style={({ pressed }) => [
                     styles.secondaryAction,
                     { opacity: pressed ? 0.82 : 1 },
-                  ]}>
+                  ]}
+                >
                   <ThemedText style={styles.secondaryActionLabel}>
                     Voice replies: {voiceRepliesEnabled ? 'On' : 'Off'}
                   </ThemedText>
@@ -891,15 +1048,18 @@ export default function ChatScreen() {
                     style={({ pressed }) => [
                       styles.ghostAction,
                       { opacity: pressed ? 0.82 : 1 },
-                    ]}>
-                    <ThemedText style={styles.ghostActionLabel}>Stop voice</ThemedText>
+                    ]}
+                  >
+                    <ThemedText style={styles.ghostActionLabel}>
+                      Stop voice
+                    </ThemedText>
                   </Pressable>
                 ) : null}
               </View>
 
               <ThemedText style={styles.endpointHint}>
-                Need backgrounds, tasks, server setup, or model tools? Head back to Home for those
-                controls.
+                Need backgrounds, tasks, server setup, or model tools? Head back
+                to Home for those controls.
               </ThemedText>
             </ScrollView>
           ) : null}
@@ -909,28 +1069,39 @@ export default function ChatScreen() {
               value={input}
               onChangeText={setInput}
               placeholder="Message Milla..."
-              placeholderTextColor={colorScheme === 'dark' ? '#6f8aa0' : '#7a8c99'}
+              placeholderTextColor={
+                colorScheme === 'dark' ? '#6f8aa0' : '#7a8c99'
+              }
               style={[
                 styles.input,
                 {
                   color: palette.text,
                   backgroundColor:
-                    colorScheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(2, 132, 199, 0.06)',
+                    colorScheme === 'dark'
+                      ? 'rgba(255,255,255,0.05)'
+                      : 'rgba(2, 132, 199, 0.06)',
                 },
               ]}
               multiline
               editable={!isLoading}
             />
             <Pressable
-              onPress={isListening ? stopListening : () => void startListening()}
+              onPress={
+                isListening ? stopListening : () => void startListening()
+              }
               disabled={isPreparingMic || !isSpeechAvailable}
               style={({ pressed }) => [
                 styles.micButton,
                 {
                   opacity:
-                    isPreparingMic || !isSpeechAvailable ? 0.5 : pressed ? 0.82 : 1,
+                    isPreparingMic || !isSpeechAvailable
+                      ? 0.5
+                      : pressed
+                        ? 0.82
+                        : 1,
                 },
-              ]}>
+              ]}
+            >
               <ThemedText style={styles.micLabel}>
                 {isPreparingMic ? '...' : isListening ? 'Stop' : 'Mic'}
               </ThemedText>
@@ -943,7 +1114,8 @@ export default function ChatScreen() {
                 {
                   opacity: isLoading || !input.trim() ? 0.5 : pressed ? 0.8 : 1,
                 },
-              ]}>
+              ]}
+            >
               <ThemedText style={styles.sendLabel}>Send</ThemedText>
             </Pressable>
           </View>
@@ -1058,9 +1230,9 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   sendButton: {
-    minHeight: 52,
-    borderRadius: 18,
-    paddingHorizontal: 18,
+    minHeight: 44,
+    borderRadius: 16,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#00f2ff',
@@ -1159,15 +1331,69 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   micButton: {
-    minHeight: 52,
-    borderRadius: 18,
-    paddingHorizontal: 16,
+    minHeight: 44,
+    borderRadius: 16,
+    paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#17324a',
   },
   micLabel: {
     color: '#dffcff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  // Chat Hub status bar
+  chatHubBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    gap: 8,
+  },
+  chatHubLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  connDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  chatHubLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chatHubSwarm: {
+    flex: 1,
+    fontSize: 11,
+    opacity: 0.55,
+    textAlign: 'right',
+  },
+  chatHubRefresh: {
+    fontSize: 16,
+    color: '#7df9ff',
+    fontWeight: '700',
+  },
+  // Error row with retry
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  retryBtn: {
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(125,249,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(125,249,255,0.25)',
+  },
+  retryBtnLabel: {
+    fontSize: 12,
+    color: '#7df9ff',
     fontWeight: '700',
   },
 });

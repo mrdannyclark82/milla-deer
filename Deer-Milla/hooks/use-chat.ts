@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Directory, EncodingType, File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import { generateOfflineCompanionResponse } from '@/services/offline-companion';
@@ -32,7 +32,8 @@ const DEFAULT_GREETING: ChatMessage = {
   role: 'assistant',
   content: "Hey love, I'm here. Ask me anything and I'll stay with you.",
 };
-const DATA_IMAGE_URL_PATTERN = /data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/;
+const DATA_IMAGE_URL_PATTERN =
+  /data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/;
 const GENERATED_IMAGE_CACHE_DIRECTORY = 'generated-images';
 
 function normalizeMessages(messages: ChatMessage[]): ChatMessage[] {
@@ -44,7 +45,10 @@ function normalizeMessages(messages: ChatMessage[]): ChatMessage[] {
 }
 
 function describeTaskFailure(error: unknown) {
-  const message = error instanceof Error ? error.message : 'Unable to reach your task list right now.';
+  const message =
+    error instanceof Error
+      ? error.message
+      : 'Unable to reach your task list right now.';
 
   if (message.includes("couldn't access your Google Tasks")) {
     return 'Google Tasks is connected, but no task list is available yet. Open Home, connect Google again if needed, and make sure your Tasks list exists in Google Tasks.';
@@ -71,7 +75,9 @@ function getImageFileExtension(mimeType: string) {
   }
 }
 
-function describeLocalModelSource(runtimeDetails: LocalModelRuntimeDetails | null) {
+function describeLocalModelSource(
+  runtimeDetails: LocalModelRuntimeDetails | null
+) {
   switch (runtimeDetails?.activeModelSource) {
     case 'bundled-asset':
       return 'the bundled MediaPipe runtime asset';
@@ -83,7 +89,9 @@ function describeLocalModelSource(runtimeDetails: LocalModelRuntimeDetails | nul
 }
 
 function describeLocalModelProfile(profile: LocalModelProfile) {
-  return profile === 'fast' ? 'the fast offline profile' : 'the balanced offline profile';
+  return profile === 'fast'
+    ? 'the fast offline profile'
+    : 'the balanced offline profile';
 }
 
 async function materializeAndroidImageUrl(imageUrl: string, cacheKey: string) {
@@ -91,14 +99,19 @@ async function materializeAndroidImageUrl(imageUrl: string, cacheKey: string) {
     return imageUrl;
   }
 
-  const match = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+  const match = imageUrl.match(
+    /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/
+  );
   if (!match) {
     return imageUrl;
   }
 
   const [, mimeType, base64Payload] = match;
   const extension = getImageFileExtension(mimeType);
-  const cacheDirectory = new Directory(Paths.cache, GENERATED_IMAGE_CACHE_DIRECTORY);
+  const cacheDirectory = new Directory(
+    Paths.cache,
+    GENERATED_IMAGE_CACHE_DIRECTORY
+  );
 
   try {
     if (!cacheDirectory.exists) {
@@ -107,7 +120,7 @@ async function materializeAndroidImageUrl(imageUrl: string, cacheKey: string) {
 
     const imageFile = new File(cacheDirectory, `${cacheKey}.${extension}`);
     imageFile.create({ overwrite: true, intermediates: true });
-    imageFile.write(base64Payload, { encoding: EncodingType.Base64 });
+    imageFile.write(base64Payload, { encoding: 'base64' });
     return imageFile.uri;
   } catch (error) {
     console.warn('Unable to cache Android image payload locally.', error);
@@ -126,12 +139,18 @@ async function materializeMessageContent(content: string, cacheKey: string) {
   }
 
   const [inlineImageUrl] = match;
-  const cachedImageUrl = await materializeAndroidImageUrl(inlineImageUrl, cacheKey);
+  const cachedImageUrl = await materializeAndroidImageUrl(
+    inlineImageUrl,
+    cacheKey
+  );
   return content.replace(inlineImageUrl, cachedImageUrl);
 }
 
 async function materializeMessage(message: ChatMessage, cacheKey: string) {
-  const nextContent = await materializeMessageContent(message.content, cacheKey);
+  const nextContent = await materializeMessageContent(
+    message.content,
+    cacheKey
+  );
   if (nextContent === message.content) {
     return message;
   }
@@ -149,12 +168,16 @@ export function useChat() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiBaseUrl, setApiBaseUrl] = useState(millaApi.defaultBaseUrl);
-  const [draftApiBaseUrl, setDraftApiBaseUrl] = useState(millaApi.defaultBaseUrl);
+  const [draftApiBaseUrl, setDraftApiBaseUrl] = useState(
+    millaApi.defaultBaseUrl
+  );
   const [usingOfflineFallback, setUsingOfflineFallback] = useState(false);
   const [usingLocalModelFallback, setUsingLocalModelFallback] = useState(false);
   const [localModelEnabled, setLocalModelEnabled] = useState(false);
-  const [localModelStatus, setLocalModelStatus] = useState<LocalModelStatus>('idle');
-  const [localModelProfile, setLocalModelProfile] = useState<LocalModelProfile>('balanced');
+  const [localModelStatus, setLocalModelStatus] =
+    useState<LocalModelStatus>('idle');
+  const [localModelProfile, setLocalModelProfile] =
+    useState<LocalModelProfile>('balanced');
   const [localModelError, setLocalModelError] = useState<string | null>(null);
   const [localModelRuntimeDetails, setLocalModelRuntimeDetails] =
     useState<LocalModelRuntimeDetails | null>(null);
@@ -218,55 +241,56 @@ export function useChat() {
 
     void Promise.all([getLocalModelEnabled(), getLocalModelProfile()]).then(
       async ([enabled, profile]) => {
-      try {
-        const runtimeDetails = await localModelService.getLatestRuntimeDetails();
-        if (isMounted) {
-          setLocalModelRuntimeDetails(runtimeDetails);
-        }
-      } catch {
-        if (isMounted) {
-          setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
-        }
-      }
-
-      if (!isMounted) {
-        return;
-      }
-
-      setLocalModelEnabled(enabled);
-      setLocalModelProfile(profile);
-
-      if (!enabled) {
-        setLocalModelStatus('idle');
-        setLocalModelError(null);
-        setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
-        return;
-      }
-
-      setLocalModelStatus('initializing');
-      void localModelService
-        .initialize()
-        .then(() => {
-          if (!isMounted) {
-            return;
+        try {
+          const runtimeDetails =
+            await localModelService.getLatestRuntimeDetails();
+          if (isMounted) {
+            setLocalModelRuntimeDetails(runtimeDetails);
           }
+        } catch {
+          if (isMounted) {
+            setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+          }
+        }
 
-          setLocalModelStatus(localModelService.getStatus());
-          setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+        if (!isMounted) {
+          return;
+        }
+
+        setLocalModelEnabled(enabled);
+        setLocalModelProfile(profile);
+
+        if (!enabled) {
+          setLocalModelStatus('idle');
           setLocalModelError(null);
-        })
-        .catch((initializationError) => {
-          if (!isMounted) {
-            return;
-          }
+          setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+          return;
+        }
 
-          setLocalModelStatus('error');
-          setLocalModelError(
-            initializationError instanceof Error
-              ? initializationError.message
-              : 'Unable to prepare the Android on-device runtime.'
-          );
-        });
+        setLocalModelStatus('initializing');
+        void localModelService
+          .initialize()
+          .then(() => {
+            if (!isMounted) {
+              return;
+            }
+
+            setLocalModelStatus(localModelService.getStatus());
+            setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+            setLocalModelError(null);
+          })
+          .catch((initializationError) => {
+            if (!isMounted) {
+              return;
+            }
+
+            setLocalModelStatus('error');
+            setLocalModelError(
+              initializationError instanceof Error
+                ? initializationError.message
+                : 'Unable to prepare the Android on-device runtime.'
+            );
+          });
       }
     );
 
@@ -303,10 +327,13 @@ export function useChat() {
     }
   }, []);
 
-  const updateLocalModelProfile = useCallback(async (profile: LocalModelProfile) => {
-    await persistLocalModelProfile(profile);
-    setLocalModelProfile(profile);
-  }, []);
+  const updateLocalModelProfile = useCallback(
+    async (profile: LocalModelProfile) => {
+      await persistLocalModelProfile(profile);
+      setLocalModelProfile(profile);
+    },
+    []
+  );
 
   const importLocalModel = useCallback(async () => {
     setIsImportingLocalModel(true);
@@ -314,7 +341,9 @@ export function useChat() {
       const runtimeDetails = await localModelService.importModelFromPicker();
       setLocalModelRuntimeDetails(runtimeDetails);
       setLocalModelStatus(runtimeDetails.isConfigured ? 'ready' : 'error');
-      setLocalModelError(runtimeDetails.isConfigured ? null : runtimeDetails.summary);
+      setLocalModelError(
+        runtimeDetails.isConfigured ? null : runtimeDetails.summary
+      );
       return runtimeDetails;
     } catch (importError) {
       setLocalModelStatus('error');
@@ -341,7 +370,9 @@ export function useChat() {
     } catch (clearError) {
       setLocalModelStatus('error');
       setLocalModelError(
-        clearError instanceof Error ? clearError.message : 'Unable to clear the imported model.'
+        clearError instanceof Error
+          ? clearError.message
+          : 'Unable to clear the imported model.'
       );
       throw clearError;
     } finally {
@@ -356,7 +387,9 @@ export function useChat() {
     try {
       const nextMessages = await millaApi.getMessages();
       const optimizedMessages = await Promise.all(
-        nextMessages.map((message, index) => materializeMessage(message, `history-${index}`))
+        nextMessages.map((message, index) =>
+          materializeMessage(message, `history-${index}`)
+        )
       );
       setUsingOfflineFallback(false);
       setMessages(normalizeMessages(optimizedMessages));
@@ -375,99 +408,106 @@ export function useChat() {
     void refreshMessages();
   }, [refreshMessages]);
 
-  const sendMessage = useCallback(async (options?: {
-    outboundMessage?: string;
-    visibleMessage?: string;
-    imageData?: string;
-  }) => {
-    const trimmedInput = input.trim();
-    const outboundContent = options?.outboundMessage?.trim() || trimmedInput;
-    const visibleContent = options?.visibleMessage?.trim() || outboundContent;
-    if (!outboundContent || isLoading) {
-      return null;
-    }
-
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: visibleContent,
-    };
-
-    setMessages((currentMessages) => [...currentMessages, userMessage]);
-    setInput('');
-    setIsLoading(true);
-    setError(null);
-    setUsingOfflineFallback(false);
-
-    try {
-      const sessionId = await getDeviceSessionId();
-      const handoffIntent = options?.imageData ? 'vision' : 'chat';
-      let handoffDecision: SwarmHandoffDecision | null = null;
-
-      try {
-        const handoffResponse = await millaApi.requestHandoffDecision(
-          buildMobileHandoffRequest({
-            sessionId,
-            intent: handoffIntent,
-            localModelEnabled,
-            requiresVision: Boolean(options?.imageData),
-          })
-        );
-        handoffDecision = handoffResponse.decision;
-        setLatestSwarmDecision(handoffDecision);
-      } catch {
-        handoffDecision = null;
+  const sendMessage = useCallback(
+    async (options?: {
+      outboundMessage?: string;
+      visibleMessage?: string;
+      imageData?: string;
+    }) => {
+      const trimmedInput = input.trim();
+      const outboundContent = options?.outboundMessage?.trim() || trimmedInput;
+      const visibleContent = options?.visibleMessage?.trim() || outboundContent;
+      if (!outboundContent || isLoading) {
+        return null;
       }
 
-      if (shouldUseLocalRoute(handoffDecision, localModelEnabled) && !options?.imageData) {
-        setLocalModelStatus('initializing');
-        const localModelResponse = await localModelService.runInference(
-          outboundContent,
-          localModelProfile
-        );
-        const assistantMessage: ChatMessage = {
-          role: 'assistant',
-          content: localModelResponse.text,
-        };
-
-        setMessages((currentMessages) => [...currentMessages, assistantMessage]);
-        setUsingLocalModelFallback(true);
-        setUsingOfflineFallback(false);
-        setLocalModelStatus('ready');
-        setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
-        setLocalModelError(null);
-        setError(
-          `Swarm routed this turn locally. ${describeSwarmDecision(handoffDecision) || ''}`.trim()
-        );
-        return assistantMessage;
-      }
-
-      const response = await millaApi.sendMessage(outboundContent, {
-        imageData: options?.imageData,
-        handoffDecision,
-      });
-      const assistantContent = response.response || response.content;
-
-      if (!assistantContent) {
-        throw new Error(response.error || 'Milla sent an empty response.');
-      }
-
-      const optimizedAssistantContent = await materializeMessageContent(
-        assistantContent,
-        `chat-${Date.now()}`
-      );
-
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: optimizedAssistantContent,
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: visibleContent,
       };
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        assistantMessage,
-      ]);
-      setUsingLocalModelFallback(false);
-      return assistantMessage;
-    } catch (sendError) {
+      setMessages((currentMessages) => [...currentMessages, userMessage]);
+      setInput('');
+      setIsLoading(true);
+      setError(null);
+      setUsingOfflineFallback(false);
+
+      try {
+        const sessionId = await getDeviceSessionId();
+        const handoffIntent = options?.imageData ? 'vision' : 'chat';
+        let handoffDecision: SwarmHandoffDecision | null = null;
+
+        try {
+          const handoffResponse = await millaApi.requestHandoffDecision(
+            buildMobileHandoffRequest({
+              sessionId,
+              intent: handoffIntent,
+              localModelEnabled,
+              requiresVision: Boolean(options?.imageData),
+            })
+          );
+          handoffDecision = handoffResponse.decision;
+          setLatestSwarmDecision(handoffDecision);
+        } catch {
+          handoffDecision = null;
+        }
+
+        if (
+          shouldUseLocalRoute(handoffDecision, localModelEnabled) &&
+          !options?.imageData
+        ) {
+          setLocalModelStatus('initializing');
+          const localModelResponse = await localModelService.runInference(
+            outboundContent,
+            localModelProfile
+          );
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: localModelResponse.text,
+          };
+
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            assistantMessage,
+          ]);
+          setUsingLocalModelFallback(true);
+          setUsingOfflineFallback(false);
+          setLocalModelStatus('ready');
+          setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+          setLocalModelError(null);
+          setError(
+            `Swarm routed this turn locally. ${describeSwarmDecision(handoffDecision) || ''}`.trim()
+          );
+          return assistantMessage;
+        }
+
+        const response = await millaApi.sendMessage(outboundContent, {
+          imageData: options?.imageData,
+          handoffDecision,
+        });
+        const assistantContent = response.response || response.content;
+
+        if (!assistantContent) {
+          throw new Error(response.error || 'Milla sent an empty response.');
+        }
+
+        const optimizedAssistantContent = await materializeMessageContent(
+          assistantContent,
+          `chat-${Date.now()}`
+        );
+
+        const assistantMessage: ChatMessage = {
+          role: 'assistant',
+          content: optimizedAssistantContent,
+        };
+
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
+        setUsingLocalModelFallback(false);
+        return assistantMessage;
+      } catch (sendError) {
         // ── Fallback 1: Gemma 4 on-device (E2B NPU or E4B CPU) ──────────────
         // Tried before localModelService because Gemma 4 is the newer capable
         // runtime; localModelService covers the legacy MediaPipe bundled asset.
@@ -480,7 +520,10 @@ export function useChat() {
             role: 'assistant',
             content: gemma4Result.text,
           };
-          setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            assistantMessage,
+          ]);
           setUsingLocalModelFallback(true);
           setUsingOfflineFallback(false);
           setLocalModelError(null);
@@ -504,7 +547,10 @@ export function useChat() {
             role: 'assistant',
             content: liteRTResult.text,
           };
-          setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            assistantMessage,
+          ]);
           setUsingLocalModelFallback(true);
           setUsingOfflineFallback(false);
           setLocalModelError(null);
@@ -524,19 +570,19 @@ export function useChat() {
               outboundContent,
               localModelProfile
             );
-          const assistantMessage: ChatMessage = {
-            role: 'assistant',
-            content: localModelResponse.text,
-          };
+            const assistantMessage: ChatMessage = {
+              role: 'assistant',
+              content: localModelResponse.text,
+            };
 
-          setMessages((currentMessages) => [
-            ...currentMessages,
-            assistantMessage,
-          ]);
-           setUsingLocalModelFallback(true);
-           setUsingOfflineFallback(false);
-           setLocalModelStatus('ready');
-           setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+            setMessages((currentMessages) => [
+              ...currentMessages,
+              assistantMessage,
+            ]);
+            setUsingLocalModelFallback(true);
+            setUsingOfflineFallback(false);
+            setLocalModelStatus('ready');
+            setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
             setLocalModelError(null);
             setError(
               `Remote link unavailable at ${apiBaseUrl}. Switched to ${describeLocalModelSource(
@@ -548,45 +594,49 @@ export function useChat() {
               }`
             );
             return assistantMessage;
-        } catch (localModelFailure) {
-          setUsingLocalModelFallback(false);
-          setLocalModelStatus('error');
-          setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
-          setLocalModelError(
-            localModelFailure instanceof Error
-              ? localModelFailure.message
-              : 'The Android on-device runtime was unavailable.'
-          );
+          } catch (localModelFailure) {
+            setUsingLocalModelFallback(false);
+            setLocalModelStatus('error');
+            setLocalModelRuntimeDetails(localModelService.getRuntimeDetails());
+            setLocalModelError(
+              localModelFailure instanceof Error
+                ? localModelFailure.message
+                : 'The Android on-device runtime was unavailable.'
+            );
+          }
         }
-      }
 
         // ── Fallback 4: Offline companion text ───────────────────────────────
-      setUsingOfflineFallback(true);
-      setError(`Remote link unavailable at ${apiBaseUrl}. All on-device runtimes unavailable. Switched to offline fallback.`);
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: options?.imageData
-          ? "I captured your screen, but I can't inspect it while the remote link is unavailable. Reconnect me and capture the screen again so I can help with what's visible."
-          : generateOfflineCompanionResponse(outboundContent),
-      };
+        setUsingOfflineFallback(true);
+        setError(
+          `Remote link unavailable at ${apiBaseUrl}. All on-device runtimes unavailable. Switched to offline fallback.`
+        );
+        const assistantMessage: ChatMessage = {
+          role: 'assistant',
+          content: options?.imageData
+            ? "I captured your screen, but I can't inspect it while the remote link is unavailable. Reconnect me and capture the screen again so I can help with what's visible."
+            : generateOfflineCompanionResponse(outboundContent),
+        };
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        assistantMessage,
-      ]);
-      return assistantMessage;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    apiBaseUrl,
-    input,
-    isLoading,
-    latestSwarmDecision,
-    localModelEnabled,
-    localModelProfile,
-    localModelRuntimeDetails,
-  ]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
+        return assistantMessage;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      apiBaseUrl,
+      input,
+      isLoading,
+      latestSwarmDecision,
+      localModelEnabled,
+      localModelProfile,
+      localModelRuntimeDetails,
+    ]
+  );
 
   const saveApiBaseUrl = useCallback(async () => {
     const normalizedBaseUrl = await millaApi.setApiBaseUrl(draftApiBaseUrl);
@@ -637,7 +687,9 @@ export function useChat() {
           : await materializeMessageContent(result.response || '', cacheKey);
 
         if (!result.success || !assistantContent) {
-          throw new Error(result.error || 'Image generation did not return a result.');
+          throw new Error(
+            result.error || 'Image generation did not return a result.'
+          );
         }
 
         const assistantMessage: ChatMessage = {
@@ -645,15 +697,23 @@ export function useChat() {
           content: assistantContent,
         };
 
-        setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
         return assistantMessage;
       } catch (generationError) {
         const assistantMessage: ChatMessage = {
           role: 'assistant',
-          content: generateOfflineCompanionResponse(`image request: ${trimmedPrompt}`),
+          content: generateOfflineCompanionResponse(
+            `image request: ${trimmedPrompt}`
+          ),
         };
 
-        setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
         setError(
           generationError instanceof Error
             ? generationError.message
@@ -728,7 +788,9 @@ export function useChat() {
       try {
         const result = await millaApi.addTask(trimmedTitle);
         if (!result.success) {
-          throw new Error(result.message || result.error || 'Task creation failed.');
+          throw new Error(
+            result.message || result.error || 'Task creation failed.'
+          );
         }
 
         const assistantMessage: ChatMessage = {
@@ -736,7 +798,10 @@ export function useChat() {
           content: result.message || `Added "${trimmedTitle}" to your tasks.`,
         };
 
-        setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
         return assistantMessage;
       } catch (taskError) {
         const assistantMessage: ChatMessage = {
@@ -747,9 +812,14 @@ export function useChat() {
               : 'Unable to add that task right now.',
         };
 
-        setMessages((currentMessages) => [...currentMessages, assistantMessage]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]);
         setError(
-          taskError instanceof Error ? taskError.message : 'Unable to add that task right now.'
+          taskError instanceof Error
+            ? taskError.message
+            : 'Unable to add that task right now.'
         );
         return assistantMessage;
       } finally {
