@@ -34,7 +34,7 @@ import { storage } from '../storage';
 import {
   CONTEXT_WINDOW_SETTINGS,
   boundConversationHistory,
-} from '../contextWindowService';
+} from '../contextWindowService.ts';
 
 async function resolveChatUserId(sessionToken?: string): Promise<string> {
   if (!sessionToken) {
@@ -105,7 +105,8 @@ async function persistConversationTurn(
       displayRole: 'Milla Rayne',
       channel,
       sourcePlatform: 'milla-hub',
-      metadata: toolEvents && toolEvents.length > 0 ? { toolEvents } : undefined,
+      metadata:
+        toolEvents && toolEvents.length > 0 ? { toolEvents } : undefined,
     }),
   ]);
 
@@ -114,7 +115,9 @@ async function persistConversationTurn(
   appendToSharedChat('assistant', assistantMessage, channel).catch(() => {});
 
   // Hot context snapshot for zero-reload session persistence
-  recordTurn(userMessage, assistantMessage, channel, userId, toolEvents).catch(() => {});
+  recordTurn(userMessage, assistantMessage, channel, userId, toolEvents).catch(
+    () => {}
+  );
 
   // Queue turn for async RAG vector indexing
   queueForIndexing(userMessage, assistantMessage, userId);

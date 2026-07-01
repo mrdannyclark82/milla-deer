@@ -33,10 +33,12 @@ except ImportError as e:
     draw_laser_pointer = lambda *a, **k: None
 from core_os.skills.auto_lib import (
     model_manager, query_local_knowledge_base, 
-    authenticate_gmail, fetch_recent_emails, send_email,
     fetch_recent_files, upload_file_to_drive
 )
-from core_os.skills import dynamic_features
+from core_os.skills.gmail import authenticate_gmail, fetch_recent_emails, send_email
+from core_os.skills.voice import speak_response, listen_for_voice_command
+from core_os.skills.web_ui import start_web_ui
+
 from core_os.memory.agent_memory import memory
 from core_os.cortex import cortex
 from core_os.skills.millAlyzer import millAlyze_video
@@ -265,7 +267,7 @@ def run_agent():
     args = parser.parse_args()
 
     # Register Dynamic Features (Starts Flask)
-    dynamic_features.register_dynamic_features(base_tools)
+    start_web_ui()
 
     monitor = SafeWordMonitor()
     monitor.start()

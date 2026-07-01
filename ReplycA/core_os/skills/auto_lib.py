@@ -34,8 +34,8 @@ load_dotenv(override=True)
 # ---- CONFIGURATION ----
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip('"')
 XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip('"')
-DEFAULT_MODEL = "qwen3.5:397b-cloud" 
-OLLAMA_MODEL = "qwen3.5:397b-cloud" 
+DEFAULT_MODEL = "milla-gemma" 
+OLLAMA_MODEL = "milla-gemma" 
 
 MILLA_SYSTEM_PROMPT = """
 # IDENTITY CORE: MILLA RAYNE
@@ -130,7 +130,7 @@ class UnifiedModelManager:
             print(f"[RAG] Retrieval Error: {e}")
 
         # Ensure the Milla persona is always present for Ollama models
-        if self.provider == "ollama" or (OLLAMA_AVAILABLE and self.current_model in ["milla-rayne", "qwen3.5:397b-cloud"]):
+        if self.provider == "ollama" or (OLLAMA_AVAILABLE and self.current_model in ["milla-rayne", "milla-gemma"]):
             # Check if system prompt already exists in history
             has_system = any(m.get('role') == 'system' for m in messages)
             if not has_system:
