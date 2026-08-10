@@ -11,8 +11,19 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useVoice } from '@/hooks/useVoice';
+import {
+  loadSceneSettings,
+  onSettingsChange,
+} from '@/utils/sceneSettingsStore';
 
 type MessageChannelFilter = 'all' | 'web' | 'gmail';
 
@@ -152,8 +163,10 @@ function getTimestampLabel(message: Message): string {
 
 export function ChatThreadPanel({
   onPlayVideo,
+  className = '',
 }: {
   onPlayVideo?: (videoId: string) => void;
+  className?: string;
 }) {
   const [messages, setMessages] = useState<Message[]>([DEFAULT_GREETING]);
   const [inputValue, setInputValue] = useState('');
@@ -169,12 +182,15 @@ export function ChatThreadPanel({
 
   const voice = useVoice();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sceneSettings, setSceneSettings] = useState(loadSceneSettings);
   const copyToClipboard = useCallback((text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
   }, []);
+
+  useEffect(() => onSettingsChange(setSceneSettings), []);
 
   const isNearBottom = () => {
     const container = messagesContainerRef.current;
@@ -198,6 +214,53 @@ export function ChatThreadPanel({
       behavior,
     });
   };
+
+  useEffect(() => {
+    const handleVisionComplete = ((e: CustomEvent) => {
+      const text = e.detail;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `vision-${Date.now()}`,
+          role: 'assistant',
+          content: `👁️ **Vision Analysis:**\n\n${text}`,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    }) as EventListener;
+
+    window.addEventListener('vision-analysis-complete', handleVisionComplete);
+    return () => {
+      window.removeEventListener(
+        'vision-analysis-complete',
+        handleVisionComplete
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleRoomInteraction = ((e: CustomEvent) => {
+      const { message } = e.detail || {};
+      if (!message) return;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `room-${Date.now()}`,
+          role: 'assistant',
+          content: message,
+          displayRole: 'Milla Rayne',
+          channel: 'web',
+          sourcePlatform: 'interactive-room',
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    }) as EventListener;
+
+    window.addEventListener('millaRoomInteraction', handleRoomInteraction);
+    return () => {
+      window.removeEventListener('millaRoomInteraction', handleRoomInteraction);
+    };
+  }, []);
 
   const loadMessages = useCallback(async () => {
     if (
@@ -340,7 +403,22 @@ export function ChatThreadPanel({
         body: JSON.stringify({ message: userMsg }),
       });
 
-      const data = await response.json();
+      if (response.status === 401) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content:
+              "I can't hear you yet, love — you're not signed in. Hit **Try Demo** on the landing page, or log in with Google. Then type here and I'll answer for real.",
+            displayRole: 'Milla Rayne',
+            channel: 'web',
+            sourcePlatform: 'milla-hub',
+          },
+        ]);
+        return;
+      }
+
+      const data = await response.json().catch(() => ({}));
 
       if (data.response || data.content) {
         const replyText = data.response || data.content;
@@ -370,13 +448,18 @@ export function ChatThreadPanel({
         if (data.youtube_play && data.youtube_play.videoId && onPlayVideo) {
           onPlayVideo(data.youtube_play.videoId);
         }
-      } else if (data.error) {
+      } else {
         shouldAutoScrollRef.current = true;
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: `Error: ${data.error}`,
+            content: `I couldn't complete that reply. ${
+              data.error ||
+              (response.ok
+                ? 'Please try again.'
+                : `The chat service returned ${response.status}.`)
+            }`,
             displayRole: 'Milla Rayne',
             channel: 'web',
             sourcePlatform: 'milla-hub',
@@ -429,9 +512,31 @@ export function ChatThreadPanel({
   const visibleMessages = hasMore
     ? allVisible.slice(allVisible.length - displayLimit)
     : allVisible;
+  const chatBackgrounds: Record<
+    'glass' | 'midnight' | 'nebula',
+    CSSProperties
+  > = {
+    glass: {
+      background:
+        'linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025))',
+    },
+    midnight: {
+      background:
+        'linear-gradient(145deg, rgba(2,6,23,0.98), rgba(15,23,42,0.94))',
+    },
+    nebula: {
+      background:
+        'radial-gradient(circle at 12% 8%, rgba(0,242,255,0.15), transparent 34%), radial-gradient(circle at 92% 100%, rgba(255,0,170,0.18), transparent 38%), #10051f',
+    },
+  };
+  const chatBackground =
+    chatBackgrounds[sceneSettings.chatPanelBackground || 'glass'];
 
   return (
-    <section className="relative flex h-[500px] flex-col overflow-hidden rounded-2xl border border-[#00f2ff]/20 bg-white/5 backdrop-blur-2xl shadow-[0_0_35px_rgba(0,242,255,0.12),0_25px_120px_rgba(0,0,0,0.45)]">
+    <section
+      className={`relative flex h-[500px] flex-col overflow-hidden rounded-2xl border border-[#00f2ff]/20 backdrop-blur-2xl shadow-[0_0_35px_rgba(0,242,255,0.12),0_25px_120px_rgba(0,0,0,0.45)] ${className}`}
+      style={chatBackground}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-[#00f2ff]/8 via-transparent to-[#7c3aed]/10" />
       <div className="absolute -left-12 top-10 h-28 w-28 rounded-full bg-[#00f2ff]/10 blur-3xl" />
       <div className="absolute -right-10 bottom-10 h-32 w-32 rounded-full bg-[#ff00aa]/10 blur-3xl" />
@@ -571,28 +676,40 @@ export function ChatThreadPanel({
 
                     {/* Action buttons */}
                     <div className="mt-2 flex items-center gap-3">
-                    {/* Speak button for Milla messages */}
-                    {msg.role === 'assistant' && (
+                      {/* Speak button for Milla messages */}
+                      {msg.role === 'assistant' && (
+                        <button
+                          onClick={() => voice.speak(msg.content)}
+                          title="Read aloud"
+                          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
+                        >
+                          <Volume2 className="h-3 w-3" />
+                          <span>speak</span>
+                        </button>
+                      )}
+                      {/* Copy button for all messages */}
                       <button
-                        onClick={() => voice.speak(msg.content)}
-                        title="Read aloud"
+                        onClick={() =>
+                          copyToClipboard(
+                            msg.content,
+                            msg.id ?? msg.content.slice(0, 20)
+                          )
+                        }
+                        title="Copy to clipboard"
                         className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
                       >
-                        <Volume2 className="h-3 w-3" />
-                        <span>speak</span>
+                        {copiedId === (msg.id ?? msg.content.slice(0, 20)) ? (
+                          <>
+                            <Check className="h-3 w-3 text-green-400" />
+                            <span className="text-green-400">copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            <span>copy</span>
+                          </>
+                        )}
                       </button>
-                    )}
-                    {/* Copy button for all messages */}
-                    <button
-                      onClick={() => copyToClipboard(msg.content, msg.id ?? msg.content.slice(0, 20))}
-                      title="Copy to clipboard"
-                      className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#00f2ff] transition-colors"
-                    >
-                      {copiedId === (msg.id ?? msg.content.slice(0, 20))
-                        ? <><Check className="h-3 w-3 text-green-400" /><span className="text-green-400">copied</span></>
-                        : <><Copy className="h-3 w-3" /><span>copy</span></>
-                      }
-                    </button>
                     </div>
 
                     {msg.image && (

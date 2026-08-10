@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { DashboardSidebar } from './DashboardSidebar';
 import { HologramAvatar } from './HologramAvatar';
+import { InteractiveBedroomAvatar } from './InteractiveBedroomAvatar';
 import { ModelSelector, type AIModel } from './ModelSelector';
 import { VideoAnalysisPanel } from './VideoAnalysisPanel';
 import { ScoreSettings } from './ScoreSettings';
@@ -27,15 +28,15 @@ import { IntegrationHealthCard } from './IntegrationHealthCard';
 import { FeatureDiscoveryCard } from './FeatureDiscoveryCard';
 import { ChatThreadPanel } from './ChatThreadPanel';
 import type {
-    CollaborationSchedulerState,
-    ConsciousnessState,
-    FusionTelemetrySnapshot,
-    ProactiveFeature,
-    SandboxFeatureSummary,
-    SandboxReadiness,
-    SandboxSummary,
-    SystemConfigStatus,
-  } from './dashboardTypes';
+  CollaborationSchedulerState,
+  ConsciousnessState,
+  FusionTelemetrySnapshot,
+  ProactiveFeature,
+  SandboxFeatureSummary,
+  SandboxReadiness,
+  SandboxSummary,
+  SystemConfigStatus,
+} from './dashboardTypes';
 import type { DeviceCapabilityProfile } from '@shared/swarm';
 import { Sandbox } from '@/components/Sandbox';
 import { KnowledgeBaseSearch } from '@/components/KnowledgeBaseSearch';
@@ -43,6 +44,7 @@ import { DailyNewsDigest } from '@/components/DailyNewsDigest';
 import { GmailTasksView } from '@/components/GmailTasksView';
 import { DatabaseView } from '@/components/DatabaseView';
 import AIModelSelector from '@/components/AIModelSelector';
+import { SceneSettingsPanel } from '@/components/scene/SceneSettingsPanel';
 import { YoutubePlayerCyberpunk } from '@/components/YoutubePlayerCyberpunk';
 import { CreativeStudio } from '@/components/CreativeStudio';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -131,7 +133,9 @@ function buildBrowserCapabilityProfile(): DeviceCapabilityProfile {
         : 'browser',
       activeModelSource: null,
       importedModelSizeMb: null,
-      lastKnownLatencyMs: Boolean((navigator as Navigator & { gpu?: unknown }).gpu)
+      lastKnownLatencyMs: Boolean(
+        (navigator as Navigator & { gpu?: unknown }).gpu
+      )
         ? 110
         : 260,
       totalRamMb: typeof deviceMemory === 'number' ? deviceMemory * 1024 : null,
@@ -172,7 +176,6 @@ interface CalendarEventsResponse {
   events: CalendarEventSummary[];
   error?: string;
 }
-
 
 export function DashboardLayout() {
   const initialSceneSettings = loadSceneSettings();
@@ -229,9 +232,13 @@ export function DashboardLayout() {
   const [dailyBriefError, setDailyBriefError] = useState<string | null>(null);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const [isGoogleActionLoading, setIsGoogleActionLoading] = useState(false);
-  const [googleActionError, setGoogleActionError] = useState<string | null>(null);
+  const [googleActionError, setGoogleActionError] = useState<string | null>(
+    null
+  );
   const [hubQuickActionResult, setHubQuickActionResult] = useState('');
-  const [hubQuickActionError, setHubQuickActionError] = useState<string | null>(null);
+  const [hubQuickActionError, setHubQuickActionError] = useState<string | null>(
+    null
+  );
   const [isHubQuickActionLoading, setIsHubQuickActionLoading] = useState(false);
   const [isFeatureDiscoveryLoading, setIsFeatureDiscoveryLoading] =
     useState(false);
@@ -244,7 +251,9 @@ export function DashboardLayout() {
   const [recommendedFeatures, setRecommendedFeatures] = useState<
     ProactiveFeature[]
   >([]);
-  const [featureSandboxes, setFeatureSandboxes] = useState<SandboxSummary[]>([]);
+  const [featureSandboxes, setFeatureSandboxes] = useState<SandboxSummary[]>(
+    []
+  );
   const [sandboxReadinessById, setSandboxReadinessById] = useState<
     Record<string, SandboxReadiness>
   >({});
@@ -254,21 +263,26 @@ export function DashboardLayout() {
   const [systemConfigStatus, setSystemConfigStatus] =
     useState<SystemConfigStatus | null>(null);
   const [isSystemConfigLoading, setIsSystemConfigLoading] = useState(false);
-  const [systemConfigError, setSystemConfigError] = useState<string | null>(null);
+  const [systemConfigError, setSystemConfigError] = useState<string | null>(
+    null
+  );
   const [consciousnessState, setConsciousnessState] =
     useState<ConsciousnessState | null>(null);
   const [isConsciousnessLoading, setIsConsciousnessLoading] = useState(false);
-  const [consciousnessError, setConsciousnessError] = useState<string | null>(null);
+  const [consciousnessError, setConsciousnessError] = useState<string | null>(
+    null
+  );
   const [triggeringCycle, setTriggeringCycle] = useState<'gim' | 'rem' | null>(
     null
   );
   const [collaborationScheduler, setCollaborationScheduler] =
     useState<CollaborationSchedulerState | null>(null);
-  const [collaborationCronDraft, setCollaborationCronDraft] = useState(
-    '0 8 * * *'
-  );
+  const [collaborationCronDraft, setCollaborationCronDraft] =
+    useState('0 8 * * *');
   const [isCollaborationLoading, setIsCollaborationLoading] = useState(false);
-  const [collaborationError, setCollaborationError] = useState<string | null>(null);
+  const [collaborationError, setCollaborationError] = useState<string | null>(
+    null
+  );
   const [fusionSnapshot, setFusionSnapshot] =
     useState<FusionTelemetrySnapshot | null>(null);
   const [fusionError, setFusionError] = useState<string | null>(null);
@@ -284,6 +298,25 @@ export function DashboardLayout() {
   const [scoreSettings, setScoreSettings] = useState({
     ...toScoreSettings(initialSceneSettings),
   });
+  const [sceneSettings, setSceneSettings] = useState(initialSceneSettings);
+  const interactiveChatRoom =
+    activeSection === 'chat' &&
+    sceneSettings.enabled &&
+    (sceneSettings.interactiveRoomEnabled ?? true);
+  const bedroomInAvatar = sceneSettings.interactiveRoomAvatarMode ?? true;
+  const [roomLightingBoost, setRoomLightingBoost] = useState(0);
+
+  useEffect(() => {
+    const handleLightingMood = (event: Event) => {
+      const mood = (event as CustomEvent<{ mood?: string }>).detail?.mood;
+      if (!mood) return;
+      setRoomLightingBoost(0.22);
+      window.setTimeout(() => setRoomLightingBoost(0), 1400);
+    };
+    window.addEventListener('millaLightingMood', handleLightingMood);
+    return () =>
+      window.removeEventListener('millaLightingMood', handleLightingMood);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -312,7 +345,6 @@ export function DashboardLayout() {
       void refreshFusionSnapshot();
     }
   }, [activeSection]);
-
 
   useEffect(() => {
     if (activeSection !== 'news') {
@@ -411,9 +443,12 @@ export function DashboardLayout() {
 
   useEffect(() => {
     return onSettingsChange((settings) => {
+      setSceneSettings(settings);
       setScoreSettings((current) => {
         const next = toScoreSettings(settings);
-        return JSON.stringify(current) === JSON.stringify(next) ? current : next;
+        return JSON.stringify(current) === JSON.stringify(next)
+          ? current
+          : next;
       });
     });
   }, []);
@@ -426,8 +461,22 @@ export function DashboardLayout() {
   };
 
   const handleAnalyzeComplete = (label: string) => {
-    logActivity(`Video analyzed: ${label}`);
-    setRecentAnalyses((prev) => [label, ...prev].slice(0, 5));
+    logActivity(
+      label.length > 50 ? `Video analyzed` : `Video analyzed: ${label}`
+    );
+    setRecentAnalyses((prev) =>
+      [label.length > 50 ? 'Webcam Snapshot' : label, ...prev].slice(0, 5)
+    );
+    // Provide visual feedback for the vision analysis
+    if (label.startsWith('Vision Analysis:')) {
+      // Create a temporary system message or show an alert if needed
+      // To incorporate into the chat, we could dispatch a custom event
+      window.dispatchEvent(
+        new CustomEvent('vision-analysis-complete', {
+          detail: label.replace('Vision Analysis: ', ''),
+        })
+      );
+    }
   };
 
   const handlePlayVideo = (videoId: string) => {
@@ -453,7 +502,9 @@ export function DashboardLayout() {
     return parsed.toLocaleString([], options);
   };
 
-  const runHubQuickAction = async (action: 'gmail-recent' | 'calendar-today') => {
+  const runHubQuickAction = async (
+    action: 'gmail-recent' | 'calendar-today'
+  ) => {
     if (!isGoogleConnected) {
       setHubQuickActionError(
         'Connect Google first to use Gmail and Calendar quick actions.'
@@ -470,7 +521,9 @@ export function DashboardLayout() {
         const response = await fetch('/api/gmail/recent?maxResults=5');
         const data = (await response.json()) as GmailRecentResponse;
         if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Unable to load recent Gmail messages.');
+          throw new Error(
+            data.error || 'Unable to load recent Gmail messages.'
+          );
         }
 
         const formatted = data.emails.length
@@ -531,7 +584,9 @@ export function DashboardLayout() {
       console.error('Failed to run dashboard quick action:', error);
       setHubQuickActionResult('');
       setHubQuickActionError(
-        error instanceof Error ? error.message : 'Unable to run the quick action.'
+        error instanceof Error
+          ? error.message
+          : 'Unable to run the quick action.'
       );
     } finally {
       setIsHubQuickActionLoading(false);
@@ -628,7 +683,9 @@ export function DashboardLayout() {
     } catch (error) {
       console.error('Failed to connect Google:', error);
       setGoogleActionError(
-        error instanceof Error ? error.message : 'Unable to connect Google right now.'
+        error instanceof Error
+          ? error.message
+          : 'Unable to connect Google right now.'
       );
     } finally {
       setIsGoogleActionLoading(false);
@@ -653,7 +710,9 @@ export function DashboardLayout() {
     } catch (error) {
       console.error('Failed to disconnect Google:', error);
       setGoogleActionError(
-        error instanceof Error ? error.message : 'Unable to disconnect Google right now.'
+        error instanceof Error
+          ? error.message
+          : 'Unable to disconnect Google right now.'
       );
     } finally {
       setIsGoogleActionLoading(false);
@@ -722,7 +781,9 @@ export function DashboardLayout() {
     setFeatureDiscoveryError(null);
 
     try {
-      await proactivePost(`/api/milla/features/${feature.id}/status`, { status });
+      await proactivePost(`/api/milla/features/${feature.id}/status`, {
+        status,
+      });
       logActivity(`${actionLabel} feature: ${feature.name}`);
       await refreshFeatureDiscovery();
     } catch (error) {
@@ -832,7 +893,9 @@ export function DashboardLayout() {
   const runSandboxAcceptanceTest = async (feature: ProactiveFeature) => {
     const link = findSandboxLinkForFeature(feature.id);
     if (!link) {
-      setFeatureDiscoveryError('Send the feature to a sandbox before testing it.');
+      setFeatureDiscoveryError(
+        'Send the feature to a sandbox before testing it.'
+      );
       return;
     }
 
@@ -884,7 +947,9 @@ export function DashboardLayout() {
         return;
       }
 
-      await proactivePost(`/api/milla/sandboxes/${link.sandbox.id}/mark-for-merge`);
+      await proactivePost(
+        `/api/milla/sandboxes/${link.sandbox.id}/mark-for-merge`
+      );
       logActivity(`Marked sandbox ready for merge: ${link.sandbox.name}`);
       await refreshFeatureDiscovery();
       await refreshSandboxReadiness(link.sandbox.id);
@@ -1122,7 +1187,8 @@ export function DashboardLayout() {
     source === 'user_pattern' ? 'user pattern' : source;
 
   const summarizeFeatureIntent = (feature: ProactiveFeature) =>
-    feature.description || `${feature.name} enhancement discovered from ${formatFeatureSource(feature.source)}.`;
+    feature.description ||
+    `${feature.name} enhancement discovered from ${formatFeatureSource(feature.source)}.`;
 
   const renderPanelNotice = (
     message: string,
@@ -1167,13 +1233,15 @@ export function DashboardLayout() {
 
         {feature.status === 'implemented' ? (
           <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100">
-            This feature has already completed the sandbox loop and is marked implemented.
+            This feature has already completed the sandbox loop and is marked
+            implemented.
           </div>
         ) : null}
 
         {feature.status === 'in_sandbox' && !link ? (
           <div className="rounded-xl border border-violet-400/20 bg-violet-500/10 px-3 py-3 text-sm text-violet-100">
-            This feature is already in sandbox review from a previous discovery cycle.
+            This feature is already in sandbox review from a previous discovery
+            cycle.
           </div>
         ) : null}
 
@@ -1184,7 +1252,11 @@ export function DashboardLayout() {
           feature.status !== 'rejected' ? (
             <button
               onClick={() =>
-                void updateFeatureStatusFromDashboard(feature, 'planned', 'approved')
+                void updateFeatureStatusFromDashboard(
+                  feature,
+                  'planned',
+                  'approved'
+                )
               }
               disabled={featureActionLoadingKey !== null}
               className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${accentClass}`}
@@ -1215,7 +1287,11 @@ export function DashboardLayout() {
           {feature.status !== 'implemented' && feature.status !== 'rejected' ? (
             <button
               onClick={() =>
-                void updateFeatureStatusFromDashboard(feature, 'rejected', 'rejected')
+                void updateFeatureStatusFromDashboard(
+                  feature,
+                  'rejected',
+                  'rejected'
+                )
               }
               disabled={featureActionLoadingKey !== null}
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/75 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
@@ -1231,7 +1307,9 @@ export function DashboardLayout() {
         {link ? (
           <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-xs text-white/70">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-white">{link.sandbox.name}</span>
+              <span className="font-medium text-white">
+                {link.sandbox.name}
+              </span>
               <span className="rounded-full border border-white/10 px-2 py-0.5 uppercase tracking-wide text-white/50">
                 {link.sandbox.status}
               </span>
@@ -1245,7 +1323,8 @@ export function DashboardLayout() {
               ) : null}
             </div>
             <div className="mt-2 text-white/50">
-              {link.sandbox.branchName} • tests {link.sandboxFeature.testsPassed}/
+              {link.sandbox.branchName} • tests{' '}
+              {link.sandboxFeature.testsPassed}/
               {link.sandboxFeature.testsFailed}
             </div>
             {implementation ? (
@@ -1372,15 +1451,19 @@ export function DashboardLayout() {
     dailySchedule: { count: 0, events: [] },
   };
 
-  const ambientAccent = 0.05 + scoreSettings.ambientLight / 1000;
-  const pulseOpacity = 0.18 + scoreSettings.amplitude / 300;
+  const ambientAccent =
+    0.05 + scoreSettings.ambientLight / 1000 + roomLightingBoost;
+  const pulseOpacity =
+    0.18 + scoreSettings.amplitude / 300 + roomLightingBoost * 0.6;
   const particleCount = 12 + Math.round((scoreSettings.status / 100) * 18);
   const liveThreadGlow = 0.1 + scoreSettings.volume / 400;
   const resolvedAvatarMedia =
     avatarMedia ??
     (activeSection === 'studio'
       ? STUDIO_AVATAR_MEDIA
-      : activeSection === 'news' || Boolean(activeVideoId) || youtubeVideos.length > 0
+      : activeSection === 'news' ||
+          Boolean(activeVideoId) ||
+          youtubeVideos.length > 0
         ? MEDIA_AVATAR_MEDIA
         : activeSection === 'hub' || activeSection === 'chat'
           ? HUB_AVATAR_MEDIA
@@ -1389,7 +1472,12 @@ export function DashboardLayout() {
   return (
     <div className="min-h-screen bg-[#0c021a] text-white font-sans overflow-hidden">
       {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0">
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          opacity: interactiveChatRoom && !bedroomInAvatar ? 0.25 : 1,
+        }}
+      >
         <div
           className="absolute inset-0"
           style={{
@@ -1472,64 +1560,80 @@ export function DashboardLayout() {
         <div className="flex-1 w-full px-6 pb-12 pt-6">
           <div
             className={`grid gap-6 ${
-              activeSection === 'studio' || activeSection === 'chat' ? 'xl:grid-cols-1' : 'xl:grid-cols-[2fr_1fr]'
+              activeSection === 'studio'
+                ? 'xl:grid-cols-1'
+                : interactiveChatRoom
+                  ? 'xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)]'
+                  : 'xl:grid-cols-[2fr_1fr]'
             }`}
           >
             <div className="space-y-6">
-              {/* Hero / hologram */}
-              <section className="dashboard-card relative overflow-hidden rounded-3xl shadow-[0_25px_120px_rgba(0,0,0,0.45)]">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00f2ff]/10 via-transparent to-[#ff00aa]/10" />
-                <div
-                  className="absolute inset-x-[18%] top-6 bottom-6 opacity-90"
-                  style={{
-                    background:
-                      'radial-gradient(ellipse at center, rgba(0,242,255,0.18) 0%, rgba(255,0,170,0.14) 38%, rgba(124,58,237,0.08) 58%, transparent 76%)',
-                    clipPath:
-                      'polygon(50% 0%, 68% 8%, 78% 24%, 80% 42%, 74% 60%, 67% 78%, 58% 100%, 42% 100%, 33% 78%, 26% 60%, 20% 42%, 22% 24%, 32% 8%)',
-                    animation: 'breathing 12s ease-in-out infinite',
-                    filter: 'blur(18px)',
+              {interactiveChatRoom && (
+                <ChatThreadPanel
+                  className="h-[min(78vh,720px)]"
+                  onPlayVideo={(videoId) => {
+                    handlePlayVideo(videoId);
+                    handleAnalyzeComplete(`YouTube Video ${videoId}`);
                   }}
                 />
-                <div className="absolute -left-20 top-10 h-40 w-40 rounded-full bg-[#00f2ff]/16 blur-3xl" />
-                <div className="absolute -right-16 bottom-6 h-48 w-48 rounded-full bg-[#ff00aa]/12 blur-3xl" />
-                <div className="relative z-10 px-6 py-6 lg:px-10 lg:py-8">
-                  <div className="flex justify-end">
-                    <div
-                      className={`h-3 w-3 rounded-full transition-all ${
-                        isGoogleConnected
-                          ? 'bg-[#00f2ff] shadow-[0_0_18px_rgba(0,242,255,0.95)] animate-pulse'
-                          : 'bg-white/20 shadow-none'
-                      }`}
-                      aria-label={
-                        isGoogleConnected
-                          ? 'Gmail and Tasks connected'
-                          : 'Gmail and Tasks disconnected'
-                      }
-                      title={
-                        isGoogleConnected
-                          ? 'Gmail and Tasks connected'
-                          : 'Gmail and Tasks disconnected'
-                      }
-                    />
-                  </div>
+              )}
 
-                  <div className="flex items-center justify-center py-2">
-                    <HologramAvatar
-                      mediaUrl={resolvedAvatarMedia.url}
-                      mediaType={resolvedAvatarMedia.type}
-                    />
-                  </div>
-                </div>
-              </section>
+              {/* Hero / hologram */}
+              {!interactiveChatRoom && (
+                <section className="dashboard-card relative overflow-hidden rounded-3xl shadow-[0_25px_120px_rgba(0,0,0,0.45)]">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00f2ff]/10 via-transparent to-[#ff00aa]/10" />
+                  <div
+                    className="absolute inset-x-[18%] top-6 bottom-6 opacity-90"
+                    style={{
+                      background:
+                        'radial-gradient(ellipse at center, rgba(0,242,255,0.18) 0%, rgba(255,0,170,0.14) 38%, rgba(124,58,237,0.08) 58%, transparent 76%)',
+                      clipPath:
+                        'polygon(50% 0%, 68% 8%, 78% 24%, 80% 42%, 74% 60%, 67% 78%, 58% 100%, 42% 100%, 33% 78%, 26% 60%, 20% 42%, 22% 24%, 32% 8%)',
+                      animation: 'breathing 12s ease-in-out infinite',
+                      filter: 'blur(18px)',
+                    }}
+                  />
+                  <div className="absolute -left-20 top-10 h-40 w-40 rounded-full bg-[#00f2ff]/16 blur-3xl" />
+                  <div className="absolute -right-16 bottom-6 h-48 w-48 rounded-full bg-[#ff00aa]/12 blur-3xl" />
+                  <div className="relative z-10 px-6 py-6 lg:px-10 lg:py-8">
+                    <div className="flex justify-end">
+                      <div
+                        className={`h-3 w-3 rounded-full transition-all ${
+                          isGoogleConnected
+                            ? 'bg-[#00f2ff] shadow-[0_0_18px_rgba(0,242,255,0.95)] animate-pulse'
+                            : 'bg-white/20 shadow-none'
+                        }`}
+                        aria-label={
+                          isGoogleConnected
+                            ? 'Gmail and Tasks connected'
+                            : 'Gmail and Tasks disconnected'
+                        }
+                        title={
+                          isGoogleConnected
+                            ? 'Gmail and Tasks connected'
+                            : 'Gmail and Tasks disconnected'
+                        }
+                      />
+                    </div>
 
-              {activeSection === 'chat' ? (
+                    <div className="flex items-center justify-center py-2">
+                      <HologramAvatar
+                        mediaUrl={resolvedAvatarMedia.url}
+                        mediaType={resolvedAvatarMedia.type}
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {activeSection === 'chat' && !interactiveChatRoom ? (
                 <ChatThreadPanel
                   onPlayVideo={(videoId) => {
                     handlePlayVideo(videoId);
                     handleAnalyzeComplete(`YouTube Video ${videoId}`);
                   }}
                 />
-              ) : activeSection === 'hub' ? (
+              ) : activeSection === 'chat' ? null : activeSection === 'hub' ? (
                 <div className="space-y-6">
                   <section className="rounded-2xl border border-cyan-400/20 bg-white/5 p-5 backdrop-blur-xl">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1541,11 +1645,14 @@ export function DashboardLayout() {
                           Workspace tools on the Hub
                         </h3>
                         <p className="mt-2 max-w-2xl text-sm text-white/65">
-                          Pull live Gmail and Calendar data without opening the Sandbox, or jump straight to the dashboard areas that manage collaboration and proactive discoveries.
+                          Pull live Gmail and Calendar data without opening the
+                          Sandbox, or jump straight to the dashboard areas that
+                          manage collaboration and proactive discoveries.
                         </p>
                       </div>
                       <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/60">
-                        Google {isGoogleConnected ? 'connected' : 'not connected'}
+                        Google{' '}
+                        {isGoogleConnected ? 'connected' : 'not connected'}
                       </div>
                     </div>
 
@@ -1639,7 +1746,9 @@ export function DashboardLayout() {
                     collaborationScheduler={collaborationScheduler}
                     formatTimestamp={formatTimestamp}
                     isCollaborationLoading={isCollaborationLoading}
-                    refreshCollaborationScheduler={refreshCollaborationScheduler}
+                    refreshCollaborationScheduler={
+                      refreshCollaborationScheduler
+                    }
                     renderPanelNotice={renderPanelNotice}
                     setCollaborationCronDraft={setCollaborationCronDraft}
                     triggerCollaborationCycleFromDashboard={
@@ -1660,8 +1769,12 @@ export function DashboardLayout() {
                 </div>
               ) : activeSection === 'news' ? (
                 <div className="space-y-4">
-                  {dailyBriefError ? renderPanelNotice(dailyBriefError, 'warning') : null}
-                  {isDailyBriefLoading ? renderPanelNotice('Refreshing daily brief...') : null}
+                  {dailyBriefError
+                    ? renderPanelNotice(dailyBriefError, 'warning')
+                    : null}
+                  {isDailyBriefLoading
+                    ? renderPanelNotice('Refreshing daily brief...')
+                    : null}
                   <DailyNewsDigest
                     digest={dailyBrief || emptyDigest}
                     className="min-h-[500px]"
@@ -1714,6 +1827,7 @@ export function DashboardLayout() {
                       onChange={handleScoreChange}
                       onClose={() => {}}
                     />
+                    <SceneSettingsPanel />
                     <GoogleSyncCard
                       googleActionError={googleActionError}
                       handleGoogleConnect={handleGoogleConnect}
@@ -1721,7 +1835,9 @@ export function DashboardLayout() {
                       isGoogleActionLoading={isGoogleActionLoading}
                       isGoogleConnected={isGoogleConnected}
                       logActivity={logActivity}
-                      refreshGoogleConnectionState={refreshGoogleConnectionState}
+                      refreshGoogleConnectionState={
+                        refreshGoogleConnectionState
+                      }
                       renderPanelNotice={renderPanelNotice}
                       setActiveSection={setActiveSection}
                     />
@@ -1777,100 +1893,105 @@ export function DashboardLayout() {
             </div>
 
             {/* Right rail */}
-            {activeSection !== 'studio' && activeSection !== 'chat' && <div className="space-y-4">
-              {showSettings && (
-                <ScoreSettings
-                  values={scoreSettings}
-                  onChange={handleScoreChange}
-                  onClose={() => setShowSettings(false)}
-                />
-              )}
-              {showVideoPanel && (
-                <VideoAnalysisPanel
-                  recentItems={recentAnalyses}
-                  onAnalyzeComplete={handleAnalyzeComplete}
-                  onClose={() => setShowVideoPanel(false)}
-                  activeVideoId={activeVideoId}
-                  onPlayVideo={handlePlayVideo}
-                  onSearchResults={setYoutubeVideos}
-                />
-              )}
+            {activeSection !== 'studio' && (
+              <div className="space-y-4">
+                {interactiveChatRoom && bedroomInAvatar && (
+                  <InteractiveBedroomAvatar />
+                )}
+                {showSettings && (
+                  <ScoreSettings
+                    values={scoreSettings}
+                    onChange={handleScoreChange}
+                    onClose={() => setShowSettings(false)}
+                  />
+                )}
+                {showVideoPanel && (
+                  <VideoAnalysisPanel
+                    recentItems={recentAnalyses}
+                    onAnalyzeComplete={handleAnalyzeComplete}
+                    onClose={() => setShowVideoPanel(false)}
+                    activeVideoId={activeVideoId}
+                    onPlayVideo={handlePlayVideo}
+                    onSearchResults={setYoutubeVideos}
+                  />
+                )}
 
-                 <div
-                   className="dashboard-card p-4"
-                   style={{
-                      boxShadow: `0 0 35px rgba(0, 242, 255, ${liveThreadGlow})`,
-                    }}
-                 >
-                <div className="flex items-center justify-between text-sm font-medium">
-                  <span className="text-white/80">Quick Toggles</span>
-                  <button
-                    onClick={() => {
-                      const next = !(showSettings && showVideoPanel);
-                      setShowSettings(next);
-                      setShowVideoPanel(next);
-                    }}
-                    className="text-[11px] rounded-full bg-white/5 px-3 py-1 border border-white/10 hover:border-white/30 transition-all"
-                  >
-                    {showSettings && showVideoPanel
-                      ? 'Hide panels'
-                      : 'Show panels'}
-                  </button>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/60">
-                  <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
-                      showSettings
-                        ? 'border-[#00f2ff]/40 bg-[#00f2ff]/10 text-[#00f2ff]'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    Score Settings
-                  </button>
-                  <button
-                    onClick={() => setShowVideoPanel(!showVideoPanel)}
-                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
-                      showVideoPanel
-                        ? 'border-[#ff00aa]/40 bg-[#ff00aa]/10 text-[#ff00aa]'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    Video Analysis
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveSection('studio');
-                      logActivity('Opened Studio for avatar video creation');
-                    }}
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition-all hover:border-white/20"
-                  >
-                    Avatar Studio
-                  </button>
-                </div>
-              </div>
-
-              <div className="dashboard-card p-4">
-                <div className="flex items-center justify-between text-sm font-medium text-white/80">
-                  <span>Activity</span>
-                  <span className="text-[11px] text-white/40">
-                    {activityLog.length} events
-                  </span>
-                </div>
-                <ScrollArea className="mt-3 h-[220px] pr-2">
-                  <div className="space-y-2">
-                    {activityLog.map((item, i) => (
-                      <div
-                        key={`${item}-${i}`}
-                        className="rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-xs text-white/70"
-                      >
-                        {item}
-                      </div>
-                    ))}
+                <div
+                  className="dashboard-card p-4"
+                  style={{
+                    boxShadow: `0 0 35px rgba(0, 242, 255, ${liveThreadGlow})`,
+                  }}
+                >
+                  <div className="flex items-center justify-between text-sm font-medium">
+                    <span className="text-white/80">Quick Toggles</span>
+                    <button
+                      onClick={() => {
+                        const next = !(showSettings && showVideoPanel);
+                        setShowSettings(next);
+                        setShowVideoPanel(next);
+                      }}
+                      className="text-[11px] rounded-full bg-white/5 px-3 py-1 border border-white/10 hover:border-white/30 transition-all"
+                    >
+                      {showSettings && showVideoPanel
+                        ? 'Hide panels'
+                        : 'Show panels'}
+                    </button>
                   </div>
-                </ScrollArea>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/60">
+                    <button
+                      onClick={() => setShowSettings(!showSettings)}
+                      className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                        showSettings
+                          ? 'border-[#00f2ff]/40 bg-[#00f2ff]/10 text-[#00f2ff]'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      Score Settings
+                    </button>
+                    <button
+                      onClick={() => setShowVideoPanel(!showVideoPanel)}
+                      className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                        showVideoPanel
+                          ? 'border-[#ff00aa]/40 bg-[#ff00aa]/10 text-[#ff00aa]'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      Video Analysis
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveSection('studio');
+                        logActivity('Opened Studio for avatar video creation');
+                      }}
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition-all hover:border-white/20"
+                    >
+                      Avatar Studio
+                    </button>
+                  </div>
+                </div>
+
+                <div className="dashboard-card p-4">
+                  <div className="flex items-center justify-between text-sm font-medium text-white/80">
+                    <span>Activity</span>
+                    <span className="text-[11px] text-white/40">
+                      {activityLog.length} events
+                    </span>
+                  </div>
+                  <ScrollArea className="mt-3 h-[220px] pr-2">
+                    <div className="space-y-2">
+                      {activityLog.map((item, i) => (
+                        <div
+                          key={`${item}-${i}`}
+                          className="rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-xs text-white/70"
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
               </div>
-            </div>}
+            )}
           </div>
         </div>
       </main>
@@ -1890,8 +2011,6 @@ export function DashboardLayout() {
           }}
         />
       )}
-
-
 
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (

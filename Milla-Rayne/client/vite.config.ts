@@ -13,6 +13,9 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom'],
   },
+  optimizeDeps: {
+    include: ['@tanstack/react-query'],
+  },
   server: {
     port: 5173,
     proxy: {

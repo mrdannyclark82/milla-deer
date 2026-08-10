@@ -1,6 +1,7 @@
 import React from 'react';
 import { SceneContextProvider } from '@/contexts/SceneContext';
 import { SceneManager } from '@/components/scene/SceneManager';
+import { InteractiveRoomLayer } from '@/components/scene/InteractiveRoomLayer';
 import type {
   AppState,
   PerformanceMode,
@@ -31,6 +32,7 @@ export function SceneProvider({
       location={location}
     >
       <SceneManager />
+      <InteractiveRoomLayer />
       {children}
     </SceneContextProvider>
   );

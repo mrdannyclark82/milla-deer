@@ -371,7 +371,7 @@ class ElevenLabsTTS implements ITTSProvider {
   }
 
   async speak(request: VoiceSynthesisRequest): Promise<VoiceSynthesisResponse> {
-    const voiceId = request.config.voiceName || '21m00Tcm4TlvDq8ikWAM'; // Default to a voice if not set
+    const voiceId = request.config.voiceName || 'knLPDa0yhh07scaTXeg6'; // Milla's custom voice
     const { text, config } = request;
 
     try {

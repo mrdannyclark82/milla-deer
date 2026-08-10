@@ -14,10 +14,16 @@ vi.mock('../services/chatOrchestrator.service');
 vi.mock('../voiceAnalysisService');
 vi.mock('../smartHomeService');
 vi.mock('../sceneDetectionService');
-vi.mock('../replycaSocialBridgeService', () => ({ appendToSharedChat: vi.fn().mockResolvedValue(undefined) }));
-vi.mock('../services/sessionPersistenceService', () => ({ recordTurn: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../replycaSocialBridgeService', () => ({
+  appendToSharedChat: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('../services/sessionPersistenceService', () => ({
+  recordTurn: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('../services/ragAutoIndexer', () => ({ queueForIndexing: vi.fn() }));
-vi.mock('../services/contextMerchService', () => ({ scanForMerchSignals: vi.fn() }));
+vi.mock('../services/contextMerchService', () => ({
+  scanForMerchSignals: vi.fn(),
+}));
 vi.mock('../services/scene.service', () => ({
   sceneService: {
     getLocation: vi.fn().mockReturnValue('living room'),
@@ -35,10 +41,17 @@ describe('Chat Routes', () => {
     app.use(cookieParser());
     registerChatRoutes(app);
     // Catch unhandled errors to expose 500 message in tests
-    app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      console.error('[test-app-error]', err?.message ?? err);
-      res.status(500).json({ error: err?.message ?? 'Internal error' });
-    });
+    app.use(
+      (
+        err: Error,
+        _req: express.Request,
+        res: express.Response,
+        _next: express.NextFunction
+      ) => {
+        console.error('[test-app-error]', err?.message ?? err);
+        res.status(500).json({ error: err?.message ?? 'Internal error' });
+      }
+    );
     vi.clearAllMocks();
 
     // Default mocks
@@ -53,7 +66,9 @@ describe('Chat Routes', () => {
     vi.spyOn(storage, 'getRecentMessages').mockResolvedValue([]);
     vi.spyOn(storage, 'createMessage').mockResolvedValue({} as any);
     // Default: unauthenticated session (routes that need auth will add their own mock)
-    vi.spyOn(authService, 'validateSession').mockResolvedValue({ valid: false } as any);
+    vi.spyOn(authService, 'validateSession').mockResolvedValue({
+      valid: false,
+    } as any);
     delete process.env.ADMIN_TOKEN;
   });
 
@@ -123,7 +138,11 @@ describe('Chat Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.response).toBe('Hello Danny!');
-      expect(storage.getRecentMessages).toHaveBeenCalledWith('default-user', expect.any(Number), expect.any(String));
+      expect(storage.getRecentMessages).toHaveBeenCalledWith(
+        'default-user',
+        expect.any(Number),
+        expect.any(String)
+      );
       expect(chatOrchestrator.generateAIResponse).toHaveBeenCalledWith(
         'Hi Milla',
         [],
@@ -135,6 +154,28 @@ describe('Chat Routes', () => {
         { canRunShellCommands: true }
       );
       expect(storage.createMessage).toHaveBeenCalledTimes(2);
+    });
+
+    it('returns a generated response when persisting the turn fails', async () => {
+      vi.spyOn(
+        chatOrchestrator,
+        'validateAndSanitizePrompt'
+      ).mockImplementation((p) => p);
+      vi.spyOn(chatOrchestrator, 'generateAIResponse').mockResolvedValue({
+        content: 'The reply still reaches the client.',
+      });
+      vi.spyOn(storage, 'createMessage').mockRejectedValue(
+        new Error('database unavailable')
+      );
+
+      const response = await request(app)
+        .post('/api/chat')
+        .send({ message: 'Keep responding' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.response).toBe(
+        'The reply still reaches the client.'
+      );
     });
 
     it('passes shell admin capability when the admin token header is valid', async () => {
@@ -189,7 +230,11 @@ describe('Chat Routes', () => {
         .send({ message: 'Sync me up' });
 
       expect(response.status).toBe(200);
-      expect(storage.getRecentMessages).toHaveBeenCalledWith('mobile-user', expect.any(Number), expect.any(String));
+      expect(storage.getRecentMessages).toHaveBeenCalledWith(
+        'mobile-user',
+        expect.any(Number),
+        expect.any(String)
+      );
       expect(authService.validateSession).toHaveBeenCalledWith('mobile-token');
       expect(storage.createMessage).toHaveBeenCalledTimes(2);
     });
@@ -242,9 +287,8 @@ describe('Chat Routes', () => {
         .send({ message: 'Use recent context' });
 
       expect(response.status).toBe(200);
-      const boundedHistory = vi.mocked(
-        chatOrchestrator.generateAIResponse
-      ).mock.calls[0][1];
+      const boundedHistory = vi.mocked(chatOrchestrator.generateAIResponse).mock
+        .calls[0][1];
       expect(boundedHistory.length).toBeLessThanOrEqual(8);
       expect(
         boundedHistory.every((message) => message.content.length <= 453)

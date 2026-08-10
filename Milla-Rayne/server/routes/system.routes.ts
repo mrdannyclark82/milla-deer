@@ -106,7 +106,9 @@ function getNetworkAccessSnapshot(hostHeader?: string) {
   return {
     port: Number(port),
     privateIpv4Candidates,
-    recommendedUrl: recommendedHost ? `http://${recommendedHost}:${port}` : null,
+    recommendedUrl: recommendedHost
+      ? `http://${recommendedHost}:${port}`
+      : null,
     loopbackUrl: `http://127.0.0.1:${port}`,
   };
 }
@@ -148,7 +150,8 @@ function getBrowserTargets(hostHeader?: string) {
       label: 'Collaboration status',
       url: `${localBase}/api/system/collaboration-cycle`,
       category: 'system',
-      description: 'Review the latest collaboration scheduler state and report.',
+      description:
+        'Review the latest collaboration scheduler state and report.',
     },
     {
       id: 'proactive-recommendations',
@@ -214,7 +217,9 @@ async function getConsciousnessSnapshot() {
 
     const latestMarker = gimContents.lastIndexOf('### 💭 GIM Session:');
     const latestSection =
-      latestMarker >= 0 ? gimContents.slice(latestMarker).trim() : gimContents.trim();
+      latestMarker >= 0
+        ? gimContents.slice(latestMarker).trim()
+        : gimContents.trim();
     const latestLines = latestSection.split('\n').filter(Boolean);
     const latestHeading = latestLines[0] || null;
     const latestPreview = latestLines.slice(1).join(' ').trim();
@@ -231,24 +236,24 @@ async function getConsciousnessSnapshot() {
 
   if (archivesExist) {
     const archiveEntries = await readdir(archivesPath);
-    gim.archiveCount = archiveEntries.filter((entry) => entry.endsWith('.md')).length;
+    gim.archiveCount = archiveEntries.filter((entry) =>
+      entry.endsWith('.md')
+    ).length;
   }
 
   let rem = {
     exists: remExists,
     path: remPath,
     updatedAt: null as number | null,
-    summary: null as
-      | {
-          atpEnergy: number | null;
-          adenosine: number | null;
-          painLevel: number | null;
-          journalEntries: number;
-          eventsBuffered: number;
-          plasticityEvents: number;
-          chemicals: Record<string, number>;
-        }
-      | null,
+    summary: null as {
+      atpEnergy: number | null;
+      adenosine: number | null;
+      painLevel: number | null;
+      journalEntries: number;
+      eventsBuffered: number;
+      plasticityEvents: number;
+      chemicals: Record<string, number>;
+    } | null,
   };
 
   if (remExists) {
@@ -264,8 +269,7 @@ async function getConsciousnessSnapshot() {
       summary: {
         atpEnergy:
           typeof state.atp_energy === 'number' ? state.atp_energy : null,
-        adenosine:
-          typeof state.adenosine === 'number' ? state.adenosine : null,
+        adenosine: typeof state.adenosine === 'number' ? state.adenosine : null,
         painLevel:
           typeof state.pain_level === 'number' ? state.pain_level : null,
         journalEntries: Array.isArray(state.journal) ? state.journal.length : 0,
@@ -433,17 +437,25 @@ export function registerSystemRoutes(app: Express) {
     asyncHandler(async (_req, res) => {
       const diagnostics = getConfigDiagnostics();
 
-      let proactive = { reachable: false as boolean, error: null as string | null };
+      let proactive = {
+        reachable: false as boolean,
+        error: null as string | null,
+      };
       try {
         const response = await fetch(`${PROACTIVE_BASE_URL}/health`);
         proactive = {
           reachable: response.ok,
-          error: response.ok ? null : `Health check failed with ${response.status}`,
+          error: response.ok
+            ? null
+            : `Health check failed with ${response.status}`,
         };
       } catch (error) {
         proactive = {
           reachable: false,
-          error: error instanceof Error ? error.message : 'Unknown proactive health error',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown proactive health error',
         };
       }
 
@@ -485,6 +497,41 @@ export function registerSystemRoutes(app: Express) {
     })
   );
 
+  // Get active local Ollama models
+  router.get(
+    '/system/local-models',
+    asyncHandler(async (_req, res) => {
+      const models = await offlineService.listAvailableLocalModels();
+      res.json({
+        success: true,
+        models,
+        activeModel: offlineService.getModelInfo()?.name ?? null,
+      });
+    })
+  );
+
+  // Set active local Ollama model
+  router.post(
+    '/system/local-models/select',
+    asyncHandler(async (req, res) => {
+      const { modelName } = req.body;
+      if (typeof modelName !== 'string' || !modelName.trim()) {
+        return res
+          .status(400)
+          .json({ success: false, error: 'Missing modelName parameter' });
+      }
+      const models = await offlineService.listAvailableLocalModels();
+      if (!models.includes(modelName)) {
+        return res.status(400).json({
+          success: false,
+          error: 'The selected local model is not installed',
+        });
+      }
+      await offlineService.setPreferredModel(modelName);
+      res.json({ success: true, activeModel: modelName });
+    })
+  );
+
   router.get(
     '/system/network-access',
     asyncHandler(async (req, res) => {
@@ -518,7 +565,8 @@ export function registerSystemRoutes(app: Express) {
   router.post(
     '/system/shell/run',
     asyncHandler(async (req, res) => {
-      const commandId = typeof req.body?.commandId === 'string' ? req.body.commandId : '';
+      const commandId =
+        typeof req.body?.commandId === 'string' ? req.body.commandId : '';
       if (!commandId) {
         res.status(400).json({
           success: false,
@@ -560,7 +608,8 @@ export function registerSystemRoutes(app: Express) {
   router.post(
     '/system/shell/cancel',
     asyncHandler(async (req, res) => {
-      const runId = typeof req.body?.runId === 'string' ? req.body.runId : undefined;
+      const runId =
+        typeof req.body?.runId === 'string' ? req.body.runId : undefined;
       const run = await cancelShellCommand(runId);
 
       if (!run) {
@@ -642,10 +691,14 @@ export function registerSystemRoutes(app: Express) {
   router.post(
     '/system/mcp-call',
     asyncHandler(async (req, res) => {
-      const serverId = typeof req.body?.serverId === 'string' ? req.body.serverId : '';
-      const toolName = typeof req.body?.toolName === 'string' ? req.body.toolName : '';
+      const serverId =
+        typeof req.body?.serverId === 'string' ? req.body.serverId : '';
+      const toolName =
+        typeof req.body?.toolName === 'string' ? req.body.toolName : '';
       const args =
-        req.body?.args && typeof req.body.args === 'object' && !Array.isArray(req.body.args)
+        req.body?.args &&
+        typeof req.body.args === 'object' &&
+        !Array.isArray(req.body.args)
           ? (req.body.args as Record<string, unknown>)
           : {};
 
@@ -784,8 +837,7 @@ export function registerSystemRoutes(app: Express) {
         method: req.method,
         headers: {
           Accept: req.headers.accept || 'application/json',
-          'Content-Type':
-            req.headers['content-type'] || 'application/json',
+          'Content-Type': req.headers['content-type'] || 'application/json',
         },
         body:
           req.method === 'GET' || req.method === 'HEAD'
@@ -808,14 +860,29 @@ export function registerSystemRoutes(app: Express) {
   app.use('/api', router);
 
   // Ollama local models
-  app.get('/api/ollama/models', requireAuth, asyncHandler(async (_req, res) => {
-    try {
-      const upstream = await fetch('http://localhost:11434/api/tags');
-      if (!upstream.ok) { res.json({ models: [] }); return; }
-      const data = await upstream.json() as { models?: { name: string; size: number; modified_at: string }[] };
-      res.json({ models: (data.models ?? []).map(m => ({ name: m.name, size: m.size, modified_at: m.modified_at })) });
-    } catch {
-      res.json({ models: [] });
-    }
-  }));
+  app.get(
+    '/api/ollama/models',
+    requireAuth,
+    asyncHandler(async (_req, res) => {
+      try {
+        const upstream = await fetch('http://localhost:11434/api/tags');
+        if (!upstream.ok) {
+          res.json({ models: [] });
+          return;
+        }
+        const data = (await upstream.json()) as {
+          models?: { name: string; size: number; modified_at: string }[];
+        };
+        res.json({
+          models: (data.models ?? []).map((m) => ({
+            name: m.name,
+            size: m.size,
+            modified_at: m.modified_at,
+          })),
+        });
+      } catch {
+        res.json({ models: [] });
+      }
+    })
+  );
 }

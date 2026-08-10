@@ -14,12 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SceneSettings, SceneMood, BackgroundMode } from '@/types/scene';
+import {
+  SceneSettings,
+  SceneMood,
+  BackgroundMode,
+  ChatPanelBackground,
+} from '@/types/scene';
 import {
   loadSceneSettings,
   saveSceneSettings,
   onSettingsChange as subscribeToSettingsChange,
 } from '@/utils/sceneSettingsStore';
+import { resetRoomHotspots } from '@/utils/roomHotspotStore';
 import { proactiveGet } from '@/lib/proactiveApi';
 
 interface SceneSettingsPanelProps {
@@ -249,6 +255,202 @@ export const SceneSettingsPanel: React.FC<SceneSettingsPanelProps> = ({
             {settings.sceneBackgroundFromRP ? 'ON' : 'OFF'}
           </Button>
         </div>
+
+        {/* Interactive room toggle */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <label className="text-sm font-medium">
+            Interactive room (click bed, lamp, me)
+          </label>
+          <Button
+            variant={settings.interactiveRoomEnabled ? 'default' : 'outline'}
+            size="sm"
+            onClick={() =>
+              updateSetting(
+                'interactiveRoomEnabled',
+                !settings.interactiveRoomEnabled
+              )
+            }
+            aria-pressed={settings.interactiveRoomEnabled}
+            disabled={!settings.enabled}
+          >
+            {settings.interactiveRoomEnabled ? 'ON' : 'OFF'}
+          </Button>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t">
+          <label
+            className="text-sm font-medium"
+            htmlFor="chat-panel-background"
+          >
+            Live Thread background
+          </label>
+          <Select
+            value={settings.chatPanelBackground || 'glass'}
+            onValueChange={(value) =>
+              updateSetting('chatPanelBackground', value as ChatPanelBackground)
+            }
+          >
+            <SelectTrigger id="chat-panel-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="glass">Glass</SelectItem>
+              <SelectItem value="midnight">Midnight</SelectItem>
+              <SelectItem value="nebula">Nebula</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Changes the background behind messages without affecting the room.
+          </p>
+        </div>
+
+        {settings.interactiveRoomEnabled && (
+          <div className="space-y-4 rounded-lg border border-fuchsia-400/20 bg-black/20 p-3">
+            <p className="text-xs text-fuchsia-100/80">
+              Bedroom framing, voice, hotspots, and Wiz lamp sync
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Photo panel width</label>
+                <span className="text-xs text-muted-foreground">
+                  {settings.interactiveRoomPanelWidth ?? 56}vw
+                </span>
+              </div>
+              <Slider
+                value={[settings.interactiveRoomPanelWidth ?? 56]}
+                onValueChange={([value]) =>
+                  updateSetting('interactiveRoomPanelWidth', value)
+                }
+                min={40}
+                max={68}
+                step={1}
+                disabled={!settings.enabled}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Photo zoom</label>
+                <span className="text-xs text-muted-foreground">
+                  {settings.interactiveRoomZoom ?? 88}%
+                </span>
+              </div>
+              <Slider
+                value={[settings.interactiveRoomZoom ?? 88]}
+                onValueChange={([value]) =>
+                  updateSetting('interactiveRoomZoom', value)
+                }
+                min={65}
+                max={105}
+                step={1}
+                disabled={!settings.enabled}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  Photo vertical position
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {settings.interactiveRoomImageOffsetY ?? 88}%
+                </span>
+              </div>
+              <Slider
+                value={[settings.interactiveRoomImageOffsetY ?? 88]}
+                onValueChange={([value]) =>
+                  updateSetting('interactiveRoomImageOffsetY', value)
+                }
+                min={40}
+                max={100}
+                step={1}
+                disabled={!settings.enabled}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Voice on touch</label>
+              <Button
+                variant={
+                  settings.interactiveRoomVoiceEnabled !== false
+                    ? 'default'
+                    : 'outline'
+                }
+                size="sm"
+                onClick={() =>
+                  updateSetting(
+                    'interactiveRoomVoiceEnabled',
+                    settings.interactiveRoomVoiceEnabled === false
+                  )
+                }
+                disabled={!settings.enabled}
+              >
+                {settings.interactiveRoomVoiceEnabled !== false ? 'ON' : 'OFF'}
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                Photo in Live Avatar card
+              </label>
+              <Button
+                variant={
+                  settings.interactiveRoomAvatarMode !== false
+                    ? 'default'
+                    : 'outline'
+                }
+                size="sm"
+                onClick={() =>
+                  updateSetting(
+                    'interactiveRoomAvatarMode',
+                    settings.interactiveRoomAvatarMode === false
+                  )
+                }
+                disabled={!settings.enabled}
+              >
+                {settings.interactiveRoomAvatarMode !== false
+                  ? 'ON'
+                  : 'Full screen'}
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-medium">Edit hotspots</label>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    resetRoomHotspots();
+                  }}
+                  disabled={!settings.enabled}
+                >
+                  Reset zones
+                </Button>
+                <Button
+                  variant={
+                    settings.interactiveRoomHotspotEditor
+                      ? 'default'
+                      : 'outline'
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateSetting(
+                      'interactiveRoomHotspotEditor',
+                      !settings.interactiveRoomHotspotEditor
+                    )
+                  }
+                  disabled={!settings.enabled}
+                >
+                  {settings.interactiveRoomHotspotEditor
+                    ? 'Editing'
+                    : 'Calibrate'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Room overlays toggle */}
         <div className="flex items-center justify-between pt-2 border-t">

@@ -1,5 +1,15 @@
 import { useRef, useState, type DragEvent } from 'react';
-import { X, Play, Link, Youtube, Upload, Loader2, Search } from 'lucide-react';
+import {
+  X,
+  Play,
+  Link,
+  Youtube,
+  Upload,
+  Loader2,
+  Search,
+  Camera,
+} from 'lucide-react';
+import { WebcamShare } from './WebcamShare';
 
 interface SearchResultVideo {
   id: string;
@@ -31,7 +41,9 @@ export function VideoAnalysisPanel({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'url' | 'upload'>('url');
+  const [activeTab, setActiveTab] = useState<'url' | 'upload' | 'webcam'>(
+    'url'
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // If we have an active video ID, switch to player view automatically or show it above
@@ -172,6 +184,17 @@ export function VideoAnalysisPanel({
           <Upload className="w-3.5 h-3.5 inline-block mr-1.5" />
           Upload
         </button>
+        <button
+          onClick={() => setActiveTab('webcam')}
+          className={`flex-1 px-4 py-2.5 text-xs font-medium transition-all ${
+            activeTab === 'webcam'
+              ? 'text-[#ff00aa] border-b-2 border-[#ff00aa] bg-[#ff00aa]/5'
+              : 'text-white/50 hover:text-white/80'
+          }`}
+        >
+          <Camera className="w-3.5 h-3.5 inline-block mr-1.5" />
+          Webcam
+        </button>
       </div>
 
       {/* Content */}
@@ -304,7 +327,7 @@ export function VideoAnalysisPanel({
               )}
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'upload' ? (
           <div
             className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-[#00f2ff]/30 hover:bg-[#00f2ff]/5 transition-all cursor-pointer"
             onDragOver={(e) => e.preventDefault()}
@@ -322,6 +345,8 @@ export function VideoAnalysisPanel({
               onChange={(e) => handleFileSelect(e.target.files?.[0])}
             />
           </div>
+        ) : (
+          <WebcamShare onShareComplete={onAnalyzeComplete} />
         )}
       </div>
 

@@ -3,7 +3,11 @@
  * Manages persistence and access to scene settings via localStorage
  */
 
-import { SceneSettings, BackgroundMode } from '@/types/scene';
+import {
+  SceneSettings,
+  BackgroundMode,
+  ChatPanelBackground,
+} from '@/types/scene';
 
 const STORAGE_KEY = 'milla.scene.settings.v1';
 const SETTINGS_VERSION = 1;
@@ -33,6 +37,14 @@ export function getDefaultSettings(): SceneSettings {
     sceneBackgroundFromRP: true, // Phase 3: Enabled by default
     winterTheme: false, // Winter theme disabled by default
     sceneRoomOverlaysEnabled: true, // Room Overlays V1: Enabled by default
+    interactiveRoomEnabled: true,
+    interactiveRoomPanelWidth: 56,
+    interactiveRoomZoom: 88,
+    interactiveRoomImageOffsetY: 88,
+    interactiveRoomVoiceEnabled: true,
+    interactiveRoomHotspotEditor: false,
+    interactiveRoomAvatarMode: true,
+    chatPanelBackground: 'glass',
     // Default to static-image so developers see static backgrounds by default.
     // Users can still change to 'auto' or 'css-animated' via settings UI.
     backgroundMode: 'auto', // Default to auto (adaptive) (use static backgrounds when available)
@@ -75,14 +87,18 @@ export function loadSceneSettings(): SceneSettings {
         typeof settings.enableParticles === 'boolean'
           ? settings.enableParticles
           : true,
-       enableParallax:
-         typeof settings.enableParallax === 'boolean'
-           ? settings.enableParallax
-           : true,
-       dashboardAmbientLight: clamp(settings.dashboardAmbientLight ?? 65, 0, 100),
-       parallaxIntensity: clamp(settings.parallaxIntensity ?? 50, 0, 75),
-       particleDensity: ['off', 'low', 'medium', 'high'].includes(
-         settings.particleDensity
+      enableParallax:
+        typeof settings.enableParallax === 'boolean'
+          ? settings.enableParallax
+          : true,
+      dashboardAmbientLight: clamp(
+        settings.dashboardAmbientLight ?? 65,
+        0,
+        100
+      ),
+      parallaxIntensity: clamp(settings.parallaxIntensity ?? 50, 0, 75),
+      particleDensity: ['off', 'low', 'medium', 'high'].includes(
+        settings.particleDensity
       )
         ? settings.particleDensity
         : 'medium',
@@ -102,11 +118,43 @@ export function loadSceneSettings(): SceneSettings {
         typeof settings.sceneRoomOverlaysEnabled === 'boolean'
           ? settings.sceneRoomOverlaysEnabled
           : true,
+      interactiveRoomEnabled:
+        typeof settings.interactiveRoomEnabled === 'boolean'
+          ? settings.interactiveRoomEnabled
+          : true,
+      interactiveRoomPanelWidth: clamp(
+        settings.interactiveRoomPanelWidth ?? 56,
+        40,
+        72
+      ),
+      interactiveRoomZoom: clamp(settings.interactiveRoomZoom ?? 88, 65, 110),
+      interactiveRoomImageOffsetY: clamp(
+        settings.interactiveRoomImageOffsetY ?? 88,
+        0,
+        100
+      ),
+      interactiveRoomVoiceEnabled:
+        typeof settings.interactiveRoomVoiceEnabled === 'boolean'
+          ? settings.interactiveRoomVoiceEnabled
+          : true,
+      interactiveRoomHotspotEditor:
+        typeof settings.interactiveRoomHotspotEditor === 'boolean'
+          ? settings.interactiveRoomHotspotEditor
+          : false,
+      interactiveRoomAvatarMode:
+        typeof settings.interactiveRoomAvatarMode === 'boolean'
+          ? settings.interactiveRoomAvatarMode
+          : true,
       backgroundMode: ['css-animated', 'static-image', 'auto'].includes(
         settings.backgroundMode as string
       )
         ? (settings.backgroundMode as BackgroundMode)
         : 'auto',
+      chatPanelBackground: ['glass', 'midnight', 'nebula'].includes(
+        settings.chatPanelBackground as string
+      )
+        ? (settings.chatPanelBackground as ChatPanelBackground)
+        : 'glass',
     };
   } catch (error) {
     console.error('Error loading scene settings:', error);

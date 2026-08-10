@@ -28,7 +28,7 @@ import { getSmartHomeSensorData } from '../smartHomeService';
 import { detectSceneContext } from '../sceneDetectionService';
 import { sceneService } from '../services/scene.service';
 import { upload } from '../middleware/upload.middleware';
-import { requireAuth } from '../middleware/auth.middleware';
+import { requireAuth, optionalAuth } from '../middleware/auth.middleware';
 import { asyncHandler } from '../utils/routeHelpers';
 import { storage } from '../storage';
 import {
@@ -105,7 +105,8 @@ async function persistConversationTurn(
       displayRole: 'Milla Rayne',
       channel,
       sourcePlatform: 'milla-hub',
-      metadata: toolEvents && toolEvents.length > 0 ? { toolEvents } : undefined,
+      metadata:
+        toolEvents && toolEvents.length > 0 ? { toolEvents } : undefined,
     }),
   ]);
 
@@ -114,7 +115,9 @@ async function persistConversationTurn(
   appendToSharedChat('assistant', assistantMessage, channel).catch(() => {});
 
   // Hot context snapshot for zero-reload session persistence
-  recordTurn(userMessage, assistantMessage, channel, userId, toolEvents).catch(() => {});
+  recordTurn(userMessage, assistantMessage, channel, userId, toolEvents).catch(
+    () => {}
+  );
 
   // Queue turn for async RAG vector indexing
   queueForIndexing(userMessage, assistantMessage, userId);
@@ -270,12 +273,18 @@ export function registerChatRoutes(app: Express) {
   );
 
   // Chat endpoint
+  // Use optionalAuth so CLI/TUI can connect without full login (falls back to default-user)
   router.post(
     '/chat',
-    requireAuth,
+    optionalAuth,
     asyncHandler(async (req, res) => {
       let { message } = req.body;
-      const { audioData, audioMimeType, imageData } = req.body;
+      const {
+        audioData,
+        audioMimeType,
+        imageData,
+        model: requestedModel,
+      } = req.body;
       let userEmotionalState: any;
 
       if (audioData && audioMimeType) {
@@ -329,26 +338,47 @@ export function registerChatRoutes(app: Express) {
       }
 
       // Generate AI Response
-      const { value: aiResponse, toolEvents } = await withToolBag(() =>
-        generateAIResponse(
-          processedMessage,
-          conversationHistory,
-          'Danny Ray',
-          imageData,
-          userId,
-          userEmotionalState,
-          bypassFunctionCalls,
-          { canRunShellCommands: true }
-        )
-      );
+      const generateResponse = () =>
+        requestedModel
+          ? generateAIResponse(
+              processedMessage,
+              conversationHistory,
+              'Danny Ray',
+              imageData,
+              userId,
+              userEmotionalState,
+              bypassFunctionCalls,
+              { canRunShellCommands: true },
+              requestedModel
+            )
+          : generateAIResponse(
+              processedMessage,
+              conversationHistory,
+              'Danny Ray',
+              imageData,
+              userId,
+              userEmotionalState,
+              bypassFunctionCalls,
+              { canRunShellCommands: true }
+            );
+      const { value: aiResponse, toolEvents } =
+        await withToolBag(generateResponse);
 
-      await persistConversationTurn(
-        userId,
-        processedMessage,
-        aiResponse.content,
-        'web',
-        toolEvents
-      );
+      try {
+        await persistConversationTurn(
+          userId,
+          processedMessage,
+          aiResponse.content,
+          'web',
+          toolEvents
+        );
+      } catch (error) {
+        // A storage outage must not discard a response that was already generated.
+        console.error(
+          'Failed to persist chat turn after generating a response:',
+          error
+        );
+      }
 
       res.json({
         response: aiResponse.content,

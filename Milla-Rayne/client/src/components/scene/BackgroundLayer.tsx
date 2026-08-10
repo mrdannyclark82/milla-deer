@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSceneContext } from '@/contexts/SceneContext';
-import { loadSceneSettings } from '@/utils/sceneSettingsStore';
+import {
+  loadSceneSettings,
+  onSettingsChange,
+} from '@/utils/sceneSettingsStore';
+import { getInteractiveRoomImageStyles } from '@/utils/interactiveRoomLayout';
 
 /**
  * Static background image component for scene display
@@ -14,6 +18,9 @@ export function BackgroundLayer() {
   );
   const [imageLoaded, setImageLoaded] = useState(false);
   const [usingMoodBackground, setUsingMoodBackground] = useState(false);
+  const [settings, setSettings] = useState(loadSceneSettings);
+
+  useEffect(() => onSettingsChange(setSettings), []);
 
   // Listen for mood background updates
   useEffect(() => {
@@ -49,7 +56,7 @@ export function BackgroundLayer() {
     const locationImageMap: Record<string, string> = {
       front_door: '/assets/scenes/front_door-night.jpg',
       living_room: '/assets/scenes/living_room-night.jpg',
-      bedroom: '/assets/scenes/living_room-night.jpg', // Fallback to living room
+      bedroom: '/assets/scenes/bedroom-night.jpg',
       bathroom: '/assets/scenes/living_room-night.jpg', // Fallback to living room
       kitchen: '/assets/scenes/living_room-night.jpg', // Fallback to living room
       outdoor: '/assets/scenes/front_door-night.jpg', // Fallback to front door
@@ -64,6 +71,11 @@ export function BackgroundLayer() {
     setImageSrc(newImageSrc);
   }, [location, usingMoodBackground]);
 
+  const isBedroomPeek =
+    location === 'bedroom' &&
+    !usingMoodBackground &&
+    (settings.interactiveRoomEnabled ?? true);
+
   return (
     <div
       style={{
@@ -73,6 +85,9 @@ export function BackgroundLayer() {
         top: 0,
         left: 0,
         overflow: 'hidden',
+        background: isBedroomPeek
+          ? 'radial-gradient(ellipse at 50% 80%, rgba(60, 20, 90, 0.5), rgba(8, 2, 18, 0.95))'
+          : undefined,
       }}
     >
       <img
@@ -80,12 +95,16 @@ export function BackgroundLayer() {
         alt=""
         onLoad={() => setImageLoaded(true)}
         style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
+          ...(isBedroomPeek
+            ? getInteractiveRoomImageStyles(settings)
+            : {
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                transition: 'opacity 0.5s ease-in-out',
+              }),
           opacity: imageLoaded ? 1 : 0,
-          transition: 'opacity 0.5s ease-in-out',
         }}
       />
     </div>

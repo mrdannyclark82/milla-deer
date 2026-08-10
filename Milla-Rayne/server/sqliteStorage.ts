@@ -49,9 +49,15 @@ export interface IStorage {
 
   createMessage(message: InsertMessage): Promise<Message>;
   getMessages(userId?: string): Promise<Message[]>;
-  getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]>;
+  getRecentMessages(
+    userId: string,
+    limit: number,
+    channel?: string
+  ): Promise<Message[]>;
   getMessageById(id: string): Promise<Message | undefined>;
-  getMessageByExternalId(externalMessageId: string): Promise<Message | undefined>;
+  getMessageByExternalId(
+    externalMessageId: string
+  ): Promise<Message | undefined>;
 
   // Enhanced session tracking methods
   createSession(userId: string): Promise<SessionInfo>;
@@ -158,6 +164,7 @@ export interface VoiceConsent {
 
 export class SqliteStorage implements IStorage {
   private db: Database.Database;
+  private readonly unreadableMessageIds = new Set<string>();
 
   constructor() {
     // Ensure memory directory exists
@@ -198,14 +205,50 @@ export class SqliteStorage implements IStorage {
     };
   }
 
+  private mapReadableMessageRows(rows: any[]): Message[] {
+    return rows.flatMap((row) => {
+      try {
+        return [this.mapMessageRow(row)];
+      } catch (error) {
+        const messageId = typeof row.id === 'string' ? row.id : 'unknown';
+        if (!this.unreadableMessageIds.has(messageId)) {
+          this.unreadableMessageIds.add(messageId);
+          console.warn(
+            `[SQLite] Skipping unreadable message ${messageId} for user ${
+              row.user_id || 'unknown'
+            }. It was encrypted with a key that is unavailable to this server.`,
+            error
+          );
+        }
+        return [];
+      }
+    });
+  }
+
   private initializeDatabase(): void {
     // Enable WAL mode for better performance
     this.db.pragma('journal_mode = WAL');
     // Enable foreign keys
     this.db.pragma('foreign_keys = ON');
 
+    // Query metadata to check if schema is already initialized
+    const tableCheck = this.db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+      )
+      .get();
+
+    if (tableCheck) {
+      console.log(
+        '[dev] SQLite: Verified database schema is loaded and ready.'
+      );
+    } else {
+      console.log(
+        '[dev] SQLite: Creating database tables for the first time...'
+      );
+    }
+
     // Create users table
-    console.debug('sqlite: creating users table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -219,7 +262,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create user_sessions table
-    console.debug('sqlite: creating user_sessions table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_sessions (
         id TEXT PRIMARY KEY,
@@ -232,7 +274,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create enhanced messages table with session tracking
-    console.debug('sqlite: creating messages table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS messages (
         id TEXT PRIMARY KEY,
@@ -262,7 +303,9 @@ export class SqliteStorage implements IStorage {
         .all() as { name: string }[];
       const hasDisplayRole = msgCols.some((c) => c.name === 'display_role');
       const hasChannel = msgCols.some((c) => c.name === 'channel');
-      const hasSourcePlatform = msgCols.some((c) => c.name === 'source_platform');
+      const hasSourcePlatform = msgCols.some(
+        (c) => c.name === 'source_platform'
+      );
       const hasChannelThreadId = msgCols.some(
         (c) => c.name === 'channel_thread_id'
       );
@@ -278,7 +321,9 @@ export class SqliteStorage implements IStorage {
       }
       if (!hasChannel) {
         console.log('sqlite: migrating messages table to add channel column');
-        this.db.exec(`ALTER TABLE messages ADD COLUMN channel TEXT DEFAULT 'web'`);
+        this.db.exec(
+          `ALTER TABLE messages ADD COLUMN channel TEXT DEFAULT 'web'`
+        );
       }
       if (!hasSourcePlatform) {
         console.log(
@@ -296,7 +341,9 @@ export class SqliteStorage implements IStorage {
         console.log(
           'sqlite: migrating messages table to add external_message_id column'
         );
-        this.db.exec(`ALTER TABLE messages ADD COLUMN external_message_id TEXT`);
+        this.db.exec(
+          `ALTER TABLE messages ADD COLUMN external_message_id TEXT`
+        );
       }
       if (!hasMetadata) {
         console.log('sqlite: migrating messages table to add metadata column');
@@ -319,7 +366,6 @@ export class SqliteStorage implements IStorage {
     }
 
     // Create sessions table for tracking conversation sessions
-    console.debug('sqlite: creating sessions table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
@@ -334,7 +380,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create usage patterns table
-    console.debug('sqlite: creating usage_patterns table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS usage_patterns (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -356,7 +401,6 @@ export class SqliteStorage implements IStorage {
 
     // Create ai_updates table for predictive updates (RSS feed data)
     // Check if table exists with old schema and migrate if needed
-    console.debug('sqlite: creating ai_updates table');
 
     // Check if ai_updates table exists and has the correct schema
     const tableInfo = this.db
@@ -407,7 +451,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create suggestion_updates table for daily AI improvement suggestions
-    console.debug('sqlite: creating suggestion_updates table');
     // Ensure migration compatibility: older schema may have used 'relevance' or 'relevance_score'
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS suggestion_updates (
@@ -453,7 +496,6 @@ export class SqliteStorage implements IStorage {
     }
 
     // Create daily_suggestions table
-    console.debug('sqlite: creating daily_suggestions table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS daily_suggestions (
         id TEXT PRIMARY KEY,
@@ -467,7 +509,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create voice_consent table
-    console.debug('sqlite: creating voice_consent table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS voice_consent (
         id TEXT PRIMARY KEY,
@@ -485,7 +526,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create oauth_tokens table
-    console.debug('sqlite: creating oauth_tokens table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS oauth_tokens (
         id TEXT PRIMARY KEY,
@@ -503,7 +543,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create memory_summaries table
-    console.debug('sqlite: creating memory_summaries table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS memory_summaries (
         id TEXT PRIMARY KEY,
@@ -519,7 +558,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create sensitive_memories table
-    console.debug('sqlite: creating sensitive_memories table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sensitive_memories (
         id TEXT PRIMARY KEY,
@@ -533,7 +571,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create youtube_knowledge_base table
-    console.debug('sqlite: creating youtube_knowledge_base table');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS youtube_knowledge_base (
         id TEXT PRIMARY KEY,
@@ -556,7 +593,6 @@ export class SqliteStorage implements IStorage {
     `);
 
     // Create indexes for ai_updates and daily_suggestions
-    console.debug('sqlite: creating indexes');
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_ai_updates_source ON ai_updates(source, published DESC);
       CREATE INDEX IF NOT EXISTS idx_ai_updates_relevance ON ai_updates(relevance DESC);
@@ -729,7 +765,9 @@ export class SqliteStorage implements IStorage {
   // Message methods
   async createMessage(message: InsertMessage): Promise<Message> {
     if (message.externalMessageId) {
-      const existing = await this.getMessageByExternalId(message.externalMessageId);
+      const existing = await this.getMessageByExternalId(
+        message.externalMessageId
+      );
       if (existing) {
         return existing;
       }
@@ -817,7 +855,8 @@ export class SqliteStorage implements IStorage {
       channelThreadId: message.channelThreadId || null,
       externalMessageId: message.externalMessageId || null,
       metadata:
-        (message.metadata as Record<string, unknown> | null | undefined) || null,
+        (message.metadata as Record<string, unknown> | null | undefined) ||
+        null,
       timestamp,
       userId: message.userId || null,
     };
@@ -836,21 +875,29 @@ export class SqliteStorage implements IStorage {
       messages = stmt.all() as any[];
     }
 
-    return messages.map((msg) => this.mapMessageRow(msg));
+    return this.mapReadableMessageRows(messages);
   }
 
-  async getRecentMessages(userId: string, limit: number, channel?: string): Promise<Message[]> {
+  async getRecentMessages(
+    userId: string,
+    limit: number,
+    channel?: string
+  ): Promise<Message[]> {
     let rows: any[];
     if (channel) {
-      rows = this.db.prepare(
-        'SELECT * FROM messages WHERE user_id = ? AND (channel = ? OR channel IS NULL AND ? = \'web\') ORDER BY timestamp DESC LIMIT ?'
-      ).all(userId, channel, channel, limit) as any[];
+      rows = this.db
+        .prepare(
+          "SELECT * FROM messages WHERE user_id = ? AND (channel = ? OR channel IS NULL AND ? = 'web') ORDER BY timestamp DESC LIMIT ?"
+        )
+        .all(userId, channel, channel, limit) as any[];
     } else {
-      rows = this.db.prepare(
-        'SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
-      ).all(userId, limit) as any[];
+      rows = this.db
+        .prepare(
+          'SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?'
+        )
+        .all(userId, limit) as any[];
     }
-    return rows.reverse().map((msg) => this.mapMessageRow(msg));
+    return this.mapReadableMessageRows(rows.reverse());
   }
 
   async getMessageById(id: string): Promise<Message | undefined> {
@@ -1184,9 +1231,7 @@ export class SqliteStorage implements IStorage {
       id: consent.id,
       userId: consent.user_id,
       consentType: consent.consent_type as
-        | 'voice_cloning'
-        | 'voice_persona'
-        | 'voice_synthesis',
+        'voice_cloning' | 'voice_persona' | 'voice_synthesis',
       granted: consent.granted === 1,
       grantedAt: consent.granted_at ? new Date(consent.granted_at) : undefined,
       revokedAt: consent.revoked_at ? new Date(consent.revoked_at) : undefined,
