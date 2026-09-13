@@ -38,6 +38,22 @@ SKIP_DIR = {
     "coverage",
 }
 
+# Names that are almost never promote targets
+DEMOTE_NAMES = {
+    "logs",
+    "log",
+    "tmp",
+    "temp",
+    "cache",
+    "node_modules",
+    "coverage",
+    "dist",
+    "build",
+    "attached_assets",
+    "uploads",
+    "memory",  # often intimate / private
+}
+
 
 @dataclass
 class Candidate:
@@ -70,6 +86,12 @@ def classify(path: Path) -> Candidate:
     score = 0.0
     kind = "unknown"
 
+    # demote junk / private-ish folder names
+    if path.name.lower() in DEMOTE_NAMES:
+        score -= 3.0
+        blockers.append(f"demoted name: {path.name}")
+        reasons.append("name on demote list")
+
     markers = {
         "package.json": ("node", 1.0),
         "pyproject.toml": ("python", 1.0),
@@ -78,6 +100,9 @@ def classify(path: Path) -> Candidate:
         "SKILL.md": ("skill", 1.2),
         "README.md": ("docs", 0.4),
         "artifacts/sprints": ("sprint", 0.6),
+        "src": ("code", 0.5),
+        "tests": ("tested", 0.8),
+        "test": ("tested", 0.5),
     }
     for name, (k, w) in markers.items():
         if (path / name).exists() or (path / name).is_dir():
