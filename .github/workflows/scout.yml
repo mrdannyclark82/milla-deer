@@ -1,6 +1,6 @@
 name: Scout Technology Radar
 on:
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch:
   schedule:
     - cron: '0 8 * * 1' # Runs at 8:00 AM every Monday
 
@@ -9,18 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - name: Install dependencies
-        run: npm install axios
+      - name: Install scout dependency
+        run: |
+          mkdir -p "$RUNNER_TEMP/scout-deps"
+          npm install --prefix "$RUNNER_TEMP/scout-deps" axios
+          echo "$RUNNER_TEMP/scout-deps/node_modules" >> "$GITHUB_PATH"
+          echo "NODE_PATH=$RUNNER_TEMP/scout-deps/node_modules" >> "$GITHUB_ENV"
 
       - name: Run Scout Script and Generate Report
         id: scout_report
+        env:
+          NODE_PATH: ${{ runner.temp }}/scout-deps/node_modules
         run: |
           report_content=$(node .github/scripts/scout.js)
           echo "report<<EOF" >> $GITHUB_OUTPUT
@@ -28,7 +34,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Issue
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -37,5 +43,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Radar Tecnológico - ${new Date().toLocaleDateString()}`,
-              body: report
+              body: report || 'Scout completed with empty report.'
             });
