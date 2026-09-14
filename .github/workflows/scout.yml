@@ -2,7 +2,7 @@ name: Scout Technology Radar
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 8 * * 1' # Runs at 8:00 AM every Monday
+    - cron: '0 8 * * 1'
 
 jobs:
   scout:
@@ -20,15 +20,14 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/scout-deps"
           npm install --prefix "$RUNNER_TEMP/scout-deps" axios
-          echo "$RUNNER_TEMP/scout-deps/node_modules" >> "$GITHUB_PATH"
-          echo "NODE_PATH=$RUNNER_TEMP/scout-deps/node_modules" >> "$GITHUB_ENV"
 
       - name: Run Scout Script and Generate Report
         id: scout_report
         env:
           NODE_PATH: ${{ runner.temp }}/scout-deps/node_modules
         run: |
-          report_content=$(node .github/scripts/scout.js)
+          cp .github/scripts/scout.js "$RUNNER_TEMP/scout.cjs"
+          report_content=$(node "$RUNNER_TEMP/scout.cjs")
           echo "report<<EOF" >> $GITHUB_OUTPUT
           echo "$report_content" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
