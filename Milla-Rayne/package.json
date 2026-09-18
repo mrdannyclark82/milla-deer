@@ -126,6 +126,7 @@
     "form-data": "^4.0.4",
     "framer-motion": "^12.23.24",
     "github-mcp-server": "^1.8.7",
+    "glob": "^13.0.6",
     "helmet": "^8.1.0",
     "huggingface-mcp-server": "^1.0.26",
     "input-otp": "^1.4.2",
