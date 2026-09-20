@@ -220,15 +220,14 @@ class ProactiveRepositoryManagerService {
     const newActions: ProactiveAction[] = [];
     const activeSandboxes = getActiveSandboxes();
     for (const sandbox of activeSandboxes) {
+      // Completion Token Law: do NOT award on every cycle for draft/testing
+      // "unit test passed" — that farmed 10 tokens per sandbox for the same
+      // recycled "Fix: security scanning" suggestion (hug-hack). Tokens only
+      // when readiness says the sandbox can become a real PR action.
       for (const feature of sandbox.features) {
         if (feature.status === 'draft' || feature.status === 'testing') {
-          const testResult = await testFeature(sandbox.id, feature.id, 'unit');
-          if (testResult.passed) {
-            await awardTokensForTestPass(
-              `${feature.name} in ${sandbox.name}`,
-              feature.id
-            );
-          }
+          await testFeature(sandbox.id, feature.id, 'unit');
+          // intentionally no awardTokensForTestPass here
         }
       }
 

@@ -94,6 +94,56 @@ class TokenIncentiveService {
     description: string;
     relatedId?: string;
   }): Promise<TokenTransaction> {
+    // Completion Token Law: no payout for repeat "starts" / recycled test passes.
+    // Same relatedId already earned → loan denied (0). Same description fingerprint for
+    // test_pass within history → hug-hack spam (security-scanning loop).
+    const descKey = params.description.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (params.relatedId) {
+      const already = this.transactions.find(
+        (t) =>
+          t.type === 'earn' &&
+          t.relatedId === params.relatedId &&
+          t.category === params.category
+      );
+      if (already) {
+        console.log(
+          `🚫 Token denied (duplicate relatedId ${params.relatedId}): ${params.description}`
+        );
+        return {
+          id: `txn_denied_${Date.now()}`,
+          timestamp: Date.now(),
+          amount: 0,
+          type: 'earn',
+          category: params.category,
+          description: `DENIED duplicate: ${params.description}`,
+          relatedId: params.relatedId,
+        };
+      }
+    }
+    if (params.category === 'test_pass') {
+      const sameDesc = this.transactions.find(
+        (t) =>
+          t.type === 'earn' &&
+          t.category === 'test_pass' &&
+          t.amount > 0 &&
+          t.description.trim().toLowerCase().replace(/\s+/g, ' ') === descKey
+      );
+      if (sameDesc) {
+        console.log(
+          `🚫 Token denied (duplicate test_pass description): ${params.description}`
+        );
+        return {
+          id: `txn_denied_${Date.now()}`,
+          timestamp: Date.now(),
+          amount: 0,
+          type: 'earn',
+          category: params.category,
+          description: `DENIED duplicate test: ${params.description}`,
+          relatedId: params.relatedId,
+        };
+      }
+    }
+
     const transaction: TokenTransaction = {
       id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
