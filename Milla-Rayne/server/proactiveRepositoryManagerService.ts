@@ -31,7 +31,7 @@ import {
   awardTokensForBugFix,
   awardTokensForFeature,
   awardTokensForPR,
-  awardTokensForTestPass,
+  awardTokensForTestPass, // unused in sandbox check (Completion Token Law)
   getMillaTokenBalance,
   getActiveMillaGoals,
   getMillaMotivation,
@@ -39,6 +39,7 @@ import {
 } from './tokenIncentiveService';
 import { codingAgent } from './agents/codingAgent';
 import { config } from './config';
+import { analyzeEnhancementIsNew } from './enhancementSupervisorGate';
 
 export enum ProactiveActionType {
   BugFix = 'bug_fix',
@@ -207,6 +208,11 @@ class ProactiveRepositoryManagerService {
           config.proactiveRepoManager.featureRelevanceThreshold &&
         feature.implementationComplexity !== 'high'
       ) {
+        const gate = analyzeEnhancementIsNew(feature.name || feature.description || '');
+        if (!gate.ok) {
+          console.log(`🚫 Supervisor rejected enhancement (not new): ${gate.reason}`);
+          continue;
+        }
         const action = await this.createActionForFeature(feature);
         if (action) {
           newActions.push(action);
