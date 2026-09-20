@@ -117,3 +117,8 @@ Until the deer test passes, treat this document as **law for humans and Prime**;
 ## One-line canon
 
 > **We don’t pay for hugs. We don’t pay for starts. We pay for finished steps — or honest culls — so the empire stops farming its own dopamine.**
+
+
+## Run logs
+
+Every `ledger_proto.py` invocation appends to `logs/run-YYYYMMDD.jsonl` and `logs/run-YYYYMMDD.log`. No silent commands.
